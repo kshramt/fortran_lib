@@ -1,0 +1,34 @@
+<%
+  PROP = {
+    'integer' => {suf: '_i'},
+    'real' => {suf: '_r'},
+    'double precision' => {suf: '_d'},
+    'complex' => {suf: '_cx'},
+    'double complex' => {suf: '_dcx'},
+    'logical' => {suf: '_l'},
+  }
+%>
+module lib_character
+  implicit none
+  private
+  public:: str, STR_LEN
+  integer, parameter:: STR_LEN = 256
+
+  interface str
+    <%PROP.each{|type, prop|%>
+      module procedure str<%=prop[:suf]%>
+    <%}%>
+  end interface
+  
+contains
+
+  <%PROP.each{|type, prop|%>
+    elemental function str<%=prop[:suf]%>(x) result(this)
+       character(len = STR_LEN):: this
+       <%=type%>, intent(in):: x
+       integer:: n
+       write(this, *) x
+       this = trim(adjustl(this))
+    end function str<%=prop[:suf]%>
+  <%}%>
+end module lib_character
