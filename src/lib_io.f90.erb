@@ -36,7 +36,7 @@ module lib_io
   private
   public:: VERSION, ARRAY_EXT, META_EXT, LEN_NAME_MAX
   public:: newunit, write_array, read_array
-  integer, parameter:: VERSION = 1
+  integer, parameter:: VERSION = 1 ! File format's compatibility.
   integer, parameter:: LEN_NAME_MAX = 1024
   character(len = *), parameter:: ARRAY_EXT = '.array'
   character(len = *), parameter:: META_EXT = '.meta'
