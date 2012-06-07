@@ -39,9 +39,10 @@ module lib_io
 
   implicit none
   private
-  public:: VERSION, ARRAY_EXT, META_EXT
+  public:: VERSION, ARRAY_EXT, META_EXT, LEN_NAME_MAX
   public:: newunit, write_array, read_array
   integer, parameter:: VERSION = 1
+  integer, parameter:: LEN_NAME_MAX = 1024
   character(len = *), parameter:: ARRAY_EXT = '.array'
   character(len = *), parameter:: META_EXT = '.meta'
 
@@ -83,14 +84,17 @@ contains
           <% if num_desc >= 1 %>
             character(len = *), intent(in):: <%= list(num_desc){|i| "desc#{i}"} %>
           <% end %>
-          integer:: wU1
 
-          call write_array_meta(arrayName // ARRAY_EXT, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
+          integer:: wU1
+          character(len = LEN_NAME_MAX):: arrayFileName
+
+          arrayFileName = trim(arrayName) // ARRAY_EXT
+          call write_array_meta(trim(arrayFileName), A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
 #ifdef NEWUNIT_AVAILABLE
-          open(newunit = wU1, file = arrayName // ARRAY_EXT, status = 'replace', action = 'write', form = 'unformatted')
+          open(newunit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
 #else
           call newunit(wU1)
-          open(unit = wU1, file = arrayName // ARRAY_EXT, status = 'replace', action = 'write', form = 'unformatted')
+          open(unit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
 #endif
           write(wU1) A
           close(wU1)
@@ -109,14 +113,17 @@ contains
           integer:: sizes(1:1)
           integer:: i
           integer:: wU1
+          character(len = LEN_NAME_MAX):: arrayMetaFileName
 
           forall(i = 1:dim) sizes(i) = size(A, i)
 
+          arrayMetaFileName = trim(arrayFileName) // META_EXT
+
 #if NEWUNIT_AVAILABLE
-          open(newunit = wU1, file = arrayFileName // META_EXT, status = 'replace', action = 'write')
+          open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #else
           call newunit(wU1)
-          open(unit = wU1, file = arrayFileName // META_EXT, status = 'replace', action = 'write')
+          open(unit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #endif
           write(wU1, *) VERSION
           write(wU1, *) dataType
@@ -141,15 +148,19 @@ contains
       subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, A)
         character(len = *), intent(in):: arrayName
         <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
-        integer:: rU1
 
-        call read_array_meta(arrayName // ARRAY_EXT, A)
+        integer:: rU1
+        character(len = LEN_NAME_MAX):: arrayFileName
+
+        arrayFileName = trim(arrayName) // ARRAY_EXT
+
+        call read_array_meta(arrayFileName, A)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = arrayName // ARRAY_EXT, status = 'old', action = 'read', form = 'unformatted')
+        open(newunit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
 #else
         call newunit(rU1)
-        open(unit = rU1, file = arrayName // ARRAY_EXT, status = 'old', action = 'read', form = 'unformatted')
+        open(unit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
 #endif
         read(rU1) A
         close(rU1)
@@ -169,29 +180,32 @@ contains
         integer:: sizes(1:dim)
         integer:: i
         integer:: rU1
+        character(len = LEN_NAME_MAX):: arrayMetaFileName
+
+        arrayMetaFileName = trim(arrayFileName) // META_EXT
 
 #if NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = arrayFileName // META_EXT, status = 'old', action = 'read')
+        open(newunit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
 #else
         call newunit(rU1)
-        open(unit = rU1, file = arrayFileName // META_EXT, status = 'old', action = 'read')
+        open(unit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
 #endif
 
         read(rU1, *) versionIn
         if(versionIn /= VERSION)then
-          write(0, *) 'Versions of ', arrayFileName // META_EXT, ' and current library differ: ', versionIn, ' and ', VERSION
+          write(0, *) 'Versions of ', trim(arrayMetaFileName), ' and current library differ: ', versionIn, ' and ', VERSION
           stop 1
         end if
 
         read(rU1, *) dataTypeIn
         if(dataTypeIn /= dataType)then
-          write(0, *) 'Data type mismatch in ', arrayFileName // META_EXT, '. Expected ', dataType, ' but got ', trim(dataTypeIn)
+          write(0, *) 'Data type mismatch in ', trim(arrayMetaFileName), '. Expected ', dataType, ' but got ', trim(dataTypeIn)
           stop 1
         end if
 
         read(rU1, *) dimIn
         if(dimIn /= dim)then
-          write(0, *) 'Dimension mismatch in ', arrayFileName // META_EXT, '. Expected ', dim, ' but got ', dimIn
+          write(0, *) 'Dimension mismatch in ', trim(arrayMetaFileName), '. Expected ', dim, ' but got ', dimIn
           stop 1
         end if
 
