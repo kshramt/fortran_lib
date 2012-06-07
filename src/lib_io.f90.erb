@@ -92,8 +92,8 @@ contains
         write(wU1) A
         close(wU1)
 
-#if NEWUNIT_AVAILABLE
         arrayMetaFileName = trim(arrayFileName) // META_EXT
+#ifdef NEWUNIT_AVAILABLE
         open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #else
         call newunit(wU1)
@@ -160,7 +160,7 @@ contains
 
         arrayMetaFileName = trim(arrayFileName) // META_EXT
 
-#if NEWUNIT_AVAILABLE
+#ifdef NEWUNIT_AVAILABLE
         open(newunit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
 #else
         call newunit(rU1)
