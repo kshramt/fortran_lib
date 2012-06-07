@@ -13,11 +13,6 @@
   DIM_RANGE = (1..DIM_MAX)
 
   NUM_DESC_MAX = 10
-  DESC_RANGE = (0..NUM_DESC_MAX)
-
-  def suffix(type, dim, num_desc)
-    "#{type.fort_suf}_#{dim}_desc#{num_desc}"
-  end
 
   def list(n, str = ', ', &block)
     (1..n).map(&block).join(str)
@@ -54,15 +49,10 @@ module lib_io
 
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
-      <% DESC_RANGE.each{|num_desc| %>
-        interface write_array
-          module procedure write_array<%= suffix(type, dim, num_desc) %>
-        end interface write_array
+      interface write_array
+        module procedure write_array<%= type.fort_suf %>_<%= dim %>
+      end interface write_array
 
-        interface write_array_meta
-          module procedure write_array_meta<%= suffix(type, dim, num_desc) %>
-        end interface write_array_meta
-      <% } %>
       interface read_array
         module procedure read_array<%= type.fort_suf %>_<%= dim %>
       end interface read_array
@@ -77,73 +67,59 @@ contains
 
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
-      <% DESC_RANGE.each{|num_desc| %>
-        subroutine write_array<%= suffix(type, dim, num_desc) %>(arrayName, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
-          character(len = *), intent(in):: arrayName
-          <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
-          <% if num_desc >= 1 %>
-            character(len = *), intent(in):: <%= list(num_desc){|i| "desc#{i}"} %>
-          <% end %>
+      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, A<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+        character(len = *), intent(in):: arrayName
+        <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
+        <% if NUM_DESC_MAX >= 1 %>
+          character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
+        <% end %>
 
-          integer:: wU1
-          character(len = LEN_NAME_MAX):: arrayFileName
+        character(len = *), parameter:: dataType = '<%= type %>'
+        integer, parameter:: dim = <%= dim %>
 
-          arrayFileName = trim(arrayName) // ARRAY_EXT
-          call write_array_meta(trim(arrayFileName), A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
+        integer:: sizes(1:dim)
+        integer:: wU1
+        integer:: i
+        character(len = LEN_NAME_MAX):: arrayFileName, arrayMetaFileName
+
+        arrayFileName = trim(arrayName) // ARRAY_EXT
 #ifdef NEWUNIT_AVAILABLE
-          open(newunit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
+        open(newunit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
 #else
-          call newunit(wU1)
-          open(unit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
+        call newunit(wU1)
+        open(unit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
 #endif
-          write(wU1) A
-          close(wU1)
-        end subroutine write_array<%= suffix(type, dim, num_desc) %>
-
-        subroutine write_array_meta<%= suffix(type, dim, num_desc) %>(arrayFileName, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
-          character(len = *), intent(in):: arrayFileName
-          <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
-          <% if num_desc >= 1 %>
-            character(len = *):: <%= list(num_desc){|i| "desc#{i}"} %>
-          <% end %>
-
-          character(len = *), parameter:: dataType = '<%= type %>'
-          integer, parameter:: dim = <%= dim %>
-
-          integer:: sizes(1:1)
-          integer:: i
-          integer:: wU1
-          character(len = LEN_NAME_MAX):: arrayMetaFileName
-
-          forall(i = 1:dim) sizes(i) = size(A, i)
-
-          arrayMetaFileName = trim(arrayFileName) // META_EXT
+        write(wU1) A
+        close(wU1)
 
 #if NEWUNIT_AVAILABLE
-          open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
+        arrayMetaFileName = trim(arrayFileName) // META_EXT
+        open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #else
-          call newunit(wU1)
-          open(unit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
+        call newunit(wU1)
+        open(unit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #endif
-          write(wU1, *) VERSION
-          write(wU1, *) dataType
-          write(wU1, *) dim
-          write(wU1, *) (sizes(i), i = 1, dim)
-          <% (1..num_desc).each{|i| %>
-            write(wU1, *) desc<%= i %>
-          <% } %>
 
-          write(wU1, *)
-          write(wU1, *) 'VERSION'
-          write(wU1, *) 'dataType'
-          write(wU1, *) 'dim'
-          write(wU1, *) 'sizes'
-          <% (1..num_desc).each{|i| %>
-            write(wU1, *) 'desc<%= i %>'
-          <% } %>
-          close(wU1)
-        end subroutine write_array_meta<%= suffix(type, dim, num_desc) %>
-      <% } %>
+        forall(i = 1:dim) sizes(i) = size(A, i)
+
+        write(wU1, *) VERSION
+        write(wU1, *) dataType
+        write(wU1, *) dim
+        write(wU1, *) (sizes(i), i = 1, dim)
+        <% (1..NUM_DESC_MAX).each{|i| %>
+          if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
+        <% } %>
+
+        write(wU1, *)
+        write(wU1, *) 'VERSION'
+        write(wU1, *) 'dataType'
+        write(wU1, *) 'dim'
+        write(wU1, *) 'sizes'
+        <% (1..NUM_DESC_MAX).each{|i| %>
+          if(present(desc<%= i %>)) write(wU1, *) 'desc<%= i %>'
+        <% } %>
+        close(wU1)
+      end subroutine write_array<%= type.fort_suf %>_<%= dim %>
 
       subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, A)
         character(len = *), intent(in):: arrayName
