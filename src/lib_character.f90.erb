@@ -1,12 +1,21 @@
 <%
-  PROP = {
-    'integer' => {suf: '_i'},
-    'real' => {suf: '_r'},
-    'double precision' => {suf: '_d'},
-    'complex' => {suf: '_cx'},
-    'double complex' => {suf: '_dcx'},
-    'logical' => {suf: '_l'},
-  }
+  TYPES = [
+    'integer',
+    'integer(8)',
+    'real',
+    'double precision',
+    'complex',
+    'complex(kind(0.0d0))',
+    'logical',
+  ]
+
+  class String
+    def fort_suf
+      work = self.gsub(/[^\w]/, '_')
+      work = 'type_' + work unless work[0] =~ /[A-Za-z]/
+      '_' + work
+    end
+  end
 %>
 module lib_character
   implicit none
@@ -15,20 +24,20 @@ module lib_character
   integer, parameter:: STR_LEN = 256
 
   interface str
-    <%PROP.each{|type, prop|%>
-      module procedure str<%=prop[:suf]%>
-    <%}%>
+    <% TYPES.each{|type| %>
+      module procedure str<%= type.fort_suf %>
+    <% } %>
   end interface
   
 contains
 
-  <%PROP.each{|type, prop|%>
-    elemental function str<%=prop[:suf]%>(x) result(this)
+  <% TYPES.each{|type| %>
+    elemental function str<%= type.fort_suf %>(x) result(this)
        character(len = STR_LEN):: this
-       <%=type%>, intent(in):: x
+       <%= type %>, intent(in):: x
        integer:: n
        write(this, *) x
        this = trim(adjustl(this))
-    end function str<%=prop[:suf]%>
-  <%}%>
+    end function str<%= type.fort_suf %>
+  <% } %>
 end module lib_character
