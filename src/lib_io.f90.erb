@@ -1,0 +1,228 @@
+<%
+  TYPES = [
+    'integer',
+    'integer(8)',
+    'real',
+    'double precision',
+    'complex',
+    'complex(kind(0.0d0))',
+    'logical',
+  ]
+
+  DIM_MAX = 7
+  DIM_RANGE = (1..DIM_MAX)
+
+  NUM_DESC_MAX = 10
+  DESC_RANGE = (0..NUM_DESC_MAX)
+
+  def suffix(type, dim, num_desc)
+    "#{type.fort_suf}_#{dim}_desc#{num_desc}"
+  end
+
+  def list(n, str = ', ', &block)
+    (1..n).map(&block).join(str)
+  end
+
+  class String
+    def fort_suf
+      work = self.gsub(/[^\w]/, '_')
+      work = 'type_' + work unless work[0] =~ /[A-Za-z]/
+      '_' + work
+    end
+  end
+%>
+
+#include "./env.h"
+
+module lib_io
+  use iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+
+  implicit none
+  private
+  public:: VERSION, ARRAY_EXT, META_EXT
+  public:: newunit, write_array, read_array
+  integer, parameter:: VERSION = 1
+  character(len = *), parameter:: ARRAY_EXT = '.array'
+  character(len = *), parameter:: META_EXT = '.meta'
+
+  interface newunit
+    <% ['integer', 'integer(8)'].each{|type| %>
+      module procedure newunit<%= type.fort_suf %>
+    <% } %>
+  end interface newunit
+
+  <% TYPES.each{|type| %>
+    <% DIM_RANGE.each{|dim| %>
+      <% DESC_RANGE.each{|num_desc| %>
+        interface write_array
+          module procedure write_array<%= suffix(type, dim, num_desc) %>
+        end interface write_array
+
+        interface write_array_meta
+          module procedure write_array_meta<%= suffix(type, dim, num_desc) %>
+        end interface write_array_meta
+      <% } %>
+      interface read_array
+        module procedure read_array<%= type.fort_suf %>_<%= dim %>
+      end interface read_array
+
+      interface read_array_meta
+        module procedure read_array_meta<%= type.fort_suf %>_<%= dim %>
+      end interface read_array_meta
+    <% } %>
+  <% } %>
+
+contains
+
+  <% TYPES.each{|type| %>
+    <% DIM_RANGE.each{|dim| %>
+      <% DESC_RANGE.each{|num_desc| %>
+        subroutine write_array<%= suffix(type, dim, num_desc) %>(arrayName, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
+          character(len = *), intent(in):: arrayName
+          <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
+          <% if num_desc >= 1 %>
+            character(len = *), intent(in):: <%= list(num_desc){|i| "desc#{i}"} %>
+          <% end %>
+          integer:: wU1
+
+          call write_array_meta(arrayName // ARRAY_EXT, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
+#ifdef NEWUNIT_AVAILABLE
+          open(newunit = wU1, file = arrayName // ARRAY_EXT, status = 'replace', action = 'write', form = 'unformatted')
+#else
+          call newunit(wU1)
+          open(unit = wU1, file = arrayName // ARRAY_EXT, status = 'replace', action = 'write', form = 'unformatted')
+#endif
+          write(wU1) A
+          close(wU1)
+        end subroutine write_array<%= suffix(type, dim, num_desc) %>
+
+        subroutine write_array_meta<%= suffix(type, dim, num_desc) %>(arrayFileName, A<%= list(num_desc, ''){|i| ", desc#{i}"} %>)
+          character(len = *), intent(in):: arrayFileName
+          <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
+          <% if num_desc >= 1 %>
+            character(len = *):: <%= list(num_desc){|i| "desc#{i}"} %>
+          <% end %>
+
+          character(len = *), parameter:: dataType = '<%= type %>'
+          integer, parameter:: dim = <%= dim %>
+
+          integer:: sizes(1:1)
+          integer:: i
+          integer:: wU1
+
+          forall(i = 1:dim) sizes(i) = size(A, i)
+
+#if NEWUNIT_AVAILABLE
+          open(newunit = wU1, file = arrayFileName // META_EXT, status = 'replace', action = 'write')
+#else
+          call newunit(wU1)
+          open(unit = wU1, file = arrayFileName // META_EXT, status = 'replace', action = 'write')
+#endif
+          write(wU1, *) VERSION
+          write(wU1, *) dataType
+          write(wU1, *) dim
+          write(wU1, *) (sizes(i), i = 1, dim)
+          <% (1..num_desc).each{|i| %>
+            write(wU1, *) desc<%= i %>
+          <% } %>
+
+          write(wU1, *)
+          write(wU1, *) 'VERSION'
+          write(wU1, *) 'dataType'
+          write(wU1, *) 'dim'
+          write(wU1, *) 'sizes'
+          <% (1..num_desc).each{|i| %>
+            write(wU1, *) 'desc<%= i %>'
+          <% } %>
+          close(wU1)
+        end subroutine write_array_meta<%= suffix(type, dim, num_desc) %>
+      <% } %>
+
+      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, A)
+        character(len = *), intent(in):: arrayName
+        <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
+        integer:: rU1
+
+        call read_array_meta(arrayName // ARRAY_EXT, A)
+
+#ifdef NEWUNIT_AVAILABLE
+        open(newunit = rU1, file = arrayName // ARRAY_EXT, status = 'old', action = 'read', form = 'unformatted')
+#else
+        call newunit(rU1)
+        open(unit = rU1, file = arrayName // ARRAY_EXT, status = 'old', action = 'read', form = 'unformatted')
+#endif
+        read(rU1) A
+        close(rU1)
+      end subroutine read_array<%= type.fort_suf %>_<%= dim %>
+
+      subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>(arrayFileName, A)
+        character(len = *), intent(in):: arrayFileName
+        <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
+
+        character(len = *), parameter:: dataType = '<%= type %>'
+        integer, parameter:: dim = <%= dim %>
+
+        <% # Use .max to get nice error message.  %>
+        character(len = <%= TYPES.map{|type| type.size}.max %>):: dataTypeIn
+        integer:: versionIn
+        integer:: dimIn
+        integer:: sizes(1:dim)
+        integer:: i
+        integer:: rU1
+
+#if NEWUNIT_AVAILABLE
+        open(newunit = rU1, file = arrayFileName // META_EXT, status = 'old', action = 'read')
+#else
+        call newunit(rU1)
+        open(unit = rU1, file = arrayFileName // META_EXT, status = 'old', action = 'read')
+#endif
+
+        read(rU1, *) versionIn
+        if(versionIn /= VERSION)then
+          write(0, *) 'Versions of ', arrayFileName // META_EXT, ' and current library differ: ', versionIn, ' and ', VERSION
+          stop 1
+        end if
+
+        read(rU1, *) dataTypeIn
+        if(dataTypeIn /= dataType)then
+          write(0, *) 'Data type mismatch in ', arrayFileName // META_EXT, '. Expected ', dataType, ' but got ', trim(dataTypeIn)
+          stop 1
+        end if
+
+        read(rU1, *) dimIn
+        if(dimIn /= dim)then
+          write(0, *) 'Dimension mismatch in ', arrayFileName // META_EXT, '. Expected ', dim, ' but got ', dimIn
+          stop 1
+        end if
+
+        read(rU1, *) (sizes(i), i = 1, dim)
+
+        close(rU1)
+
+        allocate(A(<%= list(dim){|i| "1:sizes(#{i})"} %>))
+      end subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>
+    <% } %>
+  <% } %>
+
+
+  <% ['integer', 'integer(8)'].each{|type| %>
+    subroutine newunit<%= type.fort_suf %>(n)
+      <%= type %>, intent(out):: n
+      <%= type %>:: i, unitMin, unitMax
+      logical:: isOpened
+
+      unitMin = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT)
+      unitMax = huge(n)
+      do i = unitMin, unitMax
+        inquire(unit = i, opened = isOpened)
+        if(.not.(isOpened))then
+          n = i
+          return
+        end if
+      end do
+
+      write(0, *) "Unit numbers between ", unitMin, unitMax, " are not available."
+      stop 1
+    end subroutine newunit<%= type.fort_suf %>
+  <% } %>
+end module lib_io
