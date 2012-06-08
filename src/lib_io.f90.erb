@@ -20,9 +20,9 @@
 
   class String
     def fort_suf
-      work = self.gsub(/[^\w]/, '_')
-      work = 'type_' + work unless work[0] =~ /[A-Za-z]/
-      '_' + work
+      buf = self.gsub(/[^\w]/, '_')
+      buf = 'type_' + buf unless buf[0] =~ /[A-Za-z]/
+      '_' + buf
     end
   end
 %>
