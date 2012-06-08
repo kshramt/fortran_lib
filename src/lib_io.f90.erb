@@ -106,17 +106,16 @@ contains
         write(wU1, *) dataType
         write(wU1, *) dim
         write(wU1, *) (sizes(i), i = 1, dim)
-        <% (1..NUM_DESC_MAX).each{|i| %>
-          if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
-        <% } %>
 
         write(wU1, *)
         write(wU1, *) 'VERSION'
         write(wU1, *) 'dataType'
         write(wU1, *) 'dim'
         write(wU1, *) 'sizes'
+
+        write(wU1, *)
         <% (1..NUM_DESC_MAX).each{|i| %>
-          if(present(desc<%= i %>)) write(wU1, *) 'desc<%= i %>'
+          if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
         <% } %>
         close(wU1)
       end subroutine write_array<%= type.fort_suf %>_<%= dim %>
