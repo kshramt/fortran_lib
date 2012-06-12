@@ -201,7 +201,7 @@ contains
       logical:: isOpened
 
       unitMin = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT)
-      unitMax = huge(n)
+      unitMax = huge(0)
       do i = unitMin, unitMax
         inquire(unit = i, opened = isOpened)
         if(.not.(isOpened))then
