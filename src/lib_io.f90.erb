@@ -149,7 +149,7 @@ contains
         integer, parameter:: dim = <%= dim %>
 
         <% # Use .max to get nice error message.  %>
-        character(len = <%= TYPES.map{|type| type.size}.max %>):: dataTypeIn
+        character(len = <%= TYPES.map(&:size).max %>):: dataTypeIn
         integer:: versionIn
         integer:: dimIn
         integer:: sizes(1:dim)
