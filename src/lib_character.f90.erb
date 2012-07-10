@@ -20,23 +20,31 @@
 module lib_character
   implicit none
   private
-  public:: str, STR_LEN
-  integer, parameter:: STR_LEN = 256
+  public:: s, str, STR_LEN, TAB, NEW_LINE
+  integer,   parameter:: STR_LEN  = 256
+  character, parameter:: TAB      = char(9)
+  character, parameter:: NEW_LINE = new_line('_')
 
   interface str
     <% TYPES.each{|type| %>
       module procedure str<%= type.fort_suf %>
     <% } %>
   end interface
-  
+
 contains
 
+  function s(str) result(this)
+    character(len = *), intent(in):: str
+    character(len = len_trim(adjustl(str))):: this
+    this = trim(adjustl(str))
+  end function s
+
   <% TYPES.each{|type| %>
-    elemental function str<%= type.fort_suf %>(x) result(this)
+    function str<%= type.fort_suf %>(x) result(this)
        character(len = STR_LEN):: this
        <%= type %>, intent(in):: x
        write(this, *) x
-       this = trim(adjustl(this))
+       this = s(this)
     end function str<%= type.fort_suf %>
   <% } %>
 end module lib_character

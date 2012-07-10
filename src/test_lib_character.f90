@@ -11,5 +11,6 @@ program test_lib_character
   print*, trim(str((3.0, 4.0d0)))
   print*, trim(str(.true.))
   print*, trim(str(.false.))
+  print*, '@' // s(" abc d  ") // '@'
   stop
 end program test_lib_character
