@@ -29,19 +29,27 @@
 
 #include "./env.h"
 
+! AUTHOR = 'Kasahara Amato'
 module lib_io
-  use iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+  use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+  use lib_character, only: TAB
 
   implicit none
+
   private
-  public:: VERSION, ARRAY_EXT, META_EXT, LEN_NAME_MAX
-  integer, parameter:: VERSION = 1 ! File format's compatibility.
-  integer, parameter:: LEN_NAME_MAX = 1024
-  character(len = *), parameter:: ARRAY_EXT = '.array'
-  character(len = *), parameter:: META_EXT = '.meta'
+  public:: LIB_IO_VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, LEN_NAME_MAX
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
+
+  integer, parameter:: LIB_IO_VERSION = 2 ! Array file format's compatibility.
+  integer, parameter:: LEN_NAME_MAX = 1024
+  integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
+  integer, parameter:: NEW_UNIT_MAX = huge(0)
+  character(len = *), parameter:: ARRAY_DIR_EXT = '.array'
+  character(len = *), parameter:: ARRAY_DATA_FILE = 'data.dat'
+  character(len = *), parameter:: ARRAY_META_FILE = 'meta.dat'
+  character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
 
   interface new_unit
     <% ['integer', 'integer(8)'].each{|type| %>
@@ -142,6 +150,7 @@ contains
 
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
+      ! @desc Store array A into arrayName.array and its metadata into arrayName.array.meta.
       subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, A<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
         character(len = *), intent(in):: arrayName
         <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
@@ -155,35 +164,48 @@ contains
         integer:: sizes(1:dim)
         integer:: wU1
         integer:: i
-        character(len = LEN_NAME_MAX):: arrayFileName, arrayMetaFileName
+        integer:: exitStatus
+        character(len = LEN_NAME_MAX):: arrayDir
 
-        arrayFileName = trim(arrayName) // ARRAY_EXT
+        arrayDir = trim(arrayName) // ARRAY_DIR_EXT // '/'
+        call execute_command_line("mkdir -p "//trim(arrayDir), exitstat = exitStatus)
+        if(exitStatus /= 0)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, "Execute_command_line failed."
+          stop 1
+        end if
+
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
+        open(newunit = wU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
 #else
-        open(unit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
         call new_unit(wU1)
+        open(unit = wU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+#endif
+        write(wU1, *) LIB_IO_VERSION
+        close(wU1)
+
+#ifdef NEWUNIT_AVAILABLE
+        open(newunit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
+#else
+        call new_unit(wU1)
+        open(unit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
 #endif
         write(wU1) A
         close(wU1)
 
-        arrayMetaFileName = trim(arrayFileName) // META_EXT
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
+        open(newunit = wU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
 #else
-        open(unit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
         call new_unit(wU1)
+        open(unit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write')
 #endif
 
         forall(i = 1:dim) sizes(i) = size(A, i)
 
-        write(wU1, *) VERSION
         write(wU1, *) dataType
         write(wU1, *) dim
         write(wU1, *) (sizes(i), i = 1, dim)
 
         write(wU1, *)
-        write(wU1, *) 'VERSION'
         write(wU1, *) 'dataType'
         write(wU1, *) 'dim'
         write(wU1, *) 'sizes'
@@ -200,24 +222,24 @@ contains
         <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
 
         integer:: rU1
-        character(len = LEN_NAME_MAX):: arrayFileName
+        character(len = LEN_NAME_MAX):: arrayDir
 
-        arrayFileName = trim(arrayName) // ARRAY_EXT
+        arrayDir = trim(arrayName) // ARRAY_DIR_EXT // '/'
 
-        call read_array_meta(arrayFileName, A)
+        call read_array_meta(arrayDir, A)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
+        open(newunit = rU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
 #else
-        open(unit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
         call new_unit(rU1)
+        open(unit = rU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
 #endif
         read(rU1) A
         close(rU1)
       end subroutine read_array<%= type.fort_suf %>_<%= dim %>
 
-      subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>(arrayFileName, A)
-        character(len = *), intent(in):: arrayFileName
+      subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>(arrayDir, A)
+        character(len = *), intent(in):: arrayDir
         <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
 
         character(len = *), parameter:: dataType = '<%= type %>'
@@ -225,37 +247,43 @@ contains
 
         <% # Use .max to get nice error message.  %>
         character(len = <%= TYPES.map(&:size).max %>):: dataTypeIn
-        integer:: versionIn
+        integer:: libIoVersionIn
         integer:: dimIn
         integer:: sizes(1:dim)
         integer:: i
         integer:: rU1
-        character(len = LEN_NAME_MAX):: arrayMetaFileName
-
-        arrayMetaFileName = trim(arrayFileName) // META_EXT
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
+        open(newunit = rU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
 #else
-        open(unit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
         call new_unit(rU1)
+        open(unit = rU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
 #endif
 
-        read(rU1, *) versionIn
-        if(versionIn /= VERSION)then
-          write(0, *) 'Versions of ', trim(arrayMetaFileName), ' and current library differ: ', versionIn, ' and ', VERSION
+        read(rU1, *) libIoVersionIn
+        if(libIoVersionIn /= LIB_IO_VERSION)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', trim(arrayDir), ' and current library differ: ', libIoVersionIn, ' and ', LIB_IO_VERSION
           stop 1
         end if
 
+        close(rU1)
+
+#ifdef NEWUNIT_AVAILABLE
+        open(newunit = rU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
+#else
+        call new_unit(rU1)
+        open(unit = rU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
+#endif
+
         read(rU1, *) dataTypeIn
         if(dataTypeIn /= dataType)then
-          write(0, *) 'Data type mismatch in ', trim(arrayMetaFileName), '. Expected ', dataType, ' but got ', trim(dataTypeIn)
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', trim(arrayDir), '. Expected ', dataType, ' but got ', trim(dataTypeIn)
           stop 1
         end if
 
         read(rU1, *) dimIn
         if(dimIn /= dim)then
-          write(0, *) 'Dimension mismatch in ', trim(arrayMetaFileName), '. Expected ', dim, ' but got ', dimIn
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', trim(arrayDir), '. Expected ', dim, ' but got ', dimIn
           stop 1
         end if
 
@@ -263,6 +291,7 @@ contains
 
         close(rU1)
 
+        if(allocated(A)) deallocate(A)
         allocate(A(<%= list(dim){|i| "1:sizes(#{i})"} %>))
       end subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>
     <% } %>
@@ -272,12 +301,10 @@ contains
   <% ['integer', 'integer(8)'].each{|type| %>
     subroutine new_unit<%= type.fort_suf %>(n)
       <%= type %>, intent(out):: n
-      <%= type %>:: i, unitMin, unitMax
+      <%= type %>:: i
       logical:: isOpened
 
-      unitMin = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT)
-      unitMax = huge(0)
-      do i = unitMin, unitMax
+      do i = NEW_UNIT_MIN, NEW_UNIT_MAX
         inquire(unit = i, opened = isOpened)
         if(.not.(isOpened))then
           n = i
@@ -285,7 +312,7 @@ contains
         end if
       end do
 
-      write(0, *) "Unit numbers between ", unitMin, unitMax, " are not available."
+      write(ERROR_UNIT, *) __FILE__, __LINE__, "Unit numbers between ",  NEW_UNIT_MIN, NEW_UNIT_MAX, " are not available."
       stop 1
     end subroutine new_unit<%= type.fort_suf %>
   <% } %>
