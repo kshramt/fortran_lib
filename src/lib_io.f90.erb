@@ -32,7 +32,7 @@
 ! AUTHOR = 'Kasahara Amato'
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
-  use lib_character, only: TAB
+  use lib_character, only: TAB, s
   use lib_system, only: mkdir_p
 
   implicit none
@@ -168,32 +168,32 @@ contains
         integer:: exitStatus
         character(len = LEN_NAME_MAX):: arrayDir
 
-        arrayDir = trim(arrayName) // ARRAY_DIR_EXT // '/'
+        arrayDir = s(arrayName) // ARRAY_DIR_EXT // '/'
         call mkdir_p(s(arrayDir))
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = wU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+        open(newunit = wU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
 #else
         call new_unit(wU1)
-        open(unit = wU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+        open(unit = wU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
 #endif
         write(wU1, *) LIB_IO_VERSION
         close(wU1)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
+        open(newunit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
 #else
         call new_unit(wU1)
-        open(unit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
+        open(unit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
 #endif
         write(wU1) A
         close(wU1)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = wU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
+        open(newunit = wU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
 #else
         call new_unit(wU1)
-        open(unit = wU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write')
+        open(unit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write')
 #endif
 
         forall(i = 1:dim) sizes(i) = size(A, i)
@@ -221,15 +221,15 @@ contains
         integer:: rU1
         character(len = LEN_NAME_MAX):: arrayDir
 
-        arrayDir = trim(arrayName) // ARRAY_DIR_EXT // '/'
+        arrayDir = s(arrayName) // ARRAY_DIR_EXT // '/'
 
         call read_array_meta(arrayDir, A)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+        open(newunit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
 #else
         call new_unit(rU1)
-        open(unit = rU1, file = trim(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+        open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
 #endif
         read(rU1) A
         close(rU1)
@@ -251,36 +251,36 @@ contains
         integer:: rU1
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
+        open(newunit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
 #else
         call new_unit(rU1)
-        open(unit = rU1, file = trim(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
+        open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
 #endif
 
         read(rU1, *) libIoVersionIn
         if(libIoVersionIn /= LIB_IO_VERSION)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', trim(arrayDir), ' and current library differ: ', libIoVersionIn, ' and ', LIB_IO_VERSION
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersionIn, ' and ', LIB_IO_VERSION
           stop 1
         end if
 
         close(rU1)
 
 #ifdef NEWUNIT_AVAILABLE
-        open(newunit = rU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
+        open(newunit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
 #else
         call new_unit(rU1)
-        open(unit = rU1, file = trim(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
+        open(unit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
 #endif
 
         read(rU1, *) dataTypeIn
         if(dataTypeIn /= dataType)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', trim(arrayDir), '. Expected ', dataType, ' but got ', trim(dataTypeIn)
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', s(arrayDir), '. Expected ', dataType, ' but got ', s(dataTypeIn)
           stop 1
         end if
 
         read(rU1, *) dimIn
         if(dimIn /= dim)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', trim(arrayDir), '. Expected ', dim, ' but got ', dimIn
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', s(arrayDir), '. Expected ', dim, ' but got ', dimIn
           stop 1
         end if
 
