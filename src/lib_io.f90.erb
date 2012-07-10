@@ -36,7 +36,7 @@ module lib_io
   implicit none
 
   private
-  public:: LIB_IO_VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, LEN_NAME_MAX
+  public:: LIB_IO_VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE, LEN_NAME_MAX
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
@@ -49,6 +49,7 @@ module lib_io
   character(len = *), parameter:: ARRAY_DATA_FILE = 'data.dat'
   character(len = *), parameter:: ARRAY_META_FILE = 'meta.dat'
   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
+  character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.dat'
 
   interface new_unit
     <% ['integer', 'integer(8)'].each{|type| %>
@@ -157,14 +158,18 @@ contains
           character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
         <% end %>
 
-        character(len = *), parameter:: dataType = '<%= type %>'
-        integer, parameter:: dim = <%= dim %>
+        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
+        integer, parameter:: DIM_FOR_SELF = <%= dim %>
 
-        integer:: sizes(1:dim)
+        character(len = len(DATA_TYPE_FOR_SELF)) dataType
+        integer:: dim
+        integer:: sizes(1:DIM_FOR_SELF)
         integer:: wU1
         integer:: i
         integer:: exitStatus
         character(len = LEN_NAME_MAX):: arrayDir
+
+        namelist /array_meta/ dataType, dim, sizes
 
         arrayDir = s(arrayName) // ARRAY_DIR_EXT // '/'
         call mkdir_p(s(arrayDir))
@@ -179,20 +184,15 @@ contains
         write(wU1) A
         close(wU1)
 
-        call new_unit(wU1)
-        open(unit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write')
+        dataType = DATA_TYPE_FOR_SELF
+        dim = DIM_FOR_SELF
         forall(i = 1:dim) sizes(i) = size(A, i)
+        call new_unit(wU1)
+        open(unit = wU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
+        write(wU1, nml = array_meta)
+        close(wU1)
 
-        write(wU1, *) dataType
-        write(wU1, *) dim
-        write(wU1, *) (sizes(i), i = 1, dim)
-
-        write(wU1, *)
-        write(wU1, *) 'dataType'
-        write(wU1, *) 'dim'
-        write(wU1, *) 'sizes'
-
-        write(wU1, *)
+        open(unit = wU1, file = s(arrayDir) // ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
         <% (1..NUM_DESC_MAX).each{|i| %>
           if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
         <% } %>
@@ -220,43 +220,41 @@ contains
         character(len = *), intent(in):: arrayDir
         <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
 
-        character(len = *), parameter:: dataType = '<%= type %>'
-        integer, parameter:: dim = <%= dim %>
+        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
+        integer, parameter:: DIM_FOR_SELF = <%= dim %>
 
         <% # Use .max to get nice error message.  %>
-        character(len = <%= TYPES.map(&:size).max %>):: dataTypeIn
-        integer:: libIoVersionIn
-        integer:: dimIn
-        integer:: sizes(1:dim)
+        character(len = <%= TYPES.map(&:size).max %>):: dataType
+        integer:: libIoVersion
+        integer:: dim
+        integer:: sizes(1:DIM_FOR_SELF)
         integer:: i
         integer:: rU1
 
+        namelist /array_meta/ dataType, dim, sizes
+
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
-        read(rU1, *) libIoVersionIn
-        if(libIoVersionIn /= LIB_IO_VERSION)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersionIn, ' and ', LIB_IO_VERSION
+        read(rU1, *) libIoVersion
+        if(libIoVersion /= LIB_IO_VERSION)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersion, ' and ', LIB_IO_VERSION
           stop 1
         end if
-
         close(rU1)
 
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
+        read(rU1, nml = array_meta)
 
-        read(rU1, *) dataTypeIn
-        if(dataTypeIn /= dataType)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', s(arrayDir), '. Expected ', dataType, ' but got ', s(dataTypeIn)
+        if(dataType /= DATA_TYPE_FOR_SELF)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', s(arrayDir), '. Expected ', DATA_TYPE_FOR_SELF, ' but got ', s(dataType)
           stop 1
         end if
 
-        read(rU1, *) dimIn
-        if(dimIn /= dim)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', s(arrayDir), '. Expected ', dim, ' but got ', dimIn
+        if(dim /= DIM_FOR_SELF)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', s(arrayDir), '. Expected ', DIM_FOR_SELF, ' but got ', dim
           stop 1
         end if
-
-        read(rU1, *) (sizes(i), i = 1, dim)
 
         close(rU1)
 
