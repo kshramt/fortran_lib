@@ -35,17 +35,18 @@ module lib_io
   implicit none
   private
   public:: VERSION, ARRAY_EXT, META_EXT, LEN_NAME_MAX
-  public:: newunit, write_array, read_array
   integer, parameter:: VERSION = 1 ! File format's compatibility.
   integer, parameter:: LEN_NAME_MAX = 1024
   character(len = *), parameter:: ARRAY_EXT = '.array'
   character(len = *), parameter:: META_EXT = '.meta'
+  public:: new_unit
+  public:: write_array, read_array
 
-  interface newunit
+  interface new_unit
     <% ['integer', 'integer(8)'].each{|type| %>
-      module procedure newunit<%= type.fort_suf %>
+      module procedure new_unit<%= type.fort_suf %>
     <% } %>
-  end interface newunit
+  end interface new_unit
 
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
@@ -86,8 +87,8 @@ contains
 #ifdef NEWUNIT_AVAILABLE
         open(newunit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
 #else
-        call newunit(wU1)
         open(unit = wU1, file = trim(arrayFileName), status = 'replace', action = 'write', form = 'unformatted')
+        call new_unit(wU1)
 #endif
         write(wU1) A
         close(wU1)
@@ -96,8 +97,8 @@ contains
 #ifdef NEWUNIT_AVAILABLE
         open(newunit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
 #else
-        call newunit(wU1)
         open(unit = wU1, file = trim(arrayMetaFileName), status = 'replace', action = 'write')
+        call new_unit(wU1)
 #endif
 
         forall(i = 1:dim) sizes(i) = size(A, i)
@@ -134,8 +135,8 @@ contains
 #ifdef NEWUNIT_AVAILABLE
         open(newunit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
 #else
-        call newunit(rU1)
         open(unit = rU1, file = trim(arrayFileName), status = 'old', action = 'read', form = 'unformatted')
+        call new_unit(rU1)
 #endif
         read(rU1) A
         close(rU1)
@@ -162,8 +163,8 @@ contains
 #ifdef NEWUNIT_AVAILABLE
         open(newunit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
 #else
-        call newunit(rU1)
         open(unit = rU1, file = trim(arrayMetaFileName), status = 'old', action = 'read')
+        call new_unit(rU1)
 #endif
 
         read(rU1, *) versionIn
@@ -195,7 +196,7 @@ contains
 
 
   <% ['integer', 'integer(8)'].each{|type| %>
-    subroutine newunit<%= type.fort_suf %>(n)
+    subroutine new_unit<%= type.fort_suf %>(n)
       <%= type %>, intent(out):: n
       <%= type %>:: i, unitMin, unitMax
       logical:: isOpened
@@ -212,6 +213,6 @@ contains
 
       write(0, *) "Unit numbers between ", unitMin, unitMax, " are not available."
       stop 1
-    end subroutine newunit<%= type.fort_suf %>
+    end subroutine new_unit<%= type.fort_suf %>
   <% } %>
 end module lib_io
