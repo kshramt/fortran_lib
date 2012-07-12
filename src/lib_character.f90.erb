@@ -23,7 +23,7 @@ module lib_character
   public:: s, str, STR_LEN, TAB, NEW_LINE
   integer,   parameter:: STR_LEN  = 256
   character, parameter:: TAB      = char(9)
-  character, parameter:: NEW_LINE = new_line('_')
+  character, parameter:: NEW_LINE = char(10)
 
   interface str
     <% TYPES.each{|type| %>
