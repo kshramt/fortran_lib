@@ -1,5 +1,5 @@
 program test_lib_io
-  use lib_io, only: LIB_IO_VERSION, write_array, read_array
+  use lib_io, only: LIB_IO_VERSION => VERSION, write_array, read_array
 
   implicit none
   real, allocatable:: A(:, :)

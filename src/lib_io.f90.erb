@@ -36,12 +36,12 @@ module lib_io
   implicit none
 
   private
-  public:: LIB_IO_VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE, LEN_NAME_MAX
+  public:: VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE, LEN_NAME_MAX
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
 
-  integer, parameter:: LIB_IO_VERSION = 2 ! Array file format's compatibility.
+  integer, parameter:: VERSION = 2 ! Array file format's compatibility.
   integer, parameter:: LEN_NAME_MAX = 1024
   integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
   integer, parameter:: NEW_UNIT_MAX = huge(0)
@@ -176,7 +176,7 @@ contains
 
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
-        write(wU1, *) LIB_IO_VERSION
+        write(wU1, *) VERSION
         close(wU1)
 
         call new_unit(wU1)
@@ -236,8 +236,8 @@ contains
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
         read(rU1, *) libIoVersion
-        if(libIoVersion /= LIB_IO_VERSION)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersion, ' and ', LIB_IO_VERSION
+        if(libIoVersion /= VERSION)then
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersion, ' and ', VERSION
           stop 1
         end if
         close(rU1)
