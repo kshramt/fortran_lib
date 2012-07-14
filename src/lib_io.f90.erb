@@ -67,9 +67,9 @@ module lib_io
         module procedure read_array<%= type.fort_suf %>_<%= dim %>
       end interface read_array
 
-      interface read_array_meta
-        module procedure read_array_meta<%= type.fort_suf %>_<%= dim %>
-      end interface read_array_meta
+      interface read_array_v_1
+        module procedure read_array_v_1<%= type.fort_suf %>_<%= dim %>
+      end interface read_array_v_1
     <% } %>
   <% } %>
 
@@ -203,16 +203,22 @@ contains
         character(len = *), intent(in):: arrayName
         <%= type %>, intent(out), allocatable:: ary(<%= list(dim){':'} %>)
 
+        integer:: rU1, libIoVersion
         character(len = LEN_NAME_MAX):: arrayDir
 
         arrayDir = s(arrayName) // ARRAY_DIR_EXT // '/'
 
-        call read_array_meta(arrayDir, A)
-
         call new_unit(rU1)
-        open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
-        read(rU1) A
+        open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
+        read(rU1, *) libIoVersion
         close(rU1)
+
+        select case(libIoVersion)
+        case(1)
+          call read_array_v_1(arrayDir, ary)
+        case default
+          write(ERROR_UNIT, *) "Unsupported version: ", libIoVersion
+        end select
       end subroutine read_array<%= type.fort_suf %>_<%= dim %>
 
       subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>(arrayDir, ary)
@@ -224,22 +230,12 @@ contains
 
         <% # Use .max to get nice error message.  %>
         character(len = <%= TYPES.map(&:size).max %>):: dataType
-        integer:: libIoVersion
         integer:: dim
         integer:: sizes(1:DIM_FOR_SELF)
         integer:: i
         integer:: rU1
 
         namelist /array_meta/ dataType, dim, sizes
-
-        call new_unit(rU1)
-        open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
-        read(rU1, *) libIoVersion
-        if(libIoVersion /= VERSION)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersion, ' and ', VERSION
-          stop 1
-        end if
-        close(rU1)
 
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
@@ -259,7 +255,11 @@ contains
 
         if(allocated(ary)) deallocate(ary)
         allocate(ary(<%= list(dim){|i| "1:sizes(#{i})"} %>))
-      end subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>
+
+        call new_unit(rU1)
+        open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+        read(rU1) ary
+      end subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>
     <% } %>
   <% } %>
 
