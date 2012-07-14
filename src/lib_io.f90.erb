@@ -242,12 +242,12 @@ contains
         read(rU1, nml = array_meta)
 
         if(dataType /= DATA_TYPE_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', s(arrayDir), '. Expected ', DATA_TYPE_FOR_SELF, ' but got ', s(dataType)
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch. Expected ', DATA_TYPE_FOR_SELF, ' but type of ', s(arrayDir), ' is ', s(dataType)
           stop 1
         end if
 
         if(dim /= DIM_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', s(arrayDir), '. Expected ', DIM_FOR_SELF, ' but got ', dim
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch. Expected ', DIM_FOR_SELF, ' but dimension of ', s(arrayDir), ' is ', dim
           stop 1
         end if
 
