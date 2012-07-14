@@ -1,5 +1,5 @@
 program test_lib_character
-  use lib_character, only: str, STR_LEN
+  use lib_character, only: s, str, STR_LEN
   implicit none
   character(len = STR_LEN):: buf
   buf = trim(str(huge(3.0d0)))
