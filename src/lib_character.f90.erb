@@ -41,10 +41,10 @@ contains
 
   <% TYPES.each{|type| %>
     function str<%= type.fort_suf %>(x) result(this)
-       character(len = STR_LEN):: this
-       <%= type %>, intent(in):: x
-       write(this, *) x
-       this = s(this)
+      character(len = STR_LEN):: this
+      <%= type %>, intent(in):: x
+      write(this, *) x
+      this = s(this)
     end function str<%= type.fort_suf %>
   <% } %>
 end module lib_character
