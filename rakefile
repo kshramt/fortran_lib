@@ -1,4 +1,8 @@
 ERB_COMPILER = 'erb'
+ERBED_F90_FILES = FileList['src/*.f90.erb'].ext('')
+
+desc "Compile erb files."
+task erb: ERBED_F90_FILES
 
 rule '.f90' => '.f90.erb' do |t|
   sh "#{ERB_COMPILER} #{t.source} > #{t.name}"
