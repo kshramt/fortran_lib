@@ -1,0 +1,78 @@
+<%
+  TYPES = [
+    'integer',
+    'integer(8)',
+    'real',
+    'double precision',
+    'complex',
+    'complex(kind(0.0d0))',
+    'logical',
+    'character(len = *)'
+  ]
+
+  DIM_MAX = 7
+  DIM_RANGE = (0..DIM_MAX)
+
+  def list(n, str = ', ', &block)
+    (1..n).map(&block).join(str)
+  end
+
+  class String
+    def fort_suf
+      buf = self.gsub(/[^\w]/, '_')
+      buf = 'type_' + buf unless buf[0] =~ /[A-Za-z]/
+      '_' + buf
+    end
+  end
+%>
+
+module lib_util
+  use iso_fortran_env, only: ERROR_UNIT
+  implicit none
+  private
+  public:: check
+
+  interface check
+    module procedure check_without_value
+
+    <% TYPES.each{|type| %>
+      <% DIM_RANGE.each{|dim| %>
+        module procedure check<%= type.fort_suf %>_<%= dim %>
+      <%}%>
+    <%}%>
+  end interface
+
+contains
+
+  ! Define check_without_value separately because
+  ! SOME_TYPE, intent(in), optional:: value
+  ! makes "with_value" subroutines ambiguous.
+  subroutine check_without_value(isOk, errorMessage)
+    logical, intent(in):: isOk
+    character(len = *), intent(in):: errorMessage
+    
+    if(.not.isOk)then
+      write(ERROR_UNIT, *) errorMessage
+      stop 1
+    end if
+  end subroutine check_without_value
+
+  <% TYPES.each{|type| %>
+    <% DIM_RANGE.each{|dim| %>
+      subroutine check<%= type.fort_suf %>_<%= dim %>(isOk, errorMessage, value)
+        logical, intent(in):: isOk
+        character(len = *), intent(in):: errorMessage
+        <% if dim == 0 %>
+          <%= type %>, intent(in):: value
+        <% else %>
+          <%= type %>, intent(in):: value(<%= list(dim){':'} %>)
+        <% end %>
+
+        if(.not.isOk)then
+          write(ERROR_UNIT, *) errorMessage, value
+          stop 1
+        end if
+      end subroutine check<%= type.fort_suf %>_<%= dim %>
+    <%}%>
+  <%}%>
+end module lib_util
