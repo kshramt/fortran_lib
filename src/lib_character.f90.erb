@@ -20,11 +20,11 @@
 module lib_character
   implicit none
   private
-  integer,   parameter:: STR_LEN  = 256
   public:: s                    ! Same as String#strip method in Ruby.
   public:: str                  ! Convert a value to a string. The result is also stripped.
   public:: STR_LEN              ! Maximum length of str.
   public:: TAB, NEW_LINE
+  integer,   parameter:: STR_LEN  = 1024
   character, parameter:: TAB      = char(9)
   character, parameter:: NEW_LINE = new_line('_')
 
