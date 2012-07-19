@@ -1,0 +1,5 @@
+ERB_COMPILER = 'erb'
+
+rule '.f90' => '.f90.erb' do |t|
+  sh "#{ERB_COMPILER} #{t.source} > #{t.name}"
+end
