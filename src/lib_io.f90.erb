@@ -30,8 +30,9 @@
 ! AUTHOR = 'Kasahara Amato'
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
-  use lib_character, only: TAB, s
+  use lib_character, only: TAB, s, str
   use lib_system, only: mkdir_p
+  use lib_util, only: check
 
   implicit none
 
@@ -241,15 +242,8 @@ contains
         open(unit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
         read(rU1, nml = array_meta)
 
-        if(dataType /= DATA_TYPE_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch. Expected ', DATA_TYPE_FOR_SELF, ' but type of ', s(arrayDir), ' is ', s(dataType)
-          stop 1
-        end if
-
-        if(dim /= DIM_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch. Expected ', DIM_FOR_SELF, ' but dimension of ', s(arrayDir), ' is ', dim
-          stop 1
-        end if
+        call check(s(dataType) == DATA_TYPE_FOR_SELF, 'Data type mismatch. Expected ' // DATA_TYPE_FOR_SELF // ' but type of ' // s(arrayDir) // ' is ', s(dataType))
+        call check(dim == DIM_FOR_SELF, 'Dimension mismatch. Expected' // str(DIM_FOR_SELF) // ' but dimension of ' // s(arrayDir) // ' is ' // str(dim))
 
         close(rU1)
 
