@@ -19,11 +19,14 @@
 %>
 module lib_character
   implicit none
+
   private
+
   public:: s                    ! Same as String#strip method in Ruby.
   public:: str                  ! Convert a value to a string. The result is also stripped.
   public:: STR_LEN              ! Maximum length of str.
   public:: TAB, NEW_LINE
+
   integer,   parameter:: STR_LEN  = 1024
   character, parameter:: TAB      = char(9)
   character, parameter:: NEW_LINE = char(10)
@@ -43,6 +46,7 @@ contains
   pure function s(str) result(this)
     character(len = *), intent(in):: str
     character(len = len_trim(adjustl(str))):: this
+
     this = trim(adjustl(str))
   end function s
 
@@ -50,12 +54,14 @@ contains
     pure function str<%= type.fort_suf %>(x) result(this)
       <%= type %>, intent(in):: x
       character(len = len(s(str_fixed(x)))):: this
+
       this = s(str_fixed(x))
     end function str<%= type.fort_suf %>
 
     pure function str_fixed<%= type.fort_suf %>(x) result(this)
       character(len = STR_LEN):: this
       <%= type %>, intent(in):: x
+
       write(this, *) x
       this = s(this)
     end function str_fixed<%= type.fort_suf %>
