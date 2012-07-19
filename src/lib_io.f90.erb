@@ -36,12 +36,12 @@ module lib_io
   implicit none
 
   private
-  public:: LIB_IO_VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE, LEN_NAME_MAX
+  public:: VERSION, ARRAY_DIR_EXT, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE, LEN_NAME_MAX
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
 
-  integer, parameter:: LIB_IO_VERSION = 2 ! Array file format's compatibility.
+  integer, parameter:: VERSION = 1 ! Array file format's compatibility.
   integer, parameter:: LEN_NAME_MAX = 1024
   integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
   integer, parameter:: NEW_UNIT_MAX = huge(0)
@@ -67,9 +67,9 @@ module lib_io
         module procedure read_array<%= type.fort_suf %>_<%= dim %>
       end interface read_array
 
-      interface read_array_meta
-        module procedure read_array_meta<%= type.fort_suf %>_<%= dim %>
-      end interface read_array_meta
+      interface read_array_v_1
+        module procedure read_array_v_1<%= type.fort_suf %>_<%= dim %>
+      end interface read_array_v_1
     <% } %>
   <% } %>
 
@@ -151,9 +151,9 @@ contains
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
       ! @desc Store array A into arrayName.array and its metadata into arrayName.array.meta.
-      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, A<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, ary<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
         character(len = *), intent(in):: arrayName
-        <%= type %>, intent(in):: A(<%= list(dim){':'} %>)
+        <%= type %>, intent(in):: ary(<%= list(dim){':'} %>)
         <% if NUM_DESC_MAX >= 1 %>
           character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
         <% end %>
@@ -176,17 +176,17 @@ contains
 
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
-        write(wU1, *) LIB_IO_VERSION
+        write(wU1, *) VERSION
         close(wU1)
 
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
-        write(wU1) A
+        write(wU1) ary
         close(wU1)
 
         dataType = DATA_TYPE_FOR_SELF
         dim = DIM_FOR_SELF
-        forall(i = 1:dim) sizes(i) = size(A, i)
+        forall(i = 1:dim) sizes(i) = size(ary, i)
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
         write(wU1, nml = array_meta)
@@ -199,33 +199,37 @@ contains
         close(wU1)
       end subroutine write_array<%= type.fort_suf %>_<%= dim %>
 
-      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, A)
+      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, ary)
         character(len = *), intent(in):: arrayName
-        <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
+        <%= type %>, intent(out), allocatable:: ary(<%= list(dim){':'} %>)
 
-        integer:: rU1
+        integer:: rU1, libIoVersion
         character(len = LEN_NAME_MAX):: arrayDir
 
         arrayDir = s(arrayName) // ARRAY_DIR_EXT // '/'
 
-        call read_array_meta(arrayDir, A)
-
         call new_unit(rU1)
-        open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
-        read(rU1) A
+        open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
+        read(rU1, *) libIoVersion
         close(rU1)
+
+        select case(libIoVersion)
+        case(1)
+          call read_array_v_1(arrayDir, ary)
+        case default
+          write(ERROR_UNIT, *) "Unsupported version: ", libIoVersion
+        end select
       end subroutine read_array<%= type.fort_suf %>_<%= dim %>
 
-      subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>(arrayDir, A)
+      subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>(arrayDir, ary)
         character(len = *), intent(in):: arrayDir
-        <%= type %>, intent(out), allocatable:: A(<%= list(dim){':'} %>)
+        <%= type %>, intent(out), allocatable:: ary(<%= list(dim){':'} %>)
 
         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
         integer, parameter:: DIM_FOR_SELF = <%= dim %>
 
         <% # Use .max to get nice error message.  %>
         character(len = <%= TYPES.map(&:size).max %>):: dataType
-        integer:: libIoVersion
         integer:: dim
         integer:: sizes(1:DIM_FOR_SELF)
         integer:: i
@@ -234,33 +238,28 @@ contains
         namelist /array_meta/ dataType, dim, sizes
 
         call new_unit(rU1)
-        open(unit = rU1, file = s(arrayDir) // ARRAY_VERSION_FILE, status = 'old', action = 'read')
-        read(rU1, *) libIoVersion
-        if(libIoVersion /= LIB_IO_VERSION)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Versions of ', s(arrayDir), ' and current library differ: ', libIoVersion, ' and ', LIB_IO_VERSION
-          stop 1
-        end if
-        close(rU1)
-
-        call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'old', action = 'read')
         read(rU1, nml = array_meta)
 
         if(dataType /= DATA_TYPE_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch in ', s(arrayDir), '. Expected ', DATA_TYPE_FOR_SELF, ' but got ', s(dataType)
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Data type mismatch. Expected ', DATA_TYPE_FOR_SELF, ' but type of ', s(arrayDir), ' is ', s(dataType)
           stop 1
         end if
 
         if(dim /= DIM_FOR_SELF)then
-          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch in ', s(arrayDir), '. Expected ', DIM_FOR_SELF, ' but got ', dim
+          write(ERROR_UNIT, *) __FILE__, __LINE__, 'Dimension mismatch. Expected ', DIM_FOR_SELF, ' but dimension of ', s(arrayDir), ' is ', dim
           stop 1
         end if
 
         close(rU1)
 
-        if(allocated(A)) deallocate(A)
-        allocate(A(<%= list(dim){|i| "1:sizes(#{i})"} %>))
-      end subroutine read_array_meta<%= type.fort_suf %>_<%= dim %>
+        if(allocated(ary)) deallocate(ary)
+        allocate(ary(<%= list(dim){|i| "1:sizes(#{i})"} %>))
+
+        call new_unit(rU1)
+        open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+        read(rU1) ary
+      end subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>
     <% } %>
   <% } %>
 
