@@ -152,9 +152,9 @@ contains
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
       ! @desc Store array A into arrayName.array and its metadata into arrayName.array.meta.
-      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, ary<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayName, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
         character(len = *), intent(in):: arrayName
-        <%= type %>, intent(in):: ary(<%= list(dim){':'} %>)
+        <%= type %>, intent(in):: array(<%= list(dim){':'} %>)
         <% if NUM_DESC_MAX >= 1 %>
           character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
         <% end %>
@@ -182,12 +182,12 @@ contains
 
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
-        write(wU1) ary
+        write(wU1) array
         close(wU1)
 
         dataType = DATA_TYPE_FOR_SELF
         dim = DIM_FOR_SELF
-        forall(i = 1:dim) sizes(i) = size(ary, i)
+        forall(i = 1:dim) sizes(i) = size(array, i)
         call new_unit(wU1)
         open(unit = wU1, file = s(arrayDir) // ARRAY_META_FILE, status = 'replace', action = 'write')
         write(wU1, nml = array_meta)
@@ -200,9 +200,9 @@ contains
         close(wU1)
       end subroutine write_array<%= type.fort_suf %>_<%= dim %>
 
-      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, ary)
+      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayName, array)
         character(len = *), intent(in):: arrayName
-        <%= type %>, intent(out), allocatable:: ary(<%= list(dim){':'} %>)
+        <%= type %>, intent(out), allocatable:: array(<%= list(dim){':'} %>)
 
         integer:: rU1, libIoVersion
         character(len = LEN_NAME_MAX):: arrayDir
@@ -216,15 +216,15 @@ contains
 
         select case(libIoVersion)
         case(1)
-          call read_array_v_1(arrayDir, ary)
+          call read_array_v_1(arrayDir, array)
         case default
           write(ERROR_UNIT, *) "Unsupported version: ", libIoVersion
         end select
       end subroutine read_array<%= type.fort_suf %>_<%= dim %>
 
-      subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>(arrayDir, ary)
+      subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>(arrayDir, array)
         character(len = *), intent(in):: arrayDir
-        <%= type %>, intent(out), allocatable:: ary(<%= list(dim){':'} %>)
+        <%= type %>, intent(out), allocatable:: array(<%= list(dim){':'} %>)
 
         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
         integer, parameter:: DIM_FOR_SELF = <%= dim %>
@@ -247,12 +247,12 @@ contains
 
         close(rU1)
 
-        if(allocated(ary)) deallocate(ary)
-        allocate(ary(<%= list(dim){|i| "1:sizes(#{i})"} %>))
+        if(allocated(array)) deallocate(array)
+        allocate(array(<%= list(dim){|i| "1:sizes(#{i})"} %>))
 
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
-        read(rU1) ary
+        read(rU1) array
       end subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>
     <% } %>
   <% } %>
