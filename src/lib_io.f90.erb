@@ -113,16 +113,18 @@ contains
     character(len = *), intent(in):: fileName
     integer, intent(in), optional:: numberOfHeaders
 
-    integer:: rU1, ios, i
+    integer, parameter:: &
+      & SEEK_NORMAL_CHAR = 1, &
+      & SEEK_SPACE_OR_TAB = 2
+    integer:: rU1, ios, i, mode
     character:: c
-    character(len = 128):: mode
 
     integer:: numberOfHeaders_
 
     numberOfHeaders_ = 0
     if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
-    mode = 'seek_normal_char'
+    mode = SEEK_NORMAL_CHAR
     this = 0
     call new_unit(rU1)
     open(rU1, file = fileName, status = 'old', action = 'read')
@@ -133,12 +135,12 @@ contains
       read(rU1, '(a1)', advance = 'no', iostat = ios) c
       if(ios /= 0 .or. c == new_line('_'))then
         exit
-      else if(mode == 'seek_normal_char' .and. c /= ' ' .and. c /= TAB)then
+      else if(mode == SEEK_NORMAL_CHAR .and. c /= ' ' .and. c /= TAB)then
         this = this + 1
-        mode = 'seek_space_or_tab'
+        mode = SEEK_SPACE_OR_TAB
         cycle
-      else if(mode == 'seek_space_or_tab' .and. (c == ' ' .or. c == TAB))then
-        mode = 'seek_normal_char'
+      else if(mode == SEEK_SPACE_OR_TAB .and. (c == ' ' .or. c == TAB))then
+        mode = SEEK_NORMAL_CHAR
         cycle
       else
         write(ERROR_UNIT, *) __FILE__, __LINE__, 'Must not happen.'
