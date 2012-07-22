@@ -113,9 +113,9 @@ contains
     character(len = *), intent(in):: fileName
     integer, intent(in), optional:: numberOfHeaders
 
-    integer, parameter:: &
-      & SEEK_NORMAL_CHAR = 1, &
-      & SEEK_SPACE_OR_TAB = 2
+    enum, bind(c)
+      enumerator:: SEEK_NORMAL_CHAR, SEEK_SPACE_OR_TAB
+    end enum
     integer:: rU1, ios, i, mode
     character:: c
 
