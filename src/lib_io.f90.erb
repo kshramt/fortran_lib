@@ -242,7 +242,6 @@ contains
 
         close(rU1)
 
-        if(allocated(array)) deallocate(array)
         allocate(array(<%= list(dim){|i| "1:sizes(#{i})"} %>))
 
         call new_unit(rU1)
