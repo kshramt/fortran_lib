@@ -168,7 +168,7 @@ contains
 
     type(RealListNode), pointer:: targetNode
 
-    targetNode => node_at(list, size(list))
+    targetNode => list%entry
     this = targetNode%val
     if(is_size_one(list))then
       deallocate(list%entry)
