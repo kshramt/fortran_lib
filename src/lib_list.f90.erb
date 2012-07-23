@@ -247,13 +247,14 @@ contains
       <%= t.type %>, allocatable, intent(out):: array(:)
       type(<%= t.val %>), intent(in):: list
 
-      integer:: i
+      integer:: i, nList
       type(<%= t.val %>Node), pointer:: walker
 
-      i = size(list)
-      allocate(array(1:i))
+      nList = size(list)
+      allocate(array(1:nList))
       if(is_empty(list)) return
 
+      i = nList
       walker => list%entry
       array(i) = walker%val
       do while(i > 1)
