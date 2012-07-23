@@ -7,7 +7,7 @@ module lib_list
   use lib_util, only: check
   implicit none
   private
-  public:: RealList, new, size, val_at, unshift, shift, delete_at, pop, delete, insert_at, push, node_at, list_to_array, array_to_list, is_size_one, is_empty, assignment(=)
+  public:: RealList, new, size, val_at, unshift, shift, delete_at, pop, delete, insert_at, push, node_at, array_from_list, list_from_array, is_size_one, is_empty, assignment(=), operator(.val.), swap
 
   type RealListNode
     real:: val
