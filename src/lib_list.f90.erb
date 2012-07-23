@@ -70,7 +70,7 @@ module lib_list
   public:: unshift ! Delete the head node and return a value of the node.
   public:: push    ! Insert a node to the tail.
   public:: pop  ! Delete the tail node and return a value of the node.
-  public:: delete               ! Delete all nodes.
+  public:: clear                ! Delete all nodes.
   public:: swap                 ! Swap nodes in a list.
   public:: array_from_list      ! List to array convertor.
   public:: copy                 ! Cleate a deep copy of a list.
@@ -140,8 +140,8 @@ module lib_list
 
     end interface
 
-    interface delete
-      module procedure delete_<%= t.val %>
+    interface clear
+      module procedure clear_<%= t.val %>
     end interface
 
     interface swap
@@ -236,7 +236,7 @@ contains
 
       integer:: i
 
-      if(.not.is_empty(list)) call delete(list)
+      if(.not.is_empty(list)) call clear(list)
 
       do i = lbound(array, 1), ubound(array, 1)
         call push(list, array(i))
@@ -327,7 +327,7 @@ contains
       deallocate(targetNode)
     end function pop_<%= t.val %>
 
-    recursive subroutine delete_<%= t.val %>(list)
+    recursive subroutine clear_<%= t.val %>(list)
       type(<%= t.val %>), intent(inout):: list
 
       <%= t.type %>:: trash
@@ -335,7 +335,7 @@ contains
       do while(associated(list%entry))
         trash = pop(list)
       end do
-    end subroutine delete_<%= t.val %>
+    end subroutine clear_<%= t.val %>
 
     subroutine insert_at_<%= t.val %>(list, val, pos)
       type(<%= t.val %>), intent(inout):: list
@@ -432,7 +432,7 @@ contains
       <%= t.type %>, intent(in):: val
 
       if(.not.is_empty(list))then
-        call delete(list)
+        call clear(list)
       end if
 
       allocate(list%entry)
