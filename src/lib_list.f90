@@ -24,7 +24,7 @@ module lib_list
 !   end interface
 
   interface assignment(=)
-    module procedure assign
+    module procedure copy, list_from_array_coercion, array_from_list_coercion
   end interface
 
   interface is_size_one
@@ -40,14 +40,6 @@ module lib_list
   end interface
 
 contains
-  subroutine assign(variable, expression)
-    type(RealList), intent(out):: variable
-    type(RealList), intent(in):: expression
-
-    variable%entry => array_to_list_entry_node(list_to_array(expression))
-  end subroutine assign
-  
-  function array_to_list(array) result(this)
 
   subroutine swap(list, pos1, pos2)
     type(RealList), intent(inout):: list
@@ -62,54 +54,73 @@ contains
     pos1Node%val = pos2Node%val
     pos2Node%val = swapVal
   end subroutine swap
+
+  subroutine copy(new, original)
+    type(RealList), intent(inout):: new
+    type(RealList), intent(in):: original
+
+    call list_from_array_coercion(new, array_from_list(original))
+  end subroutine copy
+
+  function array_from_list(list) result(this)
+    real, allocatable:: this(:)
+    type(RealList), intent(in):: list
+
+    this = list
+  end function array_from_list
+
+  ! WARNING: Using this function can cause memory leak
+  ! because
+  !   list = array_to_list(array)
+  ! is equivalent to
+  !   call array_to_list_coercion(array, list1)
+  !   call copy(list1, list2)
+  ! Hence, list1 is not and can't be deleted.
+  ! To avoid it, use as follows:
+  !   list => array_to_list(array)
+  function list_from_array(array) result(this)
     type(RealList):: this
     real, intent(in):: array(:)
 
-    if(size(array) == 0) return
+    this = array
+  end function list_from_array
 
-    this%entry => array_to_list_entry_node(array)
-  end function array_to_list
-  
-  function array_to_list_entry_node(array) result(this)
-    type(RealListNode), pointer:: this
+  subroutine list_from_array_coercion(list, array)
+    type(RealList), intent(inout):: list
     real, intent(in):: array(:)
 
-    type(RealList):: buf
     integer:: i
 
-    call check(size(array) >= 1, 'size(array) should >= 1: ', size(array))
+    if(.not.is_empty(list)) call delete(list)
 
     do i = lbound(array, 1), ubound(array, 1)
-      call push(buf, array(i))
+      call push(list, array(i))
     end do
+  end subroutine list_from_array_coercion
 
-    this => buf%entry
-  end function array_to_list_entry_node
-  
-  function list_to_array(list) result(this)
+  subroutine array_from_list_coercion(array, list)
+    real, allocatable, intent(out):: array(:)
     type(RealList), intent(in):: list
-    real, allocatable:: this(:)
 
     integer:: i
     type(RealListNode), pointer:: walker
 
-    allocate(this(1:size(list)))
-
-    if(is_empty(list)) return  ! Empty array.
+    i = size(list)
+    allocate(array(1:i))
+    if(is_empty(list)) return
 
     walker => list%entry
-    i = size(list)
-    this(i) = walker%val
+    array(i) = walker%val
     do while(i > 1)
       walker => walker%prev
       i = i - 1
-      this(i) = walker%val
+      array(i) = walker%val
     end do
-  end function list_to_array
+  end subroutine array_from_list_coercion
 
   function val_at(list, pos) result(this)
     real:: this
-    type(RealList), intent(inout):: list
+    type(RealList), intent(in):: list
     integer, intent(in):: pos
 
     type(RealListNode), pointer:: targetNode
@@ -143,7 +154,7 @@ contains
       this = pop(list)
       return
     end if
- 
+
     targetNode => node_at(list, pos)
     this = targetNode%val
     if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
