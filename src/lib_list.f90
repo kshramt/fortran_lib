@@ -287,7 +287,7 @@ contains
   end function size_RealList
 
   subroutine new(list, val)
-    type(RealList), intent(out):: list
+    type(RealList), intent(inout):: list
     real, intent(in):: val
 
     if(.not.is_empty(list))then
