@@ -178,14 +178,42 @@ contains
       type(<%= t.val %>), intent(inout):: list
       integer, intent(in):: pos1, pos2
 
-      type(<%= t.val %>Node), pointer:: pos1Node, pos2Node
-      <%= t.type %>:: swapVal
+      type(<%= t.val %>Node), pointer:: posLNodePrev, posLNode, posLNodeNext
+      type(<%= t.val %>Node), pointer:: posRNodePrev, posRNode, posRNodeNext
+      integer:: posL, posR, nList
 
-      pos1Node => node_at(list, pos1)
-      pos2Node => node_at(list, pos2)
-      swapVal = pos1Node%val
-      pos1Node%val = pos2Node%val
-      pos2Node%val = swapVal
+      posL = min(pos1, pos2)
+      posR = max(pos1, pos2)
+      nList = size(list)
+      call check(1 <= posL .and. posR <= nList, "swap: Out of range: [pos1, posR] = ", [pos1, posR])
+      if(posL == posR) return
+
+      posLNode => node_at(list, posL)
+      posLNodePrev => posLNode%prev
+      posRNode => node_at(list, posR)
+      posRNodeNext => posRNode%next
+      if(posR - posL == 1)then
+        if(associated(posLNodePrev)) posLNodePrev%next => posRNode
+        posLNode%next => posRNodeNext
+        posRNode%next => posLNode
+        if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
+        posRNode%prev => posLNodePrev
+        posLNode%prev => posRNode
+      else
+        posLNodeNext => posLNode%next
+        posRNodePrev => posRNode%prev
+
+        if(associated(posLNodePrev)) posLNodePrev%next => posRNode
+        posLNode%next => posRNodeNext
+        posRNodePrev%next => posLNode
+        posRNode%next => posLNodeNext
+        if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
+        posRNode%prev => posLNodePrev
+        posLNodeNext%prev => posRNode
+        posLNode%prev => posRNodePrev
+      end if
+
+      if(posR == nList) list%entry => posLNode
     end subroutine swap_<%= t.val %>
 
     subroutine copy_<%= t.val %>(new, original)
