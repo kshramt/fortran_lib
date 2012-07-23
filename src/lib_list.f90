@@ -186,7 +186,7 @@ contains
 
     real:: trash
 
-    do while(associated(list%entry%prev))
+    do while(associated(list%entry))
       trash = pop(list)
     end do
   end subroutine delete
