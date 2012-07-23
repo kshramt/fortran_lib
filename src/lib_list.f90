@@ -48,6 +48,20 @@ contains
   end subroutine assign
   
   function array_to_list(array) result(this)
+
+  subroutine swap(list, pos1, pos2)
+    type(RealList), intent(inout):: list
+    integer, intent(in):: pos1, pos2
+
+    type(RealListNode), pointer:: pos1Node, pos2Node
+    real:: swapVal
+
+    pos1Node => node_at(list, pos1)
+    pos2Node => node_at(list, pos2)
+    swapVal = pos1Node%val
+    pos1Node%val = pos2Node%val
+    pos2Node%val = swapVal
+  end subroutine swap
     type(RealList):: this
     real, intent(in):: array(:)
 
