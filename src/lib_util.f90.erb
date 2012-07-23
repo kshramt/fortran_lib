@@ -17,6 +17,14 @@
     (1..n).map(&block).join(str)
   end
 
+  def parenthesis(n)
+    if n >= 1
+      "(#{list(n){':'}})"
+    else
+      ""
+    end
+  end
+
   class String
     def fort_suf
       buf = self.gsub(/[^\w]/, '_')
@@ -62,11 +70,7 @@ contains
       subroutine check<%= type.fort_suf %>_<%= dim %>(isOk, errorMessage, value)
         logical, intent(in):: isOk
         character(len = *), intent(in):: errorMessage
-        <% if dim == 0 %>
-          <%= type %>, intent(in):: value
-        <% else %>
-          <%= type %>, intent(in):: value(<%= list(dim){':'} %>)
-        <% end %>
+        <%= type %>, intent(in):: value<%= parenthesis(dim)%>
 
         if(.not.isOk)then
           write(ERROR_UNIT, *) errorMessage, value
