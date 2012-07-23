@@ -19,9 +19,9 @@ module lib_list
     type(RealListNode), pointer:: entry => null()
   end type RealList
 
-!   interface operator(.val_at.)
-!     module procedure val_at
-!   end interface
+  interface operator(.val.)
+    module procedure val_at
+  end interface
 
   interface assignment(=)
     module procedure copy, list_from_array_coercion, array_from_list_coercion
