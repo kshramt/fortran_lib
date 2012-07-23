@@ -19,14 +19,6 @@ module lib_list
     type(RealListNode), pointer:: entry => null()
   end type RealList
 
-!   interface operator(.unshift.)
-!     module procedure unshift
-!   end interface
-
-!   interface operator(.pop.)
-!     module procedure pop
-!   end interface
-
 !   interface operator(.val_at.)
 !     module procedure val_at
 !   end interface
