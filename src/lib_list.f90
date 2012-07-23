@@ -1,8 +1,38 @@
-! RealListNodeをRealListでラップする意味がないかもしれない。
-! テストを書いてみてから、もし必要そうだったら修正して、それからerb化する。
 ! DEFERRED_TYPES = {lib_ray_tracing: %w[SimpleLayer ComplexLayer]}
 ! これに、use, lib_ray_tracing, only: assignment(=), SimpleLayer, ComplexLayer
-! みたいな感じにしたい。
+! いや、やはりやめよう。全て1ファイルに生成する。
+! 生成すべきやつを、簡単にコメントアウトできるようにすれば良いのだ。
+! 内部型のやつと外部型のやつを分けて書けば、十分。
+! 一貫性も保たれるし、自分に取っては簡潔だし、必要なリストの種類がそんなにコロコロ変わるとも思えないし、コンパイル時間よりも保守にかける時間が短くて済む方が大切だ。
+! module lib_@simple_layer@_list
+!   use lib_@simple_layer@, only: @SimpleLayer@ => CustomType, operator(=)
+!   private
+!   public:: CustomTypeList
+
+!   type CustomTypeNode
+!     type(CustomType):: val
+!     type(CustomTypeNode), pointer:: prev => null()
+!     type(CustomTypeNode), pointer:: next => null()
+!   end type CustomTypeNode
+
+!   type CustomTypeList
+!     type(CustomTypeNode), pointer:: entry => null()
+!   end type CustomTypeList
+
+! end module lib_simple_layer_list
+
+! module lib_intrinsic_types_list
+!   use lib_real_list
+!   use lib_double_precision_list
+! end module lib_intrinsic_types_list
+
+! program main
+!   use lib_simple_layer
+!   use lib_simple_layer_list CustomTypeList => SimpleLayerList
+
+!   call push(list, SimpleLayer(3.5, 'ad'))
+! end program main
+! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 module lib_list
   use lib_util, only: check
   implicit none
@@ -191,8 +221,6 @@ contains
     end do
   end subroutine delete
 
-  ! 破壊的なルーチンを書く方が、メモリリークを考える手間が省ける。
-  ! 仮に、再代入を定義してしまったら、以前のメモリを削除する必要がある。
   subroutine insert_at(list, val, pos)
     type(RealList), intent(inout):: list
     real, intent(in):: val
