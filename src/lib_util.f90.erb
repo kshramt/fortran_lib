@@ -38,44 +38,64 @@ module lib_util
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT
   implicit none
   private
-  public:: check
+  public:: raise, check
+
+
+  interface raise
+    module procedure raise_without_value
+  end interface raise
 
   interface check
     module procedure check_without_value
+  end interface check
 
-    <% TYPES.each{|type| %>
-      <% DIM_RANGE.each{|dim| %>
+  <% TYPES.each{|type| %>
+    <% DIM_RANGE.each{|dim| %>
+      interface raise
+        module procedure raise<%= type.fort_suf %>_<%= dim %>
+      end interface
+
+      interface check
         module procedure check<%= type.fort_suf %>_<%= dim %>
-      <%}%>
+      end interface
     <%}%>
-  end interface
+  <%}%>
 
 contains
 
   ! Define check_without_value separately because
   ! SOME_TYPE, intent(in), optional:: value
   ! makes "with_value" subroutines ambiguous.
+  subroutine raise_without_value(errorMessage)
+    character(len = *), intent(in):: errorMessage
+
+    write(ERROR_UNIT, *) errorMessage
+    stop 1
+  end subroutine raise_without_value
+
   subroutine check_without_value(isOk, errorMessage)
     logical, intent(in):: isOk
     character(len = *), intent(in):: errorMessage
-    
-    if(.not.isOk)then
-      write(ERROR_UNIT, *) errorMessage
-      stop 1
-    end if
+
+    if(.not.isOk) call raise(errorMessage)
   end subroutine check_without_value
 
   <% TYPES.each{|type| %>
     <% DIM_RANGE.each{|dim| %>
+      subroutine raise<%= type.fort_suf %>_<%= dim %>(errorMessage, value)
+        character(len = *), intent(in):: errorMessage
+        <%= type %>, intent(in):: value<%= parenthesis(dim)%>
+
+        write(ERROR_UNIT, *) errorMessage, value
+        stop 1
+      end subroutine raise<%= type.fort_suf %>_<%= dim %>
+
       subroutine check<%= type.fort_suf %>_<%= dim %>(isOk, errorMessage, value)
         logical, intent(in):: isOk
         character(len = *), intent(in):: errorMessage
         <%= type %>, intent(in):: value<%= parenthesis(dim)%>
 
-        if(.not.isOk)then
-          write(ERROR_UNIT, *) errorMessage, value
-          stop 1
-        end if
+        if(.not.isOk) call raise(errorMessage, value)
       end subroutine check<%= type.fort_suf %>_<%= dim %>
     <%}%>
   <%}%>
