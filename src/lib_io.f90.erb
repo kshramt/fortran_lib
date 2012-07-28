@@ -1,4 +1,32 @@
 <%
+  class Type
+    attr_reader :type, :val
+
+    def initialize(type, is_intrinsic = true)
+      @type = if is_intrinsic
+                type
+              else
+                "type(#{type})"
+              end
+      @val = '_' + type.gsub(/\W/, '_')
+    end
+
+    class ::String
+      def to_type(is_intrinsic = true)
+        Type.new(self, is_intrinsic)
+      end
+    end
+  end
+
+  def list(n, str = ', ', &block)
+    (1..n).map(&block).join(str)
+  end
+
+  def parenthesis(n)
+    buf = ([':']*n).join(", ")
+    if n == 0 then buf else "(#{buf})" end
+  end
+
   TYPES = [
     'integer',
     'integer(8)',
@@ -7,24 +35,12 @@
     'complex',
     'complex(kind(0.0d0))',
     'logical',
-  ]
+  ].map(&:to_type)
 
   DIM_MAX = 7
   DIM_RANGE = (1..DIM_MAX)
 
   NUM_DESC_MAX = 10
-
-  def list(n, str = ', ', &block)
-    (1..n).map(&block).join(str)
-  end
-
-  class String
-    def fort_suf
-      buf = self.gsub(/[^\w]/, '_')
-      buf = 'type_' + buf unless buf[0] =~ /[A-Za-z]/
-      '_' + buf
-    end
-  end
 %>
 
 ! AUTHOR = 'Kasahara Amato'
@@ -52,23 +68,23 @@ module lib_io
   character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
 
   interface new_unit
-    <% ['integer', 'integer(8)'].each{|type| %>
-      module procedure new_unit<%= type.fort_suf %>
+    <% ['integer', 'integer(8)'].map(&:to_type).each{|t| %>
+      module procedure new_unit<%= t.val %>
     <% } %>
   end interface new_unit
 
-  <% TYPES.each{|type| %>
+  <% TYPES.each{|t| %>
     <% DIM_RANGE.each{|dim| %>
       interface write_array
-        module procedure write_array<%= type.fort_suf %>_<%= dim %>
+        module procedure write_array<%= t.val %>_<%= dim %>
       end interface write_array
 
       interface read_array
-        module procedure read_array<%= type.fort_suf %>_<%= dim %>
+        module procedure read_array<%= t.val %>_<%= dim %>
       end interface read_array
 
       interface read_array_v_1
-        module procedure read_array_v_1<%= type.fort_suf %>_<%= dim %>
+        module procedure read_array_v_1<%= t.val %>_<%= dim %>
       end interface read_array_v_1
     <% } %>
   <% } %>
@@ -150,16 +166,16 @@ contains
     close(rU1)
   end function number_of_columns
 
-  <% TYPES.each{|type| %>
+  <% TYPES.each{|t| %>
     <% DIM_RANGE.each{|dim| %>
-      subroutine write_array<%= type.fort_suf %>_<%= dim %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+      subroutine write_array<%= t.val %>_<%= dim %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
         character(len = *), intent(in):: arrayDir
-        <%= type %>, intent(in):: array(<%= list(dim){':'} %>)
+        <%= t.type %>, intent(in):: array<%= parenthesis(dim) %>
         <% if NUM_DESC_MAX >= 1 %>
           character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
         <% end %>
 
-        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
+        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t.type %>'
         integer, parameter:: DIM_FOR_SELF = <%= dim %>
 
         character(len = len(DATA_TYPE_FOR_SELF)) dataType
@@ -196,11 +212,11 @@ contains
           if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
         <% } %>
         close(wU1)
-      end subroutine write_array<%= type.fort_suf %>_<%= dim %>
+      end subroutine write_array<%= t.val %>_<%= dim %>
 
-      subroutine read_array<%= type.fort_suf %>_<%= dim %>(arrayDir, array)
+      subroutine read_array<%= t.val %>_<%= dim %>(arrayDir, array)
         character(len = *), intent(in):: arrayDir
-        <%= type %>, intent(out), allocatable:: array(<%= list(dim){':'} %>)
+        <%= t.type %>, intent(out), allocatable:: array<%= parenthesis(dim) %>
 
         integer:: rU1, libIoVersion
 
@@ -215,22 +231,19 @@ contains
         case default
           write(ERROR_UNIT, *) "Unsupported version: ", libIoVersion
         end select
-      end subroutine read_array<%= type.fort_suf %>_<%= dim %>
+      end subroutine read_array<%= t.val %>_<%= dim %>
 
-      subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>(arrayDir, array)
+      subroutine read_array_v_1<%= t.val %>_<%= dim %>(arrayDir, array)
         character(len = *), intent(in):: arrayDir
-        <%= type %>, intent(out), allocatable:: array(<%= list(dim){':'} %>)
+        <%= t.type %>, intent(out), allocatable:: array<%= parenthesis(dim) %>
 
-        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= type %>'
+        character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t.type %>'
         integer, parameter:: DIM_FOR_SELF = <%= dim %>
-
-        <% # Use .max to get nice error message.  %>
-        character(len = <%= TYPES.map(&:size).max %>):: dataType
+        character(len = <%= TYPES.map{|_t| _t.type.size}.max %>):: dataType
         integer:: dim
         integer:: sizes(1:DIM_FOR_SELF)
         integer:: i
         integer:: rU1
-
         namelist /array_meta/ dataType, dim, sizes
 
         call new_unit(rU1)
@@ -247,15 +260,15 @@ contains
         call new_unit(rU1)
         open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
         read(rU1) array
-      end subroutine read_array_v_1<%= type.fort_suf %>_<%= dim %>
+      end subroutine read_array_v_1<%= t.val %>_<%= dim %>
     <% } %>
   <% } %>
 
 
-  <% ['integer', 'integer(8)'].each{|type| %>
-    subroutine new_unit<%= type.fort_suf %>(n)
-      <%= type %>, intent(out):: n
-      <%= type %>:: i
+  <% ['integer', 'integer(8)'].map(&:to_type).each{|t| %>
+    subroutine new_unit<%= t.val %>(n)
+      <%= t.type %>, intent(out):: n
+      <%= t.type %>:: i
       logical:: isOpened
 
       do i = NEW_UNIT_MIN, NEW_UNIT_MAX
@@ -268,6 +281,6 @@ contains
 
       write(ERROR_UNIT, *) __FILE__, __LINE__, "Unit numbers between ",  NEW_UNIT_MIN, NEW_UNIT_MAX, " are not available."
       stop 1
-    end subroutine new_unit<%= type.fort_suf %>
+    end subroutine new_unit<%= t.val %>
   <% } %>
 end module lib_io
