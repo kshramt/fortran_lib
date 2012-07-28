@@ -47,7 +47,7 @@
 module lib_list
   use lib_util, only: check
   <% USERS_MODULES_AND_TYPES.each{|m, t| %>
-    use <%= m %>
+    use <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
   <% } %>
 
   implicit none
