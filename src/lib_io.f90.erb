@@ -48,7 +48,7 @@ module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   use lib_character, only: TAB, s, str
   use lib_system, only: mkdir_p
-  use lib_util, only: check
+  use lib_util, only: raise, check
 
   implicit none
 
@@ -159,8 +159,7 @@ contains
         mode = SEEK_NORMAL_CHAR
         cycle
       else
-        write(ERROR_UNIT, *) __FILE__, __LINE__, 'Must not happen.'
-        stop 1
+        call raise('Must not happen.')
       end if
     end do
     close(rU1)
@@ -229,7 +228,7 @@ contains
         case(1)
           call read_array_v_1(arrayDir, array)
         case default
-          write(ERROR_UNIT, *) "Unsupported version: ", libIoVersion
+          call raise("Unsupported version: ", libIoVersion)
         end select
       end subroutine read_array<%= t.val %>_<%= dim %>
 
@@ -279,8 +278,7 @@ contains
         end if
       end do
 
-      write(ERROR_UNIT, *) __FILE__, __LINE__, "Unit numbers between ",  NEW_UNIT_MIN, NEW_UNIT_MAX, " are not available."
-      stop 1
+      call raise("No available unit number exist between: ",  (/NEW_UNIT_MIN, NEW_UNIT_MAX/))
     end subroutine new_unit<%= t.val %>
   <% } %>
 end module lib_io
