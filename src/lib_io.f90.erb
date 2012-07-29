@@ -182,7 +182,6 @@ contains
         integer:: sizes(1:DIM_FOR_SELF)
         integer:: wU1
         integer:: i
-        integer:: exitStatus
 
         namelist /array_meta/ dataType, dim, sizes
 
@@ -241,7 +240,6 @@ contains
         character(len = <%= TYPES.map{|_t| _t.type.size}.max %>):: dataType
         integer:: dim
         integer:: sizes(1:DIM_FOR_SELF)
-        integer:: i
         integer:: rU1
         namelist /array_meta/ dataType, dim, sizes
 
