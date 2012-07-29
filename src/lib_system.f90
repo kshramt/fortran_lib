@@ -1,5 +1,5 @@
 module lib_system
-  use, intrinsic:: iso_fortran_env, only: ERROR_UNIT
+  use lib_util, only: raise
   use lib_character, only: s
   implicit none
   private
@@ -16,8 +16,7 @@ contains
     if(present(exitStatus))then
       exitStatus = exitStatus_
     elseif(exitStatus_ /= 0)then
-      write(ERROR_UNIT, *) __FILE__, __LINE__, "Failed: mkdir -p " // s(path)
-      stop 1
+      call raise("Failed: mkdir -p ", s(path))
     end if
   end subroutine mkdir_p
 end module lib_system
