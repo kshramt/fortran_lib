@@ -47,7 +47,6 @@
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   use lib_character, only: TAB, s, str
-  use lib_system, only: mkdir_p
   use lib_util, only: raise, check
 
   implicit none
@@ -57,6 +56,7 @@ module lib_io
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
+  public:: mkdir_p
 
   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
   integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
@@ -89,6 +89,19 @@ module lib_io
   <% } %>
 
 contains
+
+  subroutine mkdir_p(path, exitStatus)
+    character(len = *) path
+    integer, intent(out), optional:: exitStatus
+    integer:: exitStatus_
+    call execute_command_line("mkdir -p " // s(path), exitstat = exitStatus_)
+
+    if(present(exitStatus))then
+      exitStatus = exitStatus_
+    elseif(exitStatus_ /= 0)then
+      call raise("Failed: mkdir -p ", s(path))
+    end if
+  end subroutine mkdir_p
 
   ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
   function file_shape(fileName, numberOfHeaders) result(this)
