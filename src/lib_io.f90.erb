@@ -59,6 +59,8 @@ module lib_io
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
   public:: mkdir_p
+  public:: tempfile
+  public:: close_tempfile
   public:: init_shell_interface_file
   public:: read_shell_interface_file
 
@@ -112,6 +114,24 @@ contains
     read(ioU, *) val
     close(ioU)
   end subroutine read_shell_interface_file
+
+  subroutine tempfile(ioU, file)
+    integer, intent(out):: ioU
+    character(len = *), intent(out):: file
+
+    call init_shell_interface_file()
+    ! tempfile name must be quoted since '/' mark is regarded to be end of record (same as namelist).
+    call execute_command_line('echo \"$(tempfile)\" > ' // SHELL_INTERFACE_FILE)
+    call read_shell_interface_file(file)
+    call new_unit(ioU)
+    open(ioU, file = s(file), status = 'old', action = 'readwrite')
+  end subroutine tempfile
+
+  subroutine close_tempfile(ioU)
+    integer, intent(in):: ioU
+
+    close(ioU, status = 'delete')
+  end subroutine close_tempfile
 
   subroutine mkdir_p(path, exitStatus)
     character(len = *) path
