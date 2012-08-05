@@ -53,10 +53,14 @@ module lib_io
 
   private
   public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
+  public:: TMP_DIR
+  public:: SHELL_INTERFACE_FILE
   public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
   public:: mkdir_p
+  public:: init_shell_interface_file
+  public:: read_shell_interface_file
 
   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
   integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
@@ -65,6 +69,8 @@ module lib_io
   character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
   character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
+  character(len = *), parameter:: TMP_DIR = 'tmp'
+  character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
 
   interface new_unit
     <% ['integer', 'integer(8)'].map(&:to_type).each{|t| %>
@@ -89,6 +95,23 @@ module lib_io
   <% } %>
 
 contains
+
+  subroutine init_shell_interface_file()
+    call mkdir_p(TMP_DIR)
+    call execute_command_line("cat /dev/null > " // SHELL_INTERFACE_FILE)
+  end subroutine init_shell_interface_file
+
+  ! YAGNI: this can easily expand to val for r, R, i, I, z, Z, and l.
+  subroutine read_shell_interface_file(val)
+    character(len = *), intent(out):: val
+
+    integer:: ioU
+
+    call new_unit(ioU)
+    open(ioU, file = SHELL_INTERFACE_FILE, status = 'old', action = 'read')
+    read(ioU, *) val
+    close(ioU)
+  end subroutine read_shell_interface_file
 
   subroutine mkdir_p(path, exitStatus)
     character(len = *) path
