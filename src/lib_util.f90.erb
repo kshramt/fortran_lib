@@ -67,17 +67,23 @@ contains
   ! SOME_TYPE, intent(in), optional:: value
   ! makes "with_value" subroutines ambiguous.
   subroutine raise_without_value(errorMessage)
-    character(len = *), intent(in):: errorMessage
+    character(len = *), intent(in), optional:: errorMessage
 
-    write(ERROR_UNIT, *) errorMessage
+    if(present(errorMessage)) write(ERROR_UNIT, *) errorMessage
     stop 1
   end subroutine raise_without_value
 
   subroutine check_without_value(isOk, errorMessage)
     logical, intent(in):: isOk
-    character(len = *), intent(in):: errorMessage
+    character(len = *), intent(in), optional:: errorMessage
 
-    if(.not.isOk) call raise(errorMessage)
+    if(.not.isOk)then
+      if(present(errorMessage))then
+        call raise(errorMessage)
+      else
+        call raise()
+      end if
+    end if
   end subroutine check_without_value
 
   <% TYPES.each{|type| %>
