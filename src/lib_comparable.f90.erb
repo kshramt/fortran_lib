@@ -1,0 +1,104 @@
+<%
+  Type = Struct.new(:type, :suf)
+  REALS = [
+           Type.new('real', '_r'),
+           Type.new('double precision', '_dr'),
+          ]
+
+  COMPLEXES = [
+               Type.new('complex', '_z'),
+               Type.new('complex(kind(0.0d0))', '_dz'),
+              ]
+  INTEGERS = [
+              Type.new('integer', '_i'),
+              Type.new('integer(8)', '_di'),
+             ]
+%>
+module lib_comparable
+!  use , only:
+
+  implicit none
+
+  private
+  public:: equivalent
+
+  interface equivalent
+    <% REALS.product(REALS).each{|t1, t2| %>
+      module procedure equivalent<%= t1.suf %><%= t2.suf %>
+    <% } %>
+
+    <% COMPLEXES.product(COMPLEXES).each{|t1, t2| %>
+      module procedure equivalent<%= t1.suf %><%= t2.suf %>
+    <% } %>
+
+    <% INTEGERS.product(INTEGERS).each{|t1, t2| %>
+      module procedure equivalent<%= t1.suf %><%= t2.suf %>
+    <% } %>
+
+    module procedure equivalent_l
+    module procedure equivalent_c
+  end interface
+
+contains
+
+
+  <% REALS.product(REALS).each{|t1, t2| %>
+    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
+      logical:: this
+      <%= t1.type %>, intent(in):: a
+      <%= t2.type %>, intent(in):: b
+      real(min(kind(a), kind(b))), intent(in), optional:: delta
+
+      real(kind(delta)):: delta_, deltaRelative, deltaAbsolute
+
+      if(present(delta))then
+        delta_ = delta*max(abs(a), abs(b))
+      else
+        deltaRelative = epsilon(delta)*max(abs(a), abs(b))
+        deltaAbsolute = epsilon(delta)*tiny(delta)
+        delta_ = max(deltaRelative, deltaAbsolute)
+      end if
+
+      this = (abs(a - b) < 2*delta_)
+    end function equivalent<%= t1.suf %><%= t2.suf %>
+  <% } %>
+
+  <% COMPLEXES.product(COMPLEXES).each{|t1, t2| %>
+    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
+      logical:: this
+      <%= t1.type %>, intent(in):: a
+      <%= t2.type %>, intent(in):: b
+      real(min(kind(a), kind(b))), intent(in), optional:: delta
+
+      if(present(delta))then
+        this = equivalent(real(a), real(b), delta) .and. equivalent(aimag(a), aimag(b), delta)
+      else
+        this = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
+      end if
+    end function equivalent<%= t1.suf %><%= t2.suf %>
+  <% } %>
+
+  <% INTEGERS.product(INTEGERS).each{|t1, t2| %>
+    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b) result(this)
+      logical:: this
+      <%= t1.type %>, intent(in):: a
+      <%= t2.type %>, intent(in):: b
+
+      this = (a == b)
+    end function equivalent<%= t1.suf %><%= t2.suf %>
+  <% } %>
+
+  elemental function equivalent_l(a, b) result(this)
+    logical:: this
+    logical, intent(in):: a, b
+
+    this = a .eqv. b
+  end function equivalent_l
+
+  elemental function equivalent_c(a, b) result(this)
+    logical:: this
+    character(len = *), intent(in):: a, b
+
+    this = (a == b)
+  end function equivalent_c
+end module lib_comparable
