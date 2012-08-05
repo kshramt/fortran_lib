@@ -128,7 +128,7 @@ contains
           write(ioUA, *) a
           call tempfile(ioUB, fileB)
           write(ioUB, *) b
-          call execute_command_line("diff -w -B " // s(fileA) // ' ' // s(fileB))
+          call execute_command_line("diff -w -B " // s(fileA) // ' ' // s(fileB) // ' | more')
           call close_tempfile(ioUA)
           call close_tempfile(ioUB)
           call raise(__FILE__, __LINE__)
