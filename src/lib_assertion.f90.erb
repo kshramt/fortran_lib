@@ -1,26 +1,3 @@
-!  iIrRzZcl
-! i**------
-! I**------
-! r--**----
-! R--**----
-! z----**--
-! Z----**--
-! c------*-
-! l-------*
-! total 14 combinations in types.
-
-!  01234567
-! 0********
-! 1**------
-! 2*-*-----
-! 3*--*----
-! 4*---*---
-! 5*----*--
-! 6*-----*-
-! 7*------*
-! total 22 combinations in dimensions.
-! total 308 combinations in type*dimension.
-
 <%
   class Type
     require 'ruby_patch'
@@ -106,6 +83,28 @@ module lib_assertion
 
 contains
 
+  !  iIrRzZcl
+  ! i**------
+  ! I**------
+  ! r--**----
+  ! R--**----
+  ! z----**--
+  ! Z----**--
+  ! c------*-
+  ! l-------*
+  ! total 14 combinations in types.
+  !
+  !  01234567
+  ! 0********
+  ! 1**------
+  ! 2*-*-----
+  ! 3*--*----
+  ! 4*---*---
+  ! 5*----*--
+  ! 6*-----*-
+  ! 7*------*
+  ! total 22 combinations in dimensions.
+  ! total 308 combinations in type*dimension.
   <% PAIRS.each{|t1, t2| %>
     <% OPS.each{|op| %>
       subroutine assert<%= op[:suf] %>_equal<%= t1.suf %><%= t2.suf %>(a, b)
