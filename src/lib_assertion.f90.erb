@@ -57,21 +57,21 @@ module lib_assertion
   implicit none
 
   private
-  <% OPS.each{|op| %>
+  <%- OPS.each{|op| -%>
     public:: assert<%= op[:suf] %>_equal
-  <% } %>
+  <%- } -%>
   public:: assert_true
   public:: assert_false
 
-  <% PAIRS.each{|t1, t2| %>
-    <% OPS.each{|op| %>
+  <%- PAIRS.each{|t1, t2| -%>
+    <%- OPS.each{|op| -%>
       interface assert<%= op[:suf] %>_equal
         module procedure assert<%= op[:suf] %>_equal<%= t1.suf %><%= t2.suf %>
       end interface assert<%= op[:suf] %>_equal
-    <% } %>
-  <% } %>
+    <%- } -%>
+  <%- } -%>
 
-  <% (0..7).each{|dim| %>
+  <%- (0..7).each{|dim| -%>
     interface assert_true
       module procedure assert_true_<%= dim %>
     end interface assert_true
@@ -79,7 +79,7 @@ module lib_assertion
     interface assert_false
       module procedure assert_true_<%= dim %>
     end interface assert_false
-  <% } %>
+  <%- } -%>
 
 contains
 
@@ -105,8 +105,8 @@ contains
   ! 7*------*
   ! total 22 combinations in dimensions.
   ! total 308 combinations in type*dimension.
-  <% PAIRS.each{|t1, t2| %>
-    <% OPS.each{|op| %>
+  <%- PAIRS.each{|t1, t2| -%>
+    <%- OPS.each{|op| -%>
       subroutine assert<%= op[:suf] %>_equal<%= t1.suf %><%= t2.suf %>(a, b)
         <%= t1.type %>, intent(in):: a<%= t1.parenthesis %>
         <%= t2.type %>, intent(in):: b<%= t2.parenthesis %>
@@ -114,12 +114,12 @@ contains
         integer:: ioUA, ioUB
         character(len = 1024):: fileA, fileB
 
-        <% unless t1.dim == 0 || t2.dim == 0 %>
+        <%- unless t1.dim == 0 || t2.dim == 0 -%>
           if(all(shape(a) /= shape(b)))then
             write(ERROR_UNIT, *) "shape(a) /= shape(b): ", shape(a), ' /= ', shape(b)
             call raise(__FILE__, __LINE__)
           end if
-        <% end %>
+        <%- end -%>
 
         if(<%= op[:op] %>((/equivalent(a, b)/)))then
           write(ERROR_UNIT, *) 'a <%= op[:msg] %> b:'
@@ -133,10 +133,10 @@ contains
           call raise(__FILE__, __LINE__)
         end if
       end subroutine assert<%= op[:suf] %>_equal<%= t1.suf %><%= t2.suf %>
-    <% } %>
-  <% } %>
+    <%- } -%>
+  <%- } -%>
 
-  <% (0..7).each{|dim| %>
+  <%- (0..7).each{|dim| -%>
     subroutine assert_true_<%= dim %>(mask)
       logical, intent(in):: mask<%= Type.parenthesis(dim) %>
 
@@ -152,5 +152,5 @@ contains
         call raise(__FILE__, __LINE__)
       end if
     end subroutine assert_false_<%= dim %>
-  <% } %>
+  <%- } -%>
 end module lib_assertion

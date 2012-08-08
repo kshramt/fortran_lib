@@ -46,9 +46,9 @@
 
 module lib_list
   use lib_util, only: check
-  <% USERS_MODULES_AND_TYPES.each{|m, t| %>
+  <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
     use <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
-  <% } %>
+  <%- } -%>
 
   implicit none
 
@@ -78,11 +78,11 @@ module lib_list
   public:: is_size_one          ! .true. is size of list is one.
   public:: is_empty             ! .true. is size of list is zero.
 
-  <% TYPES.each{|t| %>
+  <%- TYPES.each{|t| -%>
     public:: <%= t.val %>
-  <% } %>
+  <%- } -%>
 
-  <% TYPES.each{|t| %>
+  <%- TYPES.each{|t| -%>
     type <%= t.val %>Node
       <%= t.type %>:: val
       type(<%= t.val %>Node), pointer:: prev => null()
@@ -92,9 +92,9 @@ module lib_list
     type <%= t.val %>
       type(<%= t.val %>Node), pointer:: entry => null()
     end type <%= t.val %>
-  <% } %>
+  <%- } -%>
 
-  <% TYPES.each{|t| %>
+  <%- TYPES.each{|t| -%>
     interface new
       module procedure new_<%= t.val %>
     end interface
@@ -169,11 +169,11 @@ module lib_list
     interface is_empty
       module procedure is_empty_<%= t.val %>
     end interface
-  <% } %>
+  <%- } -%>
 
 contains
 
-  <% TYPES.each{|t| %>
+  <%- TYPES.each{|t| -%>
     subroutine swap_<%= t.val %>(list, pos1, pos2)
       type(<%= t.val %>), intent(inout):: list
       integer, intent(in):: pos1, pos2
@@ -438,5 +438,5 @@ contains
       allocate(list%entry)
       list%entry%val = val
     end subroutine new_<%= t.val %>
-  <% } %>
+  <%- } -%>
 end module lib_list

@@ -75,13 +75,13 @@ module lib_io
   character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
 
   interface new_unit
-    <% ['integer', 'integer(8)'].map(&:to_type).each{|t| %>
+    <%- ['integer', 'integer(8)'].map(&:to_type).each{|t| -%>
       module procedure new_unit<%= t.val %>
-    <% } %>
+    <%- } -%>
   end interface new_unit
 
-  <% TYPES.each{|t| %>
-    <% DIM_RANGE.each{|dim| %>
+  <%- TYPES.each{|t| -%>
+    <%- DIM_RANGE.each{|dim| -%>
       interface write_array
         module procedure write_array<%= t.val %>_<%= dim %>
       end interface write_array
@@ -93,8 +93,8 @@ module lib_io
       interface read_array_v_1
         module procedure read_array_v_1<%= t.val %>_<%= dim %>
       end interface read_array_v_1
-    <% } %>
-  <% } %>
+    <%- } -%>
+  <%- } -%>
 
 contains
 
@@ -220,14 +220,14 @@ contains
     close(rU1)
   end function number_of_columns
 
-  <% TYPES.each{|t| %>
-    <% DIM_RANGE.each{|dim| %>
+  <%- TYPES.each{|t| -%>
+    <%- DIM_RANGE.each{|dim| -%>
       subroutine write_array<%= t.val %>_<%= dim %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
         character(len = *), intent(in):: arrayDir
         <%= t.type %>, intent(in):: array<%= parenthesis(dim) %>
-        <% if NUM_DESC_MAX >= 1 %>
+        <%- if NUM_DESC_MAX >= 1 -%>
           character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
-        <% end %>
+        <%- end -%>
 
         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t.type %>'
         integer, parameter:: DIM_FOR_SELF = <%= dim %>
@@ -261,9 +261,9 @@ contains
         close(wU1)
 
         open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
-        <% (1..NUM_DESC_MAX).each{|i| %>
+        <%- (1..NUM_DESC_MAX).each{|i| -%>
           if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
-        <% } %>
+        <%- } -%>
         close(wU1)
       end subroutine write_array<%= t.val %>_<%= dim %>
 
@@ -313,11 +313,11 @@ contains
         open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
         read(rU1) array
       end subroutine read_array_v_1<%= t.val %>_<%= dim %>
-    <% } %>
-  <% } %>
+    <%- } -%>
+  <%- } -%>
 
 
-  <% ['integer', 'integer(8)'].map(&:to_type).each{|t| %>
+  <%- ['integer', 'integer(8)'].map(&:to_type).each{|t| -%>
     subroutine new_unit<%= t.val %>(n)
       <%= t.type %>, intent(out):: n
       <%= t.type %>:: i
@@ -333,5 +333,5 @@ contains
 
       call raise("No available unit number exist between: ",  (/NEW_UNIT_MIN, NEW_UNIT_MAX/))
     end subroutine new_unit<%= t.val %>
-  <% } %>
+  <%- } -%>
 end module lib_io

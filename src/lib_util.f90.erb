@@ -49,8 +49,8 @@ module lib_util
     module procedure check_without_value
   end interface check
 
-  <% TYPES.each{|type| %>
-    <% DIM_RANGE.each{|dim| %>
+  <%- TYPES.each{|type| -%>
+    <%- DIM_RANGE.each{|dim| -%>
       interface raise
         module procedure raise<%= type.fort_suf %>_<%= dim %>
       end interface
@@ -58,8 +58,8 @@ module lib_util
       interface check
         module procedure check<%= type.fort_suf %>_<%= dim %>
       end interface
-    <%}%>
-  <%}%>
+    <%- } -%>
+  <%- } -%>
 
 contains
 
@@ -86,8 +86,8 @@ contains
     end if
   end subroutine check_without_value
 
-  <% TYPES.each{|type| %>
-    <% DIM_RANGE.each{|dim| %>
+  <%- TYPES.each{|type| -%>
+    <%- DIM_RANGE.each{|dim| -%>
       subroutine raise<%= type.fort_suf %>_<%= dim %>(errorMessage, value)
         character(len = *), intent(in):: errorMessage
         <%= type %>, intent(in):: value<%= parenthesis(dim)%>
@@ -103,6 +103,6 @@ contains
 
         if(.not.isOk) call raise(errorMessage, value)
       end subroutine check<%= type.fort_suf %>_<%= dim %>
-    <%}%>
-  <%}%>
+    <%- } -%>
+  <%- } -%>
 end module lib_util

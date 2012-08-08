@@ -31,7 +31,7 @@ module lib_character
   character, parameter:: TAB      = char(9)
   character, parameter:: NEW_LINE = char(10)
 
-  <% TYPES.each{|type| %>
+  <%- TYPES.each{|type| -%>
     interface str
       module procedure str<%= type.fort_suf %>
     end interface
@@ -39,7 +39,7 @@ module lib_character
     interface str_fixed
       module procedure str_fixed<%= type.fort_suf %>
     end interface
-  <% } %>
+  <%- } -%>
 
 contains
 
@@ -50,7 +50,7 @@ contains
     this = trim(adjustl(str))
   end function s
 
-  <% TYPES.each{|type| %>
+  <%- TYPES.each{|type| -%>
     pure function str<%= type.fort_suf %>(x) result(this)
       <%= type %>, intent(in):: x
       character(len = len(s(str_fixed(x)))):: this
@@ -65,5 +65,5 @@ contains
       write(this, *) x
       this = s(this)
     end function str_fixed<%= type.fort_suf %>
-  <% } %>
+  <%- } -%>
 end module lib_character

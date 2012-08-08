@@ -23,17 +23,17 @@ module lib_comparable
   public:: equivalent
 
   interface equivalent
-    <% REALS.product(REALS).each{|t1, t2| %>
+    <%- REALS.product(REALS).each{|t1, t2| -%>
       module procedure equivalent<%= t1.suf %><%= t2.suf %>
-    <% } %>
+    <%- } -%>
 
-    <% COMPLEXES.product(COMPLEXES).each{|t1, t2| %>
+    <%- COMPLEXES.product(COMPLEXES).each{|t1, t2| -%>
       module procedure equivalent<%= t1.suf %><%= t2.suf %>
-    <% } %>
+    <%- } -%>
 
-    <% INTEGERS.product(INTEGERS).each{|t1, t2| %>
+    <%- INTEGERS.product(INTEGERS).each{|t1, t2| -%>
       module procedure equivalent<%= t1.suf %><%= t2.suf %>
-    <% } %>
+    <%- } -%>
 
     module procedure equivalent_l
     module procedure equivalent_c
@@ -42,7 +42,7 @@ module lib_comparable
 contains
 
 
-  <% REALS.product(REALS).each{|t1, t2| %>
+  <%- REALS.product(REALS).each{|t1, t2| -%>
     elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
       logical:: this
       <%= t1.type %>, intent(in):: a
@@ -62,9 +62,9 @@ contains
 
       this = (abs(a - b) < 2*delta_)
     end function equivalent<%= t1.suf %><%= t2.suf %>
-  <% } %>
+  <%- } -%>
 
-  <% COMPLEXES.product(COMPLEXES).each{|t1, t2| %>
+  <%- COMPLEXES.product(COMPLEXES).each{|t1, t2| -%>
     elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
       logical:: this
       <%= t1.type %>, intent(in):: a
@@ -77,9 +77,9 @@ contains
         this = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
       end if
     end function equivalent<%= t1.suf %><%= t2.suf %>
-  <% } %>
+  <%- } -%>
 
-  <% INTEGERS.product(INTEGERS).each{|t1, t2| %>
+  <%- INTEGERS.product(INTEGERS).each{|t1, t2| -%>
     elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b) result(this)
       logical:: this
       <%= t1.type %>, intent(in):: a
@@ -87,7 +87,7 @@ contains
 
       this = (a == b)
     end function equivalent<%= t1.suf %><%= t2.suf %>
-  <% } %>
+  <%- } -%>
 
   elemental function equivalent_l(a, b) result(this)
     logical:: this
