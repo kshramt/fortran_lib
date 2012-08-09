@@ -34,11 +34,11 @@ module lib_character
   <%- TYPES.each{|type| -%>
     interface str
       module procedure str<%= type.fort_suf %>
-    end interface
+    end interface str
 
     interface str_fixed
       module procedure str_fixed<%= type.fort_suf %>
-    end interface
+    end interface str_fixed
   <%- } -%>
 
 contains

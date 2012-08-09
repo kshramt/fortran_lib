@@ -53,11 +53,11 @@ module lib_util
     <%- DIM_RANGE.each{|dim| -%>
       interface raise
         module procedure raise<%= type.fort_suf %>_<%= dim %>
-      end interface
+      end interface raise
 
       interface check
         module procedure check<%= type.fort_suf %>_<%= dim %>
-      end interface
+      end interface check
     <%- } -%>
   <%- } -%>
 
