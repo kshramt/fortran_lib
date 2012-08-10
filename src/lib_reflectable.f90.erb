@@ -1,0 +1,78 @@
+<%
+  $LOAD_PATH.unshift('/Users/seismo04/d/soft/fort/lib')
+  require 'fort'
+
+  TYPES\
+  = (0..7).to_a.map{|dim| ::Fort::Type::LogicalType.new(dim)}\
+  + (0..7).to_a.product([8, 16, 32, 64]).map{|dim, kind| ::Fort::Type::IntegerType.new(dim, kind)}\
+  + (0..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::RealType.new(dim, kind)}\
+  + (0..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::ComplexType.new(dim, kind)}\
+  + (0..7).to_a.map{|dim| ::Fort::Type::CharacterType.new(dim, '*')}
+%>
+
+module lib_reflectable
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+
+  implicit none
+
+  private
+
+  public:: str_from_type_of
+  public:: sym_from_type_of
+  public:: dim_from_type_of
+  public:: suf_from_type_of
+
+  <%- TYPES.each{|t| -%>
+    interface str_from_type_of
+      module procedure str_from_type_of<%= t.suf %>
+    end interface str_from_type_of
+
+    interface sym_from_type_of
+      module procedure sym_from_type_of<%= t.suf %>
+    end interface sym_from_type_of
+
+    interface dim_from_type_of
+      module procedure dim_from_type_of<%= t.suf %>
+    end interface dim_from_type_of
+
+    interface suf_from_type_of
+      module procedure suf_from_type_of<%= t.suf %>
+    end interface suf_from_type_of
+  <%- } -%>
+
+contains
+
+  <%- TYPES.each{|t| -%>
+    function str_from_type_of<%= t.suf %>(v) result(this)
+      character(len = *), parameter:: STRING_EXPRESSION = "<%= t %>"
+      character(len = len(STRING_EXPRESSION)):: this
+      <%= t %>, intent(in):: v<%= t.parenthesis %>
+
+      this = STRING_EXPRESSION
+    end function str_from_type_of<%= t.suf %>
+
+    function sym_from_type_of<%= t.suf %>(v) result(this)
+      character(len = *), parameter:: SYMBOL = "<%= t.sym %>"
+      character(len = len(SYMBOL)):: this
+      <%= t %>, intent(in):: v<%= t.parenthesis %>
+
+      this = SYMBOL
+    end function sym_from_type_of<%= t.suf %>
+
+    function dim_from_type_of<%= t.suf %>(v) result(this)
+      integer, parameter:: DIM = <%= t.dim %>
+      integer:: this
+      <%= t %>, intent(in):: v<%= t.parenthesis %>
+
+      this = DIM
+    end function dim_from_type_of<%= t.suf %>
+
+    function suf_from_type_of<%= t.suf %>(v) result(this)
+      character(len = *), parameter:: SUFFIX = "<%= t.suf %>"
+      character(len = len(SUFFIX)):: this
+      <%= t %>, intent(in):: v<%= t.parenthesis %>
+
+      this = SUFFIX
+    end function suf_from_type_of<%= t.suf %>
+  <%- } -%>
+end module lib_reflectable
