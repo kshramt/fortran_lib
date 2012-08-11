@@ -17,61 +17,50 @@ module lib_reflectable
   private
 
   public:: str_from_type_of
-  public:: sym_from_type_of
   public:: dim_from_type_of
-  public:: suf_from_type_of
+  public:: stem_from_type_of
 
   <%- TYPES.each{|t| -%>
     interface str_from_type_of
-      module procedure str_from_type_of<%= t.suf %>
+      module procedure str_from_type_of<%= t %>
     end interface str_from_type_of
 
-    interface sym_from_type_of
-      module procedure sym_from_type_of<%= t.suf %>
-    end interface sym_from_type_of
-
     interface dim_from_type_of
-      module procedure dim_from_type_of<%= t.suf %>
+      module procedure dim_from_type_of<%= t %>
     end interface dim_from_type_of
 
-    interface suf_from_type_of
-      module procedure suf_from_type_of<%= t.suf %>
-    end interface suf_from_type_of
+    interface stem_from_type_of
+      module procedure stem_from_type_of<%= t %>
+    end interface stem_from_type_of
   <%- } -%>
 
 contains
 
   <%- TYPES.each{|t| -%>
     function str_from_type_of<%= t.suf %>(v) result(this)
+
+    function str_from_type_of<%= t %>(v) result(this)
       character(len = *), parameter:: STRING_EXPRESSION = "<%= t %>"
       character(len = len(STRING_EXPRESSION)):: this
-      <%= t %>, intent(in):: v<%= t.parenthesis %>
+      <%= t.declare %>, intent(in):: v
 
       this = STRING_EXPRESSION
-    end function str_from_type_of<%= t.suf %>
+    end function str_from_type_of<%= t %>
 
-    function sym_from_type_of<%= t.suf %>(v) result(this)
-      character(len = *), parameter:: SYMBOL = "<%= t.sym %>"
-      character(len = len(SYMBOL)):: this
-      <%= t %>, intent(in):: v<%= t.parenthesis %>
-
-      this = SYMBOL
-    end function sym_from_type_of<%= t.suf %>
-
-    function dim_from_type_of<%= t.suf %>(v) result(this)
+    function dim_from_type_of<%= t %>(v) result(this)
       integer, parameter:: DIM = <%= t.dim %>
       integer:: this
-      <%= t %>, intent(in):: v<%= t.parenthesis %>
+      <%= t.declare %>, intent(in):: v
 
       this = DIM
-    end function dim_from_type_of<%= t.suf %>
+    end function dim_from_type_of<%= t %>
 
-    function suf_from_type_of<%= t.suf %>(v) result(this)
-      character(len = *), parameter:: SUFFIX = "<%= t.suf %>"
-      character(len = len(SUFFIX)):: this
-      <%= t %>, intent(in):: v<%= t.parenthesis %>
+    function stem_from_type_of<%= t %>(v) result(this)
+      character(len = *), parameter:: STEM = "<%= t.stem %>"
+      character(len = len(STEM)):: this
+      <%= t.declare %>, intent(in):: v
 
-      this = SUFFIX
-    end function suf_from_type_of<%= t.suf %>
+      this = STEM
+    end function stem_from_type_of<%= t %>
   <%- } -%>
 end module lib_reflectable

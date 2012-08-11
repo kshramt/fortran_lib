@@ -1,23 +1,16 @@
 <%
-  TYPES = [
-    'integer',
-    'integer(8)',
-    'real',
-    'double precision',
-    'complex',
-    'complex(kind(0.0d0))',
-    'logical',
-  ]
+  require 'fort'
 
-  class String
-    def fort_suf
-      work = self.gsub(/[^\w]/, '_')
-      work = 'type_' + work unless work[0] =~ /[A-Za-z]/
-      '_' + work
-    end
-  end
+  TYPES\
+  = [::Fort::Type::LogicalType.new(0)]\
+  + [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}\
+  + [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}\
+  + [32, 64, 128].map{|kind| ::Fort::Type::ComplexType.new(0, kind)}\
+  + [::Fort::Type::CharacterType.new(0, '*')]
 %>
 module lib_character
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+
   implicit none
 
   private
@@ -31,13 +24,13 @@ module lib_character
   character, parameter:: TAB      = char(9)
   character, parameter:: NEW_LINE = char(10)
 
-  <%- TYPES.each{|type| -%>
+  <%- TYPES.each{|t| -%>
     interface str
-      module procedure str<%= type.fort_suf %>
+      module procedure str<%= t %>
     end interface str
 
     interface str_fixed
-      module procedure str_fixed<%= type.fort_suf %>
+      module procedure str_fixed<%= t %>
     end interface str_fixed
   <%- } -%>
 
@@ -50,20 +43,20 @@ contains
     this = trim(adjustl(str))
   end function s
 
-  <%- TYPES.each{|type| -%>
-    pure function str<%= type.fort_suf %>(x) result(this)
-      <%= type %>, intent(in):: x
+  <%- TYPES.each{|t| -%>
+    pure function str<%= t %>(x) result(this)
+      <%= t.declare %>, intent(in):: x
       character(len = len(s(str_fixed(x)))):: this
 
       this = s(str_fixed(x))
-    end function str<%= type.fort_suf %>
+    end function str<%= t %>
 
-    pure function str_fixed<%= type.fort_suf %>(x) result(this)
+    pure function str_fixed<%= t %>(x) result(this)
       character(len = STR_LEN):: this
-      <%= type %>, intent(in):: x
+      <%= t.declare %>, intent(in):: x
 
       write(this, *) x
       this = s(this)
-    end function str_fixed<%= type.fort_suf %>
+    end function str_fixed<%= t %>
   <%- } -%>
 end module lib_character

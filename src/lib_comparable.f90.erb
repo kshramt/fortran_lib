@@ -1,21 +1,20 @@
 <%
-  Type = Struct.new(:type, :suf)
-  REALS = [
-           Type.new('real', '_r'),
-           Type.new('double precision', '_dr'),
-          ]
+  require 'fort'
 
-  COMPLEXES = [
-               Type.new('complex', '_z'),
-               Type.new('complex(kind(0.0d0))', '_dz'),
-              ]
-  INTEGERS = [
-              Type.new('integer', '_i'),
-              Type.new('integer(8)', '_di'),
-             ]
+  INT_KINDS = [8, 16, 32, 64]
+  INT_KIND_PAIRS = INT_KINDS.product(INT_KINDS)
+  REAL_KINDS = [32, 64,128]
+  REAL_KIND_PAIRS = REAL_KINDS.product(REAL_KINDS)
+
+  INTEGER_PAIRS = INT_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::IntegerType.new(0, kind)}}
+  REAL_PAIRS = REAL_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::RealType.new(0, kind)}}
+  COMPLEX_PAIRS = REAL_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::ComplexType.new(0, kind)}}
+  LOGICAL_PAIRS = [[::Fort::Type::LogicalType.new(0), ::Fort::Type::LogicalType.new(0)]]
+  CHARACTER_PAIRS = [[::Fort::Type::CharacterType.new(0, '*'), ::Fort::Type::CharacterType.new(0, '*')]]
 %>
+
 module lib_comparable
-!  use , only:
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
   implicit none
 
@@ -23,52 +22,41 @@ module lib_comparable
   public:: equivalent
 
   interface equivalent
-    <%- REALS.product(REALS).each{|t1, t2| -%>
-      module procedure equivalent<%= t1.suf %><%= t2.suf %>
+    <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
+      module procedure equivalent<%= t1 %><%= t2 %>
     <%- } -%>
-
-    <%- COMPLEXES.product(COMPLEXES).each{|t1, t2| -%>
-      module procedure equivalent<%= t1.suf %><%= t2.suf %>
-    <%- } -%>
-
-    <%- INTEGERS.product(INTEGERS).each{|t1, t2| -%>
-      module procedure equivalent<%= t1.suf %><%= t2.suf %>
-    <%- } -%>
-
-    module procedure equivalent_l
-    module procedure equivalent_c
   end interface equivalent
 
 contains
 
 
-  <%- REALS.product(REALS).each{|t1, t2| -%>
-    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
+  <%- REAL_PAIRS.each{|t1, t2| -%>
+    elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
       logical:: this
-      <%= t1.type %>, intent(in):: a
-      <%= t2.type %>, intent(in):: b
+      <%= t1.declare %>, intent(in):: a
+      <%= t2.declare %>, intent(in):: b
       real(max(kind(a), kind(b))), intent(in), optional:: delta
 
       real(kind(delta)):: delta_, deltaRelative, deltaAbsolute
-      real(min(kind(a), kind(b))):: lowPrecision
+      real(min(kind(a), kind(b))):: lowerPrecision
 
       if(present(delta))then
         delta_ = delta*max(abs(a), abs(b))
       else
         deltaRelative = max(epsilon(a)*abs(a), epsilon(b)*abs(b))
-        deltaAbsolute = epsilon(lowPrecision)*tiny(lowPrecision)
+        deltaAbsolute = epsilon(lowerPrecision)*tiny(lowerPrecision)
         delta_ = max(deltaRelative, deltaAbsolute)
       end if
 
       this = (abs(a - b) < 2*delta_)
-    end function equivalent<%= t1.suf %><%= t2.suf %>
+    end function equivalent<%= t1 %><%= t2 %>
   <%- } -%>
 
-  <%- COMPLEXES.product(COMPLEXES).each{|t1, t2| -%>
-    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b, delta) result(this)
+  <%- COMPLEX_PAIRS.each{|t1, t2| -%>
+    elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
       logical:: this
-      <%= t1.type %>, intent(in):: a
-      <%= t2.type %>, intent(in):: b
+      <%= t1.declare %>, intent(in):: a
+      <%= t2.declare %>, intent(in):: b
       real(max(kind(a), kind(b))), intent(in), optional:: delta
 
       if(present(delta))then
@@ -76,30 +64,36 @@ contains
       else
         this = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
       end if
-    end function equivalent<%= t1.suf %><%= t2.suf %>
+    end function equivalent<%= t1 %><%= t2 %>
   <%- } -%>
 
-  <%- INTEGERS.product(INTEGERS).each{|t1, t2| -%>
-    elemental function equivalent<%= t1.suf %><%= t2.suf %>(a, b) result(this)
+  <%- INTEGER_PAIRS.each{|t1, t2| -%>
+    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
       logical:: this
-      <%= t1.type %>, intent(in):: a
-      <%= t2.type %>, intent(in):: b
+      <%= t1.declare %>, intent(in):: a
+      <%= t2.declare %>, intent(in):: b
 
       this = (a == b)
-    end function equivalent<%= t1.suf %><%= t2.suf %>
+    end function equivalent<%= t1 %><%= t2 %>
   <%- } -%>
 
-  elemental function equivalent_l(a, b) result(this)
-    logical:: this
-    logical, intent(in):: a, b
+  <%- LOGICAL_PAIRS.each{|t1, t2| -%>
+    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
+      logical:: this
+      <%= t1.declare %>, intent(in):: a
+      <%= t2.declare %>, intent(in):: b
 
-    this = a .eqv. b
-  end function equivalent_l
+      this = a .eqv. b
+    end function equivalent<%= t1 %><%= t2 %>
+  <%- } -%>
 
-  elemental function equivalent_c(a, b) result(this)
-    logical:: this
-    character(len = *), intent(in):: a, b
+  <%- CHARACTER_PAIRS.each{|t1, t2| -%>
+    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
+      logical:: this
+      <%= t1.declare %>, intent(in):: a
+      <%= t2.declare %>, intent(in):: b
 
-    this = (a == b)
-  end function equivalent_c
+      this = (a == b)
+    end function equivalent<%= t1 %><%= t2 %>
+  <%- } -%>
 end module lib_comparable

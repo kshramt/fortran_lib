@@ -15,7 +15,6 @@
   NUM_DESC_MAX = 10
 %>
 
-! AUTHOR = 'Kasahara Amato'
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
@@ -49,21 +48,21 @@ module lib_io
 
   interface new_unit
     <%- [8, 16, 32, 64].map{|i| ::Fort::Type::IntegerType.new(0, i)}.each{|t| -%>
-      module procedure new_unit<%= t.suf %>
+      module procedure new_unit<%= t %>
     <%- } -%>
   end interface new_unit
 
   <%- TYPES.each{|t| -%>
     interface write_array
-      module procedure write_array<%= t.suf %>
+      module procedure write_array<%= t %>
     end interface write_array
 
     interface read_array
-      module procedure read_array<%= t.suf %>
+      module procedure read_array<%= t %>
     end interface read_array
 
     interface read_array_v_1
-      module procedure read_array_v_1<%= t.suf %>
+      module procedure read_array_v_1<%= t %>
     end interface read_array_v_1
   <%- } -%>
 
@@ -192,9 +191,9 @@ contains
   end function number_of_columns
 
   <%- TYPES.each{|t| -%>
-    subroutine write_array<%= t.suf %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+    subroutine write_array<%= t %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
       character(len = *), intent(in):: arrayDir
-      <%= t %>, intent(in):: array<%= t.parenthesis %>
+      <%= t.declare %>, intent(in):: array
       <%- if NUM_DESC_MAX >= 1 -%>
         character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
       <%- end -%>
@@ -235,11 +234,11 @@ contains
         if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
       <%- } -%>
       close(wU1)
-    end subroutine write_array<%= t.suf %>
+    end subroutine write_array<%= t %>
 
-    subroutine read_array<%= t.suf %>(arrayDir, array)
+    subroutine read_array<%= t %>(arrayDir, array)
       character(len = *), intent(in):: arrayDir
-      <%= t %>, intent(out), allocatable:: array<%= t.parenthesis %>
+      <%= t.declare %>, intent(out), allocatable:: array
 
       integer:: rU1, libIoVersion
 
@@ -254,11 +253,11 @@ contains
       case default
         call raise("Unsupported version: ", libIoVersion)
       end select
-    end subroutine read_array<%= t.suf %>
+    end subroutine read_array<%= t %>
 
-    subroutine read_array_v_1<%= t.suf %>(arrayDir, array)
+    subroutine read_array_v_1<%= t %>(arrayDir, array)
       character(len = *), intent(in):: arrayDir
-      <%= t %>, intent(out), allocatable:: array<%= t.parenthesis %>
+      <%= t.declare %>, intent(out), allocatable:: array
 
       character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
       integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
@@ -282,13 +281,13 @@ contains
       call new_unit(rU1)
       open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
       read(rU1) array
-    end subroutine read_array_v_1<%= t.suf %>
+    end subroutine read_array_v_1<%= t %>
   <%- } -%>
 
 
   <%- [8, 16, 32, 64].map{|i| ::Fort::Type::IntegerType.new(0, i)}.each{|t| -%>
-    subroutine new_unit<%= t.suf %>(n)
-      <%= t %>, intent(out):: n
+    subroutine new_unit<%= t %>(n)
+      <%= t.declare %>, intent(out):: n
       integer(kind(n)):: i
       logical:: isOpened
 
@@ -301,6 +300,6 @@ contains
       end do
 
       call raise("No available unit number exist between: ",  (/NEW_UNIT_MIN, NEW_UNIT_MAX/))
-    end subroutine new_unit<%= t.suf %>
+    end subroutine new_unit<%= t %>
   <%- } -%>
 end module lib_io

@@ -1,53 +1,57 @@
 <%
-  # Edit here to add your type.
-  # YourType should have assignment(=).
-  USERS_MODULES_AND_TYPES = {
-    # lib_your_type: ['YourType',],
+  $LOAD_PATH.unshift('/home/kame1/d/soft/fort/lib')
+  require 'ruby_patch'
+  require 'fort'
+
+  # # Edit here and USERS_MODULES_AND_TYPES bellow to add type(SomeData).
+  # # type(SomeData) should have assignment(=).
+  # class ::Fort::Type::SomeDataType < ::Fort::Type
+  #   require 'ruby_patch'
+  #   extend ::RubyPatch::AutoLoad
+  #
+  #   def initialize(dim = 0)
+  #     super
+  #   end
+  #
+  #   def to_s
+  #     super
+  #   end
+  #
+  #   def declare
+  #     "#{@stem}#{super}"
+  #   end
+  # end
+
+  ::Fort::Type.class_eval{
+    def list_type
+      "#{self.to_s}List"
+    end
+
+    def list_node_type
+      "#{self.to_s}ListNode"
+    end
   }
+  INTRINSIC_TYPES\
+  = [::Fort::Type::LogicalType.new]\
+  + (0..13).to_a.map{|i| 2**i}.map{|len| ::Fort::Type::CharacterType.new(0, len)}\
+  + [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}\
+  + [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}\
+  + [32, 64, 128].map{|kind| ::Fort::Type::ComplexType.new(0, kind)}
 
-  class Type
-    attr_reader :type, :val
-
-    def initialize(type, is_intrinsic = true)
-      @type = if is_intrinsic
-                type
-              else
-                "type(#{type})"
-              end
-      @val = list(type)
-    end
-
-    private
-
-    def list(str)
-      str.gsub(/(?:\A|\W)(\w)/){$1.upcase}.gsub(/\W/, '') + 'List'
-    end
-  end
-
-  USER_DEFINED_TYPES = USERS_MODULES_AND_TYPES\
-    .values\
-    .flatten\
-    .map{|t| Type.new(t, false)}
-
-  INTRINSIC_TYPES = (
-                     [
-                      'integer',
-                      'integer(8)',
-                      'real',
-                      'double precision',
-                      'complex',
-                      'complex(kind(0.0d0))',
-                      'logical',
-                     ] + (0..13).map{|i| "character(len = #{2**i})"})\
-    .map{|t| Type.new(t)}
+  USERS_MODULES_AND_TYPES = {
+    # # You should also edit here to add type(SomeData)
+    # lib_some_data: [::Fort::Type::SomeDataType]{|klass| klass.new(0)}
+  }
+  USER_DEFINED_TYPES = USERS_MODULES_AND_TYPES.values.flatten
 
   TYPES = INTRINSIC_TYPES + USER_DEFINED_TYPES
 %>
 
 module lib_list
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   use lib_util, only: check
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
-    use <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
+    use <%= m %>, non_intrinsic, only: <%= (["assignment(=)"] + t).join(', ') %>
   <%- } -%>
 
   implicit none
@@ -78,108 +82,108 @@ module lib_list
   public:: is_size_one          ! .true. is size of list is one.
   public:: is_empty             ! .true. is size of list is zero.
 
-  <% TYPES.each{|t| %>
-    public:: <%= t.val %>
-  <% } %>
+  <%- TYPES.each{|t| -%>
+    public:: <%= t.list_type %>
+  <%- } -%>
 
-  <% TYPES.each{|t| %>
-    type <%= t.val %>Node
-      <%= t.type %>:: val
-      type(<%= t.val %>Node), pointer:: prev => null()
-      type(<%= t.val %>Node), pointer:: next => null()
-    end type <%= t.val %>Node
+  <%- TYPES.each{|t| -%>
+    type <%= t.list_node_type %>
+      <%= t.declare %>:: val
+      type(<%= t.list_node_type %>), pointer:: prev => null()
+      type(<%= t.list_node_type %>), pointer:: next => null()
+    end type <%= t.list_node_type %>
 
-    type <%= t.val %>
-      type(<%= t.val %>Node), pointer:: entry => null()
-    end type <%= t.val %>
-  <% } %>
+    type <%= t.list_type %>
+      type(<%= t.list_node_type %>), pointer:: entry => null()
+    end type <%= t.list_type %>
+  <%- } -%>
 
-  <% TYPES.each{|t| %>
+  <%- TYPES.each{|t| -%>
     interface new
-      module procedure new_<%= t.val %>
+      module procedure new<%= t %>
     end interface
 
     interface size
-      module procedure size_<%= t.val %>
+      module procedure size<%= t %>
     end interface
 
     interface delete_at
-      module procedure delete_at_<%= t.val %>
+      module procedure delete_at<%= t %>
     end interface
 
     interface insert_at
-      module procedure insert_at_<%= t.val %>
+      module procedure insert_at<%= t %>
     end interface
 
     interface val_at
-      module procedure val_at_<%= t.val %>
+      module procedure val_at<%= t %>
     end interface
 
     interface operator(.val.)
-      module procedure val_at_<%= t.val %>
+      module procedure val_at<%= t %>
     end interface
 
     interface node_at
-      module procedure node_at_<%= t.val %>
+      module procedure node_at<%= t %>
     end interface
 
     interface shift
-      module procedure shift_<%= t.val %>
+      module procedure shift<%= t %>
     end interface
 
     interface unshift
-      module procedure unshift_<%= t.val %>
+      module procedure unshift<%= t %>
     end interface
 
     interface push
-      module procedure push_<%= t.val %>
+      module procedure push<%= t %>
     end interface
 
     interface pop
-      module procedure pop_<%= t.val %>
+      module procedure pop<%= t %>
 
     end interface
 
     interface clear
-      module procedure clear_<%= t.val %>
+      module procedure clear<%= t %>
     end interface
 
     interface swap
-      module procedure swap_<%= t.val %>
+      module procedure swap<%= t %>
     end interface
 
     interface array_from_list
-      module procedure array_from_list_<%= t.val %>
+      module procedure array_from_list<%= t %>
     end interface
 
     interface copy
-      module procedure copy_<%= t.val %>
+      module procedure copy<%= t %>
     end interface
 
     interface assignment(=)
-      module procedure copy_<%= t.val %>
-      module procedure list_from_array_coercion_<%= t.val %>
-      module procedure array_from_list_coercion_<%= t.val %>
+      module procedure copy<%= t %>
+      module procedure list_from_array_coercion<%= t %>
+      module procedure array_from_list_coercion<%= t %>
     end interface
 
     interface is_size_one
-      module procedure is_size_one_<%= t.val %>
+      module procedure is_size_one<%= t %>
     end interface
 
     interface is_empty
-      module procedure is_empty_<%= t.val %>
+      module procedure is_empty<%= t %>
     end interface
-  <% } %>
+  <%- } -%>
 
 contains
 
-  <% TYPES.each{|t| %>
-    subroutine swap_<%= t.val %>(list, pos1, pos2)
-      type(<%= t.val %>), intent(inout):: list
+  <%- TYPES.each{|t| -%>
+    subroutine swap<%= t %>(list, pos1, pos2)
+      type(<%= t.list_type %>), intent(inout):: list
       integer, intent(in):: pos1, pos2
 
-      type(<%= t.val %>Node), pointer:: posLNodePrev, posLNode, posLNodeNext
-      type(<%= t.val %>Node), pointer:: posRNodePrev, posRNode, posRNodeNext
+      type(<%= t.list_node_type %>), pointer:: posLNodePrev, posLNode, posLNodeNext
+      type(<%= t.list_node_type %>), pointer:: posRNodePrev, posRNode, posRNodeNext
       integer:: posL, posR, nList
 
       posL = min(pos1, pos2)
@@ -214,25 +218,25 @@ contains
       end if
 
       if(posR == nList) list%entry => posLNode
-    end subroutine swap_<%= t.val %>
+    end subroutine swap<%= t %>
 
-    subroutine copy_<%= t.val %>(new, original)
-      type(<%= t.val %>), intent(inout):: new
-      type(<%= t.val %>), intent(in):: original
+    subroutine copy<%= t %>(new, original)
+      type(<%= t.list_type %>), intent(inout):: new
+      type(<%= t.list_type %>), intent(in):: original
 
       new = array_from_list(original)
-    end subroutine copy_<%= t.val %>
+    end subroutine copy<%= t %>
 
-    function array_from_list_<%= t.val %>(list) result(this)
-      <%= t.type %>, allocatable:: this(:)
-      type(<%= t.val %>), intent(in):: list
+    function array_from_list<%= t %>(list) result(this)
+      <%= t.declare %>, allocatable:: this(:)
+      type(<%= t.list_type %>), intent(in):: list
 
       this = list
-    end function array_from_list_<%= t.val %>
+    end function array_from_list<%= t %>
 
-    subroutine list_from_array_coercion_<%= t.val %>(list, array)
-      type(<%= t.val %>), intent(inout):: list
-      <%= t.type %>, intent(in):: array(:)
+    subroutine list_from_array_coercion<%= t %>(list, array)
+      type(<%= t.list_type %>), intent(inout):: list
+      <%= t.declare %>, intent(in):: array(:)
 
       integer:: i
 
@@ -241,14 +245,14 @@ contains
       do i = lbound(array, 1), ubound(array, 1)
         call push(list, array(i))
       end do
-    end subroutine list_from_array_coercion_<%= t.val %>
+    end subroutine list_from_array_coercion<%= t %>
 
-    subroutine array_from_list_coercion_<%= t.val %>(array, list)
-      <%= t.type %>, allocatable, intent(out):: array(:)
-      type(<%= t.val %>), intent(in):: list
+    subroutine array_from_list_coercion<%= t %>(array, list)
+      <%= t.declare %>, allocatable, intent(out):: array(:)
+      type(<%= t.list_type %>), intent(in):: list
 
       integer:: i, nList
-      type(<%= t.val %>Node), pointer:: walker
+      type(<%= t.list_node_type %>), pointer:: walker
 
       nList = size(list)
       allocate(array(1:nList))
@@ -262,39 +266,39 @@ contains
         i = i - 1
         array(i) = walker%val
       end do
-    end subroutine array_from_list_coercion_<%= t.val %>
+    end subroutine array_from_list_coercion<%= t %>
 
-    function val_at_<%= t.val %>(list, pos) result(this)
-      <%= t.type %>:: this
-      type(<%= t.val %>), intent(in):: list
+    function val_at<%= t %>(list, pos) result(this)
+      <%= t.declare %>:: this
+      type(<%= t.list_type %>), intent(in):: list
       integer, intent(in):: pos
 
-      type(<%= t.val %>Node), pointer:: targetNode
+      type(<%= t.list_node_type %>), pointer:: targetNode
 
       targetNode => node_at(list, pos)
       this = targetNode%val
-    end function val_at_<%= t.val %>
+    end function val_at<%= t %>
 
-    function unshift_<%= t.val %>(list) result(this)
-      <%= t.type %>:: this
-      type(<%= t.val %>), intent(inout):: list
+    function unshift<%= t %>(list) result(this)
+      <%= t.declare %>:: this
+      type(<%= t.list_type %>), intent(inout):: list
 
       this = delete_at(list, 1)
-    end function unshift_<%= t.val %>
+    end function unshift<%= t %>
 
-    subroutine shift_<%= t.val %>(list, val)
-      type(<%= t.val %>), intent(inout):: list
-      <%= t.type %>, intent(in):: val
+    subroutine shift<%= t %>(list, val)
+      type(<%= t.list_type %>), intent(inout):: list
+      <%= t.declare %>, intent(in):: val
 
       call insert_at(list, val, 1)
-    end subroutine shift_<%= t.val %>
+    end subroutine shift<%= t %>
 
-    function delete_at_<%= t.val %>(list, pos) result(this)
-      <%= t.type %>:: this
-      type(<%= t.val %>), intent(inout):: list
+    function delete_at<%= t %>(list, pos) result(this)
+      <%= t.declare %>:: this
+      type(<%= t.list_type %>), intent(inout):: list
       integer:: pos
 
-      type(<%= t.val %>Node), pointer:: targetNode
+      type(<%= t.list_node_type %>), pointer:: targetNode
 
       if(pos == size(list))then
         this = pop(list)
@@ -306,13 +310,13 @@ contains
       if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
       targetNode%next%prev => targetNode%prev
       deallocate(targetNode)
-    end function delete_at_<%= t.val %>
+    end function delete_at<%= t %>
 
-    function pop_<%= t.val %>(list) result(this)
-      <%= t.type %>:: this
-      type(<%= t.val %>), intent(inout):: list
+    function pop<%= t %>(list) result(this)
+      <%= t.declare %>:: this
+      type(<%= t.list_type %>), intent(inout):: list
 
-      type(<%= t.val %>Node), pointer:: targetNode
+      type(<%= t.list_node_type %>), pointer:: targetNode
 
       targetNode => list%entry
       this = targetNode%val
@@ -325,24 +329,24 @@ contains
       list%entry%next => targetNode%next
 
       deallocate(targetNode)
-    end function pop_<%= t.val %>
+    end function pop<%= t %>
 
-    recursive subroutine clear_<%= t.val %>(list)
-      type(<%= t.val %>), intent(inout):: list
+    recursive subroutine clear<%= t %>(list)
+      type(<%= t.list_type %>), intent(inout):: list
 
-      <%= t.type %>:: trash
+      <%= t.declare %>:: trash
 
       do while(associated(list%entry))
         trash = pop(list)
       end do
-    end subroutine clear_<%= t.val %>
+    end subroutine clear<%= t %>
 
-    subroutine insert_at_<%= t.val %>(list, val, pos)
-      type(<%= t.val %>), intent(inout):: list
-      <%= t.type %>, intent(in):: val
+    subroutine insert_at<%= t %>(list, val, pos)
+      type(<%= t.list_type %>), intent(inout):: list
+      <%= t.declare %>, intent(in):: val
       integer, intent(in):: pos
 
-      type(<%= t.val %>Node), pointer:: nextNode, newNode
+      type(<%= t.list_node_type %>), pointer:: nextNode, newNode
 
       if(pos == size(list) + 1)then
         call push(list, val)
@@ -354,13 +358,13 @@ contains
       newNode%val = val
       newNode%prev => nextNode%prev
       newNode%next => nextNode
-    end subroutine insert_at_<%= t.val %>
+    end subroutine insert_at<%= t %>
 
-    subroutine push_<%= t.val %>(list, val)
-      type(<%= t.val %>), intent(inout):: list
-      <%= t.type %>, intent(in):: val
+    subroutine push<%= t %>(list, val)
+      type(<%= t.list_type %>), intent(inout):: list
+      <%= t.declare %>, intent(in):: val
 
-      type(<%= t.val %>Node), pointer:: newNode
+      type(<%= t.list_node_type %>), pointer:: newNode
 
       if(is_empty(list))then
         call new(list, val)
@@ -373,11 +377,11 @@ contains
       newNode%next => list%entry%next
       list%entry%next => newNode
       list%entry => newNode
-    end subroutine push_<%= t.val %>
+    end subroutine push<%= t %>
 
-    function node_at_<%= t.val %>(list, pos) result(this)
-      type(<%= t.val %>Node), pointer:: this
-      type(<%= t.val %>), intent(in):: list
+    function node_at<%= t %>(list, pos) result(this)
+      type(<%= t.list_node_type %>), pointer:: this
+      type(<%= t.list_type %>), intent(in):: list
       integer, intent(in):: pos
 
       integer:: posNow
@@ -391,28 +395,28 @@ contains
         this => this%prev
         posNow = posNow - 1
       end do
-    end function node_at_<%= t.val %>
+    end function node_at<%= t %>
 
-    function is_empty_<%= t.val %>(list) result(this)
+    function is_empty<%= t %>(list) result(this)
       logical:: this
-      type(<%= t.val %>), intent(in):: list
+      type(<%= t.list_type %>), intent(in):: list
 
       this = .not.associated(list%entry)
-    end function is_empty_<%= t.val %>
+    end function is_empty<%= t %>
 
-    function is_size_one_<%= t.val %>(list) result(this)
+    function is_size_one<%= t %>(list) result(this)
       logical:: this
-      type(<%= t.val %>), intent(in):: list
+      type(<%= t.list_type %>), intent(in):: list
 
       this = (.not.is_empty(list)) .and. (.not.associated(list%entry%prev))
-    end function is_size_one_<%= t.val %>
+    end function is_size_one<%= t %>
 
-    function size_<%= t.val %>(list) result(this)
-      ! arrayとの相互変換を考慮して、integerの範囲に絞る
+    function size<%= t %>(list) result(this)
+      ! "this" is integer since maximum size(array, 1) is huge(0).
       integer:: this
-      type(<%= t.val %>), intent(in):: list
+      type(<%= t.list_type %>), intent(in):: list
 
-      type(<%= t.val %>Node), pointer:: walker
+      type(<%= t.list_node_type %>), pointer:: walker
 
       if(is_empty(list))then
         this = 0
@@ -425,11 +429,11 @@ contains
         walker => walker%prev
         this = this + 1
       end do
-    end function size_<%= t.val %>
+    end function size<%= t %>
 
-    subroutine new_<%= t.val %>(list, val)
-      type(<%= t.val %>), intent(inout):: list
-      <%= t.type %>, intent(in):: val
+    subroutine new<%= t %>(list, val)
+      type(<%= t.list_type %>), intent(inout):: list
+      <%= t.declare %>, intent(in):: val
 
       if(.not.is_empty(list))then
         call clear(list)
@@ -437,6 +441,6 @@ contains
 
       allocate(list%entry)
       list%entry%val = val
-    end subroutine new_<%= t.val %>
-  <% } %>
+    end subroutine new<%= t %>
+  <%- } -%>
 end module lib_list
