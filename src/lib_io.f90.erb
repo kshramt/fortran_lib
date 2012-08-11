@@ -138,7 +138,7 @@ contains
     character:: dummy
 
     call new_unit(rU1)
-    open(rU1, file = fileName, status = 'old', action = 'read')
+    open(rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
     do this = 0, huge(this)
       read(rU1, *, iostat = ios) dummy
       if(ios /= 0) exit
@@ -168,7 +168,7 @@ contains
     mode = SEEK_NORMAL_CHAR
     this = 0
     call new_unit(rU1)
-    open(rU1, file = fileName, status = 'old', action = 'read')
+    open(rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
     do i = 1, numberOfHeaders_
       read(rU1, *)
     end do
@@ -184,7 +184,7 @@ contains
         mode = SEEK_NORMAL_CHAR
         cycle
       else
-        call raise('Must not happen.')
+        call must_not_happen
       end if
     end do
     close(rU1)
@@ -225,7 +225,7 @@ contains
       dim = DIM_FOR_SELF
       forall(i = 1:dim) sizes(i) = size(array, i)
       call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'replace', action = 'write')
+      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
       write(wU1, nml = array_meta)
       close(wU1)
 
@@ -268,7 +268,7 @@ contains
       namelist /array_meta/ dataType, dim, sizes
 
       call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'old', action = 'read')
+      open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
       call check(s(dataType) == DATA_TYPE_FOR_SELF, 'Data type mismatch. Expected ' // DATA_TYPE_FOR_SELF // ' but type of ' // s(arrayDir) // ' is ', s(dataType))

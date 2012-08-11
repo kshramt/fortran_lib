@@ -14,7 +14,7 @@ module lib_util
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT
   implicit none
   private
-  public:: raise, check
+  public:: must_not_happen, raise, check
 
 
   interface raise
@@ -36,6 +36,10 @@ module lib_util
   <%- } -%>
 
 contains
+
+  subroutine must_not_happen
+    call raise('Must not happen.')
+  end subroutine must_not_happen
 
   ! Define check_without_value separately because
   ! SOME_TYPE, intent(in), optional:: value

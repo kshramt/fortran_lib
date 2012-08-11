@@ -37,8 +37,6 @@ module lib_reflectable
 contains
 
   <%- TYPES.each{|t| -%>
-    function str_from_type_of<%= t.suf %>(v) result(this)
-
     function str_from_type_of<%= t %>(v) result(this)
       character(len = *), parameter:: STRING_EXPRESSION = "<%= t %>"
       character(len = len(STRING_EXPRESSION)):: this
