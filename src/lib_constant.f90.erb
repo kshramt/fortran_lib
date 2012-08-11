@@ -1,0 +1,53 @@
+<%-
+  require 'fort'
+
+  TYPES = [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}
+-%>
+
+module lib_constant
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+
+  implicit none
+
+  private
+
+  <%- TYPES.each{|t| -%>
+    public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
+    public:: DEG_TO_RAD_<%= t.kind %>
+    public:: RAD_TO_DEG_<%= t.kind %>
+    public:: PI<%= t %>         ! Expected to be used by erb generate code.
+    public:: DEG_TO_RAD<%= t %>
+    public:: RAD_TO_DEG<%= t %>
+  <%- } -%>
+  public:: get_nan
+  public:: get_infinity
+
+  <%- TYPES.each{|t| -%>
+    <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind_const %>)
+    <%= t.declare %>, parameter:: DEG_TO_RAD<%= t %> = PI<%= t %>/180
+    <%= t.declare %>, parameter:: RAD_TO_DEG<%= t %> = 180/PI<%= t %>
+    <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>
+    <%= t.declare %>, parameter:: DEG_TO_RAD_<%= t.kind %> = DEG_TO_RAD<%= t %>
+    <%= t.declare %>, parameter:: RAD_TO_DEG_<%= t.kind %> = RAD_TO_DEG<%= t %>
+  <%- } -%>
+
+contains
+
+  elemental function get_nan() result(this)
+    real(REAL32):: this
+
+    character(len = len('NaN')):: buf ! buf can not be a parameter.
+
+    buf = 'NaN'
+    read(buf, *) this
+  end function get_nan
+
+  elemental function get_infinity() result(this)
+    real(REAL32):: this
+
+    character(len = len('Infinity')):: buf ! buf can not be a parameter.
+
+    buf = 'Infinity'
+    read(buf, *) this
+  end function get_infinity
+end module lib_constant
