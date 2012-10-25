@@ -26,10 +26,10 @@
   OPS = [{op: '.not.all', suf: '', msg: '/='}, {op: 'all', suf: '_not', msg: '=='}]
 %>
 
+#include "utils.h"
 module lib_assertion
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT
-  use lib_util, only: raise, check
   use lib_comparable, only: equivalent
   use lib_character, only: s
   use lib_io, only: new_unit, tempfile, close_tempfile
@@ -95,7 +95,7 @@ contains
         character(len = 1024):: fileA, fileB
 
         <%- unless t1.dim == 0 || t2.dim == 0 -%>
-          call check(all(shape(a) == shape(b)), "shape(a) /= shape(b): ", (/shape(a), shape(b)/))
+          RAISE_IF(any(shape(a) /= shape(b)), shape(a), shape(b))
         <%- end -%>
 
         if(<%= op[:op] %>((/equivalent(a, b)/)))then
@@ -107,7 +107,7 @@ contains
           call execute_command_line("diff -w -B " // s(fileA) // ' ' // s(fileB) // ' | more')
           call close_tempfile(ioUA)
           call close_tempfile(ioUB)
-          call raise(__FILE__, __LINE__)
+          RAISE()
         end if
       end subroutine assert<%= op[:suf] %>_equal<%= t1 %><%= t2 %>
     <%- } -%>
@@ -117,13 +117,13 @@ contains
     subroutine assert_true<%= t %>(mask)
       <%= t.declare %>, intent(in):: mask
 
-      call check(all((/mask/)), __FILE__, __LINE__)
+      RAISE_IF(.not.all((/mask/)))
     end subroutine assert_true<%= t %>
 
     subroutine assert_false<%= t %>(mask)
       <%= t.declare %>, intent(in):: mask
 
-      call check(.not.any((/mask/)), __FILE__, __LINE__)
+      RAISE_IF(any((/mask/)))
     end subroutine assert_false<%= t %>
   <%- } -%>
 end module lib_assertion

@@ -15,11 +15,11 @@
   NUM_DESC_MAX = 10
 %>
 
+#include "utils.h"
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use lib_character, only: TAB, s, str
-  use lib_util, only: raise, check
+  use lib_character, only: TAB, s
 
   implicit none
 
@@ -112,7 +112,7 @@ contains
     if(present(exitStatus))then
       exitStatus = exitStatus_
     elseif(exitStatus_ /= 0)then
-      call raise("Failed: mkdir -p ", s(path))
+      RAISE('Failed to execute mkdir -p ', s(path))
     end if
   end subroutine mkdir_p
 
@@ -184,7 +184,7 @@ contains
         mode = SEEK_NORMAL_CHAR
         cycle
       else
-        call must_not_happen
+        MUST_NOT_HAPPEN
       end if
     end do
     close(rU1)
@@ -251,7 +251,7 @@ contains
       case(1)
         call read_array_v_1(arrayDir, array)
       case default
-        call raise("Unsupported version: ", libIoVersion)
+        RAISE('Unsupported version: ', libIoVersion)
       end select
     end subroutine read_array<%= t %>
 
@@ -271,8 +271,8 @@ contains
       open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
-      call check(s(dataType) == DATA_TYPE_FOR_SELF, 'Data type mismatch. Expected ' // DATA_TYPE_FOR_SELF // ' but type of ' // s(arrayDir) // ' is ', s(dataType))
-      call check(dim == DIM_FOR_SELF, 'Dimension mismatch. Expected' // str(DIM_FOR_SELF) // ' but dimension of ' // s(arrayDir) // ' is ' // str(dim))
+      RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF, 'Expected: ', DATA_TYPE_FOR_SELF, ' Got: ', s(dataType), ' for ', s(arrayDir))
+      RAISE_IF(dim /= DIM_FOR_SELF, 'Expected: ', DIM_FOR_SELF, ' ', ' Got: ', dim, ' for ', s(arrayDir))
 
       close(rU1)
 
@@ -299,7 +299,7 @@ contains
         end if
       end do
 
-      call raise("No available unit number exist between: ",  (/NEW_UNIT_MIN, NEW_UNIT_MAX/))
+      RAISE("No available unit number exist between: ",  NEW_UNIT_MIN, NEW_UNIT_MAX)
     end subroutine new_unit<%= t %>
   <%- } -%>
 end module lib_io

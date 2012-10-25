@@ -1,0 +1,21 @@
+require 'tempfile'
+
+ERB_COMPILER = 'erb1.9'
+ERB_OPTIONS = "-T '-' -P"
+CPP_COMPILER = 'cpp-mp-4.8'
+CPP_OPTIONS = "-C"
+ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
+
+desc "Compile erb files."
+task erb: ERBED_F90_FILES
+
+rule '.f90' => '.f90.erb' do |t|
+  begin
+    tempfile = Tempfile.new(['fortran_lib', '.f90']).path
+    sh "#{ERB_COMPILER} #{ERB_OPTIONS} #{t.source} > #{t.name}"
+    sh "#{CPP_COMPILER} #{CPP_OPTIONS} #{t.name} > #{tempfile}"
+    mv tempfile, t.name
+  rescue
+    mv t.name, tempfile
+  end
+end

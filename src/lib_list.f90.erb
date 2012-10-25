@@ -1,5 +1,4 @@
 <%
-  $LOAD_PATH.unshift('/home/kame1/d/soft/fort/lib')
   require 'ruby_patch'
   require 'fort'
 
@@ -47,9 +46,9 @@
   TYPES = INTRINSIC_TYPES + USER_DEFINED_TYPES
 %>
 
+#include "utils.h"
 module lib_list
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use lib_util, only: check
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
     use <%= m %>, non_intrinsic, only: <%= (["assignment(=)"] + t).join(', ') %>
   <%- } -%>
@@ -70,8 +69,8 @@ module lib_list
   ! WARNING: Returns pointer!
   ! BAD: targetNode =  node_at(list, pos)
   ! OK:  targetNode => node_at(list, pos)
-  public:: shift                ! Insert a node to the head.
-  public:: unshift ! Delete the head node and return a value of the node.
+  public:: shift ! Delete the head node and return a value of the node.
+  public:: unshift              ! Insert a node to the head.
   public:: push    ! Insert a node to the tail.
   public:: pop  ! Delete the tail node and return a value of the node.
   public:: clear                ! Delete all nodes.
@@ -79,8 +78,8 @@ module lib_list
   public:: array_from_list      ! List to array convertor.
   public:: copy                 ! Cleate a deep copy of a list.
   public:: assignment(=)        ! List to array, array to list, deep copy of list.
-  public:: is_size_one          ! .true. is size of list is one.
-  public:: is_empty             ! .true. is size of list is zero.
+  public:: is_size_one          ! .true. if size of list is one.
+  public:: is_empty             ! .true. if size of list is zero.
 
   <%- TYPES.each{|t| -%>
     public:: <%= t.list_type %>
@@ -189,7 +188,7 @@ contains
       posL = min(pos1, pos2)
       posR = max(pos1, pos2)
       nList = size(list)
-      call check(1 <= posL .and. posR <= nList, "swap: Out of range: [pos1, posR] = ", [pos1, posR])
+      RAISE_IF(posL < 1 .or. nList < posR, 'Out of range: posL, posR = ', posL, posR)
       if(posL == posR) return
 
       posLNode => node_at(list, posL)
@@ -386,7 +385,7 @@ contains
 
       integer:: posNow
 
-      call check(1 <= pos .and. pos <= size(list), 'pos out of range: (/size(list), pos/) = ', (/size(list), pos/))
+      RAISE_IF(pos < 1 .or. size(list) < pos, 'Out of range: pos, size(list) = ', pos, size(list))
 
       this => list%entry
       posNow = size(list)
