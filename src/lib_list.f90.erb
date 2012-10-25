@@ -279,19 +279,19 @@ contains
       this = targetNode%val
     end function val_at<%= t %>
 
-    function unshift<%= t %>(list) result(this)
+    function shift<%= t %>(list) result(this)
       <%= t.declare %>:: this
       type(<%= t.list_type %>), intent(inout):: list
 
       this = delete_at(list, 1)
-    end function unshift<%= t %>
+    end function shift<%= t %>
 
-    subroutine shift<%= t %>(list, val)
+    subroutine unshift<%= t %>(list, val)
       type(<%= t.list_type %>), intent(inout):: list
       <%= t.declare %>, intent(in):: val
 
       call insert_at(list, val, 1)
-    end subroutine shift<%= t %>
+    end subroutine unshift<%= t %>
 
     function delete_at<%= t %>(list, pos) result(this)
       <%= t.declare %>:: this
