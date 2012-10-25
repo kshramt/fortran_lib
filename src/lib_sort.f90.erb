@@ -1,0 +1,110 @@
+<%-
+  require 'fort'
+
+  INTEGER_TYPES = [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(1, kind)}
+  REAL_TYPES = [32, 64,128].map{|kind| ::Fort::Type::RealType.new(1, kind)}
+  TYPES = INTEGER_TYPES + REAL_TYPES
+-%>
+
+#include "utils.h"
+module lib_sort
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+  use lib_comparable, only: is_nan
+
+  implicit none
+
+  private
+
+  public:: qsort
+
+  <%- TYPES.each{|t| -%>
+    interface qsort
+      module procedure qsort<%= t %>
+    end interface qsort
+  <%- } -%>
+
+contains
+
+  <%- INTEGER_TYPES.each{|t| -%>
+    recursive function qsort<%= t %>(a) result(this)
+      <%= t.declare %>:: this
+      <%= t.declare %>, intent(in):: a
+      <%= t.declare %>:: aMin, aMax
+
+      if(size(a) <= 1)then
+        this = a
+        return
+      end if
+
+      aMin = minval(a)
+      aMax = maxval(a)
+      if(aMax <= aMin)then
+        this = a
+        return
+      end if
+
+      pib = intermediate_floor_avoid_overflow(aMin, aMax)
+      this = [qsort(pack(a, a <= pib)), qsort(pack(a, a > pib))]
+    end function qsort<%= t %>
+    
+    ! this: Floor of m/n.
+    function div_floor<%= t %>(m, n) result(this)
+      <%= t.declare %>:: this
+      <%= t.declare %>, intent(in):: m, n
+
+      this = m/n
+      if(mod(m, n) < 0) this = this - 1
+    end function div_floor<%= t %>
+    
+    ! this: Floor of intermediate of m and n without suffering overflow.
+    function intermediate_floor_avoid_overflow<%= t %>(m, n) result(this)
+      <%= t.declare %>:: this
+      <%= t.declare %>, intent(in):: m, n
+
+      this = div_floor(m, 2) + div_floor(n, 2)
+      if((mod(m, 2) == 1 .and. mod(n, 2) == 1) .or. (mod(m, 2) == -1 .and. mod(n, 2) == -1)) this = this + 1
+    end function intermediate_floor_avoid_overflow<%= t %>
+  <%- } -%>
+
+  <%- REAL_TYPES.each{|t| -%>
+    recursive function qsort<%= t %>(a) result(this)
+      <%= t.declare %>, intent(in):: a
+      <%= t.declare %>:: this
+
+      <%= t.declare %>:: aMin, aMax, pib
+      Integer:: maxlocA(1:1), minlocA(1:1)
+
+      RAISE_IF(any(is_nan(a)), a)
+
+      if(size(a) <= 1)then        ! Anchor case.
+        this = a
+        return
+      end if
+
+      aMin = minval(a)
+      aMax = maxval(a)
+      if(aMax <= aMin)then ! Quick return if possible: aMin equal aMax means all values in a are same.
+        this = a
+        return
+      end if
+
+      ! Infinity case.
+      ! These case is separately handled since Inf - Inf = NaN although pib should not be NaN.
+      if(aMin < -huge(aMin))then  ! -Inf
+        minlocA = minloc(a)
+        this = [aMin, qsort([a(1:minlocA(1) - 1), a(minlocA(1) + 1:size(a))])]
+        return
+      end if
+
+      if(huge(aMax) < aMax)then   ! +Inf
+        maxlocA = maxloc(a)
+        this = [qsort([a(1:maxlocA(1) - 1), a(maxlocA(1) + 1:size(a))]), aMax]
+        return
+      end if
+
+
+      pib = aMin/2 + aMax/2       ! Avoid overflow.
+      this = [qsort(pack(a, a <= pib)), qsort(pack(a, a > pib))]
+    end function qsort<%= t %>
+  <%- } -%>
+end module lib_sort
