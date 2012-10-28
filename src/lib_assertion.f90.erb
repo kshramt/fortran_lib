@@ -43,12 +43,12 @@ module lib_assertion
   public:: assert_true
   public:: assert_false
 
-  <%- TYPE_PAIRS.each{|t1, t2| -%>
-    <%- OPS.each{|op| -%>
-      interface assert<%= op[:suf] %>_equal
+  <%- OPS.each{|op| -%>
+    interface assert<%= op[:suf] %>_equal
+      <%- TYPE_PAIRS.each{|t1, t2| -%>
         module procedure assert<%= op[:suf] %>_equal<%= t1 %><%= t2 %>
-      end interface assert<%= op[:suf] %>_equal
-    <%- } -%>
+      <%- } -%>
+    end interface assert<%= op[:suf] %>_equal
   <%- } -%>
 
   <%- LOGICAL_TYPES.each{|t| -%>
