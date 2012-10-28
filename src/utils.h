@@ -7,14 +7,14 @@
 #  define MUST_NOT_HAPPEN RAISE('Must not happen.') /* Must not happen unless a compiler has bugs. */
 #  define BUG RAISE('Bug.')			  /* Should not happen unless some programs have bugs. */
 
-#  define WARN_IF(isBad, ...)\
-     if(isBad)then;\
-       WARN(#isBad, " ", ##__VA_ARGS__);\
+#  define WARN_IF(isBad, ...) \
+     if(isBad)then; \
+       WARN(#isBad, " ", ##__VA_ARGS__); \
      end if
 
-#  define RAISE_IF(isBad, ...)\
-     if(isBad)then;\
-       RAISE(#isBad, " ", ##__VA_ARGS__);\
+#  define RAISE_IF(isBad, ...) \
+     if(isBad)then; \
+       RAISE(#isBad, " ", ##__VA_ARGS__); \
      end if
 
 #  ifdef DEBUG
