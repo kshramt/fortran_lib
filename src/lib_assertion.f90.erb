@@ -57,7 +57,7 @@ module lib_assertion
     end interface assert_true
 
     interface assert_false
-      module procedure assert_true<%= t %>
+      module procedure assert_false<%= t %>
     end interface assert_false
   <%- } -%>
 
