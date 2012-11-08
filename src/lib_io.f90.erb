@@ -139,9 +139,14 @@ contains
 
     call new_unit(rU1)
     open(rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
-    do this = 0, huge(this)
+
+    this = 0
+    do
       read(rU1, *, iostat = ios) dummy
-      if(ios /= 0) exit
+      if(IS_IOSTAT_BAD(ios)) exit
+      RAISE_IF(this >= huge(this), 'Line number too large.')
+
+      this = this + 1
     end do
     close(rU1)
   end function number_of_lines
