@@ -160,8 +160,10 @@ contains
     integer, intent(in), optional:: numberOfHeaders
 
     enum, bind(c)
-      enumerator:: SEEK_NORMAL_CHAR, SEEK_SPACE_OR_TAB
+      enumerator:: SEEK_NORMAL_CHAR, SEEK_SEPARATOR
     end enum
+    character, parameter:: SEPARATORS(1:2) = [' ', TAB]
+
     integer:: rU1, ios, i, mode
     character:: c
 
@@ -179,18 +181,19 @@ contains
     end do
     do
       read(rU1, '(a1)', advance = 'no', iostat = ios) c
-      if(ios /= 0 .or. c == new_line('_'))then
-        exit
-      else if(mode == SEEK_NORMAL_CHAR .and. c /= ' ' .and. c /= TAB)then
-        this = this + 1
-        mode = SEEK_SPACE_OR_TAB
-        cycle
-      else if(mode == SEEK_SPACE_OR_TAB .and. (c == ' ' .or. c == TAB))then
-        mode = SEEK_NORMAL_CHAR
-        cycle
-      else
-        MUST_NOT_HAPPEN
-      end if
+      if(IS_IOSTAT_BAD(ios) .or. c == new_line('_')) exit
+
+      select case(mode)
+      case(SEEK_SEPARATOR)
+        if(INCLUDE_VAL(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
+      case(SEEK_NORMAL_CHAR)
+        if(.not.INCLUDE_VAL(SEPARATORS, c))then
+          RAISE_IF(this >= huge(this), "Column number too large.")
+
+          this = this + 1
+          mode = SEEK_SEPARATOR
+        end if
+      end select
     end do
     close(rU1)
   end function number_of_columns
