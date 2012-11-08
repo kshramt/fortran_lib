@@ -1,12 +1,15 @@
 #ifndef UTILS_HAVE_ALREADY_LOADED
 #  define UTILS_HAVE_ALREADY_LOADED
-#  define USE_UTILS_H use iso_fortran_env, only: ERROR_UNIT
+#  define USE_UTILS_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, is_iostat_eor, is_iostat_end
 #  define WHERE_AM_I __FILE__, " ", __LINE__
 #  define WARN(...) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, ##__VA_ARGS__
 #  define RAISE(...) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, ##__VA_ARGS__; stop 1
 #  define MUST_NOT_HAPPEN RAISE('Must not happen.') /* Must not happen unless a compiler has bugs. */
 #  define BUG RAISE('Bug.')			  /* Should not happen unless some programs have bugs. */
 #  define ALL_OF(array, dim, index) index = lbound(array, dim), ubound(array, dim)
+#  define INCLUDE_VAL(array, val) any(array == val)
+#  define IS_IOSTAT_BAD(ios) (is_iostat_eor(ios) .or. is_iostat_end(ios))
+#  define IS_IOSTAT_OK(ios) (.not.IS_IOSTAT_BAD(ios))
 #  define I (0, 1)
 
 #  define WARN_IF(isBad, ...) \
