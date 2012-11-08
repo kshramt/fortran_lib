@@ -6,7 +6,7 @@
 #  define RAISE(...) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, ##__VA_ARGS__; stop 1
 #  define MUST_NOT_HAPPEN RAISE('Must not happen.') /* Must not happen unless a compiler has bugs. */
 #  define BUG RAISE('Bug.')			  /* Should not happen unless some programs have bugs. */
-#  define ALL(array, index) index = lbound(array, 1), ubound(array, 1)
+#  define ALL_OF(array, dim, index) index = lbound(array, dim), ubound(array, dim)
 #  define I (0, 1)
 
 #  define WARN_IF(isBad, ...) \

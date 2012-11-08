@@ -241,7 +241,7 @@ contains
 
       if(.not.is_empty(list)) call clear(list)
 
-      do i = lbound(array, 1), ubound(array, 1)
+      do ALL_OF(array, 1, i)
         call push(list, array(i))
       end do
     end subroutine list_from_array_coercion<%= t %>
