@@ -185,9 +185,9 @@ contains
 
       select case(mode)
       case(SEEK_SEPARATOR)
-        if(INCLUDE_VAL(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
+        if(HAS_VAL(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
       case(SEEK_NORMAL_CHAR)
-        if(.not.INCLUDE_VAL(SEPARATORS, c))then
+        if(.not.HAS_VAL(SEPARATORS, c))then
           RAISE_IF(this >= huge(this), "Column number too large.")
 
           this = this + 1

@@ -7,7 +7,7 @@
 #  define MUST_NOT_HAPPEN RAISE('Must not happen.') /* Must not happen unless a compiler has bugs. */
 #  define BUG RAISE('Bug.')			  /* Should not happen unless some programs have bugs. */
 #  define ALL_OF(array, dim, index) index = lbound(array, dim), ubound(array, dim)
-#  define INCLUDE_VAL(array, val) any(array == val)
+#  define HAS_VAL(array, val) any(array == val)
 #  define IS_IOSTAT_BAD(ios) (is_iostat_eor(ios) .or. is_iostat_end(ios))
 #  define IS_IOSTAT_OK(ios) (.not.IS_IOSTAT_BAD(ios))
 #  define I (0, 1)
