@@ -19,7 +19,7 @@
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use lib_character, only: TAB, s
+  use lib_character, only: TAB, s, operator(+)
 
   implicit none
 
@@ -44,6 +44,7 @@ module lib_io
   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
   character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
   character(len = *), parameter:: TMP_DIR = 'tmp'
+  ! Non-intrinsic function `+' can not be used in initialization expression.
   character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
 
   interface new_unit
@@ -70,7 +71,7 @@ contains
 
   subroutine init_shell_interface_file()
     call mkdir_p(TMP_DIR)
-    call execute_command_line("cat /dev/null > " // SHELL_INTERFACE_FILE)
+    call execute_command_line("cat /dev/null > " + SHELL_INTERFACE_FILE)
   end subroutine init_shell_interface_file
 
   ! YAGNI: this can easily expand to val for r, R, i, I, z, Z, and l.
@@ -91,7 +92,7 @@ contains
 
     call init_shell_interface_file()
     ! tempfile name must be quoted since '/' mark is regarded to be end of record (same as namelist).
-    call execute_command_line('echo \"$(tempfile)\" > ' // SHELL_INTERFACE_FILE)
+    call execute_command_line('echo \"$(tempfile)\" > ' + SHELL_INTERFACE_FILE)
     call read_shell_interface_file(file)
     call new_unit(ioU)
     open(ioU, file = s(file), status = 'old', action = 'readwrite')
@@ -107,7 +108,7 @@ contains
     character(len = *) path
     integer, intent(out), optional:: exitStatus
     integer:: exitStatus_
-    call execute_command_line("mkdir -p " // s(path), exitstat = exitStatus_)
+    call execute_command_line("mkdir -p " + s(path), exitstat = exitStatus_)
 
     if(present(exitStatus))then
       exitStatus = exitStatus_
@@ -220,12 +221,12 @@ contains
       call mkdir_p(s(arrayDir))
 
       call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
       write(wU1, *) VERSION
       close(wU1)
 
       call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
+      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
       write(wU1) array
       close(wU1)
 
@@ -233,11 +234,11 @@ contains
       dim = DIM_FOR_SELF
       forall(i = 1:dim) sizes(i) = size(array, i)
       call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
+      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
       write(wU1, nml = array_meta)
       close(wU1)
 
-      open(unit = wU1, file = s(arrayDir) // '/' // ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
+      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
       <%- (1..NUM_DESC_MAX).each{|i| -%>
         if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
       <%- } -%>
@@ -251,7 +252,7 @@ contains
       integer:: rU1, libIoVersion
 
       call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_VERSION_FILE, status = 'old', action = 'read')
+      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
       read(rU1, *) libIoVersion
       close(rU1)
 
@@ -276,7 +277,7 @@ contains
       namelist /array_meta/ dataType, dim, sizes
 
       call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
+      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
       RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF, 'Expected: ', DATA_TYPE_FOR_SELF, ' Got: ', s(dataType), ' for ', s(arrayDir))
@@ -287,7 +288,7 @@ contains
       allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
 
       call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) // '/' // ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
       read(rU1) array
     end subroutine read_array_v_1<%= t %>
   <%- } -%>

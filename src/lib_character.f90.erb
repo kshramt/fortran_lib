@@ -16,6 +16,7 @@ module lib_character
   private
 
   public:: s                    ! Same as String#strip method in Ruby.
+  public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
   public:: str                  ! Convert a value to a string. The result is also stripped.
   public:: STR_LEN              ! Maximum length of str.
   public:: TAB, NEW_LINE
@@ -24,6 +25,9 @@ module lib_character
   character, parameter:: TAB      = char(9)
   character, parameter:: NEW_LINE = char(10)
 
+  interface operator(+)
+    module procedure add
+  end interface operator(+)
   <%- TYPES.each{|t| -%>
     interface str
       module procedure str<%= t %>
@@ -42,6 +46,13 @@ contains
 
     this = trim(adjustl(str))
   end function s
+
+  elemental function add(str1, str2) result(this)
+    character(len = *), intent(in):: str1, str2
+    character(len = len(str1) + len(str2)):: this
+
+    this = str1 // str2
+  end function add
 
   <%- TYPES.each{|t| -%>
     pure function str<%= t %>(x) result(this)
