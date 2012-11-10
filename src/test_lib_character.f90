@@ -11,5 +11,6 @@ program test_lib_character
   print*, '|' + str(.true.) + '|'
   print*, '|' + str(.false.) + '|'
   print*, '|' + s(" abc d  ") + '|'
+  print*, 'あ'*33
   stop
 end program test_lib_character

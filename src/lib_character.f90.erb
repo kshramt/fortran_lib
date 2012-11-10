@@ -7,6 +7,7 @@
   + [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}\
   + [32, 64, 128].map{|kind| ::Fort::Type::ComplexType.new(0, kind)}\
   + [::Fort::Type::CharacterType.new(0, '*')]
+  INT_TYPES = [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}
 %>
 module lib_character
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
@@ -17,6 +18,7 @@ module lib_character
 
   public:: s                    ! Same as String#strip method in Ruby.
   public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
+  public:: operator(*)          ! Syntax sugar of `repeat'. Inspired by Ruby's String#*.
   public:: str                  ! Convert a value to a string. The result is also stripped.
   public:: STR_LEN              ! Maximum length of str.
   public:: TAB, NEW_LINE
@@ -28,6 +30,13 @@ module lib_character
   interface operator(+)
     module procedure add
   end interface operator(+)
+
+  interface operator(*)
+    <%- INT_TYPES.each{|t| -%>
+      module procedure repeat_delegator<%= t %>
+    <%- } -%>
+  end interface operator(*)
+
   <%- TYPES.each{|t| -%>
     interface str
       module procedure str<%= t %>
@@ -53,6 +62,16 @@ contains
 
     this = str1 // str2
   end function add
+
+  <%- INT_TYPES.each{|t| -%>
+    pure function repeat_delegator<%= t %>(str, n) result(this)
+      character(len = *), intent(in):: str
+      <%= t.declare %>, intent(in):: n
+      character(len = len(str)*n):: this
+
+      this = repeat(str, n)
+    end function repeat_delegator<%= t %>
+  <%- } -%>
 
   <%- TYPES.each{|t| -%>
     pure function str<%= t %>(x) result(this)
