@@ -25,8 +25,10 @@
 #  ifdef DEBUG
 #    define DEBUG_PRINT(...) print*, WHERE_AM_I, ##__VA_ARGS__
 #    define DEBUG_PRINT_VARIABLE(x) print*, WHERE_AM_I, #x, x /* Print a variable name and it's value. */
+#    define DEBUG_RAISE_IF(isBad, ...) RAISE_IF(isBad, ##__VA_ARGS__)
 #  else
 #    define DEBUG_PRINT(...)
 #    define DEBUG_PRINT_VARIABLE(x)
+#    define DEBUG_RAISE_IF(isBad, ...)
 #  endif
 #endif
