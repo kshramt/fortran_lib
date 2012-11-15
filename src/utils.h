@@ -32,5 +32,5 @@
 #    define DEBUG_PRINT_VARIABLE(x)
 #    define DEBUG_RAISE_IF(isBad, ...)
 #  endif
-#endif
 #  define DEBUG_ASSERT(isOK, ...) DEBUG_RAISE_IF(.not.(isOk), ##__VA_ARGS__)
+#endif
