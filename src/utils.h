@@ -21,6 +21,7 @@
      if(isBad)then; \
        RAISE(#isBad, " ", ##__VA_ARGS__); \
      end if
+#  define ASSERT(isOk, ...) RAISE_IF(.not.(isOk), ##__VA_ARGS__)
 
 #  ifdef DEBUG
 #    define DEBUG_RAISE_IF(isBad, ...) RAISE_IF(isBad, ##__VA_ARGS__)
@@ -32,3 +33,4 @@
 #    define DEBUG_RAISE_IF(isBad, ...)
 #  endif
 #endif
+#  define DEBUG_ASSERT(isOK, ...) DEBUG_RAISE_IF(.not.(isOk), ##__VA_ARGS__)
