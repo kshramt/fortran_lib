@@ -1,6 +1,6 @@
 #ifndef UTILS_HAVE_ALREADY_LOADED
 #  define UTILS_HAVE_ALREADY_LOADED
-#  define USE_UTILS_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, is_iostat_eor, is_iostat_end
+#  define USE_UTILS_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT
 #  define WHERE_AM_I __FILE__, " ", __LINE__
 #  define WARN(...) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, ##__VA_ARGS__
 #  define RAISE(...) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, ##__VA_ARGS__; stop 1
