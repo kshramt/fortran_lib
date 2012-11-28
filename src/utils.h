@@ -22,6 +22,9 @@
        RAISE(#isBad, " ", ##__VA_ARGS__); \
      end if
 #  define ASSERT(isOk, ...) RAISE_IF(.not.(isOk), ##__VA_ARGS__)
+#  define TEST(isPass, ...)\
+     ASSERT(isPass, ##__VA_ARGS__);\
+     write(OUTPUT_UNIT, '(a)', advance = 'no') '.'
 
 #  ifdef DEBUG
 #    define DEBUG_RAISE_IF(isBad, ...) RAISE_IF(isBad, ##__VA_ARGS__)
