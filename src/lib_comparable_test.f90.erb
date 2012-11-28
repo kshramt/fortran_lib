@@ -1,0 +1,69 @@
+#include "utils.h"
+<%-
+def array_from_str(str)
+  str\
+    .split(/\n+/)\
+    .map(&:strip)\
+    .delete_if{|line| line =~ /\A[#!]/}\
+    .map{|line| line\
+      .split(/;/)\
+      .map(&:strip)}
+end
+
+TRUE_PAIRS = array_from_str(<<-EOS)
+0;	0
+1;	1
+-1;	-1
+huge(0);	huge(0)
+-huge(0);	-huge(0)
+1_INT32;	1_INT64
+0_INT32;	0_INT64
+
+0.0;	0.0
+1.0;	1.0
+huge(0.0);	huge(0.0)
+0.0;	2*epsilon(0.0)*tiny(0.0)
+0.0;	-2*epsilon(0.0)*tiny(0.0)
+1.0;	1.0 + 2*epsilon(0.0)*tiny(0.0)
+1.0;	1.0 - 2*epsilon(0.0)*tiny(0.0)
+0.0_REAL32;	0.0_REAL64
+1.0_REAL32;	1.0_REAL64
+0.0d0;	2*epsilon(0.0)*tiny(0.0)
+0.0d0;	-2*epsilon(0.0)*tiny(0.0)
+1.0d0;	1.0 + 2*epsilon(0.0)*tiny(0.0)
+1.0d0;	1.0 - 2*epsilon(0.0)*tiny(0.0)
+
+cmplx(0.0, 0.0);	cmplx(0.0, 0.0)
+cmplx(1.0, -1.0);	cmplx(1.0, -1.0)
+cmplx(0.0, 2*epsilon(0.0)*tiny(0.0));	cmplx(-2*epsilon(0.0)*tiny(0.0), 0)
+cmplx(1.0, 1.0 - 2*epsilon(0.0)*tiny(0.0));	cmplx(1.0 + 2*epsilon(0.0)*tiny(0.0), 1.0)
+EOS
+
+FALSE_PAIRS = array_from_str(<<-EOS)
+0.0;	3*epsilon(0.0)*tiny(0.0)
+0.0;	-3*epsilon(0.0)*tiny(0.0)
+1.0;	1.0 + 3*epsilon(0.0)
+1.0;	1.0 - 3*epsilon(0.0)
+
+cmplx(0.0, 3*epsilon(0.0)*tiny(0.0));	cmplx(0.0, 0.0)
+cmplx(1.0, 1.0 + 3*epsilon(0.0));	cmplx(1.0, 1.0)
+EOS
+-%>
+
+program test_lib_comparable
+  USE_UTILS_H
+  use iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
+  use lib_comparable
+  implicit none
+
+  <%- TRUE_PAIRS.each{|i1, i2| -%>
+    TEST(equivalent(<%= i1 %>, <%= i2 %>))
+  <%- } -%>
+
+  <%- FALSE_PAIRS.each{|i1, i2| -%>
+    TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
+  <%- } -%>
+
+  write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
+  stop
+end program test_lib_comparable
