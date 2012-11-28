@@ -48,7 +48,7 @@ contains
         delta_ = max(deltaRelative, deltaAbsolute)
       end if
 
-      this = (abs(a - b) < 2*delta_)
+      this = (abs(a - b) <= 2*delta_)
     end function equivalent<%= t1 %><%= t2 %>
   <%- } -%>
 
