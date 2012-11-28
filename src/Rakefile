@@ -4,7 +4,10 @@ ERB_COMPILER = 'erb1.9'
 ERB_OPTIONS = "-T '-' -P"
 CPP_COMPILER = 'cpp-mp-4.8'
 CPP_OPTIONS = "-C"
+GFORTRAN_COMPILER = "gfortran-mp-4.8"
+GFORTRAN_OPTIONS = "-ffree-line-length-none -fmax-identifier-length=63 -cpp -Wall"
 ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
+TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
 
 desc "Compile erb files."
 task erb: ERBED_F90_FILES
@@ -19,3 +22,28 @@ rule '.f90' => '.f90.erb' do |t|
     mv t.name, tempfile
   end
 end
+
+%w[.o .mod].each{|ext|
+  rule ext => '.f90' do |t|
+    sh "#{GFORTRAN_COMPILER} -c #{t.source} #{GFORTRAN_OPTIONS}"
+  end
+}
+
+# `sh' is too verbose for automatic test.
+def run_test(t)
+  tempfile = Tempfile.new(['fortran_lib', '.f90']).path
+  system <<-EOS
+#{CPP_COMPILER} #{CPP_OPTIONS} #{t.prerequisites.last} > #{tempfile}\
+&& #{GFORTRAN_COMPILER} -o #{t.name} #{GFORTRAN_OPTIONS} #{(t.prerequisites[0..-2] + [tempfile]).join(' ')}\
+&& ./#{t.name}
+  EOS
+end
+
+task test: TEST_FILES
+{
+  "lib_comparable_test.exe" => %w[ lib_comparable.o lib_comparable_test.f90],
+}.each{|target, dependencies|
+  file target => dependencies do |t|
+    run_test(t)
+  end
+}
