@@ -1,11 +1,12 @@
 require 'tempfile'
+require 'yaml'
 
-ERB_COMPILER = 'erb1.9'
-ERB_OPTIONS = "-T '-' -P"
-CPP_COMPILER = 'cpp-mp-4.8'
-CPP_OPTIONS = "-C"
-GFORTRAN_COMPILER = "gfortran-mp-4.8"
-GFORTRAN_OPTIONS = "-ffree-line-length-none -fmax-identifier-length=63 -cpp -Wall"
+CONFIG = YAML.load_file(File.join(ENV['HOME'], '.config', 'command', 'config.yaml'))
+
+ERB = [:erb, :erb_option_default].map{|k| CONFIG[k]}.join(' ')
+CPP = [:cpp, :cpp_option_default].map{|k| CONFIG[k]}.join(' ')
+GFORTRAN = [:gfortran, :gfortran_option_default].map{|k| CONFIG[k]}.join(' ')
+
 ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
 TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
 
@@ -15,8 +16,8 @@ task erb: ERBED_F90_FILES
 rule '.f90' => '.f90.erb' do |t|
   begin
     tempfile = Tempfile.new(['fortran_lib', '.f90']).path
-    sh "#{ERB_COMPILER} #{ERB_OPTIONS} #{t.source} > #{t.name}"
-    sh "#{CPP_COMPILER} #{CPP_OPTIONS} #{t.name} > #{tempfile}"
+    sh "#{ERB} #{t.source} > #{t.name}"
+    sh "#{CPP} #{t.name} > #{tempfile}"
     mv tempfile, t.name
   rescue
     mv t.name, tempfile
@@ -25,7 +26,7 @@ end
 
 %w[.o .mod].each{|ext|
   rule ext => '.f90' do |t|
-    sh "#{GFORTRAN_COMPILER} -c #{t.source} #{GFORTRAN_OPTIONS}"
+    sh "#{GFORTRAN} -c #{t.source}"
   end
 }
 
@@ -33,8 +34,8 @@ end
 def run_test(t)
   tempfile = Tempfile.new(['fortran_lib', '.f90']).path
   system <<-EOS
-#{CPP_COMPILER} #{CPP_OPTIONS} #{t.prerequisites.last} > #{tempfile}\
-&& #{GFORTRAN_COMPILER} -o #{t.name} #{GFORTRAN_OPTIONS} #{(t.prerequisites[0..-2] + [tempfile]).join(' ')}\
+#{CPP} #{t.prerequisites.last} > #{tempfile}\
+&& #{GFORTRAN} -o #{t.name} #{(t.prerequisites[0..-2] + [tempfile]).join(' ')}\
 && ./#{t.name}
   EOS
 end
