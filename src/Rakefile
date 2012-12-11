@@ -1,11 +1,8 @@
 require 'tempfile'
-require 'yaml'
 
-CONFIG = YAML.load_file(File.join(ENV['HOME'], '.config', 'command', 'config.yaml'))
-
-ERB = [:erb, :erb_option_default].map{|k| CONFIG[k]}.join(' ')
-CPP = [:cpp, :cpp_option_default].map{|k| CONFIG[k]}.join(' ')
-GFORTRAN = [:gfortran, :gfortran_option_default].map{|k| CONFIG[k]}.join(' ')
+ERB = ENV['MY_ERB']
+CPP = ENV['MY_CPP']
+GFORTRAN = ENV['MY_GFORTRAN']
 
 ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
 TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
