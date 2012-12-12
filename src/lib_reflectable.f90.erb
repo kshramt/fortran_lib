@@ -2,11 +2,11 @@
   require 'fort'
 
   TYPES\
-  = (0..7).to_a.map{|dim| ::Fort::Type::LogicalType.new(dim)}\
-  + (0..7).to_a.product([8, 16, 32, 64]).map{|dim, kind| ::Fort::Type::IntegerType.new(dim, kind)}\
-  + (0..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::RealType.new(dim, kind)}\
-  + (0..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::ComplexType.new(dim, kind)}\
-  + (0..7).to_a.map{|dim| ::Fort::Type::CharacterType.new(dim, '*')}
+  = ::Fort::Type::Logical.multi_provide\
+  + ::Fort::Type::Integer.multi_provide\
+  + ::Fort::Type::Real.multi_provide\
+  + ::Fort::Type::Complex.multi_provide\
+  + ::Fort::Type::Character.multi_provide
 %>
 
 module lib_reflectable
@@ -54,7 +54,7 @@ contains
     end function dim_from_type_of<%= t %>
 
     function stem_from_type_of<%= t %>(v) result(this)
-      character(len = *), parameter:: STEM = "<%= t.stem %>"
+      character(len = *), parameter:: STEM = "<%= t.type %>"
       character(len = len(STEM)):: this
       <%= t.declare %>, intent(in):: v
 

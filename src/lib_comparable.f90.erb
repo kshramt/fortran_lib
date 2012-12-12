@@ -1,16 +1,20 @@
 <%
   require 'fort'
 
-  INT_KINDS = [8, 16, 32, 64]
-  INT_KIND_PAIRS = INT_KINDS.product(INT_KINDS)
-  REAL_KINDS = [32, 64,128]
-  REAL_KIND_PAIRS = REAL_KINDS.product(REAL_KINDS)
+  integers = ::Fort::Type::Integer.multi_provide(dim: 0)
+  INTEGER_PAIRS = integers.product(integers)
 
-  INTEGER_PAIRS = INT_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::IntegerType.new(0, kind)}}
-  REAL_PAIRS = REAL_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::RealType.new(0, kind)}}
-  COMPLEX_PAIRS = REAL_KIND_PAIRS.map{|kinds| kinds.map{|kind| ::Fort::Type::ComplexType.new(0, kind)}}
-  LOGICAL_PAIRS = [[::Fort::Type::LogicalType.new(0), ::Fort::Type::LogicalType.new(0)]]
-  CHARACTER_PAIRS = [[::Fort::Type::CharacterType.new(0, '*'), ::Fort::Type::CharacterType.new(0, '*')]]
+  reals = ::Fort::Type::Real.multi_provide(dim: 0)
+  REAL_PAIRS = reals.product(reals)
+
+  complexes = ::Fort::Type::Complex.multi_provide(dim: 0)
+  COMPLEX_PAIRS = complexes.product(complexes)
+
+  logicals = ::Fort::Type::Logical.multi_provide(dim: 0)
+  LOGICAL_PAIRS = logicals.product(logicals)
+
+  characters = ::Fort::Type::Character.multi_provide(dim: 0)
+  CHARACTER_PAIRS = characters.product(characters)
 %>
 
 module lib_comparable
@@ -28,7 +32,6 @@ module lib_comparable
   end interface equivalent
 
 contains
-
 
   <%- REAL_PAIRS.each{|t1, t2| -%>
     elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)

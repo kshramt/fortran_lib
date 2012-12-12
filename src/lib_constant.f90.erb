@@ -1,7 +1,7 @@
 <%-
   require 'fort'
 
-  TYPES = [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}
+  TYPES = ::Fort::Type::Real.multi_provide(dim: 0)
 -%>
 
 module lib_constant
@@ -23,7 +23,7 @@ module lib_constant
   public:: get_infinity
 
   <%- TYPES.each{|t| -%>
-    <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind_const %>)
+    <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
     <%= t.declare %>, parameter:: DEG_TO_RAD<%= t %> = PI<%= t %>/180
     <%= t.declare %>, parameter:: RAD_TO_DEG<%= t %> = 180/PI<%= t %>
     <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>

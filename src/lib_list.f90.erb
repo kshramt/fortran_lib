@@ -4,11 +4,10 @@
 
   # # Edit here and USERS_MODULES_AND_TYPES bellow to add type(SomeData).
   # # type(SomeData) should have assignment(=).
-  # class ::Fort::Type::SomeDataType < ::Fort::Type
-  #   require 'ruby_patch'
-  #   extend ::RubyPatch::AutoLoad
-  #
-  #   def initialize(dim = 0)
+  # class ::Fort::Type::SomeData < ::Fort::Type::Base
+  #   @params_default = {dim: 0}
+  #   @params_default_for_multi_provide = {dim: ::Fort::Type::DIM_RANGE}
+  #   def initialize(params = {})
   #     super
   #   end
   #
@@ -17,29 +16,29 @@
   #   end
   #
   #   def declare
-  #     "#{@stem}#{super}"
+  #     super
   #   end
   # end
 
-  ::Fort::Type.class_eval{
+  ::Fort::Type::Base.class_eval{
     def list_type
       "#{self.to_s}List"
     end
 
     def list_node_type
-      "#{self.to_s}ListNode"
+      "#{self.list_type}Node"
     end
   }
   INTRINSIC_TYPES\
-  = [::Fort::Type::LogicalType.new]\
-  + (0..13).to_a.map{|i| 2**i}.map{|len| ::Fort::Type::CharacterType.new(0, len)}\
-  + [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}\
-  + [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}\
-  + [32, 64, 128].map{|kind| ::Fort::Type::ComplexType.new(0, kind)}
+  = ::Fort::Type::Logical.multi_provide(dim: 0)\
+  + ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).to_a.map{|n| 2**n})\
+  + ::Fort::Type::Integer.multi_provide(dim: 0)\
+  + ::Fort::Type::Real.multi_provide(dim: 0)\
+  + ::Fort::Type::Complex.multi_provide(dim: 0)
 
   USERS_MODULES_AND_TYPES = {
     # # You should also edit here to add type(SomeData)
-    # lib_some_data: [::Fort::Type::SomeDataType]{|klass| klass.new(0)}
+    # lib_some_data: [::Fort::Type::SomeData]{|klass| klass.provide(dim: 0)}
   }
   USER_DEFINED_TYPES = USERS_MODULES_AND_TYPES.values.flatten
 
@@ -48,6 +47,7 @@
 
 #include "utils.h"
 module lib_list
+  USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
     use <%= m %>, non_intrinsic, only: <%= (["assignment(=)"] + t).join(', ') %>
@@ -94,6 +94,7 @@ module lib_list
 
     type <%= t.list_type %>
       type(<%= t.list_node_type %>), pointer:: entry => null()
+      Integer:: size            ! Currently, integer is enough since max size of a dimension of an array is huge(0).
     end type <%= t.list_type %>
   <%- } -%>
 

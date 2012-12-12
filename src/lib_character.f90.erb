@@ -1,13 +1,13 @@
 <%
   require 'fort'
 
+  INT_TYPES = ::Fort::Type::Integer.multi_provide(dim: 0)
   TYPES\
-  = [::Fort::Type::LogicalType.new(0)]\
-  + [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}\
-  + [32, 64, 128].map{|kind| ::Fort::Type::RealType.new(0, kind)}\
-  + [32, 64, 128].map{|kind| ::Fort::Type::ComplexType.new(0, kind)}\
-  + [::Fort::Type::CharacterType.new(0, '*')]
-  INT_TYPES = [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(0, kind)}
+  = ::Fort::Type::Logical.multi_provide(dim: 0)\
+  + ::Fort::Type::Real.multi_provide(dim: 0)\
+  + ::Fort::Type::Complex.multi_provide(dim: 0)\
+  + ::Fort::Type::Character.multi_provide\
+  + INT_TYPES
 %>
 module lib_character
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>

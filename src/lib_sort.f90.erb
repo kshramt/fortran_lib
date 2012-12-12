@@ -1,9 +1,9 @@
 <%-
   require 'fort'
 
-  INTEGER_TYPES = [8, 16, 32, 64].map{|kind| ::Fort::Type::IntegerType.new(1, kind)}
-  REAL_TYPES = [32, 64,128].map{|kind| ::Fort::Type::RealType.new(1, kind)}
-  TYPES = INTEGER_TYPES + REAL_TYPES
+  INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 1)
+  REALS = ::Fort::Type::Real.multi_provide(dim: 1)
+  TYPES = INTEGERS + REALS
 -%>
 
 #include "utils.h"
@@ -25,7 +25,7 @@ module lib_sort
 
 contains
 
-  <%- INTEGER_TYPES.each{|t| -%>
+  <%- INTEGERS.each{|t| -%>
     recursive function qsort<%= t %>(a) result(this)
       <%= t.declare %>:: this
       <%= t.declare %>, intent(in):: a
@@ -66,7 +66,7 @@ contains
     end function intermediate_floor_avoid_overflow<%= t %>
   <%- } -%>
 
-  <%- REAL_TYPES.each{|t| -%>
+  <%- REALS.each{|t| -%>
     recursive function qsort<%= t %>(a) result(this)
       <%= t.declare %>, intent(in):: a
       <%= t.declare %>:: this

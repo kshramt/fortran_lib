@@ -2,11 +2,11 @@
   require 'fort'
 
   TYPES\
-  = (1..7).to_a.map{|dim| ::Fort::Type::LogicalType.new(dim)}\
-  + (1..7).to_a.product([8, 16, 32, 64]).map{|dim, kind| ::Fort::Type::IntegerType.new(dim, kind)}\
-  + (1..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::RealType.new(dim, kind)}\
-  + (1..7).to_a.product([32, 64, 128]).map{|dim, kind| ::Fort::Type::ComplexType.new(dim, kind)}\
-  + (1..7).to_a.map{|dim| ::Fort::Type::CharacterType.new(dim, '*')}
+  = ::Fort::Type::Logical.multi_provide(dim: (1..7))\
+  + ::Fort::Type::Integer.multi_provide(dim: (1..7))\
+  + ::Fort::Type::Real.multi_provide(dim: (1..7))\
+  + ::Fort::Type::Complex.multi_provide(dim: (1..7))\
+  + ::Fort::Type::Character.multi_provide(dim: (1..7))
 
   def list(n, joint = ', ', &block)
     (1..n).to_a.map(&block).join(joint)
@@ -48,7 +48,7 @@ module lib_io
   character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
 
   interface new_unit
-    <%- [8, 16, 32, 64].map{|i| ::Fort::Type::IntegerType.new(0, i)}.each{|t| -%>
+    <%- ::Fort::Type::Integer.multi_provide(dim: 0).each{|t| -%>
       module procedure new_unit<%= t %>
     <%- } -%>
   end interface new_unit
@@ -294,7 +294,7 @@ contains
   <%- } -%>
 
 
-  <%- [8, 16, 32, 64].map{|i| ::Fort::Type::IntegerType.new(0, i)}.each{|t| -%>
+  <%- ::Fort::Type::Integer.multi_provide(dim: 0).each{|t| -%>
     subroutine new_unit<%= t %>(n)
       <%= t.declare %>, intent(out):: n
       integer(kind(n)):: i
