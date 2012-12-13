@@ -16,49 +16,49 @@ module lib_reflectable
 
   private
 
-  public:: str_from_type_of
-  public:: dim_from_type_of
-  public:: stem_from_type_of
+  public:: str_from_type
+  public:: dim_from_type
+  public:: stem_from_type
 
   <%- TYPES.each{|t| -%>
-    interface str_from_type_of
-      module procedure str_from_type_of<%= t %>
-    end interface str_from_type_of
+    interface str_from_type
+      module procedure str_from_type<%= t %>
+    end interface str_from_type
 
-    interface dim_from_type_of
-      module procedure dim_from_type_of<%= t %>
-    end interface dim_from_type_of
+    interface dim_from_type
+      module procedure dim_from_type<%= t %>
+    end interface dim_from_type
 
-    interface stem_from_type_of
-      module procedure stem_from_type_of<%= t %>
-    end interface stem_from_type_of
+    interface stem_from_type
+      module procedure stem_from_type<%= t %>
+    end interface stem_from_type
   <%- } -%>
 
 contains
 
   <%- TYPES.each{|t| -%>
-    function str_from_type_of<%= t %>(v) result(this)
+    pure function str_from_type<%= t %>(v) result(this)
       character(len = *), parameter:: STRING_EXPRESSION = "<%= t %>"
       character(len = len(STRING_EXPRESSION)):: this
       <%= t.declare %>, intent(in):: v
 
       this = STRING_EXPRESSION
-    end function str_from_type_of<%= t %>
+    end function str_from_type<%= t %>
 
-    function dim_from_type_of<%= t %>(v) result(this)
+    pure function dim_from_type<%= t %>(v) result(this)
       integer, parameter:: DIM = <%= t.dim %>
       integer:: this
       <%= t.declare %>, intent(in):: v
 
       this = DIM
-    end function dim_from_type_of<%= t %>
+    end function dim_from_type<%= t %>
 
-    function stem_from_type_of<%= t %>(v) result(this)
+    pure function stem_from_type<%= t %>(v) result(this)
       character(len = *), parameter:: STEM = "<%= t.type %>"
       character(len = len(STEM)):: this
       <%= t.declare %>, intent(in):: v
 
       this = STEM
-    end function stem_from_type_of<%= t %>
+    end function stem_from_type<%= t %>
   <%- } -%>
 end module lib_reflectable
