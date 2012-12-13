@@ -5,7 +5,6 @@ CPP = ENV['MY_CPP']
 GFORTRAN = ENV['MY_GFORTRAN']
 
 ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
-TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
 
 desc "Compile erb files."
 task erb: ERBED_F90_FILES
@@ -37,6 +36,7 @@ def run_test(t)
   EOS
 end
 
+TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
 task test: TEST_FILES
 {
   "lib_comparable_test.exe" => %w[ lib_comparable.o lib_comparable_test.f90],
