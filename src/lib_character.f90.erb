@@ -21,11 +21,8 @@ module lib_character
   public:: operator(*)          ! Syntax sugar of `repeat'. Inspired by Ruby's String#*.
   public:: str                  ! Convert a value to a string. The result is also stripped.
   public:: STR_LEN              ! Maximum length of str.
-  public:: TAB, NEW_LINE
 
   integer,   parameter:: STR_LEN  = 1024
-  character, parameter:: TAB      = char(9)
-  character, parameter:: NEW_LINE = char(10)
 
   interface operator(+)
     module procedure add
