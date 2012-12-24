@@ -39,7 +39,7 @@ end
 TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
 task test: TEST_FILES
 {
-  "lib_comparable_test.exe" => %w[ lib_comparable.o lib_comparable_test.f90],
+  "lib_comparable_test.exe" => %w[ lib_constant.o lib_comparable.o lib_comparable_test.f90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t)

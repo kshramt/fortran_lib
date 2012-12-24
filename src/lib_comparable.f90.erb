@@ -4,8 +4,8 @@
   integers = ::Fort::Type::Integer.multi_provide(dim: 0)
   INTEGER_PAIRS = integers.product(integers)
 
-  reals = ::Fort::Type::Real.multi_provide(dim: 0)
-  REAL_PAIRS = reals.product(reals)
+  REALS = ::Fort::Type::Real.multi_provide(dim: 0)
+  REAL_PAIRS = REALS.product(REALS)
 
   complexes = ::Fort::Type::Complex.multi_provide(dim: 0)
   COMPLEX_PAIRS = complexes.product(complexes)
@@ -24,6 +24,13 @@ module lib_comparable
 
   private
   public:: equivalent
+  public:: is_nan
+
+  interface is_nan
+    <%- REALS.each{|t| -%>
+      module procedure is_nan<%= t %>
+    <%- } -%>
+  end interface is_nan
 
   interface equivalent
     <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
@@ -32,6 +39,15 @@ module lib_comparable
   end interface equivalent
 
 contains
+
+  <%- REALS.each{|t| -%>
+    elemental function is_nan<%= t %>(a) result(this)
+      logical:: this
+      <%= t.declare %>, intent(in):: a
+
+      this = (a /= a)
+    end function is_nan<%= t %>
+  <%- } -%>
 
   <%- REAL_PAIRS.each{|t1, t2| -%>
     elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)

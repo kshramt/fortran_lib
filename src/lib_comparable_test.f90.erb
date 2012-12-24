@@ -54,7 +54,12 @@ program test_lib_comparable
   USE_UTILS_H
   use iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
   use lib_comparable
+  use lib_constant, only: get_nan
   implicit none
+
+  TEST(.not.is_nan(0.0))
+  TEST(.not.is_nan(0.0_REAL64))
+  TEST(is_nan(get_nan()))
 
   <%- TRUE_PAIRS.each{|i1, i2| -%>
     TEST(equivalent(<%= i1 %>, <%= i2 %>))
