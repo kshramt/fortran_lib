@@ -71,13 +71,6 @@ contains
   <%- } -%>
 
   <%- TYPES.each{|t| -%>
-    pure function str<%= t %>(x) result(this)
-      <%= t.declare %>, intent(in):: x
-      character(len = len(s(str_fixed(x)))):: this
-
-      this = s(str_fixed(x))
-    end function str<%= t %>
-
     pure function str_fixed<%= t %>(x) result(this)
       character(len = STR_LEN):: this
       <%= t.declare %>, intent(in):: x
@@ -85,5 +78,12 @@ contains
       write(this, *) x
       this = s(this)
     end function str_fixed<%= t %>
+
+    pure function str<%= t %>(x) result(this)
+      <%= t.declare %>, intent(in):: x
+      character(len = len(s(str_fixed<%= t %>(x)))):: this
+
+      this = s(str_fixed(x))
+    end function str<%= t %>
   <%- } -%>
 end module lib_character

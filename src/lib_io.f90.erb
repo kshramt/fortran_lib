@@ -109,7 +109,7 @@ contains
     character(len = *) path
     integer, intent(out), optional:: exitStatus
     integer:: exitStatus_
-    call execute_command_line("mkdir -p " + s(path), exitstat = exitStatus_)
+    call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
 
     if(present(exitStatus))then
       exitStatus = exitStatus_
