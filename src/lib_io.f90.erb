@@ -227,7 +227,7 @@ contains
       close(wU1)
 
       call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted')
+      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
       write(wU1) array
       close(wU1)
 
@@ -289,7 +289,7 @@ contains
       allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
 
       call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted')
+      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
       read(rU1) array
     end subroutine read_array_v_1<%= t %>
   <%- } -%>
