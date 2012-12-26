@@ -38,9 +38,9 @@ contains
 
   <%- INTEGERS.each{|t| -%>
     recursive function qsort<%= t %>(a) result(this)
-      <%= t.declare %>:: this
+      <%= t.declare %>, allocatable:: this
       <%= t.declare %>, intent(in):: a
-      <%= t.declare %>:: aMin, aMax
+      <%= t.type %>(kind = <%= t.kind %>):: aMin, aMax, pib
 
       if(size(a) <= 1)then
         this = a
@@ -60,29 +60,29 @@ contains
     
     ! this: Floor of m/n.
     function div_floor<%= t %>(m, n) result(this)
-      <%= t.declare %>:: this
-      <%= t.declare %>, intent(in):: m, n
+      <%= t.type %>(kind = <%= t.kind %>):: this
+      <%= t.type %>(kind = <%= t.kind %>), intent(in):: m, n
 
       this = m/n
-      if(mod(m, n) < 0) this = this - 1
+      if(mod(m, n) < 0) this = this - 1_<%= t.kind %>
     end function div_floor<%= t %>
     
     ! this: Floor of intermediate of m and n without suffering overflow.
     function intermediate_floor_avoid_overflow<%= t %>(m, n) result(this)
-      <%= t.declare %>:: this
-      <%= t.declare %>, intent(in):: m, n
+      <%= t.type %>(kind = <%= t.kind %>):: this
+      <%= t.type %>(kind = <%= t.kind %>), intent(in):: m, n
 
-      this = div_floor(m, 2) + div_floor(n, 2)
-      if((mod(m, 2) == 1 .and. mod(n, 2) == 1) .or. (mod(m, 2) == -1 .and. mod(n, 2) == -1)) this = this + 1
+      this = div_floor(m, 2_<%= t.kind %>) + div_floor(n, 2_<%= t.kind %>)
+      if((mod(m, 2) == 1 .and. mod(n, 2) == 1) .or. (mod(m, 2) == -1 .and. mod(n, 2) == -1)) this = this + 1_<%= t.kind %>
     end function intermediate_floor_avoid_overflow<%= t %>
   <%- } -%>
 
   <%- REALS.each{|t| -%>
     recursive function qsort<%= t %>(a) result(this)
       <%= t.declare %>, intent(in):: a
-      <%= t.declare %>:: this
+      <%= t.declare %>, allocatable:: this
 
-      <%= t.declare %>:: aMin, aMax, pib
+      <%= t.type %>(kind = <%= t.kind %>):: aMin, aMax, pib
       Integer:: maxlocA(1:1), minlocA(1:1)
 
       RAISE_IF(any(is_nan(a)), a)
