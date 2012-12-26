@@ -24,6 +24,16 @@ module lib_sort
     end interface qsort
   <%- } -%>
 
+  <%- INTEGERS.each{|t| -%>
+    interface div_floor
+      module procedure div_floor<%= t %>
+    end interface div_floor
+
+    interface intermediate_floor_avoid_overflow
+      module procedure intermediate_floor_avoid_overflow<%= t %>
+    end interface intermediate_floor_avoid_overflow
+  <%- } -%>
+
 contains
 
   <%- INTEGERS.each{|t| -%>
