@@ -9,6 +9,7 @@
 #include "utils.h"
 module lib_sort
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+  USE_UTILS_H
   use lib_comparable, only: is_nan
 
   implicit none
