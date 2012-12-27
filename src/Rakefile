@@ -1,8 +1,8 @@
 require 'tempfile'
 
-ERB = ENV['MY_ERB']
-CPP = ENV['MY_CPP']
-GFORTRAN = ENV['MY_GFORTRAN']
+ERB = ENV.fetch('MY_ERB')
+CPP = ENV.fetch('MY_CPP')
+GFORTRAN = ENV.fetch('MY_GFORTRAN')
 
 ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
 
