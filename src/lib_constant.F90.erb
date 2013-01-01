@@ -11,7 +11,7 @@ module lib_constant
 
   private
 
-  public:: TAB, NEW_LINE
+  public:: TAB
   <%- TYPES.each{|t| -%>
     public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
     public:: DEG_FROM_RAD_<%= t.kind %>
@@ -24,7 +24,6 @@ module lib_constant
   public:: get_infinity
 
   character, parameter:: TAB      = char(9)
-  character, parameter:: NEW_LINE = char(10)
   <%- TYPES.each{|t| -%>
     <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
     <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = PI<%= t %>/180
