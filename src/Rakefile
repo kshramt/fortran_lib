@@ -11,12 +11,15 @@ task erb: ERBED_F90_FILES
 
 rule '.f90' => '.f90.erb' do |t|
   begin
-    tempfile = Tempfile.new(['fortran_lib', '.f90']).path
     sh "#{ERB} #{t.source} > #{t.name}"
-    sh "#{CPP} #{t.name} > #{tempfile}"
-    mv tempfile, t.name
   rescue
-    mv t.name, tempfile
+    if File.exist?(t.name)
+      if File.zero?(t.name)
+        rm t.name
+      else
+        mv t.name, "#{t.name}.fail"
+      end
+    end
   end
 end
 
@@ -28,12 +31,7 @@ end
 
 # `sh' is too verbose for automatic test.
 def run_test(t)
-  tempfile = Tempfile.new(['fortran_lib', '.f90']).path
-  system <<-EOS
-#{CPP} #{t.prerequisites.last} > #{tempfile}\
-&& #{GFORTRAN} -o #{t.name} #{(t.prerequisites[0..-2] + [tempfile]).join(' ')}\
-&& ./#{t.name}
-  EOS
+  system "#{GFORTRAN} -o #{t.name} #{t.prerequisites.join(' ')} && ./#{t.name}"
 end
 
 TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
