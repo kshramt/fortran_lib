@@ -57,16 +57,16 @@ program test_lib_comparable
   use lib_constant, only: get_nan
   implicit none
 
-  TEST(.not.is_nan(0.0))
-  TEST(.not.is_nan(0.0_REAL64))
-  TEST(is_nan(get_nan()))
+  test(.not.is_nan(0.0))
+  test(.not.is_nan(0.0_REAL64))
+  test(is_nan(get_nan()))
 
   <%- TRUE_PAIRS.each{|i1, i2| -%>
-    TEST(equivalent(<%= i1 %>, <%= i2 %>))
+    test(equivalent(<%= i1 %>, <%= i2 %>))
   <%- } -%>
 
   <%- FALSE_PAIRS.each{|i1, i2| -%>
-    TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
+    test(.not.equivalent(<%= i1 %>, <%= i2 %>))
   <%- } -%>
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__

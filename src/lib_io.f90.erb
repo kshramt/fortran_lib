@@ -20,7 +20,7 @@ module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   use lib_constant, only: TAB
-  use lib_character, only: s, operator(+)
+  use lib_character, only: s, str, operator(+)
 
   implicit none
 
@@ -114,7 +114,7 @@ contains
     if(present(exitStatus))then
       exitStatus = exitStatus_
     elseif(exitStatus_ /= 0)then
-      RAISE('Failed to execute mkdir -p ', s(path))
+      raise('Failed to execute mkdir -p ' + s(path))
     end if
   end subroutine mkdir_p
 
@@ -145,8 +145,8 @@ contains
     this = 0
     do
       read(rU1, *, iostat = ios) dummy
-      if(IS_IOSTAT_BAD(ios)) exit
-      RAISE_IF(this >= huge(this), 'Line number too large.')
+      if(is_iostat_bad(ios)) exit
+      raise_if(this >= huge(this))
 
       this = this + 1
     end do
@@ -183,14 +183,14 @@ contains
     end do
     do
       read(rU1, '(a1)', advance = 'no', iostat = ios) c
-      if(IS_IOSTAT_BAD(ios) .or. c == new_line('_')) exit
+      if(is_iostat_bad(ios) .or. c == new_line('_')) exit
 
       select case(mode)
       case(SEEK_SEPARATOR)
-        if(HAS_VAL(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
+        if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
       case(SEEK_NORMAL_CHAR)
-        if(.not.HAS_VAL(SEPARATORS, c))then
-          RAISE_IF(this >= huge(this), "Column number too large.")
+        if(.not.has_val(SEPARATORS, c))then
+          raise_if(this >= huge(this))
 
           this = this + 1
           mode = SEEK_SEPARATOR
@@ -261,7 +261,7 @@ contains
       case(1)
         call read_array_v_1(arrayDir, array)
       case default
-        RAISE('Unsupported version: ', libIoVersion)
+        raise('Unsupported version: ' + str(libIoVersion))
       end select
     end subroutine read_array<%= t %>
 
@@ -281,8 +281,8 @@ contains
       open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
-      RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF, 'Expected: ', DATA_TYPE_FOR_SELF, ' Got: ', s(dataType), ' for ', s(arrayDir))
-      RAISE_IF(dim /= DIM_FOR_SELF, 'Expected: ', DIM_FOR_SELF, ' ', ' Got: ', dim, ' for ', s(arrayDir))
+      raise_if(s(dataType) /= DATA_TYPE_FOR_SELF)
+      raise_if(dim /= DIM_FOR_SELF)
 
       close(rU1)
 
@@ -309,7 +309,7 @@ contains
         end if
       end do
 
-      RAISE("No available unit number exist between: ",  NEW_UNIT_MIN, NEW_UNIT_MAX)
+      raise('No available unit number exist between: ' + str(NEW_UNIT_MIN) + ' and ' + str(NEW_UNIT_MAX))
     end subroutine new_unit<%= t %>
   <%- } -%>
 end module lib_io

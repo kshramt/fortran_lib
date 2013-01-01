@@ -85,7 +85,7 @@ contains
       <%= t.type %>(kind = <%= t.kind %>):: aMin, aMax, pib
       Integer:: maxlocA(1:1), minlocA(1:1)
 
-      RAISE_IF(any(is_nan(a)), a)
+      raise_if(any(is_nan(a)))
 
       if(size(a) <= 1)then        ! Anchor case.
         this = a
