@@ -1,4 +1,3 @@
-#include "utils.h"
 <%-
 def array_from_str(str)
   str\
@@ -50,6 +49,7 @@ cmplx(1.0, 1.0 + 3*epsilon(0.0));	cmplx(1.0, 1.0)
 EOS
 -%>
 
+#include "utils.h"
 program test_lib_comparable
   USE_UTILS_H
   use iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
