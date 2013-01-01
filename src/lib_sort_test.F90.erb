@@ -47,11 +47,14 @@ program lib_sort_test
     <%- } -%>
   <%- } -%>
 
-  <%- 20.times{|i| -%>
-    <%- randoms = (0...200).map{rand} -%>
+  <%- 1.times{|i| -%>
+    <%- randoms = (0...250000).map{rand} -%>
     <%- sorted = randoms.sort -%>
     test(all(equivalent(qsort(<%= randoms.inspect %>), <%= sorted.inspect %>)))
   <% } %>
+
+  ! Bug check
+  test(all(equivalent(qsort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
 
   write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
   stop

@@ -94,6 +94,7 @@ contains
 
       aMin = minval(a)
       aMax = maxval(a)
+
       if(aMax <= aMin)then ! Quick return if possible: aMin equal aMax means all values in a are same.
         this = a
         return
@@ -113,8 +114,8 @@ contains
         return
       end if
 
-
       pib = aMin/2 + aMax/2       ! Avoid overflow.
+      if(pib >= aMax) pib = aMin  ! Avoid infinite loop
       this = [qsort(pack(a, a <= pib)), qsort(pack(a, a > pib))]
     end function qsort<%= t %>
   <%- } -%>
