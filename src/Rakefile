@@ -4,12 +4,12 @@ ERB = ENV['MY_ERB']
 CPP = ENV['MY_CPP']
 GFORTRAN = ENV['MY_GFORTRAN']
 
-ERBED_F90_FILES = FileList['*.f90.erb'].ext('')
+ERBED_F90_FILES = FileList['*.F90.erb'].ext('')
 
 desc "Compile erb files."
 task erb: ERBED_F90_FILES
 
-rule '.f90' => '.f90.erb' do |t|
+rule '.F90' => '.F90.erb' do |t|
   begin
     sh "#{ERB} #{t.source} > #{t.name}"
   rescue
@@ -24,7 +24,7 @@ rule '.f90' => '.f90.erb' do |t|
 end
 
 %w[.o .mod].each{|ext|
-  rule ext => '.f90' do |t|
+  rule ext => '.F90' do |t|
     sh "#{GFORTRAN} -c #{t.source}"
   end
 }
@@ -34,11 +34,11 @@ def run_test(t)
   system "#{GFORTRAN} -o #{t.name} #{t.prerequisites.join(' ')} && ./#{t.name}"
 end
 
-TEST_FILES = FileList['*_test.f90', '*_test.f90.erb'].sub(/\.f90(?:\.erb)?\z/, '.exe')
+TEST_FILES = FileList['*_test.F90', '*_test.F90.erb'].sub(/\.F90(?:\.erb)?\z/, '.exe')
 task test: TEST_FILES
 {
-  "lib_comparable_test.exe" => %w[lib_constant.o lib_comparable.o lib_comparable_test.f90],
-  "lib_character_test.exe" => %w[lib_character.o lib_character_test.f90],
+  "lib_comparable_test.exe" => %w[lib_constant.o lib_comparable.o lib_comparable_test.F90],
+  "lib_character_test.exe" => %w[lib_character.o lib_character_test.F90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t)
