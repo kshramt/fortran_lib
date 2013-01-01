@@ -40,6 +40,7 @@ task test: TEST_FILES
   "lib_comparable_test.exe" => %w[lib_constant.o lib_comparable.o lib_comparable_test.F90],
   "lib_character_test.exe" => %w[lib_character.o lib_character_test.F90],
   "lib_constant_test.exe" => %w[lib_comparable.o lib_constant.o lib_constant_test.F90],
+  "lib_sort_test.exe" => %w[lib_comparable.o lib_sort.o lib_sort_test.F90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t)
