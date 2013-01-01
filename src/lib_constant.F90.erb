@@ -1,7 +1,7 @@
 <%-
   require 'fort'
 
-  TYPES = ::Fort::Type::Real.multi_provide(dim: 0)
+  REALS = ::Fort::Type::Real.multi_provide(dim: 0)
 -%>
 
 module lib_constant
@@ -12,7 +12,7 @@ module lib_constant
   private
 
   public:: TAB
-  <%- TYPES.each{|t| -%>
+  <%- REALS.each{|t| -%>
     public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
     public:: DEG_FROM_RAD_<%= t.kind %>
     public:: RAD_FROM_DEG_<%= t.kind %>
@@ -24,7 +24,7 @@ module lib_constant
   public:: get_infinity
 
   character, parameter:: TAB      = char(9)
-  <%- TYPES.each{|t| -%>
+  <%- REALS.each{|t| -%>
     <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
     <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = 180/PI<%= t %>
     <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = PI<%= t %>/180
