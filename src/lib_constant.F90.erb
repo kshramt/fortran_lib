@@ -26,8 +26,8 @@ module lib_constant
   character, parameter:: TAB      = char(9)
   <%- TYPES.each{|t| -%>
     <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
-    <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = PI<%= t %>/180
-    <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = 180/PI<%= t %>
+    <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = 180/PI<%= t %>
+    <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = PI<%= t %>/180
     <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>
     <%= t.declare %>, parameter:: DEG_FROM_RAD_<%= t.kind %> = DEG_FROM_RAD<%= t %>
     <%= t.declare %>, parameter:: RAD_FROM_DEG_<%= t.kind %> = RAD_FROM_DEG<%= t %>
