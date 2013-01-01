@@ -1,6 +1,7 @@
 #include "utils.h"
 program lib_character_test
-  use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, REAL64
+  USE_UTILS_H
+  use, intrinsic:: iso_fortran_env, only: REAL64
   use lib_character, only: s, str
   use lib_character, only: operator(+), operator(*)
 
@@ -38,6 +39,7 @@ program lib_character_test
   test('a'*0 == '')
   test('a'*1 == 'a')
   test('a'*2 == 'aa')
+  test('ab'*2 == 'abab')
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
   stop
