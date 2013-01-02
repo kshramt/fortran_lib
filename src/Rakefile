@@ -2,7 +2,7 @@ require 'tempfile'
 
 ERB = ENV['MY_ERB']
 CPP = ENV['MY_CPP']
-GFORTRAN = ENV['MY_GFORTRAN'] + ' -ffree-line-length-none -fmax-identifier-length=63'
+GFORTRAN = ENV['MY_GFORTRAN'] + ' -ffree-line-length-none -fmax-identifier-length=63 -ggdb -O0'
 
 ERBED_F90_FILES = FileList['*.F90.erb'].ext('')
 
