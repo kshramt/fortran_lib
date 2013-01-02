@@ -2,9 +2,15 @@
 #  define UTILS_HAVE_ALREADY_LOADED
 #  define USE_UTILS_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, OUTPUT_UNIT
 #  define WHERE_AM_I __FILE__, " ", __LINE__
-#  define quote_left(x) "x
-#  define quote_right(x) x"
-#  define quote(x) quote_right(quote_left(x))
+#  ifdef __GFORTRAN__
+#    define quote(x) "x"
+#  else
+#    ifdef __INTEL_COMPILER
+#      define quote(x) #x
+#    else
+#      define quote(x) #x
+#    endif
+#  endif
 #  define warn(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define raise(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
 #  define ALL_OF(array, dim, index) index = lbound((array), (dim)), ubound((array), (dim))
