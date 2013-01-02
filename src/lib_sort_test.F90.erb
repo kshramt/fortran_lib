@@ -48,7 +48,7 @@ program lib_sort_test
   <%- } -%>
 
   <%- 1.times{|i| -%>
-    <%- randoms = (0...250000).map{rand} -%>
+    <%- randoms = (0...1000).map{rand*0.01} -%>
     <%- sorted = randoms.sort -%>
     test(all(equivalent(qsort(<%= randoms.inspect %>), <%= sorted.inspect %>)))
   <% } %>
