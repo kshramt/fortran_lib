@@ -57,7 +57,7 @@ contains
       pib = intermediate_floor_avoid_overflow(aMin, aMax)
       this = [qsort(pack(a, a <= pib)), qsort(pack(a, a > pib))]
     end function qsort<%= t %>
-    
+
     ! this: Floor of m/n.
     function div_floor<%= t %>(m, n) result(this)
       <%= t.type %>(kind = <%= t.kind %>):: this
@@ -66,7 +66,7 @@ contains
       this = m/n
       if(mod(m, n) < 0) this = this - 1_<%= t.kind %>
     end function div_floor<%= t %>
-    
+
     ! this: Floor of intermediate of m and n without suffering overflow.
     function intermediate_floor_avoid_overflow<%= t %>(m, n) result(this)
       <%= t.type %>(kind = <%= t.kind %>):: this
