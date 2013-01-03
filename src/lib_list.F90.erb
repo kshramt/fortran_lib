@@ -31,7 +31,7 @@
   }
   INTRINSIC_TYPES\
   = ::Fort::Type::Logical.multi_provide(dim: 0)\
-  + ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).to_a.map{|n| 2**n})\
+  + ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).map{|n| 2**n})\
   + ::Fort::Type::Integer.multi_provide(dim: 0)\
   + ::Fort::Type::Real.multi_provide(dim: 0)\
   + ::Fort::Type::Complex.multi_provide(dim: 0)
