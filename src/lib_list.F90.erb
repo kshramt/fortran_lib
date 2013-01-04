@@ -347,6 +347,8 @@ contains
       newNode%val = val
       newNode%prev => nextNode%prev
       newNode%next => nextNode
+      nextNode%prev => newNode
+      if(associated(newNode%prev)) newNode%prev%next => newNode
     end subroutine insert_at<%= t %>
 
     subroutine push<%= t %>(list, val)
