@@ -57,7 +57,7 @@ module lib_list
 
   private
 
-  public:: new       ! Create a size 1 list.
+
   public:: size      ! Size of a list.
   public:: delete_at ! Delete the N-th node and return a value of the node.
   public:: insert_at ! Insert a node to N-th position.
@@ -65,22 +65,16 @@ module lib_list
   !    N: 1   2   3   4   5
   public:: val_at              ! Value at N-th node.
   public:: operator(.val.)     ! Same to val_at.
-  public:: node_at             ! N-th node.
-  ! WARNING: Returns pointer!
-  ! BAD: targetNode =  node_at(list, pos)
-  ! OK:  targetNode => node_at(list, pos)
   public:: shift ! Delete the head node and return a value of the node.
   public:: unshift              ! Insert a node to the head.
   public:: push    ! Insert a node to the tail.
   public:: pop  ! Delete the tail node and return a value of the node.
   public:: clear                ! Delete all nodes.
   public:: swap                 ! Swap nodes in a list.
-  public:: array_from_list      ! List to array convertor.
-  public:: copy                 ! Cleate a deep copy of a list.
   public:: assignment(=)        ! List to array, array to list, deep copy of list.
   public:: is_size_one          ! .true. if size of list is one.
   public:: is_empty             ! .true. if size of list is zero.
-
+  public:: array_from_list      ! List to array converter.
   <%- TYPES.each{|t| -%>
     public:: <%= t.list_type %>
   <%- } -%>
@@ -99,10 +93,6 @@ module lib_list
   <%- } -%>
 
   <%- TYPES.each{|t| -%>
-    interface new
-      module procedure new<%= t %>
-    end interface
-
     interface size
       module procedure size<%= t %>
     end interface
@@ -121,10 +111,6 @@ module lib_list
 
     interface operator(.val.)
       module procedure val_at<%= t %>
-    end interface
-
-    interface node_at
-      module procedure node_at<%= t %>
     end interface
 
     interface shift
@@ -152,14 +138,6 @@ module lib_list
       module procedure swap<%= t %>
     end interface
 
-    interface array_from_list
-      module procedure array_from_list<%= t %>
-    end interface
-
-    interface copy
-      module procedure copy<%= t %>
-    end interface
-
     interface assignment(=)
       module procedure copy<%= t %>
       module procedure list_from_array_coercion<%= t %>
@@ -173,6 +151,24 @@ module lib_list
     interface is_empty
       module procedure is_empty<%= t %>
     end interface
+
+    interface array_from_list
+      module procedure array_from_list<%= t %>
+    end interface array_from_list
+
+    ! Internal
+
+    interface new
+      module procedure new<%= t %>
+    end interface new
+
+    interface node_at
+      module procedure node_at<%= t %>
+    end interface node_at
+
+    interface copy
+      module procedure copy<%= t %>
+    end interface copy
   <%- } -%>
 
 contains
@@ -219,20 +215,6 @@ contains
 
       if(posR == nList) list%entry => posLNode
     end subroutine swap<%= t %>
-
-    subroutine copy<%= t %>(new, original)
-      type(<%= t.list_type %>), intent(inout):: new
-      type(<%= t.list_type %>), intent(in):: original
-
-      new = array_from_list(original)
-    end subroutine copy<%= t %>
-
-    function array_from_list<%= t %>(list) result(this)
-      <%= t.declare %>, allocatable:: this(:)
-      type(<%= t.list_type %>), intent(in):: list
-
-      this = list
-    end function array_from_list<%= t %>
 
     subroutine list_from_array_coercion<%= t %>(list, array)
       type(<%= t.list_type %>), intent(inout):: list
@@ -379,24 +361,6 @@ contains
       list%entry => newNode
     end subroutine push<%= t %>
 
-    function node_at<%= t %>(list, pos) result(this)
-      type(<%= t.list_node_type %>), pointer:: this
-      type(<%= t.list_type %>), intent(in):: list
-      integer, intent(in):: pos
-
-      integer:: posNow
-
-      raise_if(pos < 1 .or. size(list) < pos)
-
-      this => list%entry
-      posNow = size(list)
-
-      do while(posNow > pos)
-        this => this%prev
-        posNow = posNow - 1
-      end do
-    end function node_at<%= t %>
-
     function is_empty<%= t %>(list) result(this)
       logical:: this
       type(<%= t.list_type %>), intent(in):: list
@@ -431,6 +395,16 @@ contains
       end do
     end function size<%= t %>
 
+    function array_from_list<%= t %>(list) result(answer)
+      <%= t.declare %>, allocatable:: answer(:)
+      type(<%= t.list_type %>), intent(in):: list
+
+      answer = list
+    end function array_from_list<%= t %>
+
+    ! Internal
+
+    ! Create a size 1 list.
     subroutine new<%= t %>(list, val)
       type(<%= t.list_type %>), intent(inout):: list
       <%= t.declare %>, intent(in):: val
@@ -442,5 +416,35 @@ contains
       allocate(list%entry)
       list%entry%val = val
     end subroutine new<%= t %>
+
+    ! N-th node.
+    ! WARNING: Returns pointer!
+    ! BAD: targetNode =  node_at(list, pos)
+    ! OK:  targetNode => node_at(list, pos)
+    function node_at<%= t %>(list, pos) result(this)
+      type(<%= t.list_node_type %>), pointer:: this
+      type(<%= t.list_type %>), intent(in):: list
+      integer, intent(in):: pos
+
+      integer:: posNow
+
+      raise_if(pos < 1 .or. size(list) < pos)
+
+      this => list%entry
+      posNow = size(list)
+
+      do while(posNow > pos)
+        this => this%prev
+        posNow = posNow - 1
+      end do
+    end function node_at<%= t %>
+
+    ! Cleate a deep copy of a list.
+    subroutine copy<%= t %>(new, original)
+      type(<%= t.list_type %>), intent(inout):: new
+      type(<%= t.list_type %>), intent(in):: original
+
+      new = array_from_list(original)
+    end subroutine copy<%= t %>
   <%- } -%>
 end module lib_list
