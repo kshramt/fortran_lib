@@ -49,6 +49,7 @@
 module lib_list
   USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+  use lib_comparable, only: equivalent
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
     use <%= m %>, non_intrinsic, only: <%= (["assignment(=)"] + t).join(', ') %>
   <%- } -%>
@@ -75,6 +76,8 @@ module lib_list
   public:: is_size_one          ! .true. if size of list is one.
   public:: is_empty             ! .true. if size of list is zero.
   public:: array_from_list      ! List to array converter.
+  public:: equivalent           ! .true. if size and components are equivalent.
+                                ! XXX: More array like interface?
   <%- TYPES.each{|t| -%>
     public:: <%= t.list_type %>
   <%- } -%>
@@ -155,6 +158,10 @@ module lib_list
     interface array_from_list
       module procedure array_from_list<%= t %>
     end interface array_from_list
+
+    interface equivalent
+      module procedure equivalent<%= t %>
+    end interface equivalent
 
     ! Internal
 
@@ -401,6 +408,13 @@ contains
 
       answer = list
     end function array_from_list<%= t %>
+
+    function equivalent<%= t %>(list1, list2) result(answer)
+      type(<%= t.list_type %>), intent(in):: list1, list2
+      Logical:: answer
+
+      answer = all(equivalent(array_from_list(list1), array_from_list(list2)))
+    end function equivalent<%= t %>
 
     ! Internal
 
