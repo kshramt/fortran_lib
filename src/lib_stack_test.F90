@@ -10,8 +10,6 @@ program lib_stack_test
   type(IntegerDim0KindINT32Stack):: stack
   Integer:: val
   Logical:: isSuccess
-  Integer:: i
-  Integer, parameter:: N = 5000
 
   isSuccess = pop(stack, val)
   test(.not.isSuccess)
