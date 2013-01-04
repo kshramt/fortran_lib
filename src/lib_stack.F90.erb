@@ -1,11 +1,11 @@
 <%-
 require 'fort'
 TYPES\
-= ::Fort::Type::Real.multi_provide(dim: 0)\
-+ ::Fort::Type::Integer.multi_provide(dim: 0)\
-+ ::Fort::Type::Logical.multi_provide(dim: 0)\
-+ ::Fort::Type::Complex.multi_provide(dim: 0)\
-+ ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).map{|n| 2**n})
+= ::Fort::Type::Real.multi_provide\
++ ::Fort::Type::Integer.multi_provide\
++ ::Fort::Type::Logical.multi_provide\
++ ::Fort::Type::Complex.multi_provide\
++ ::Fort::Type::Character.multi_provide(len: (0..13).map{|n| 2**n})
 -%>
 
 module lib_stack
@@ -39,7 +39,7 @@ module lib_stack
     end type <%= t %>Stack
 
     type <%= t %>StackNode
-      <%= t.declare %>:: val
+      <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>:: val
       type(<%= t %>StackNode), pointer:: prev => null()
     end type <%= t %>StackNode
   <%- } -%>
@@ -60,7 +60,7 @@ contains
 
     function pop<%= t %>(stack, val) result(isSuccess)
       type(<%= t %>Stack), intent(inout):: stack
-      <%= t.declare %>, intent(out):: val
+      <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: val
       Logical:: isSuccess
       type(<%= t %>StackNode), pointer:: tmpNodeHolder => null()
 
