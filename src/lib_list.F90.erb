@@ -98,62 +98,61 @@ module lib_list
   <%- TYPES.each{|t| -%>
     interface size
       module procedure size<%= t %>
-    end interface
+    end interface size
 
     interface delete_at
       module procedure delete_at<%= t %>
-    end interface
+    end interface delete_at
 
     interface insert_at
       module procedure insert_at<%= t %>
-    end interface
+    end interface insert_at
 
     interface val_at
       module procedure val_at<%= t %>
-    end interface
+    end interface val_at
 
     interface operator(.val.)
       module procedure val_at<%= t %>
-    end interface
+    end interface operator(.val.)
 
     interface shift
       module procedure shift<%= t %>
-    end interface
+    end interface shift
 
     interface unshift
       module procedure unshift<%= t %>
-    end interface
+    end interface unshift
 
     interface push
       module procedure push<%= t %>
-    end interface
+    end interface push
 
     interface pop
       module procedure pop<%= t %>
-
-    end interface
+    end interface pop
 
     interface clear
       module procedure clear<%= t %>
-    end interface
+    end interface clear
 
     interface swap
       module procedure swap<%= t %>
-    end interface
+    end interface swap
 
     interface assignment(=)
       module procedure copy<%= t %>
       module procedure list_from_array_coercion<%= t %>
       module procedure array_from_list_coercion<%= t %>
-    end interface
+    end interface assignment(=)
 
     interface is_size_one
       module procedure is_size_one<%= t %>
-    end interface
+    end interface is_size_one
 
     interface is_empty
       module procedure is_empty<%= t %>
-    end interface
+    end interface is_empty
 
     interface array_from_list
       module procedure array_from_list<%= t %>
