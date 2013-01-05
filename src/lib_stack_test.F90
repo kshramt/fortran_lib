@@ -14,6 +14,8 @@ program lib_stack_test
   Integer, allocatable:: val1(:)
   Integer, allocatable:: val2(:, :)
   Logical:: isSuccess
+  Integer:: i
+  Integer, parameter:: N = 1000000
 
   ! dim = 0
   isSuccess = pop(stack0, val0)
@@ -80,6 +82,17 @@ program lib_stack_test
   isSuccess = pop(stack2, val2)
   test(isSuccess)
   test(all(shape(val2) == [2, 3]))
+
+  ! Many times
+  do i = 1, N
+    call push(stack0, i)
+  end do
+  do i = 1, N - 1
+    isSuccess = pop(stack0, val0)
+  end do
+  isSuccess = pop(stack0, val0)
+  test(isSuccess)
+  test(val0 == 1)
 
   write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
