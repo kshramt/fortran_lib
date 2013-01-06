@@ -6,6 +6,9 @@ GFORTRAN = ENV.fetch('MY_GFORTRAN') + ' -DDEBUG -ffree-line-length-none -fmax-id
 
 ERBED_F90_FILES = FileList['*.F90.erb'].ext('')
 
+desc "Alias of test."
+task default: :test
+
 desc "Compile erb files."
 task erb: ERBED_F90_FILES
 
@@ -35,6 +38,7 @@ def run_test(t)
 end
 
 TEST_FILES = FileList['*_test.F90', '*_test.F90.erb'].sub(/\.F90(?:\.erb)?\z/, '.exe')
+desc "Run tests."
 task test: TEST_FILES
 {
   "lib_comparable_test.exe" => %w[lib_constant.o lib_comparable.o lib_comparable_test.F90],
