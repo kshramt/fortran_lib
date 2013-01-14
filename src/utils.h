@@ -36,7 +36,7 @@
 #  ifdef DEBUG
 #    define debug_raise_if(isBad) raise_if(isBad)
 #    define debug_print(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, (x)
-#    define debug_print_variable(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, quote(x), (x)
+#    define debug_print_variable(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
 #  else
 #    define debug_raise_if(isBad)
 #    define debug_print(x)
