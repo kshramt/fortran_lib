@@ -1,8 +1,8 @@
 <%
   require 'fort'
 
-  integers = ::Fort::Type::Integer.multi_provide(dim: 0)
-  INTEGER_PAIRS = integers.product(integers)
+  INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
+  INTEGER_PAIRS = INTEGERS.product(INTEGERS)
 
   REALS = ::Fort::Type::Real.multi_provide(dim: 0)
   REAL_PAIRS = REALS.product(REALS)
@@ -27,7 +27,7 @@ module lib_comparable
   public:: is_nan
 
   interface is_nan
-    <%- REALS.each{|t| -%>
+    <%- (REALS + INTEGERS).each{|t| -%>
       module procedure is_nan<%= t %>
     <%- } -%>
   end interface is_nan
@@ -41,11 +41,20 @@ module lib_comparable
 contains
 
   <%- REALS.each{|t| -%>
-    elemental function is_nan<%= t %>(a) result(this)
+    elemental function is_nan<%= t %>(x) result(this)
       logical:: this
-      <%= t.declare %>, intent(in):: a
+      <%= t.declare %>, intent(in):: x
 
-      this = (a /= a)
+      this = (x /= x)
+    end function is_nan<%= t %>
+  <%- } -%>
+
+  <%- INTEGERS.each{|t| -%>
+    elemental function is_nan<%= t %>(n) result(this)
+      logical:: this
+      <%= t.declare %>, intent(in):: n
+
+      this = .false.
     end function is_nan<%= t %>
   <%- } -%>
 

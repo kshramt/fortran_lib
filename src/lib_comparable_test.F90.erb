@@ -59,6 +59,8 @@ program test_lib_comparable
 
   test(.not.is_nan(0.0))
   test(.not.is_nan(0.0_REAL64))
+  test(.not.is_nan(0))
+  test(.not.is_nan(0_INT64))
   test(is_nan(get_nan()))
 
   <%- TRUE_PAIRS.each{|i1, i2| -%>
