@@ -119,7 +119,7 @@ contains
       Logical, intent(out):: isUniform
       <%= t.declare %>:: xsMin, xsMax
       Integer(kind = INT64):: iL, iR, nXs
-      
+
       nXs = size(xs, dim = 1, kind = INT64)
       if(xs(1) <= xs(nXs))then
         xsMin = xs(1)
