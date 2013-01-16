@@ -25,12 +25,17 @@ module lib_comparable
   private
   public:: equivalent
   public:: is_nan
+  public:: is_infinity
 
-  interface is_nan
-    <%- (REALS + INTEGERS).each{|t| -%>
+  <%- (REALS + INTEGERS).each{|t| -%>
+    interface is_nan
       module procedure is_nan<%= t %>
-    <%- } -%>
-  end interface is_nan
+    end interface is_nan
+
+    interface is_infinity
+      module procedure is_infinity<%= t %>
+    end interface is_infinity
+  <%- } -%>
 
   interface equivalent
     <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
@@ -47,6 +52,13 @@ contains
 
       this = (x /= x)
     end function is_nan<%= t %>
+
+    elemental function is_infinity<%= t %>(x) result(answer)
+      Logical:: answer
+      <%= t.declare %>, intent(in):: x
+
+      answer = x > huge(x)
+    end function is_infinity<%= t %>
   <%- } -%>
 
   <%- INTEGERS.each{|t| -%>
@@ -56,6 +68,13 @@ contains
 
       this = .false.
     end function is_nan<%= t %>
+
+    elemental function is_infinity<%= t %>(x) result(answer)
+      Logical:: answer
+      <%= t.declare %>, intent(in):: x
+
+      answer = .false.
+    end function is_infinity<%= t %>
   <%- } -%>
 
   <%- REAL_PAIRS.each{|t1, t2| -%>
