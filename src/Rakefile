@@ -48,6 +48,7 @@ task test: TEST_FILES
   "lib_list_test.exe" => %w[lib_comparable.o lib_list.o lib_list_test.F90],
   "lib_stack_test.exe" => %w[lib_stack.o lib_stack_test.F90],
   "lib_queue_test.exe" => %w[lib_queue.o lib_queue_test.F90],
+  "lib_reflectable_test.exe" => %w[lib_reflectable.o lib_reflectable_test.F90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t)
