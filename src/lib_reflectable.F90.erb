@@ -73,11 +73,10 @@ contains
 
   <%- NUMERICS.each{|t| -%>
     pure function kind_from_type<%= t %>(v) result(answer)
-      character(len = *), parameter:: KIND = "<%= t.kind %>"
-      character(len = len(KIND)):: answer
+      Integer:: answer
       <%= t.declare %>, intent(in):: v
 
-      answer = KIND
+      answer = <%= t.kind %>
     end function kind_from_type<%= t %>
   <%- } -%>
 end module lib_reflectable
