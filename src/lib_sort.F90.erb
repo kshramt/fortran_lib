@@ -30,9 +30,9 @@ module lib_sort
       module procedure sorting_quick<%= t %>
     end interface sorting_quick
 
-    interface get_pib
-      module procedure get_pib<%= t %>
-    end interface get_pib
+    interface get_pivot
+      module procedure get_pivot<%= t %>
+    end interface get_pivot
 
     interface sorting_2
       module procedure sorting_2<%= t %>
@@ -60,7 +60,7 @@ contains
 
     subroutine sorting_quick<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(:)
-      <%= t.declare %>:: pib
+      <%= t.declare %>:: pivot
       type(IntegerDim0KindINT64Stack):: iLs, iRs
       Integer(kind = INT64):: iL, iR, iLOriginal, iROriginal
       Logical:: isUniform
@@ -85,15 +85,15 @@ contains
             call sorting_3(xs(iL:iR))
             exit
           case(3:)
-            pib = get_pib(xs(iL:iR), isUniform)
+            pivot = get_pivot(xs(iL:iR), isUniform)
             if(isUniform) exit
 
             iROriginal = iR  ! Right most index of the current segment
             loop_to_swap: do ! Within the segment
-              do while(xs(iR) > pib)
+              do while(xs(iR) > pivot)
                 iR = iR - 1
               end do
-              do while(xs(iL) <= pib)
+              do while(xs(iL) <= pivot)
                 if(iL >= iR)then
                   call push(iLs, iR + 1)
                   call push(iRs, iROriginal)
@@ -113,8 +113,8 @@ contains
       end do
     end subroutine sorting_quick<%= t %>
 
-    function get_pib<%= t %>(xs, isUniform) result(pib)
-      <%= t.declare %>:: pib
+    function get_pivot<%= t %>(xs, isUniform) result(pivot)
+      <%= t.declare %>:: pivot
       <%= t.declare %>, intent(in):: xs(:)
       Logical, intent(out):: isUniform
       <%= t.declare %>:: xsMin, xsMax
@@ -146,20 +146,20 @@ contains
 
       isUniform = (xsMax <= xsMin)
       if(isUniform)then
-        pib = -huge(pib)
+        pivot = -huge(pivot)
         return
       end if
 
       if(is_infinity(xsMax))then
-        pib = huge(xsMax)
+        pivot = huge(xsMax)
       elseif(is_infinity(-xsMin))then
-        pib = -huge(xsMin)
+        pivot = -huge(xsMin)
       else
-        pib = (xsMin/2) + (xsMax/2)
+        pivot = (xsMin/2) + (xsMax/2)
 
-        if(pib >= xsMax .or. pib < xsMin) pib = xsMin ! I'm not sure whether the second condition could be true.
+        if(pivot >= xsMax .or. pivot < xsMin) pivot = xsMin ! I'm not sure whether the second condition could be true.
       end if
-    end function get_pib<%= t %>
+    end function get_pivot<%= t %>
 
     subroutine sorting_3<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(1:3)
