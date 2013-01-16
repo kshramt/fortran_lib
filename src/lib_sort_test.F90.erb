@@ -39,7 +39,7 @@ program lib_sort_test
   test(all(sort_quick([0]) == [0]))
   test(all(equivalent(sort_quick([0.0]), [0.0])))
 
-  <%- SML_SETS.each{|sml_set| -%>
+  <%- [SML_SETS.last].each{|sml_set| -%>
     <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
       test(all(sort_quick(<%= input.inspect %>) == <%= sorted.inspect %>))
     <%- } -%>
