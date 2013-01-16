@@ -161,12 +161,8 @@ contains
       end if
     end function get_pivot<%= t %>
 
-    subroutine sorting_3<%= t %>(xs)
+    pure subroutine sorting_3<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(1:3)
-
-      debug_raise_if(is_nan(xs(1)))
-      debug_raise_if(is_nan(xs(2)))
-      debug_raise_if(is_nan(xs(3)))
 
       if(xs(3) < xs(1)) call swapping(xs(1), xs(3))
       if(xs(3) < xs(2))then
@@ -176,16 +172,13 @@ contains
       end if
     end subroutine sorting_3<%= t %>
 
-    subroutine sorting_2<%= t %>(xs)
+    pure subroutine sorting_2<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(1:2)
-
-      debug_raise_if(is_nan(xs(1)))
-      debug_raise_if(is_nan(xs(2)))
 
       if(xs(2) < xs(1)) call swapping(xs(1), xs(2))
     end subroutine sorting_2<%= t %>
 
-    subroutine swapping<%= t %>(a, b)
+    elemental subroutine swapping<%= t %>(a, b)
       <%= t.declare %>, intent(inout):: a, b
       <%= t.declare %>:: swap
 
