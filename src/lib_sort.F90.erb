@@ -10,7 +10,7 @@
 module lib_sort
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   USE_UTILS_H
-  use lib_comparable, only: is_nan
+  use lib_comparable, only: is_nan, is_infinity
 
   use lib_stack, only: push, pop
   use lib_stack, only: IntegerDim0KindINT64Stack
@@ -150,8 +150,15 @@ contains
         return
       end if
 
-      pib = (xsMin/2) + (xsMax/2)
-      if(pib == xsMax) pib = xsMin
+      if(is_infinity(xsMax))then
+        pib = huge(xsMax)
+      elseif(is_infinity(-xsMin))then
+        pib = -huge(xsMin)
+      else
+        pib = (xsMin/2) + (xsMax/2)
+
+        if(pib >= xsMax .or. pib < xsMin) pib = xsMin ! I'm not sure whether the second condition could be true.
+      end if
     end function get_pib<%= t %>
 
     subroutine sorting_3<%= t %>(xs)
