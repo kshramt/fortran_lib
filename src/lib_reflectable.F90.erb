@@ -1,15 +1,12 @@
 <%
   require 'fort'
 
-  NUMERICS\
-  = ::Fort::Type::Integer.multi_provide\
-  + ::Fort::Type::Real.multi_provide\
-  + ::Fort::Type::Complex.multi_provide\
-
   TYPES\
   = ::Fort::Type::Logical.multi_provide\
   + ::Fort::Type::Character.multi_provide\
-  + NUMERICS
+  + ::Fort::Type::Integer.multi_provide\
+  + ::Fort::Type::Real.multi_provide\
+  + ::Fort::Type::Complex.multi_provide
 %>
 
 module lib_reflectable
@@ -22,7 +19,6 @@ module lib_reflectable
   public:: str_from_type
   public:: dim_from_type
   public:: stem_from_type
-  public:: kind_from_type
 
   <%- TYPES.each{|t| -%>
     interface str_from_type
@@ -36,12 +32,6 @@ module lib_reflectable
     interface stem_from_type
       module procedure stem_from_type<%= t %>
     end interface stem_from_type
-  <%- } -%>
-
-  <%- NUMERICS.each{|t| -%>
-    interface kind_from_type
-      module procedure kind_from_type<%= t %>
-    end interface kind_from_type
   <%- } -%>
 
 contains
@@ -69,14 +59,5 @@ contains
 
       this = STEM
     end function stem_from_type<%= t %>
-  <%- } -%>
-
-  <%- NUMERICS.each{|t| -%>
-    pure function kind_from_type<%= t %>(v) result(answer)
-      Integer:: answer
-      <%= t.declare %>, intent(in):: v
-
-      answer = <%= t.kind %>
-    end function kind_from_type<%= t %>
   <%- } -%>
 end module lib_reflectable
