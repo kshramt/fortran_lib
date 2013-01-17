@@ -134,48 +134,28 @@ contains
       <%= t.declare %>:: pivot
       <%= t.declare %>, intent(in):: xs(:)
       Logical, intent(out):: isUniform
-      <%= t.declare %>:: xsMin, xsMax
-      Integer(kind = INT64):: iL, iR, nXs
+      <%= t.declare %>:: tmpX
+      Integer(kind = INT64):: iXs, nXs
+
+      isUniform = .false.
 
       nXs = size(xs, dim = 1, kind = INT64)
-      if(xs(1) <= xs(nXs))then
-        xsMin = xs(1)
-        xsMax = xs(nXs)
-      else
-        xsMin = xs(nXs)
-        xsMax = xs(1)
-      end if
-      iL = 1 + 1
-      iR = nXs - 1
-      do while(iL <= iR)
-        if(xs(iL) <= xs(iR))then
-          if(xs(iL) < xsMin) xsMin = xs(iL)
-          if(xs(iR) > xsMax) xsMax = xs(iR)
-        else if(xs(iL) > xs(iR))then
-          if(xs(iR) < xsMin) xsMin = xs(iR)
-          if(xs(iL) > xsMax) xsMax = xs(iL)
-        end if
 
-        if(xsMin < xsMax) exit
-        iL = iL + 1
-        iR = iR - 1
-      end do
-
-      isUniform = (xsMax <= xsMin)
-      if(isUniform)then
-        pivot = -huge(pivot)
+      if(xs(1) /= xs(nXs))then
+        pivot = min(xs(1), xs(nXs))
         return
       end if
 
-      if(is_infinity(xsMax))then
-        pivot = huge(xsMax)
-      elseif(is_infinity(-xsMin))then
-        pivot = -huge(xsMin)
-      else
-        pivot = (xsMin/2) + (xsMax/2)
+      tmpX = xs(1)
+      do iXs = 2, nXs - 1
+        if(xs(iXs) /= tmpX)then
+          pivot = min(xs(iXs), tmpX)
+          return
+        end if
+      end do
 
-        if(pivot >= xsMax .or. pivot < xsMin) pivot = xsMin ! I'm not sure whether the second condition could be true.
-      end if
+      pivot = huge(pivot)
+      isUniform = .true.
     end function get_pivot<%= t %>
 
     function sort_merge<%= t %>(xs) result(xsSorted)
