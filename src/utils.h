@@ -42,5 +42,5 @@
 #    define debug_print(x)
 #    define debug_print_variable(x)
 #  endif
-#  define debug_assert(isOK) debug_raise_if(.not.(isOk))
+#  define debug_assert(isOk) debug_raise_if(.not.(isOk))
 #endif
