@@ -20,6 +20,7 @@ module lib_sort
   private
 
   public:: sort_quick, sorting_quick
+  public:: sort_merge, sorting_merge
 
   <%- TYPES.each{|t| -%>
     interface sort_quick
@@ -33,6 +34,22 @@ module lib_sort
     interface get_pivot
       module procedure get_pivot<%= t %>
     end interface get_pivot
+
+    interface sort_merge
+      module procedure sort_merge<%= t %>
+    end interface sort_merge
+
+    interface sorting_merge
+      module procedure sorting_merge<%= t %>
+    end interface sorting_merge
+
+    interface sorting_merge_substance
+      module procedure sorting_merge_substance<%= t %>
+    end interface sorting_merge_substance
+
+    interface merge_sorted_lists
+      module procedure merge_sorted_lists<%= t %>
+    end interface merge_sorted_lists
 
     interface sorting_3
       module procedure sorting_3<%= t %>
@@ -160,6 +177,80 @@ contains
         if(pivot >= xsMax .or. pivot < xsMin) pivot = xsMin ! I'm not sure whether the second condition could be true.
       end if
     end function get_pivot<%= t %>
+
+    function sort_merge<%= t %>(xs) result(xsSorted)
+      <%= t.declare %>, intent(in):: xs(:)
+      <%= t.declare %>, allocatable:: xsSorted(:)
+
+      xsSorted = xs
+      call sorting_merge<%= t %>(xsSorted)
+    end function sort_merge<%= t %>
+
+    subroutine sorting_merge<%= t %>(xs)
+      <%= t.declare %>, intent(inout):: xs(:)
+
+      raise_if(any(is_nan(xs)))
+      call sorting_merge_substance<%= t %>(xs)
+    end subroutine sorting_merge<%= t %>
+
+    recursive subroutine sorting_merge_substance<%= t %>(xs)
+      <%= t.declare %>, intent(inout):: xs(:)
+      <%= t.declare %>, allocatable:: xsL(:), xsR(:)
+      Integer(kind = INT64):: nXs
+
+      nXs = size(xs, dim = 1, kind = INT64)
+      select case(nXs)
+      case(:1)
+        ! Nothing to do.
+      case(2)
+        call sorting_2(xs)
+      case(3)
+        call sorting_3(xs)
+      case default
+        xsL = xs(1:nXs/2)
+        xsR = xs((nXs/2 + 1):nXs)
+        call sorting_merge_substance(xsL)
+        call sorting_merge_substance(xsR)
+        call merge_sorted_lists(xsL, xsR, xs)
+      end select
+    end subroutine sorting_merge_substance<%= t %>
+
+    ! Merge sorted 1-D array xs and ys into zs.
+    subroutine merge_sorted_lists<%= t %>(xs, ys, zs)
+      <%= t.declare %>, intent(in):: xs(:), ys(:)
+      <%= t.declare %>, intent(out):: zs(:)
+      Integer(kind = INT64):: iXs, nXs, iYs, nYs, iZs, nZs
+
+      nXs = size(xs, dim = 1, kind = INT64)
+      nYs = size(ys, dim = 1, kind = INT64)
+      nZs = size(zs, dim = 1, kind = INT64)
+      debug_assert(nXs >= 1)
+      debug_assert(nYs >= 1)
+      debug_assert(nZs >= 1)
+      debug_assert(nXs + nYs == nZs)
+
+      iXs = 1
+      iYs = 1
+      iZs = 1
+      do while(iXs <= nXs .and. iYs <= nYs)
+        debug_assert(iZs <= nZs)
+
+        if(xs(iXs) <= ys(iYs))then
+          zs(iZs) = xs(iXs)
+          iXs = iXs + 1
+        else
+          zs(iZs) = ys(iYs)
+          iYs = iYs + 1
+        end if
+        iZs = iZs + 1
+      end do
+
+      if(iXs <= nXs)then
+        zs(iZs:nZs) = xs(iXs:nXs)
+      else
+        zs(iZs:nZs) = ys(iYs:nYs)
+      end if
+    end subroutine merge_sorted_lists<%= t %>
 
     pure subroutine sorting_3<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(1:3)
