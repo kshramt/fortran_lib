@@ -32,48 +32,48 @@ program lib_sort_test
   Integer:: i
 
   ! size 0
-  test(size(sort_quick([(i, i = 1, 0)])) == 0)
-  test(size(sort_quick([(dble(i), i = 1, 0)])) == 0)
-  test(size(sort_merge([(i, i = 1, 0)])) == 0)
-  test(size(sort_merge([(dble(i), i = 1, 0)])) == 0)
+  test(size(quick_sort([(i, i = 1, 0)])) == 0)
+  test(size(quick_sort([(dble(i), i = 1, 0)])) == 0)
+  test(size(merge_sort([(i, i = 1, 0)])) == 0)
+  test(size(merge_sort([(dble(i), i = 1, 0)])) == 0)
 
   ! size 1
-  test(all(sort_quick([0]) == [0]))
-  test(all(equivalent(sort_quick([0.0]), [0.0])))
-  test(all(sort_merge([0]) == [0]))
-  test(all(equivalent(sort_merge([0.0]), [0.0])))
+  test(all(quick_sort([0]) == [0]))
+  test(all(equivalent(quick_sort([0.0]), [0.0])))
+  test(all(merge_sort([0]) == [0]))
+  test(all(equivalent(merge_sort([0.0]), [0.0])))
 
   <%- [SML_SETS.last].each{|sml_set| -%>
     <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
-      test(all(sort_quick(<%= input.inspect %>) == <%= sorted.inspect %>))
-      test(all(sort_merge(<%= input.inspect %>) == <%= sorted.inspect %>))
+      test(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+      test(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
     <%- } -%>
 
     <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
-      test(all(sort_quick(<%= input.inspect %>) == <%= sorted.inspect %>))
-      test(all(sort_merge(<%= input.inspect %>) == <%= sorted.inspect %>))
+      test(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+      test(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
     <%- } -%>
 
     <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
-      test(all(equivalent(sort_quick(<%= input.inspect %>), <%= sorted.inspect %>)))
-      test(all(equivalent(sort_merge(<%= input.inspect %>), <%= sorted.inspect %>)))
+      test(all(equivalent(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+      test(all(equivalent(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
     <%- } -%>
   <%- } -%>
 
   <%- 1.times{|i| -%>
     <%- randoms = (0...1000).map{rand*0.01 - 0.005} -%>
     <%- sorted = randoms.sort -%>
-    test(all(equivalent(sort_quick(<%= randoms.inspect %>), <%= sorted.inspect %>)))
-    test(all(equivalent(sort_merge(<%= randoms.inspect %>), <%= sorted.inspect %>)))
+    test(all(equivalent(quick_sort(<%= randoms.inspect %>), <%= sorted.inspect %>)))
+    test(all(equivalent(merge_sort(<%= randoms.inspect %>), <%= sorted.inspect %>)))
   <% } %>
 
   ! Infinity
-  test(all(equivalent(sort_quick([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
-  test(all(equivalent(sort_merge([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+  test(all(equivalent(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+  test(all(equivalent(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
 
   ! Bug check
-  test(all(equivalent(sort_quick([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
-  test(all(equivalent(sort_merge([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+  test(all(equivalent(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+  test(all(equivalent(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
 
   write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
   stop

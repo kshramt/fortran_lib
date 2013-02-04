@@ -19,33 +19,33 @@ module lib_sort
 
   private
 
-  public:: sort_quick, sorting_quick
-  public:: sort_merge, sorting_merge
+  public:: quick_sort, quick_sorting
+  public:: merge_sort, merge_sorting
 
   <%- TYPES.each{|t| -%>
-    interface sort_quick
-      module procedure sort_quick<%= t %>
-    end interface sort_quick
+    interface quick_sort
+      module procedure quick_sort<%= t %>
+    end interface quick_sort
 
-    interface sorting_quick
-      module procedure sorting_quick<%= t %>
-    end interface sorting_quick
+    interface quick_sorting
+      module procedure quick_sorting<%= t %>
+    end interface quick_sorting
 
     interface get_pivot
       module procedure get_pivot<%= t %>
     end interface get_pivot
 
-    interface sort_merge
-      module procedure sort_merge<%= t %>
-    end interface sort_merge
+    interface merge_sort
+      module procedure merge_sort<%= t %>
+    end interface merge_sort
 
-    interface sorting_merge
-      module procedure sorting_merge<%= t %>
-    end interface sorting_merge
+    interface merge_sorting
+      module procedure merge_sorting<%= t %>
+    end interface merge_sorting
 
-    interface sorting_merge_substance
-      module procedure sorting_merge_substance<%= t %>
-    end interface sorting_merge_substance
+    interface merge_sorting_substance
+      module procedure merge_sorting_substance<%= t %>
+    end interface merge_sorting_substance
 
     interface merge_sorted_lists
       module procedure merge_sorted_lists<%= t %>
@@ -67,15 +67,15 @@ module lib_sort
 contains
 
   <%- TYPES.each{|t| -%>
-    function sort_quick<%= t %>(xs) result(xsSorted)
+    function quick_sort<%= t %>(xs) result(xsSorted)
       <%= t.declare %>, allocatable:: xsSorted(:)
       <%= t.declare %>, intent(in):: xs(:)
 
       xsSorted = xs
-      call sorting_quick(xsSorted)
-    end function sort_quick<%= t %>
+      call quick_sorting(xsSorted)
+    end function quick_sort<%= t %>
 
-    subroutine sorting_quick<%= t %>(xs)
+    subroutine quick_sorting<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(:)
       <%= t.declare %>:: pivot
       type(IntegerDim0KindINT64Stack):: iLs, iRs
@@ -128,7 +128,7 @@ contains
           end select
         end do
       end do
-    end subroutine sorting_quick<%= t %>
+    end subroutine quick_sorting<%= t %>
 
     function get_pivot<%= t %>(xs, isUniform) result(pivot)
       <%= t.declare %>:: pivot
@@ -158,22 +158,22 @@ contains
       isUniform = .true.
     end function get_pivot<%= t %>
 
-    function sort_merge<%= t %>(xs) result(xsSorted)
+    function merge_sort<%= t %>(xs) result(xsSorted)
       <%= t.declare %>, intent(in):: xs(:)
       <%= t.declare %>, allocatable:: xsSorted(:)
 
       xsSorted = xs
-      call sorting_merge<%= t %>(xsSorted)
-    end function sort_merge<%= t %>
+      call merge_sorting<%= t %>(xsSorted)
+    end function merge_sort<%= t %>
 
-    subroutine sorting_merge<%= t %>(xs)
+    subroutine merge_sorting<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(:)
 
       raise_if(any(is_nan(xs)))
-      call sorting_merge_substance<%= t %>(xs)
-    end subroutine sorting_merge<%= t %>
+      call merge_sorting_substance<%= t %>(xs)
+    end subroutine merge_sorting<%= t %>
 
-    recursive subroutine sorting_merge_substance<%= t %>(xs)
+    recursive subroutine merge_sorting_substance<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(:)
       <%= t.declare %>, allocatable:: xsL(:), xsR(:)
       Integer(kind = INT64):: nXs
@@ -189,11 +189,11 @@ contains
       case default
         xsL = xs(1:nXs/2)
         xsR = xs((nXs/2 + 1):nXs)
-        call sorting_merge_substance(xsL)
-        call sorting_merge_substance(xsR)
+        call merge_sorting_substance(xsL)
+        call merge_sorting_substance(xsR)
         call merge_sorted_lists(xsL, xsR, xs)
       end select
-    end subroutine sorting_merge_substance<%= t %>
+    end subroutine merge_sorting_substance<%= t %>
 
     ! Merge sorted 1-D array xs and ys into zs.
     subroutine merge_sorted_lists<%= t %>(xs, ys, zs)
