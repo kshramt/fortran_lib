@@ -1,5 +1,3 @@
-require 'tempfile'
-
 ERB = ENV.fetch('MY_ERB')
 CPP = ENV.fetch('MY_CPP')
 GFORTRAN = ENV.fetch('MY_GFORTRAN') + ' -DDEBUG -ffree-line-length-none -fmax-identifier-length=63 -ggdb -fbacktrace -fbounds-check -pipe -Wall -O0 -C -cpp'
