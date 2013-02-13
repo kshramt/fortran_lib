@@ -85,7 +85,7 @@ contains
       raise_if(any(is_nan(xs)))
 
       call push(iLs, 1_INT64)
-      call push(iRs, size(xs, dim = 1, kind = INT64))
+      call push(iRs, size(xs, dim = 1, kind = kind(iR)))
 
       do while(pop(iRs, iR))    ! Loop for all segments on the stacks.
         assert(pop(iLs, iL))
@@ -139,7 +139,7 @@ contains
 
       isUniform = .false.
 
-      nXs = size(xs, dim = 1, kind = INT64)
+      nXs = size(xs, dim = 1, kind = kind(nXs))
 
       if(xs(1) /= xs(nXs))then
         pivot = min(xs(1), xs(nXs))
@@ -178,7 +178,7 @@ contains
       <%= t.declare %>, allocatable:: xsL(:), xsR(:)
       Integer(kind = INT64):: nXs
 
-      nXs = size(xs, dim = 1, kind = INT64)
+      nXs = size(xs, dim = 1, kind = kind(nXs))
       select case(nXs)
       case(:1)
         ! Nothing to do.
@@ -201,9 +201,9 @@ contains
       <%= t.declare %>, intent(out):: zs(:)
       Integer(kind = INT64):: iXs, nXs, iYs, nYs, iZs, nZs
 
-      nXs = size(xs, dim = 1, kind = INT64)
-      nYs = size(ys, dim = 1, kind = INT64)
-      nZs = size(zs, dim = 1, kind = INT64)
+      nXs = size(xs, dim = 1, kind = kind(nXs))
+      nYs = size(ys, dim = 1, kind = kind(nYs))
+      nZs = size(zs, dim = 1, kind = kind(nZs))
       debug_assert(nXs >= 1)
       debug_assert(nYs >= 1)
       debug_assert(nZs >= 1)
