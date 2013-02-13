@@ -4,8 +4,6 @@ rvm:
 before_install:
   - sudo apt-get -qq install ${MY_GFORTRAN}
   - gem install fort
-  - ruby -e 'require "pp"; pp $LOAD_PATH'
-  - ruby -e "p (require 'fort')"
 script:
   - cd src
   - rake test --trace
