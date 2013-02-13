@@ -6,6 +6,7 @@
 
 module lib_constant
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+  use, intrinsic:: iso_fortran_env, only: INT8
 
   implicit none
 
@@ -22,6 +23,7 @@ module lib_constant
   <%- } -%>
   public:: get_nan
   public:: get_infinity
+  public:: ZERO, ONE
 
   character, parameter:: TAB      = char(9)
   <%- REALS.each{|t| -%>
@@ -32,6 +34,7 @@ module lib_constant
     <%= t.declare %>, parameter:: DEG_FROM_RAD_<%= t.kind %> = DEG_FROM_RAD<%= t %>
     <%= t.declare %>, parameter:: RAD_FROM_DEG_<%= t.kind %> = RAD_FROM_DEG<%= t %>
   <%- } -%>
+  Integer, parameter:: ZERO = 0_INT8, ONE = 1_INT8
 
 contains
 
