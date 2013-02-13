@@ -1,11 +1,13 @@
 language: Fortran
+rvm:
+  - 1.9.3
 before_install:
-  - sudo apt-get -qq install ${MY_GFORTRAN} ruby1.9.3
-  - sudo gem1.9.3 install pry fort
-  - ruby1.9.3 -e 'require "pp"; pp $LOAD_PATH'
-  - ruby1.9.3 -e "p (require 'fort')"
+  - sudo apt-get -qq install ${MY_GFORTRAN}
+  - gem install fort
+  - ruby -e 'require "pp"; pp $LOAD_PATH'
+  - ruby -e "p (require 'fort')"
 script:
   - cd src
-  - rake1.9.3 test --trace
+  - rake test --trace
 env:
-  - MY_ERB="erb1.9.3 -T - -P" MY_GFORTRAN=gfortran-4.6
+  - MY_ERB="erb -T - -P" MY_GFORTRAN=gfortran-4.6
