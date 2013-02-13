@@ -1,4 +1,4 @@
-ERB = ENV.fetch('MY_ERB')
+ERB = ENV.fetch('MY_ERB') + ' -T - -P'
 GFORTRAN = ENV.fetch('MY_GFORTRAN') + ' -DDEBUG -ffree-line-length-none -fmax-identifier-length=63 -ggdb -fbacktrace -fbounds-check -pipe -Wall -O0 -C -cpp'
 
 ERBED_F90_FILES = FileList['*.F90.erb'].ext('')
