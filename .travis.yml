@@ -1,0 +1,11 @@
+language: Fortran
+rvm:
+  - ruby1.9.3
+before_install:
+  - sudo apt-get -qq install gfortran
+  - sudo gem install erb fort
+script:
+  - cd src && rake1.9.3 test
+env:
+  - MY_ERB=erb1.9.3
+  - MY_GFORTRAN=gfortran-4.7
