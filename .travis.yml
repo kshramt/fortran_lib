@@ -6,4 +6,4 @@ script:
   - cd src
   - rake1.9.3 test --trace
 env:
-  - MY_ERB=erb1.9.3 MY_GFORTRAN=gfortran-4.6
+  - MY_ERB="erb1.9.3 -T - -P" MY_GFORTRAN=gfortran-4.6
