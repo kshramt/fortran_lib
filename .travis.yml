@@ -1,7 +1,7 @@
 language: Fortran
 before_install:
-  - sudo apt-get -qq install gfortran ruby1.9.3
-  - sudo gem install erb fort
+  - sudo apt-get -qq install ${MY_GFORTRAN} ruby1.9.3
+  - sudo gem install fort
 script:
   - cd src && rake1.9.3 test
 env:
