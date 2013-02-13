@@ -6,6 +6,7 @@ program lib_character_test
   use lib_character, only: operator(+), operator(*)
 
   implicit none
+  Character(len = 2**10):: buf
 
   ! s
   test(s('') == '')
@@ -20,8 +21,10 @@ program lib_character_test
   test(str('a') == 'a')
   test(str(0) == '0')
   test(str(-1) == '-1')
-  test(str(0.0) == '0.00000000')
-  test(str(1.0) == '1.00000000')
+  buf = str(0.0)
+  test(buf(1:9) == '0.0000000')
+  buf = str(1.0)
+  test(buf(1:9) == '1.0000000')
   test(str(0.0_REAL64) == '0.0000000000000000')
   test(str(-1.0_REAL64) == '-1.0000000000000000')
   test(str((1.0, -1.0)) == '(  1.00000000    , -1.00000000    )')
