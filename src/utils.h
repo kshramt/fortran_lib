@@ -18,6 +18,8 @@
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
 #  define I (0, 1)
+#  define print_(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
+#  define print_variable(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, quote(x), ": ", (x)
 
 #  define warn_if(isBad) \
      if(isBad)then; \
