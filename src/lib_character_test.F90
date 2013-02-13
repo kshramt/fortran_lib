@@ -27,7 +27,7 @@ program lib_character_test
   test(buf(1:9) == '1.0000000')
   test(str(0.0_REAL64) == '0.0000000000000000')
   test(str(-1.0_REAL64) == '-1.0000000000000000')
-  test(str((1.0, -1.0)) == '(  1.00000000    , -1.00000000    )')
+  test(str((1.0, -1.0)) == '(  1.0000000    , -1.0000000    )')
   test(str(.true.) == 'T')
   test(str(.false.) == 'F')
 
