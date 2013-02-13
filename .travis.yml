@@ -3,7 +3,8 @@ before_install:
   - sudo apt-get -qq install ${MY_GFORTRAN} ruby1.9.3
   - sudo gem install fort
 script:
-  - cd src && rake1.9.3 test
+  - cd src
+  - rake1.9.3 test --trace
 env:
   - MY_ERB=erb1.9.3
-  - MY_GFORTRAN=gfortran-4.7
+  - MY_GFORTRAN=gfortran-4.6
