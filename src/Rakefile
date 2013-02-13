@@ -46,7 +46,7 @@ task test: TEST_FILES
   "lib_stack_test.exe" => %w[lib_stack.o lib_stack_test.F90],
   "lib_queue_test.exe" => %w[lib_queue.o lib_queue_test.F90],
   "lib_reflectable_test.exe" => %w[lib_reflectable.o lib_reflectable_test.F90],
-  "lib_io_test.exe" => %w[lib_constant.o lib_queue.o lib_character.o lib_io.o lib_io_test.F90],
+  "lib_io_test.exe" => %w[lib_constant.o lib_character.o lib_io.o lib_io_test.F90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t)
