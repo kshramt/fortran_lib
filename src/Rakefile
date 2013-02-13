@@ -30,14 +30,22 @@ end
 }
 
 # `sh' is too verbose for automatic test.
-def run_test(t)
-  system "#{GFORTRAN} -o #{t.name} #{t.prerequisites.join(' ')} && ./#{t.name}"
+def run_test(t, failed_tests)
+  failed_tests << t.name unless system "#{GFORTRAN} -o #{t.name} #{t.prerequisites.join(' ')} && ./#{t.name}"
 end
 
 TEST_FILES = FileList['*_test.F90', '*_test.F90.erb'].sub(/\.F90(?:\.erb)?\z/, '.exe')
+FAILED_TESTS = []
 desc "Run tests."
-task test: TEST_FILES
-failed_tests = []
+task test: [:testing] do
+  unless FAILED_TESTS.empty?
+    puts "FAILED TESTS:"
+    puts FAILED_TESTS
+    exit 1
+  end
+end
+
+task testing: TEST_FILES
 {
   "lib_comparable_test.exe" => %w[lib_constant.o lib_comparable.o lib_comparable_test.F90],
   "lib_character_test.exe" => %w[lib_character.o lib_character_test.F90],
@@ -50,11 +58,6 @@ failed_tests = []
   "lib_io_test.exe" => %w[lib_constant.o lib_character.o lib_io.o lib_io_test.F90],
 }.each{|target, dependencies|
   file target => dependencies do |t|
-    failed_tests << target unless run_test(t)
+    run_test(t, FAILED_TESTS)
   end
 }
-
-unless failed_tests.empty?
-  puts failed_tests
-  exit 1
-end
