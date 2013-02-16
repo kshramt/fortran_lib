@@ -17,17 +17,12 @@ module lib_reflectable
   private
 
   public:: str_from_type
-  public:: dim_from_type
   public:: stem_from_type
 
   <%- TYPES.each{|t| -%>
     interface str_from_type
       module procedure str_from_type<%= t %>
     end interface str_from_type
-
-    interface dim_from_type
-      module procedure dim_from_type<%= t %>
-    end interface dim_from_type
 
     interface stem_from_type
       module procedure stem_from_type<%= t %>
@@ -44,13 +39,6 @@ contains
 
       this = STRING_EXPRESSION
     end function str_from_type<%= t %>
-
-    pure function dim_from_type<%= t %>(v) result(this)
-      integer:: this
-      <%= t.declare %>, intent(in):: v
-
-      this = <%= t.dim %>
-    end function dim_from_type<%= t %>
 
     pure function stem_from_type<%= t %>(v) result(this)
       character(len = *), parameter:: STEM = "<%= t.type %>"
