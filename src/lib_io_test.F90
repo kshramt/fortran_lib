@@ -5,7 +5,7 @@ program lib_io_test
   
   implicit none
   
-  test(.false.)
+  TEST(.false.)
 
   write (ERROR_UNIT, *) 'SUCCESS: ', __FILE__
   

@@ -57,31 +57,31 @@ program test_lib_comparable
   use lib_comparable
   implicit none
 
-  test(.not.is_nan(0.0))
-  test(.not.is_nan(0.0_REAL64))
-  test(.not.is_nan(0))
-  test(.not.is_nan(0_INT64))
-  test(is_nan(get_nan()))
+  TEST(.not.is_nan(0.0))
+  TEST(.not.is_nan(0.0_REAL64))
+  TEST(.not.is_nan(0))
+  TEST(.not.is_nan(0_INT64))
+  TEST(is_nan(get_nan()))
 
-  test(.not.is_infinity(0.0))
-  test(.not.is_infinity(0.0_REAL64))
-  test(.not.is_infinity(0))
-  test(.not.is_infinity(0_INT64))
-  test(is_infinity(get_infinity()))
+  TEST(.not.is_infinity(0.0))
+  TEST(.not.is_infinity(0.0_REAL64))
+  TEST(.not.is_infinity(0))
+  TEST(.not.is_infinity(0_INT64))
+  TEST(is_infinity(get_infinity()))
 
-  test(.not.equivalent(get_nan(), 0.0))
-  test(equivalent(get_nan(), get_nan()))
+  TEST(.not.equivalent(get_nan(), 0.0))
+  TEST(equivalent(get_nan(), get_nan()))
 
-  test(.not.equivalent(get_infinity(), 0.0))
-  test(.not.equivalent(get_infinity(), -get_infinity()))
-  test(equivalent(get_infinity(), get_infinity()))
+  TEST(.not.equivalent(get_infinity(), 0.0))
+  TEST(.not.equivalent(get_infinity(), -get_infinity()))
+  TEST(equivalent(get_infinity(), get_infinity()))
 
   <%- TRUE_PAIRS.each{|i1, i2| -%>
-    test(equivalent(<%= i1 %>, <%= i2 %>))
+    TEST(equivalent(<%= i1 %>, <%= i2 %>))
   <%- } -%>
 
   <%- FALSE_PAIRS.each{|i1, i2| -%>
-    test(.not.equivalent(<%= i1 %>, <%= i2 %>))
+    TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
   <%- } -%>
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__

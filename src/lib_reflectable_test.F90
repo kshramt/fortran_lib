@@ -6,9 +6,9 @@ program lib_reflectable_test
 
   implicit none
   
-  test(stem_from_type(0.0) == 'Real')
-  test(dim_from_type(0.0) == 0)
-  test(str_from_type(0.0) == 'RealDim0KindREAL32')
+  TEST(stem_from_type(0.0) == 'Real')
+  TEST(dim_from_type(0.0) == 0)
+  TEST(str_from_type(0.0) == 'RealDim0KindREAL32')
 
   write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
   stop

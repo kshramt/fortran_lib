@@ -182,7 +182,7 @@ contains
       posL = min(pos1, pos2)
       posR = max(pos1, pos2)
       nList = size(list)
-      raise_if(posL < 1 .or. nList < posR)
+      RAISE_IF(posL < 1 .or. nList < posR)
       if(posL == posR) return
 
       posLNode => node_at(list, posL)
@@ -434,7 +434,7 @@ contains
 
       integer:: posNow
 
-      raise_if(pos < 1 .or. size(list) < pos)
+      RAISE_IF(pos < 1 .or. size(list) < pos)
 
       this => list%entry
       posNow = size(list)
