@@ -8,38 +8,38 @@ program lib_character_test
   implicit none
 
   ! s
-  test(s('') == '')
-  test(s('a') == 'a')
-  test(s(' ') == '')
-  test(s(' a') == 'a')
-  test(s('a ') == 'a')
-  test(s(' a ') == 'a')
-  test(s(' a b ') == 'a b')
+  TEST(s('') == '')
+  TEST(s('a') == 'a')
+  TEST(s(' ') == '')
+  TEST(s(' a') == 'a')
+  TEST(s('a ') == 'a')
+  TEST(s(' a ') == 'a')
+  TEST(s(' a b ') == 'a b')
 
   ! str
-  test(str('a') == 'a')
-  test(str(0) == '0')
-  test(str(-1) == '-1')
-  test(str(0.0) == '0.0000000')
-  test(str(1.0) == '1.0000000')
-  test(str(0.0_REAL64) == '0.0000000000000000')
-  test(str(-1.0_REAL64) == '-1.0000000000000000')
-  test(str((1.0, -1.0)) == '(  1.0000000    , -1.0000000    )')
-  test(str(.true.) == 'T')
-  test(str(.false.) == 'F')
+  TEST(str('a') == 'a')
+  TEST(str(0) == '0')
+  TEST(str(-1) == '-1')
+  TEST(str(0.0) == '0.0000000')
+  TEST(str(1.0) == '1.0000000')
+  TEST(str(0.0_REAL64) == '0.0000000000000000')
+  TEST(str(-1.0_REAL64) == '-1.0000000000000000')
+  TEST(str((1.0, -1.0)) == '(  1.0000000    , -1.0000000    )')
+  TEST(str(.true.) == 'T')
+  TEST(str(.false.) == 'F')
 
   ! +
-  test('' + '' == '')
-  test('' + 'a' == 'a')
-  test('a' + '' == 'a')
-  test('a' + 'b' == 'ab')
-  test(' a ' + 'b' == ' a b')
+  TEST('' + '' == '')
+  TEST('' + 'a' == 'a')
+  TEST('a' + '' == 'a')
+  TEST('a' + 'b' == 'ab')
+  TEST(' a ' + 'b' == ' a b')
 
   ! *
-  test('a'*0 == '')
-  test('a'*1 == 'a')
-  test('a'*2 == 'aa')
-  test('ab'*2 == 'abab')
+  TEST('a'*0 == '')
+  TEST('a'*1 == 'a')
+  TEST('a'*2 == 'aa')
+  TEST('ab'*2 == 'abab')
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
   stop

@@ -11,38 +11,38 @@
 #      define quote(x) #x
 #    endif
 #  endif
-#  define warn(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
-#  define raise(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
+#  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
+#  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
 #  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = INT64), ubound(array, dim = dim_, kind = INT64)
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
 #  define I (0, 1)
-#  define print_(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
-#  define print_variable(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, quote(x), ": ", (x)
+#  define PRINT(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
+#  define PRINT_VARIABLE(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, quote(x), ": ", (x)
 
-#  define warn_if(isBad) \
+#  define WARN_IF(isBad) \
      if(isBad)then; \
-       warn(quote(isBad)); \
+       WARN(quote(isBad)); \
      end if
 
-#  define raise_if(isBad) \
+#  define RAISE_IF(isBad) \
      if(isBad)then; \
-       raise(quote(isBad)); \
+       RAISE(quote(isBad)); \
      end if
-#  define assert(isOk) raise_if(.not.(isOk))
-#  define test(isOk) \
-     assert(isOk); \
+#  define ASSERT(isOk) RAISE_IF(.not.(isOk))
+#  define TEST(isOk) \
+     ASSERT(isOk); \
      write(OUTPUT_UNIT, '(a)', advance = 'no') '.'
 
 #  ifdef DEBUG
-#    define debug_raise_if(isBad) raise_if(isBad)
-#    define debug_print(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, (x)
-#    define debug_print_variable(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
+#    define DEBUG_RAISE_IF(isBad) RAISE_IF(isBad)
+#    define DEBUG_PRINT(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, (x)
+#    define DEBUG_PRINT_VARIABLE(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
 #  else
-#    define debug_raise_if(isBad)
-#    define debug_print(x)
-#    define debug_print_variable(x)
+#    define DEBUG_RAISE_IF(isBad)
+#    define DEBUG_PRINT(x)
+#    define DEBUG_PRINT_VARIABLE(x)
 #  endif
-#  define debug_assert(isOk) debug_raise_if(.not.(isOk))
+#  define DEBUG_ASSERT(isOk) DEBUG_RAISE_IF(.not.(isOk))
 #endif

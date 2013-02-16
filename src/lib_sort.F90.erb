@@ -82,13 +82,13 @@ contains
       Integer(kind = INT64):: iL, iR, iLOriginal, iROriginal
       Logical:: isUniform
 
-      raise_if(any(is_nan(xs)))
+      RAISE_IF(any(is_nan(xs)))
 
       call push(iLs, 1_INT64)
       call push(iRs, size(xs, dim = 1, kind = kind(iR)))
 
       do while(pop(iRs, iR))    ! Loop for all segments on the stacks.
-        assert(pop(iLs, iL))
+        ASSERT(pop(iLs, iL))
 
         iLOriginal = iL      ! Left most index of the current segment.
         do while(iLOriginal < iR) ! While current segment remains
@@ -124,7 +124,7 @@ contains
               call swapping(xs(iL), xs(iR))
             end do loop_to_swap
           case default
-            raise('Must not happen.')
+            RAISE('Must not happen.')
           end select
         end do
       end do
@@ -169,7 +169,7 @@ contains
     subroutine merge_sorting<%= t %>(xs)
       <%= t.declare %>, intent(inout):: xs(:)
 
-      raise_if(any(is_nan(xs)))
+      RAISE_IF(any(is_nan(xs)))
       call merge_sorting_substance<%= t %>(xs)
     end subroutine merge_sorting<%= t %>
 
@@ -204,16 +204,16 @@ contains
       nXs = size(xs, dim = 1, kind = kind(nXs))
       nYs = size(ys, dim = 1, kind = kind(nYs))
       nZs = size(zs, dim = 1, kind = kind(nZs))
-      debug_assert(nXs >= 1)
-      debug_assert(nYs >= 1)
-      debug_assert(nZs >= 1)
-      debug_assert(nXs + nYs == nZs)
+      DEBUG_ASSERT(nXs >= 1)
+      DEBUG_ASSERT(nYs >= 1)
+      DEBUG_ASSERT(nZs >= 1)
+      DEBUG_ASSERT(nXs + nYs == nZs)
 
       iXs = 1
       iYs = 1
       iZs = 1
       do while(iXs <= nXs .and. iYs <= nYs)
-        debug_assert(iZs <= nZs)
+        DEBUG_ASSERT(iZs <= nZs)
 
         if(xs(iXs) <= ys(iYs))then
           zs(iZs) = xs(iXs)

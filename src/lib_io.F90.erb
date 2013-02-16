@@ -114,7 +114,7 @@ contains
     if(present(exitStatus))then
       exitStatus = exitStatus_
     elseif(exitStatus_ /= 0)then
-      raise('Failed to execute mkdir -p ' + s(path))
+      RAISE('Failed to execute mkdir -p ' + s(path))
     end if
   end subroutine mkdir_p
 
@@ -146,7 +146,7 @@ contains
     do
       read(rU1, *, iostat = ios) dummy
       if(is_iostat_bad(ios)) exit
-      raise_if(this >= huge(this))
+      RAISE_IF(this >= huge(this))
 
       this = this + 1
     end do
@@ -190,7 +190,7 @@ contains
         if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
       case(SEEK_NORMAL_CHAR)
         if(.not.has_val(SEPARATORS, c))then
-          raise_if(this >= huge(this))
+          RAISE_IF(this >= huge(this))
 
           this = this + 1
           mode = SEEK_SEPARATOR
@@ -261,7 +261,7 @@ contains
       case(1)
         call read_array_v_1(arrayDir, array)
       case default
-        raise('Unsupported version: ' + str(libIoVersion))
+        RAISE('Unsupported version: ' + str(libIoVersion))
       end select
     end subroutine read_array<%= t %>
 
@@ -281,8 +281,8 @@ contains
       open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
-      raise_if(s(dataType) /= DATA_TYPE_FOR_SELF)
-      raise_if(dim /= DIM_FOR_SELF)
+      RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
+      RAISE_IF(dim /= DIM_FOR_SELF)
 
       close(rU1)
 
@@ -309,7 +309,7 @@ contains
         end if
       end do
 
-      raise('No available unit number exist between: ' + str(NEW_UNIT_MIN) + ' and ' + str(NEW_UNIT_MAX))
+      RAISE('No available unit number exist between: ' + str(NEW_UNIT_MIN) + ' and ' + str(NEW_UNIT_MAX))
     end subroutine new_unit<%= t %>
   <%- } -%>
 end module lib_io
