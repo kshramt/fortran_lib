@@ -2,8 +2,8 @@
 program lib_stack_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only:OUTPUT_UNIT
-  use lib_stack, only: IntegerDim0KindINT32Stack, IntegerDim1KindINT32Stack, IntegerDim2KindINT32Stack
-  use lib_stack, only: push, pop
+  use lib_fortran, only: IntegerDim0KindINT32Stack, IntegerDim1KindINT32Stack, IntegerDim2KindINT32Stack
+  use lib_fortran, only: push, pop
 
   implicit none
 
