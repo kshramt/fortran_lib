@@ -116,7 +116,7 @@ module lib_fortran
 contains
 
 
-  ! = body
+  ! = procedure
   ! == Queue
   <%- TYPES.each{|t| -%>
     subroutine push<%= t %>Queue(queue, value)
