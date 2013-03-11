@@ -147,7 +147,7 @@ contains
       type(<%= t %>Queue), intent(inout):: queue
       <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: value
       Logical:: isSuccess
-      type(<%= t %>QueueNode), pointer:: tmpNodeHolder => null()
+      type(<%= t %>QueueNode), pointer:: removedNode => null()
 
       if(is_empty(queue))then
         isSuccess = .false.
@@ -155,9 +155,9 @@ contains
       end if
 
       value = queue%head%value
-      tmpNodeHolder => queue%head
+      removedNode => queue%head
       queue%head => queue%head%next
-      deallocate(tmpNodeHolder)
+      deallocate(removedNode)
       isSuccess = .true.
     end function shift<%= t %>Queue
 
@@ -186,7 +186,7 @@ contains
       type(<%= t %>Stack), intent(inout):: stack
       <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: value
       Logical:: isSuccess
-      type(<%= t %>StackNode), pointer:: tmpNodeHolder => null()
+      type(<%= t %>StackNode), pointer:: removedNode => null()
 
       if(is_empty(stack))then
         isSuccess = .false.
@@ -194,9 +194,9 @@ contains
       end if
 
       value = stack%entry%value
-      tmpNodeHolder => stack%entry
+      removedNode => stack%entry
       stack%entry => stack%entry%prev
-      deallocate(tmpNodeHolder)
+      deallocate(removedNode)
       isSuccess = .true.
     end function pop<%= t %>Stack
 
