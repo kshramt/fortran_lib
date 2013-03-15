@@ -1,0 +1,31 @@
+<%-
+  require 'fort'
+  pairs = ('a'..'z').map{|c| [c, c.ord]}
+-%>
+# include "utils.h"
+program test_lib_comparable
+  USE_UTILS_H
+  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+  use:: lib_fortran
+  implicit none
+
+  type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap
+  Integer:: n
+
+  <%- pairs.shuffle.each{|c, i| -%>
+    call add(treeMap, '<%= c %>', <%= i %>)
+  <%- } -%>
+
+  <%- pairs.shuffle.each{|c, i| -%>
+    TEST(has_key(treeMap, '<%= c %>'))
+    TEST(get_value(treeMap, '<%= c %>', n))
+    TEST(n == <%= i %>)
+  <%- } -%>
+
+  write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
+
+  stop
+end program test_lib_comparable
+
+
+
