@@ -13,7 +13,7 @@
 #  endif
 #  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
-#  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = INT64), ubound(array, dim = dim_, kind = INT64)
+#  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = kind(index)), ubound(array, dim = dim_, kind = kind(index))
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
