@@ -1,14 +1,22 @@
 <%-
-require 'fort'
-TYPES\
-= ::Fort::Type::Real.multi_provide\
-+ ::Fort::Type::Integer.multi_provide\
-+ ::Fort::Type::Logical.multi_provide\
-+ ::Fort::Type::Complex.multi_provide\
-+ ::Fort::Type::Character.multi_provide(len: (0..13).map{|n| 2**n})
+  require 'fort'
+  REALS = ::Fort::Type::Real.multi_provide
+  INTEGERS = ::Fort::Type::Integer.multi_provide
+  LOGICALS = ::Fort::Type::Logical.multi_provide
+  COMPLEXES = ::Fort::Type::Complex.multi_provide
+  CHARACTERS = ::Fort::Type::Character.multi_provide(len: (0..13).map{|n| 2**n})
+  TYPES\
+  = REALS\
+  + INTEGERS\
+  + LOGICALS\
+  + COMPLEXES\
+  + CHARACTERS
+  CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).map{|n| 2**n}).product(TYPES)
 -%>
 
+# include "utils.h"
 module lib_fortran
+  USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   implicit none
 
@@ -19,6 +27,9 @@ module lib_fortran
   public:: push                 ! Queue, Stack
   public:: shift                ! Queue
   public:: pop                  ! Stack
+  public:: add                  ! BinaryTreeMap
+  public:: has_key              ! BinaryTreeMap
+  public:: get_value            ! BinaryTreeMap
 
 
   ! = public type
@@ -37,6 +48,11 @@ module lib_fortran
     public:: <%= t %>Stack
   <%- } -%>
 
+  ! == BinaryTreeMap
+  public:: BinaryTreeMap
+  <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
+    public:: <%= key_type %><%= value_type %>BinaryTreeMap
+  <%- } -%>
 
   ! = interface
   ! == Queue
@@ -67,6 +83,24 @@ module lib_fortran
     interface is_empty
       module procedure is_empty<%= t %>Stack
     end interface is_empty
+  <%- } -%>
+
+  ! == BinaryTreeMap
+  <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
+    interface add
+      module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMap
+      module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMapNode
+    end interface add
+
+    interface has_key
+      module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
+      module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
+    end interface has_key
+
+    interface get_value
+      module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
+      module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
+    end interface get_value
   <%- } -%>
 
 
@@ -112,11 +146,31 @@ module lib_fortran
     end type <%= t %>StackNode
   <%- } -%>
 
+  ! == BinaryTreeMap
+  type, extends(Object):: BinaryTreeMap
+  end type BinaryTreeMap
+
+  type, extends(Object):: BinaryTreeMapNode
+  end type BinaryTreeMapNode
+
+  <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
+    type, extends(BinaryTreeMap):: <%= key_type %><%= value_type %>BinaryTreeMap
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: root => null()
+    end type <%= key_type %><%= value_type %>BinaryTreeMap
+
+    type, extends(BinaryTreeMapNode):: <%= key_type %><%= value_type %>BinaryTreeMapNode
+      <%= key_type.declare %>:: key
+      <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>:: value
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: small => null()
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: large => null()
+    end type <%= key_type %><%= value_type %>BinaryTreeMapNode
+  <%- } -%>
+
 
 contains
 
 
-  ! = procedure
+  ! = body
   ! == Queue
   <%- TYPES.each{|t| -%>
     subroutine push<%= t %>Queue(queue, value)
@@ -206,5 +260,94 @@ contains
 
       answer = .not.associated(stack%entry)
     end function is_empty<%= t %>Stack
+  <%- } -%>
+
+  ! == BinaryTreeMap
+  <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
+    subroutine add<%= key_type %><%= value_type %>BinaryTreeMap(self, key, value)
+      type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(inout):: self
+      Character(len = *), intent(in):: key
+      <%= value_type.declare %>, intent(in):: value
+
+      ASSERT(len_trim(key) <= <%= key_type.len %>)
+      call add(self%root, key, value)
+    end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
+
+    recursive subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode(self, key, value)
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(inout):: self
+      Character(len = *), intent(in):: key
+      <%= value_type.declare %>, intent(in):: value
+
+      if(associated(self))then
+        if(key < self%key)then
+          call add(self%small, key, value)
+        else if(key > self%key)then
+          call add(self%large, key, value)
+        else
+          self%value = value
+        end if
+      else
+        allocate(self)
+        self%key = key
+        self%value = value
+      end if
+    end subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode
+
+    function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key) result(answer)
+      type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(in):: self
+      Character(len = *), intent(in):: key
+      Logical:: answer
+
+      ASSERT(len_trim(key) <= <%= key_type.len %>)
+      answer = has_key(self%root, key)
+    end function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
+
+    recursive function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key) result(answer)
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(in):: self
+      Character(len = *), intent(in):: key
+      Logical:: answer
+
+      if(associated(self))then
+        if(key < self%key)then
+          answer = has_key(self%small, key)
+        else if(key > self%key)then
+          answer = has_key(self%large, key)
+        else
+          answer = .true.
+        end if
+      else
+        answer = .false.
+      end if
+    end function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
+
+    function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key, value) result(isSuccess)
+      type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(inout):: self
+      Character(len = *), intent(in):: key
+      <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>, intent(out):: value
+      Logical:: isSuccess
+
+      ASSERT(len_trim(key) <= <%= key_type.len %>)
+      isSuccess = get_value(self%root, key, value)
+    end function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
+
+    recursive function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value) result(isSuccess)
+      type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(in):: self
+      Character(len = *), intent(in):: key
+      <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>, intent(out):: value
+      Logical:: isSuccess
+
+      if(associated(self))then
+        if(key < self%key)then
+          isSuccess = get_value(self%small, key, value)
+        else if(key > self%key)then
+          isSuccess = get_value(self%large, key, value)
+        else
+          value = self%value
+          isSuccess = .true.
+        end if
+      else
+        isSuccess = .false.
+      end if
+    end function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
   <%- } -%>
 end module lib_fortran
