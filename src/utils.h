@@ -13,6 +13,13 @@
 #  endif
 #  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
+#  define TESTABLE_RAISE(message, isRaised) \
+     if(present(isRaised))then; \
+       isRaised = .true.; \
+       return; \
+     else; \
+       write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1; \
+     end if
 #  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = kind(index)), ubound(array, dim = dim_, kind = kind(index))
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
@@ -30,7 +37,12 @@
      if(isBad)then; \
        RAISE(quote(isBad)); \
      end if
+#  define TESTABLE_RAISE_IF(isBad, isRaised) \
+     if(isBad)then; \
+       TESTABLE_RAISE(quote(isBad), isRaised); \
+     end if
 #  define ASSERT(isOk) RAISE_IF(.not.(isOk))
+#  define TESTABLE_ASSERT(isOk, isRaised) TESTABLE_RAISE_IF(.not.(isOk), isRaised)
 #  define TEST(isOk) \
      ASSERT(isOk); \
      write(OUTPUT_UNIT, '(a)', advance = 'no') '.'
