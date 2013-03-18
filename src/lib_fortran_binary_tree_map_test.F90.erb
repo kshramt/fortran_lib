@@ -11,10 +11,17 @@ program test_lib_comparable
 
   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap
   Integer:: n
+  Logical:: isRaised, lTmp
 
   <%- pairs.shuffle.each{|c, i| -%>
     call add(treeMap, '<%= c %>', <%= i %>)
   <%- } -%>
+  call add(treeMap, '||', -1, isRaised)
+  TEST(isRaised)
+  call add(treeMap, ' |', -1, isRaised)
+  TEST(isRaised)
+  call add(treeMap, '| ', -1, isRaised)
+  TEST(.not.isRaised)
 
   <%- pairs.shuffle.each{|c, i| -%>
     TEST(has_key(treeMap, '<%= c %>'))
@@ -22,10 +29,21 @@ program test_lib_comparable
     TEST(n == <%= i %>)
   <%- } -%>
 
+  lTmp = has_key(treeMap, '||', isRaised)
+  TEST(isRaised)
+  lTmp = has_key(treeMap, ' |', isRaised)
+  TEST(isRaised)
+  lTmp = has_key(treeMap, '| ', isRaised)
+  TEST(.not.isRaised)
+
+  lTmp = get_value(treeMap, '||', n, isRaised)
+  TEST(isRaised)
+  lTmp = get_value(treeMap, ' |', n, isRaised)
+  TEST(isRaised)
+  lTmp = get_value(treeMap, '| ', n, isRaised)
+  TEST(.not.isRaised)
+
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
 
   stop
 end program test_lib_comparable
-
-
-
