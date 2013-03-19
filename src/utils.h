@@ -38,6 +38,7 @@
        RAISE(quote(isBad)); \
      end if
 #  define TESTABLE_RAISE_IF(isBad, isRaised) \
+     if(present(isRaised)) isRaised = .false.; \
      if(isBad)then; \
        TESTABLE_RAISE(quote(isBad), isRaised); \
      end if

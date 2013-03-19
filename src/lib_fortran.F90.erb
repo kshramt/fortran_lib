@@ -270,7 +270,6 @@ contains
       <%= value_type.declare %>, intent(in):: value
       Logical, optional, intent(out):: isRaised
 
-      if(present(isRaised)) isRaised = .false.
       TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
       call add(self%root, key, value)
     end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
@@ -302,7 +301,6 @@ contains
       Logical:: answer
 
       answer = .false.
-      if(present(isRaised)) isRaised = .false.
 
       TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
 
@@ -335,7 +333,6 @@ contains
       Logical:: isSuccess
 
       isSuccess = .false.
-      if(present(isRaised)) isRaised = .false.
 
       TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
 
