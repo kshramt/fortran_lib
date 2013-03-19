@@ -1,17 +1,18 @@
 <%-
   require 'fort'
+  LOG_2_CHAR_LEN_MAX = 8
   REALS = ::Fort::Type::Real.multi_provide
   INTEGERS = ::Fort::Type::Integer.multi_provide
   LOGICALS = ::Fort::Type::Logical.multi_provide
   COMPLEXES = ::Fort::Type::Complex.multi_provide
-  CHARACTERS = ::Fort::Type::Character.multi_provide(len: (0..13).map{|n| 2**n})
+  CHARACTERS = ::Fort::Type::Character.multi_provide(len: (0..LOG_2_CHAR_LEN_MAX).map{|n| 2**n})
   TYPES\
   = REALS\
   + INTEGERS\
   + LOGICALS\
   + COMPLEXES\
   + CHARACTERS
-  CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: (0..13).map{|n| 2**n}).product(TYPES)
+  CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: (0..LOG_2_CHAR_LEN_MAX).map{|n| 2**n}).product(TYPES)
 -%>
 
 # include "utils.h"
