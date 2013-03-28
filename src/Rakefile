@@ -55,7 +55,7 @@ task testing: TEST_FILES
   "lib_fortran-stack_test.exe" => %w[lib_fortran.o lib_fortran-stack_test.o],
   "lib_fortran-queue_test.exe" => %w[lib_fortran.o lib_fortran-queue_test.o],
   "lib_reflectable_test.exe" => %w[lib_reflectable.o lib_reflectable_test.o],
-  "lib_io_test.exe" => %w[lib_constant.o lib_character.o lib_io.o lib_io_test.o],
+  "lib_io_test.exe" => %w[lib_constant.o lib_character.o lib_comparable.o lib_io.o lib_io_test.o],
   "lib_fortran_binary_tree_map_test.exe" => %w[lib_fortran.o lib_fortran_binary_tree_map_test.o],
 }.each{|target, dependencies|
   file target => dependencies do |t|
