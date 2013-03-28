@@ -223,7 +223,7 @@ contains
       write(wU1, nml = array_meta)
       close(wU1)
 
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
+      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
       <%- (1..NUM_DESC_MAX).each{|i| -%>
         if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
       <%- } -%>
