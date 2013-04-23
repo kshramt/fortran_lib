@@ -26,7 +26,7 @@ program lib_io_test
   call read_array('ns.array', ns)
   TEST(all(equivalent(ns, nsOriginal)))
 
-  write (ERROR_UNIT, *) 'SUCCESS: ', __FILE__
+  write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
   
   stop
 end program lib_io_test

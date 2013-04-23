@@ -124,7 +124,7 @@ program lib_list_test
   call clear(l)
   TEST(is_empty(l))
 
-  write (ERROR_UNIT, *) 'SUCCESS: ', __FILE__
+  write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
   stop
 end program lib_list_test
