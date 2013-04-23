@@ -191,9 +191,8 @@ module sac_lib
   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_LONG_STRING = 2*LEN_SHORT_STRING
   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_ENUMERATED_VALUE_MAX = 8
 
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: &
-    INTEGER_UNDEFINED = -12345, &
-    ENUMERATED_VALUE_UNDEFINED = -12345
+  Integer(kind = SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
+  Integer(kind = SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
   Real(kind = SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
   Character(len = *), parameter, public:: STRING_UNDEFINED = '-12345'
   Character(len = LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
