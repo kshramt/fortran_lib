@@ -47,6 +47,8 @@
 #  define TEST(isOk) \
      ASSERT(isOk); \
      write(OUTPUT_UNIT, '(a)', advance = 'no') '.'
+#  define check_bound(index, array, dim_) \
+     (lbound(array, dim_) <= index .and. index <= ubound(array, dim_))
 
 #  ifdef DEBUG
 #    define DEBUG_RAISE_IF(isBad) RAISE_IF(isBad)
