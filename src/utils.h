@@ -20,7 +20,7 @@
      else; \
        write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1; \
      end if
-#  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = kind(index)), ubound(array, dim = dim_, kind = kind(index))
+#  define ALL_OF(index, array, dim_) index = lbound(array, dim = dim_, kind = kind(index)), ubound(array, dim = dim_, kind = kind(index))
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))

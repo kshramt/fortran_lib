@@ -221,7 +221,7 @@ contains
 
       if(.not.is_empty(list)) call clear(list)
 
-      do ALL_OF(array, 1, i)
+      do ALL_OF(i, array, 1)
         call push(list, array(i))
       end do
     end subroutine list_from_array_coercion<%= t %>
