@@ -6,7 +6,7 @@
 program test_lib_comparable
   USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use:: lib_fortran
+  use, non_intrinsic:: lib_fortran
   implicit none
 
   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap

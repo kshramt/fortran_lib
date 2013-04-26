@@ -10,10 +10,10 @@
 module lib_sort
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   USE_UTILS_H
-  use lib_comparable, only: is_nan, is_infinity
+  use, non_intrinsic:: lib_comparable, only: is_nan, is_infinity
 
-  use lib_fortran, only: push, pop
-  use lib_fortran, only: IntegerDim0KindINT64Stack
+  use, non_intrinsic:: lib_fortran, only: push, pop
+  use, non_intrinsic:: lib_fortran, only: IntegerDim0KindINT64Stack
 
   implicit none
 

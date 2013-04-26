@@ -23,9 +23,9 @@ SML_SETS = [
 program lib_sort_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
-  use lib_constant, only: get_infinity
-  use lib_comparable, only: equivalent
-  use lib_sort
+  use, non_intrinsic:: lib_constant, only: get_infinity
+  use, non_intrinsic:: lib_comparable, only: equivalent
+  use, non_intrinsic:: lib_sort
 
   implicit none
 

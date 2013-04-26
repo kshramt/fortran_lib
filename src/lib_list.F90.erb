@@ -40,9 +40,9 @@
 module lib_list
   USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use lib_comparable, only: equivalent
+  use, non_intrinsic:: lib_comparable, only: equivalent
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
-    use <%= m %>, non_intrinsic, only: <%= (["assignment(=)"] + t).join(', ') %>
+    use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
   <%- } -%>
 
   implicit none
