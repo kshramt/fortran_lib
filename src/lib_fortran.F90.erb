@@ -265,13 +265,12 @@ contains
 
   ! == BinaryTreeMap
   <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-    subroutine add<%= key_type %><%= value_type %>BinaryTreeMap(self, key, value, isRaised)
+    subroutine add<%= key_type %><%= value_type %>BinaryTreeMap(self, key, value)
       type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(inout):: self
       Character(len = *), intent(in):: key
       <%= value_type.declare %>, intent(in):: value
-      Logical, optional, intent(out):: isRaised
 
-      TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
+      ASSERT(len_trim(key) <= <%= key_type.len %>)
       call add(self%root, key, value)
     end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
 
@@ -295,17 +294,16 @@ contains
       end if
     end subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode
 
-    function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key, isRaised) result(answer)
+    function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key) result(answer)
       type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(in):: self
       Character(len = *), intent(in):: key
-      Logical, optional, intent(out):: isRaised
       Logical:: answer
 
-      answer = .false.
-
-      TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
-
-      answer = has_key(self%root, key)
+      if(len_trim(key) <= <%= key_type.len %>)then
+        answer = has_key(self%root, key)
+      else
+        answer = .false.
+      end if
     end function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
 
     recursive function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key) result(answer)
@@ -326,18 +324,17 @@ contains
       end if
     end function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
 
-    function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key, value, isRaised) result(isSuccess)
+    function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key, value) result(isSuccess)
       type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(inout):: self
       Character(len = *), intent(in):: key
       <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>, intent(out):: value
-      Logical, optional, intent(out):: isRaised
       Logical:: isSuccess
 
-      isSuccess = .false.
-
-      TESTABLE_ASSERT(len_trim(key) <= <%= key_type.len %>, isRaised)
-
-      isSuccess = get_value(self%root, key, value)
+      if(len_trim(key) <= <%= key_type.len %>)then
+        isSuccess = get_value(self%root, key, value)
+      else
+        isSuccess = .false.
+      end if
     end function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
 
     recursive function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value) result(isSuccess)

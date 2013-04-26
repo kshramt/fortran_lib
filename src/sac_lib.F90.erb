@@ -275,10 +275,9 @@ module sac_lib
 
 contains
 
-  subroutine read(self, fileName, isRaised)
+  subroutine read(self, fileName)
     type(Sac), intent(out):: self
     Character(len = *), intent(in):: fileName
-    Logical, intent(out), optional:: isRaised
 
     Integer(kind = SAC_INTEGER_KIND):: npts, nxsize, nysize
     Integer(kind = INT32):: io
@@ -293,16 +292,17 @@ contains
       read(io) self%head%<%= name %>
     <%- } -%>
 
+    ASSERT(is_iftype_defined(self))
     select case(get_iftype(self))
     case('itime')
-      TESTABLE_ASSERT(is_npts_defined(self), isRaised)
+      ASSERT(is_npts_defined(self))
       npts = get_npts(self)
 
       allocate(self%body%itime(1:npts))
 
       read(io) self%body%itime
     case('ixy')
-      TESTABLE_ASSERT(is_npts_defined(self), isRaised)
+      ASSERT(is_npts_defined(self))
       npts = get_npts(self)
 
       allocate(self%body%ixy(1:npts, 2))
@@ -314,7 +314,7 @@ contains
       self%body%ixy(:, 1) = xs
       self%body%ixy(:, 2) = ys
     case('iamph')
-      TESTABLE_ASSERT(is_npts_defined(self), isRaised)
+      ASSERT(is_npts_defined(self))
       npts = get_npts(self)
 
       allocate(self%body%iamph(1:npts, 2))
@@ -326,7 +326,7 @@ contains
       self%body%iamph(:, 1) = amplitudes
       self%body%iamph(:, 2) = thetas
     case('irlim')
-      TESTABLE_ASSERT(is_npts_defined(self), isRaised)
+      ASSERT(is_npts_defined(self))
       npts = get_npts(self)
 
       allocate(self%body%irlim(1:npts))
@@ -337,25 +337,24 @@ contains
 
       self%body%irlim = cmplx(reals, imaginaries)
     case('ixyz')
-      TESTABLE_ASSERT(is_nxsize_defined(self), isRaised)
+      ASSERT(is_nxsize_defined(self))
       nxsize = get_nxsize(self)
-      TESTABLE_ASSERT(is_nysize_defined(self), isRaised)
+      ASSERT(is_nysize_defined(self))
       nysize = get_nysize(self)
 
       allocate(self%body%ixyz(1:nxsize, 1:nysize))
 
       read(io) self%body%ixyz
     case default
-      TESTABLE_RAISE('Unknown iftype', isRaised)
+      RAISE('Unknown iftype')
     end select
 
     close(io)
   end subroutine read
 
-  subroutine write(self, fileName, isRaised)
+  subroutine write(self, fileName)
     type(Sac), intent(inout):: self
     Character(len = *), intent(in):: fileName
-    Logical, intent(out), optional:: isRaised
 
     Integer(kind = INT32):: io
     Real(kind = SAC_REAL_KIND), allocatable:: ixy(:, :)
@@ -367,60 +366,40 @@ contains
       write(io) self%head%<%= name %>
     <%- } -%>
 
+    ASSERT(is_iftype_defined(self))
     select case(get_iftype(self))
     case('itime')
-      if(present(isRaised))then
-        write(io) get_body_itime(self, isRaised)
-      else
-        write(io) get_body_itime(self)
-      end if
+      write(io) get_body_itime(self)
     case('ixy')
-      if(present(isRaised))then
-        ixy = get_body_ixy(self, isRaised)
-      else
-        ixy = get_body_ixy(self)
-      end if
+      ixy = get_body_ixy(self)
 
       write(io) ixy(:, 2), ixy(:, 1)
     case('iamph')
-      if(present(isRaised))then
-        write(io) get_body_iamph(self, isRaised)
-      else
-        write(io) get_body_iamph(self)
-      end if
+      write(io) get_body_iamph(self)
     case('irlim')
-      if(present(isRaised))then
-        irlim = get_body_irlim(self, isRaised)
-      else
-        irlim = get_body_irlim(self)
-      end if
+      irlim = get_body_irlim(self)
 
       write(io) real(irlim), aimag(irlim)
     case('ixyz')
-      if(present(isRaised))then
-        write(io) get_body_ixyz(self, isRaised)
-      else
-        write(io) get_body_ixyz(self)
-      end if
+      write(io) get_body_ixyz(self)
     case default
-      TESTABLE_RAISE('Unknown iftype', isRaised)
+      RAISE('Unknown iftype')
     end select
 
     close(io)
   end subroutine write
 
-  subroutine set_body_itime(self, value, isRaised)
+  subroutine set_body_itime(self, value)
     type(Sac), intent(inout):: self
     Real(kind = SAC_REAL_KIND), intent(in):: value(:)
-    Logical, intent(out), optional:: isRaised
 
     Real(kind = SAC_REAL_KIND):: b, delta
     Integer(kind = SAC_INTEGER_KIND):: npts
 
     npts = size(value, 1)
-    TESTABLE_ASSERT(is_b_defined(self), isRaised)
+    ASSERT(is_b_defined(self))
     b = get_b(self)
-    TESTABLE_ASSERT(is_delta_defined(self), isRaised)
+    ASSERT(is_delta_defined(self))
     delta = get_delta(self)
 
     call set_iftype(self, 'itime')
@@ -438,39 +417,33 @@ contains
     if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
   end subroutine set_body_itime
 
-  function get_body_itime(self, isRaised) result(value)
+  function get_body_itime(self) result(value)
     type(Sac), intent(in):: self
-    Logical, intent(out), optional:: isRaised
 
     Real(kind = SAC_REAL_KIND), allocatable:: value(:)
 
-    TESTABLE_ASSERT(get_iftype(self) == 'itime', isRaised)
-    TESTABLE_ASSERT(allocated(self%body%itime), isRaised)
+    ASSERT(is_iftype_defined(self))
+    ASSERT(get_iftype(self) == 'itime')
+    ASSERT(allocated(self%body%itime))
     value = self%body%itime
-    TESTABLE_ASSERT(size(value, 1) == get_npts(self), isRaised)
+    ASSERT(size(value, 1) == get_npts(self))
   end function get_body_itime
 
-  subroutine get_body_itime_(self, value, isRaised)
+  subroutine get_body_itime_(self, value)
     type(Sac), intent(in):: self
     Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
-    Logical, intent(out), optional:: isRaised
 
-    if(present(isRaised))then
-      value = get_body_itime(self, isRaised)
-    else
-      value = get_body_itime(self)
-    end if
+    value = get_body_itime(self)
   end subroutine get_body_itime_
 
   <%- %w[ixy iamph].each{|t| -%>
-    subroutine set_body_<%= t %>(self, value, isRaised)
+    subroutine set_body_<%= t %>(self, value)
       type(Sac), intent(inout):: self
       Real(kind = SAC_REAL_KIND):: value(:, :)
-      Logical, intent(out), optional:: isRaised
 
       Integer(kind = SAC_INTEGER_KIND):: npts
 
-      TESTABLE_ASSERT(size(value, 2) == 2, isRaised) ! [[x1, y1], [x2, y2], ...]
+      ASSERT(size(value, 2) == 2) ! [[x1, y1], [x2, y2], ...]
       npts = size(value, 1)
 
       call set_iftype(self, '<%= t %>')
@@ -490,25 +463,21 @@ contains
       if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
     end subroutine set_body_<%= t %>
 
-    function get_body_<%= t %>(self, isRaised) result(value)
+    function get_body_<%= t %>(self) result(value)
       type(Sac), intent(in):: self
-      Logical, intent(out), optional:: isRaised
 
       Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
 
-      TESTABLE_ASSERT(get_iftype(self) == '<%= t %>', isRaised)
-      TESTABLE_ASSERT(allocated(self%body%<%= t %>), isRaised)
+      ASSERT(get_iftype(self) == '<%= t %>')
+      ASSERT(allocated(self%body%<%= t %>))
       value = self%body%<%= t %>
-      TESTABLE_ASSERT(size(value, 1) == get_npts(self), isRaised)
+      ASSERT(size(value, 1) == get_npts(self))
     end function get_body_<%= t %>
   <%- } -%>
 
-  subroutine set_body_irlim(self, value, isRaised)
+  subroutine set_body_irlim(self, value)
     type(Sac), intent(inout):: self
     Complex(kind = SAC_REAL_KIND), intent(in):: value(:)
-    Logical, intent(out), optional:: isRaised
-
-    if(present(isRaised)) isRaised = .false.
 
     call set_iftype(self, 'irlim')
     call set_leven(self, .false.)
@@ -521,36 +490,27 @@ contains
     if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
   end subroutine set_body_irlim
 
-  function get_body_irlim(self, isRaised) result(value)
+  function get_body_irlim(self) result(value)
     type(Sac), intent(in):: self
-    Logical, intent(out), optional:: isRaised
 
     Complex(kind = SAC_REAL_KIND), allocatable:: value(:)
 
-    TESTABLE_ASSERT(get_iftype(self) == 'irlim', isRaised)
-    TESTABLE_ASSERT(allocated(self%body%irlim), isRaised)
+    ASSERT(get_iftype(self) == 'irlim')
+    ASSERT(allocated(self%body%irlim))
     value = self%body%irlim
-    TESTABLE_ASSERT(size(value, 1) == get_npts(self), isRaised)
+    ASSERT(size(value, 1) == get_npts(self))
   end function get_body_irlim
 
-  subroutine get_body_irlim_(self, value, isRaised)
+  subroutine get_body_irlim_(self, value)
     type(Sac), intent(in):: self
     Complex(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
-    Logical, intent(out), optional:: isRaised
 
-    if(present(isRaised))then
-      value = get_body_itime(self, isRaised)
-    else
-      value = get_body_itime(self)
-    end if
+    value = get_body_itime(self)
   end subroutine get_body_irlim_
 
-  subroutine set_body_ixyz(self, value, isRaised)
+  subroutine set_body_ixyz(self, value)
     type(Sac), intent(inout):: self
     Real(kind = SAC_REAL_KIND), intent(in):: value(:, :)
-    Logical, intent(out), optional:: isRaised
-
-    if(present(isRaised)) isRaised = .false.
 
     call set_iftype(self, 'ixyz')
     call set_leven(self, .true.)
@@ -564,54 +524,45 @@ contains
     if(allocated(self%body%irlim)) deallocate(self%body%ixyz)
   end subroutine set_body_ixyz
 
-  function get_body_ixyz(self, isRaised) result(value)
+  function get_body_ixyz(self) result(value)
     type(Sac), intent(in):: self
-    Logical, intent(out), optional:: isRaised
 
     Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
 
-    TESTABLE_ASSERT(get_iftype(self) == 'ixyz', isRaised)
-    TESTABLE_ASSERT(allocated(self%body%ixyz), isRaised)
+    ASSERT(get_iftype(self) == 'ixyz')
+    ASSERT(allocated(self%body%ixyz))
     value = self%body%ixyz
-    TESTABLE_ASSERT(size(value, 1) == get_nxsize(self), isRaised)
-    TESTABLE_ASSERT(size(value, 2) == get_nysize(self), isRaised)
+    ASSERT(size(value, 1) == get_nxsize(self))
+    ASSERT(size(value, 2) == get_nysize(self))
   end function get_body_ixyz
 
-  subroutine set_body_ixy_or_iamph_or_ixyz(self, value, isRaised)
+  subroutine set_body_ixy_or_iamph_or_ixyz(self, value)
     type(Sac), intent(inout):: self
     Real(kind = SAC_REAL_KIND):: value(:, :)
-    Logical, intent(out), optional:: isRaised
 
+    ASSERT(is_iftype_defined(self))
     select case(get_iftype(self))
     <%- %w[ixy iamph ixyz].each{|t| -%>
       case('<%= t %>')
-        if(present(isRaised))then
-          call set_body_<%= t %>(self, value, isRaised)
-        else
-          call set_body_<%= t %>(self, value)
-        end if
+        call set_body_<%= t %>(self, value)
     <%- } -%>
     case default
-      TESTABLE_RAISE('Unknown iftype', isRaised)
+      RAISE('Unknown iftype')
     end select
   end subroutine set_body_ixy_or_iamph_or_ixyz
 
-  subroutine get_body_ixy_or_iamph_or_ixyz_(self, value, isRaised)
+  subroutine get_body_ixy_or_iamph_or_ixyz_(self, value)
     type(Sac), intent(in):: self
     Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
-    Logical, intent(out), optional:: isRaised
 
+    ASSERT(is_iftype_defined(self))
     select case(get_iftype(self))
     <%- %w[ixy iamph ixyz].each{|t| -%>
       case('<%= t %>')
-        if(present(isRaised))then
-          value = get_body_<%= t %>(self, isRaised)
-        else
-          value = get_body_<%= t %>(self)
-        end if
+        value = get_body_<%= t %>(self)
     <%- } -%>
     case default
-      TESTABLE_RAISE('Unknown iftype', isRaised)
+      RAISE('Unknown iftype')
     end select
   end subroutine get_body_ixy_or_iamph_or_ixyz_
 
@@ -662,15 +613,14 @@ contains
   <%- } -%>
 
   <%- ENUMERATED_VALUES.each{|name| -%>
-    function get_<%= name %>(self, isRaised) result(value)
+    function get_<%= name %>(self) result(value)
       type(Sac), intent(in):: self
-      Logical, intent(out), optional:: isRaised
       Character(len = LEN_ENUMERATED_VALUE_MAX):: value
 
       Integer:: internalValue
 
       internalValue = self%head%<%= name %>
-      TESTABLE_ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1), isRaised)
+      ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1))
       value = ENUMERATED_VALUES(internalValue)
     end function get_<%= name %>
 
@@ -678,13 +628,15 @@ contains
       type(Sac), intent(in):: self
       Logical:: answer
 
-      answer = (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED)
+      ! 2nd condition is enough since ENUMERATED_VALUE_UNDEFINED is -12345.
+      answer = &
+        (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
+        .and. check_bound(self%head%<%= name %>, ENUMERATED_VALUES, 1)
     end function is_<%= name %>_defined
 
-    subroutine set_<%= name %>(self, value, isRaised)
+    subroutine set_<%= name %>(self, value)
       type(Sac), intent(inout):: self
       Character(len = *), intent(in):: value
-      Logical, intent(out), optional:: isRaised
 
       Integer:: internalValue
 
@@ -695,7 +647,7 @@ contains
         end if
       end do
 
-      TESTABLE_RAISE(value, isRaised)
+      RAISE(value)
     end subroutine set_<%= name %>
   <%- } -%>
 
@@ -745,12 +697,11 @@ contains
       answer = (self%head%<%= name %> /= STRING_UNDEFINED)
     end function is_<%= name %>_defined
 
-    subroutine set_<%= name %>(self, value, isRaised)
+    subroutine set_<%= name %>(self, value)
       type(Sac), intent(inout):: self
       Character(len = *), intent(in):: value
-      Logical, intent(out), optional:: isRaised
 
-      TESTABLE_ASSERT(len_trim(value) <= LEN_<%= length %>_STRING, isRaised)
+      ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
       self%head%<%= name %> = value
     end subroutine set_<%= name %>
   <%- } -%>

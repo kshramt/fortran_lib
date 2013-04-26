@@ -8,7 +8,6 @@ program sac_lib_test
 
   type(Sac):: wHead, wBody, wIo
   Real(kind = SAC_REAL_KIND), allocatable:: body(:)
-  Logical:: isRaised
 
   ! = head
   ! == float
@@ -30,8 +29,6 @@ program sac_lib_test
   call set_iftype(wHead, 'itime')
   TEST(is_iftype_defined(wHead))
   TEST(get_iftype(wHead) == 'itime')
-  call set_iftype(wHead, 'anything other than enumerated values', isRaised)
-  TEST(isRaised)
   ! == logical
   call set_leven(wHead, .true.)
   TEST(is_leven_defined(wHead))
@@ -48,8 +45,6 @@ program sac_lib_test
   TEST(.not.is_kstnm_defined(wHead))
   call set_kstnm(wHead, '0123456789abcdef')
   TEST(get_kstnm(wHead) == '0123456789abcdef')
-  call set_kstnm(wHead, '0123456789abcdefg', isRaised)
-  TEST(isRaised)
   ! == short string
   TEST(.not.is_kevnm_defined(wHead))
   call set_kevnm(wHead, 'japan')
@@ -59,8 +54,6 @@ program sac_lib_test
   TEST(.not.is_kevnm_defined(wHead))
   call set_kevnm(wHead, '12345678')
   TEST(get_kevnm(wHead) == '12345678')
-  call set_kevnm(wHead, '123456789', isRaised)
-  TEST(isRaised)
   ! = body
   ! == itime
   ! call get_body(wBody, body, isRaised)

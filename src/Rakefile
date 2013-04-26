@@ -36,14 +36,6 @@ end
 
 TEST_FILES = FileList['*_test.F90', '*_test.F90.erb'].sub(/\.F90(?:\.erb)?\z/, '.exe')
 FAILED_TESTS = []
-desc "Run tests."
-task test: [:testing] do
-  unless FAILED_TESTS.empty?
-    puts "FAILED TESTS:"
-    puts FAILED_TESTS
-    exit 1
-  end
-end
 
 task testing: TEST_FILES
 {
@@ -60,5 +52,38 @@ task testing: TEST_FILES
 }.each{|target, dependencies|
   file target => dependencies do |t|
     run_test(t, FAILED_TESTS)
+  end
+}
+
+def run_errortest(t, failed_tests)
+  system "#{GFORTRAN} -o #{t.name} #{t.prerequisites.join(' ')}"
+  if system "./#{t.name} 2> #{::File::NULL}"
+    failed_tests << t.name
+  else
+    puts ". SUCCESS: #{File.basename(t.name, '.exe') + '.F90'}"
+  end
+end
+
+ERRORTEST_FILES = FileList['*_errortest.F90', '*_errortest.F90.erb'].sub(/\.F90(?:\.erb)?\z/, '.exe')
+FAILED_ERRORTESTS = []
+
+desc "Run tests."
+task test: [:testing, :errortesting] do
+  unless FAILED_TESTS.empty? && FAILED_ERRORTESTS.empty?
+    puts "FAILED TESTS:"
+    puts FAILED_TESTS + FAILED_ERRORTESTS
+    exit 1
+  end
+end
+
+task errortesting: ERRORTEST_FILES
+{
+  "sac_lib_iftype_errortest.exe" => %w[sac_lib.o sac_lib_iftype_errortest.o],
+  "sac_lib_kstnm_errortest.exe" => %w[sac_lib.o sac_lib_kstnm_errortest.o],
+  "sac_lib_kevnm_errortest.exe" => %w[sac_lib.o sac_lib_kevnm_errortest.o],
+  "lib_fortran_binary_tree_map_add_too_long_key_errortest.exe" => %w[lib_fortran.o lib_fortran_binary_tree_map_add_too_long_key_errortest.o],
+}.each{|target, dependencies|
+  file target => dependencies do |t|
+    run_errortest(t, FAILED_ERRORTESTS)
   end
 }
