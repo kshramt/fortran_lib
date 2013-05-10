@@ -167,542 +167,542 @@
 ! This module provides few consistency check for header variables.
 ! You should be careful if you change number of data points, time interval, data type, origin time and so on.
 module sac_lib
-  USE_UTILS_H
-  use, intrinsic:: iso_fortran_env, only: &
-    INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
-    REAL32, INT32
+   USE_UTILS_H
+   use, intrinsic:: iso_fortran_env, only: &
+      INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
+      REAL32, INT32
 
-  implicit none
+   implicit none
 
-  private
+   private
 
-  public:: read, write
-  public:: set_body, get_body
-  <%- BODIES.each{|name| -%>
-    public:: set_body_<%= name %>, get_body_<%= name %>
-  <%- } -%>
-  <%- ALL_HEADS.each{|name, _| -%>
-    public:: set_<%= name %>, is_<%= name %>_defined, get_<%= name %>
-  <%- } -%>
+   public:: read, write
+   public:: set_body, get_body
+   <%- BODIES.each{|name| -%>
+      public:: set_body_<%= name %>, get_body_<%= name %>
+   <%- } -%>
+   <%- ALL_HEADS.each{|name, _| -%>
+      public:: set_<%= name %>, is_<%= name %>_defined, get_<%= name %>
+   <%- } -%>
 
-  Integer(kind = INT32), parameter, public:: SAC_INTEGER_KIND = INT32
-  Integer(kind = INT32), parameter, public:: SAC_REAL_KIND = REAL32
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_SHORT_STRING = 8
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_LONG_STRING = 2*LEN_SHORT_STRING
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_ENUMERATED_VALUE_MAX = 8
+   Integer(kind = INT32), parameter, public:: SAC_INTEGER_KIND = INT32
+   Integer(kind = INT32), parameter, public:: SAC_REAL_KIND = REAL32
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_SHORT_STRING = 8
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_LONG_STRING = 2*LEN_SHORT_STRING
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_ENUMERATED_VALUE_MAX = 8
 
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
-  Real(kind = SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
-  Character(len = *), parameter, public:: STRING_UNDEFINED = '-12345'
-  Character(len = LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
-    "itime   ", "irlim   ", "iamph   ", "ixy     ", "iunkn   ", "idisp   ", "ivel    ", "iacc    ", &
-    "ib      ", "iday    ", "io      ", "ia      ", "it0     ", "it1     ", "it2     ", "it3     ", &
-    "it4     ", "it5     ", "it6     ", "it7     ", "it8     ", "it9     ", "iradnv  ", "itannv  ", &
-    "iradev  ", "itanev  ", "inorth  ", "ieast   ", "ihorza  ", "idown   ", "iup     ", "illlbb  ", &
-    "iwwsn1  ", "iwwsn2  ", "ihglp   ", "isro    ", "inucl   ", "ipren   ", "ipostn  ", "iquake  ", &
-    "ipreq   ", "ipostq  ", "ichem   ", "iother  ", "igood   ", "iglch   ", "idrop   ", "ilowsn  ", &
-    "irldta  ", "ivolts  ", "ixyz    ", "imb     ", "ims     ", "iml     ", "imw     ", "imd     ", &
-    "imx     ", "ineic   ", "ipde    ", "iisc    ", "ireb    ", "iusgs   ", "ibrk    ", "icaltech", &
-    "illnl   ", "ievloc  ", "ijsop   ", "iuser   ", "iunknown", "iqb     ", "iqb1    ", "iqb2    ", &
-    "iqbx    ", "iqmt    ", "ieq     ", "ieq1    ", "ieq2    ", "ime     ", "iex     ", "inu     ", &
-    "inc     ", "io      ", "il      ", "ir      ", "it      ", "iu      "]
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: NVHDR_DEFAULT = 6
-  Integer(kind = SAC_INTEGER_KIND), parameter, public:: SAC_TRUE = 1, SAC_FALSE = 0
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
+   Real(kind = SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
+   Character(len = *), parameter, public:: STRING_UNDEFINED = '-12345'
+   Character(len = LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
+      "itime   ", "irlim   ", "iamph   ", "ixy     ", "iunkn   ", "idisp   ", "ivel    ", "iacc    ", &
+      "ib      ", "iday    ", "io      ", "ia      ", "it0     ", "it1     ", "it2     ", "it3     ", &
+      "it4     ", "it5     ", "it6     ", "it7     ", "it8     ", "it9     ", "iradnv  ", "itannv  ", &
+      "iradev  ", "itanev  ", "inorth  ", "ieast   ", "ihorza  ", "idown   ", "iup     ", "illlbb  ", &
+      "iwwsn1  ", "iwwsn2  ", "ihglp   ", "isro    ", "inucl   ", "ipren   ", "ipostn  ", "iquake  ", &
+      "ipreq   ", "ipostq  ", "ichem   ", "iother  ", "igood   ", "iglch   ", "idrop   ", "ilowsn  ", &
+      "irldta  ", "ivolts  ", "ixyz    ", "imb     ", "ims     ", "iml     ", "imw     ", "imd     ", &
+      "imx     ", "ineic   ", "ipde    ", "iisc    ", "ireb    ", "iusgs   ", "ibrk    ", "icaltech", &
+      "illnl   ", "ievloc  ", "ijsop   ", "iuser   ", "iunknown", "iqb     ", "iqb1    ", "iqb2    ", &
+      "iqbx    ", "iqmt    ", "ieq     ", "ieq1    ", "ieq2    ", "ime     ", "iex     ", "inu     ", &
+      "inc     ", "io      ", "il      ", "ir      ", "it      ", "iu      "]
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: NVHDR_DEFAULT = 6
+   Integer(kind = SAC_INTEGER_KIND), parameter, public:: SAC_TRUE = 1, SAC_FALSE = 0
 
-  type:: Object
-  end type Object
+   type:: Object
+   end type Object
 
-  ! npts, nvhdr, b, e, iftype, leven and delta are required variables.
-  type, extends(Object), public:: SacHead
-    private
+   ! npts, nvhdr, b, e, iftype, leven and delta are required variables.
+   type, extends(Object), public:: SacHead
+      private
 
-    <%- (FLOATS - %w[b]).each{|name| -%>
-      Real(kind = SAC_REAL_KIND):: <%= name %> = FLOAT_UNDEFINED
-    <%- } -%>
-    Real(kind = SAC_REAL_KIND):: b = 0
+      <%- (FLOATS - %w[b]).each{|name| -%>
+         Real(kind = SAC_REAL_KIND):: <%= name %> = FLOAT_UNDEFINED
+      <%- } -%>
+      Real(kind = SAC_REAL_KIND):: b = 0
 
-    <%- (INTEGERS - %w[nvhdr]).each{|name| -%>
-      Integer(kind = SAC_INTEGER_KIND):: <%= name %> = INTEGER_UNDEFINED
-    <%- } -%>
-    Integer(kind = SAC_INTEGER_KIND):: nvhdr = NVHDR_DEFAULT
+      <%- (INTEGERS - %w[nvhdr]).each{|name| -%>
+         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = INTEGER_UNDEFINED
+      <%- } -%>
+      Integer(kind = SAC_INTEGER_KIND):: nvhdr = NVHDR_DEFAULT
 
-    <%- ENUMERATED_VALUES.each{|name| -%>
-      Integer(kind = SAC_INTEGER_KIND):: <%= name %> = ENUMERATED_VALUE_UNDEFINED
-    <%- } -%>
+      <%- ENUMERATED_VALUES.each{|name| -%>
+         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = ENUMERATED_VALUE_UNDEFINED
+      <%- } -%>
 
-    <%- LOGICALS.each{|name| -%>
-      Integer(kind = SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
-    <%- } -%>
+      <%- LOGICALS.each{|name| -%>
+         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
+      <%- } -%>
 
-    <%- LONG_STRINGS.each{|name, _| -%>
-      Character(len = LEN_LONG_STRING):: <%= name %> = STRING_UNDEFINED
-    <%- } -%>
+      <%- LONG_STRINGS.each{|name, _| -%>
+         Character(len = LEN_LONG_STRING):: <%= name %> = STRING_UNDEFINED
+      <%- } -%>
 
-    <%- SHORT_STRINGS.each{|name, _| -%>
-      Character(len = LEN_SHORT_STRING):: <%= name %> = STRING_UNDEFINED
-    <%- } -%>
-  end type SacHead
+      <%- SHORT_STRINGS.each{|name, _| -%>
+         Character(len = LEN_SHORT_STRING):: <%= name %> = STRING_UNDEFINED
+      <%- } -%>
+   end type SacHead
 
-  type, extends(Object), public:: SacBody
-    private
+   type, extends(Object), public:: SacBody
+      private
 
-    Real(kind = SAC_REAL_KIND), allocatable:: &
-      itime(:), &
-      ixy(:, :), &
-      iamph(:, :), &
-      ixyz(:, :)
-    Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
-  end type SacBody
+      Real(kind = SAC_REAL_KIND), allocatable:: &
+         itime(:), &
+         ixy(:, :), &
+         iamph(:, :), &
+         ixyz(:, :)
+      Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
+   end type SacBody
 
-  type, extends(Object), public:: Sac
-    ! I left these parameters public so that a head or body of a SAC data can easily be copied to another SAC data.
-    type(SacHead):: head
-    type(SacBody):: body
-  end type Sac
+   type, extends(Object), public:: Sac
+      ! I left these parameters public so that a head or body of a SAC data can easily be copied to another SAC data.
+      type(SacHead):: head
+      type(SacBody):: body
+   end type Sac
 
-  interface set_body
-    module procedure set_body_itime
-    module procedure set_body_irlim
-    module procedure set_body_ixy_or_iamph_or_ixyz
-  end interface set_body
+   interface set_body
+      module procedure set_body_itime
+      module procedure set_body_irlim
+      module procedure set_body_ixy_or_iamph_or_ixyz
+   end interface set_body
 
-  interface get_body
-    module procedure get_body_itime_
-    module procedure get_body_irlim_
-    module procedure get_body_ixy_or_iamph_or_ixyz_
-  end interface get_body
+   interface get_body
+      module procedure get_body_itime_
+      module procedure get_body_irlim_
+      module procedure get_body_ixy_or_iamph_or_ixyz_
+   end interface get_body
 
 contains
 
-  subroutine read(self, fileName)
-    type(Sac), intent(out):: self
-    Character(len = *), intent(in):: fileName
+   subroutine read(self, fileName)
+      type(Sac), intent(out):: self
+      Character(len = *), intent(in):: fileName
 
-    Integer(kind = SAC_INTEGER_KIND):: npts, nxsize, nysize
-    Integer(kind = INT32):: io
-    Real(kind = SAC_REAL_KIND), allocatable:: &
-      xs(:), ys(:), &
-      amplitudes(:), thetas(:), &
-      reals(:), imaginaries(:)
+      Integer(kind = SAC_INTEGER_KIND):: npts, nxsize, nysize
+      Integer(kind = INT32):: io
+      Real(kind = SAC_REAL_KIND), allocatable:: &
+         xs(:), ys(:), &
+         amplitudes(:), thetas(:), &
+         reals(:), imaginaries(:)
 
-    open( newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
+      open( newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
 
-    <%- ALL_HEADS.each{|name, _| -%>
-      read(io) self%head%<%= name %>
-    <%- } -%>
+      <%- ALL_HEADS.each{|name, _| -%>
+         read(io) self%head%<%= name %>
+      <%- } -%>
 
-    ASSERT(is_iftype_defined(self))
-    select case(get_iftype(self))
-    case('itime')
-      ASSERT(is_npts_defined(self))
-      npts = get_npts(self)
+      ASSERT(is_iftype_defined(self))
+      select case(get_iftype(self))
+      case('itime')
+         ASSERT(is_npts_defined(self))
+         npts = get_npts(self)
 
-      allocate(self%body%itime(1:npts))
+         allocate(self%body%itime(1:npts))
 
-      read(io) self%body%itime
-    case('ixy')
-      ASSERT(is_npts_defined(self))
-      npts = get_npts(self)
+         read(io) self%body%itime
+      case('ixy')
+         ASSERT(is_npts_defined(self))
+         npts = get_npts(self)
 
-      allocate(self%body%ixy(1:npts, 2))
-      allocate(xs(1:npts))
-      allocate(ys(1:npts))
+         allocate(self%body%ixy(1:npts, 2))
+         allocate(xs(1:npts))
+         allocate(ys(1:npts))
 
-      read(io) ys, xs
+         read(io) ys, xs
 
-      self%body%ixy(:, 1) = xs
-      self%body%ixy(:, 2) = ys
-    case('iamph')
-      ASSERT(is_npts_defined(self))
-      npts = get_npts(self)
+         self%body%ixy(:, 1) = xs
+         self%body%ixy(:, 2) = ys
+      case('iamph')
+         ASSERT(is_npts_defined(self))
+         npts = get_npts(self)
 
-      allocate(self%body%iamph(1:npts, 2))
-      allocate(amplitudes(1:npts))
-      allocate(thetas(1:npts))
+         allocate(self%body%iamph(1:npts, 2))
+         allocate(amplitudes(1:npts))
+         allocate(thetas(1:npts))
 
-      read(io) amplitudes, thetas
+         read(io) amplitudes, thetas
 
-      self%body%iamph(:, 1) = amplitudes
-      self%body%iamph(:, 2) = thetas
-    case('irlim')
-      ASSERT(is_npts_defined(self))
-      npts = get_npts(self)
+         self%body%iamph(:, 1) = amplitudes
+         self%body%iamph(:, 2) = thetas
+      case('irlim')
+         ASSERT(is_npts_defined(self))
+         npts = get_npts(self)
 
-      allocate(self%body%irlim(1:npts))
-      allocate(reals(1:npts))
-      allocate(imaginaries(1:npts))
+         allocate(self%body%irlim(1:npts))
+         allocate(reals(1:npts))
+         allocate(imaginaries(1:npts))
 
-      read(io) reals, imaginaries
+         read(io) reals, imaginaries
 
-      self%body%irlim = cmplx(reals, imaginaries)
-    case('ixyz')
-      ASSERT(is_nxsize_defined(self))
-      nxsize = get_nxsize(self)
-      ASSERT(is_nysize_defined(self))
-      nysize = get_nysize(self)
+         self%body%irlim = cmplx(reals, imaginaries)
+      case('ixyz')
+         ASSERT(is_nxsize_defined(self))
+         nxsize = get_nxsize(self)
+         ASSERT(is_nysize_defined(self))
+         nysize = get_nysize(self)
 
-      allocate(self%body%ixyz(1:nxsize, 1:nysize))
+         allocate(self%body%ixyz(1:nxsize, 1:nysize))
 
-      read(io) self%body%ixyz
-    case default
-      RAISE('Unknown iftype')
-    end select
+         read(io) self%body%ixyz
+      case default
+         RAISE('Unknown iftype')
+      end select
 
-    close(io)
-  end subroutine read
+      close(io)
+   end subroutine read
 
-  subroutine write(self, fileName)
-    type(Sac), intent(inout):: self
-    Character(len = *), intent(in):: fileName
-
-    Integer(kind = INT32):: io
-    Real(kind = SAC_REAL_KIND), allocatable:: ixy(:, :)
-    Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
-
-    open(newunit = io, file = trim(fileName), status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
-
-    <%- ALL_HEADS.each{|name, _| -%>
-      write(io) self%head%<%= name %>
-    <%- } -%>
-
-    ASSERT(is_iftype_defined(self))
-    select case(get_iftype(self))
-    case('itime')
-      write(io) get_body_itime(self)
-    case('ixy')
-      ixy = get_body_ixy(self)
-
-      write(io) ixy(:, 2), ixy(:, 1)
-    case('iamph')
-      write(io) get_body_iamph(self)
-    case('irlim')
-      irlim = get_body_irlim(self)
-
-      write(io) real(irlim), aimag(irlim)
-    case('ixyz')
-      write(io) get_body_ixyz(self)
-    case default
-      RAISE('Unknown iftype')
-    end select
-
-    close(io)
-  end subroutine write
-
-  subroutine set_body_itime(self, value)
-    type(Sac), intent(inout):: self
-    Real(kind = SAC_REAL_KIND), intent(in):: value(:)
-
-    Real(kind = SAC_REAL_KIND):: b, delta
-    Integer(kind = SAC_INTEGER_KIND):: npts
-
-    npts = size(value, 1)
-    ASSERT(is_b_defined(self))
-    b = get_b(self)
-    ASSERT(is_delta_defined(self))
-    delta = get_delta(self)
-
-    call set_iftype(self, 'itime')
-    call set_leven(self, .true.)
-    call set_npts(self, npts)
-    call set_e(self, b + (npts - 1)*delta)
-    call set_depmin(self, minval(value))
-    call set_depmax(self, maxval(value))
-    call set_depmen(self, sum(value)/npts)
-    self%body%itime = value
-
-    if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-    if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-    if(allocated(self%body%irlim)) deallocate(self%body%irlim)
-    if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
-  end subroutine set_body_itime
-
-  function get_body_itime(self) result(value)
-    type(Sac), intent(in):: self
-
-    Real(kind = SAC_REAL_KIND), allocatable:: value(:)
-
-    ASSERT(is_iftype_defined(self))
-    ASSERT(get_iftype(self) == 'itime')
-    ASSERT(allocated(self%body%itime))
-    value = self%body%itime
-    ASSERT(size(value, 1) == get_npts(self))
-  end function get_body_itime
-
-  subroutine get_body_itime_(self, value)
-    type(Sac), intent(in):: self
-    Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
-
-    value = get_body_itime(self)
-  end subroutine get_body_itime_
-
-  <%- %w[ixy iamph].each{|t| -%>
-    subroutine set_body_<%= t %>(self, value)
+   subroutine write(self, fileName)
       type(Sac), intent(inout):: self
-      Real(kind = SAC_REAL_KIND):: value(:, :)
+      Character(len = *), intent(in):: fileName
 
+      Integer(kind = INT32):: io
+      Real(kind = SAC_REAL_KIND), allocatable:: ixy(:, :)
+      Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
+
+      open(newunit = io, file = trim(fileName), status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
+
+      <%- ALL_HEADS.each{|name, _| -%>
+         write(io) self%head%<%= name %>
+      <%- } -%>
+
+      ASSERT(is_iftype_defined(self))
+      select case(get_iftype(self))
+      case('itime')
+         write(io) get_body_itime(self)
+      case('ixy')
+         ixy = get_body_ixy(self)
+
+         write(io) ixy(:, 2), ixy(:, 1)
+      case('iamph')
+         write(io) get_body_iamph(self)
+      case('irlim')
+         irlim = get_body_irlim(self)
+
+         write(io) real(irlim), aimag(irlim)
+      case('ixyz')
+         write(io) get_body_ixyz(self)
+      case default
+         RAISE('Unknown iftype')
+      end select
+
+      close(io)
+   end subroutine write
+
+   subroutine set_body_itime(self, value)
+      type(Sac), intent(inout):: self
+      Real(kind = SAC_REAL_KIND), intent(in):: value(:)
+
+      Real(kind = SAC_REAL_KIND):: b, delta
       Integer(kind = SAC_INTEGER_KIND):: npts
 
-      ASSERT(size(value, 2) == 2) ! [[x1, y1], [x2, y2], ...]
       npts = size(value, 1)
+      ASSERT(is_b_defined(self))
+      b = get_b(self)
+      ASSERT(is_delta_defined(self))
+      delta = get_delta(self)
 
-      call set_iftype(self, '<%= t %>')
-      call set_leven(self, .false.)
+      call set_iftype(self, 'itime')
+      call set_leven(self, .true.)
       call set_npts(self, npts)
-      call set_b(self, value(1, 1))
-      call set_e(self, value(npts, 1))
-      call set_depmin(self, minval(value(:, 2)))
-      call set_depmax(self, maxval(value(:, 2)))
-      call set_depmen(self, sum(value(:, 2))/npts)
-      self%body%<%= t %> = value
+      call set_e(self, b + (npts - 1)*delta)
+      call set_depmin(self, minval(value))
+      call set_depmax(self, maxval(value))
+      call set_depmen(self, sum(value)/npts)
+      self%body%itime = value
 
-      if(allocated(self%body%itime)) deallocate(self%body%itime)
-      <%- another = {'ixy' => 'iamph', 'iamph' => 'ixy'} -%>
-      if(allocated(self%body%<%= another[t] %>)) deallocate(self%body%<%= another[t] %>)
+      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
+      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
       if(allocated(self%body%irlim)) deallocate(self%body%irlim)
       if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
-    end subroutine set_body_<%= t %>
+   end subroutine set_body_itime
 
-    function get_body_<%= t %>(self) result(value)
+   function get_body_itime(self) result(value)
+      type(Sac), intent(in):: self
+
+      Real(kind = SAC_REAL_KIND), allocatable:: value(:)
+
+      ASSERT(is_iftype_defined(self))
+      ASSERT(get_iftype(self) == 'itime')
+      ASSERT(allocated(self%body%itime))
+      value = self%body%itime
+      ASSERT(size(value, 1) == get_npts(self))
+   end function get_body_itime
+
+   subroutine get_body_itime_(self, value)
+      type(Sac), intent(in):: self
+      Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
+
+      value = get_body_itime(self)
+   end subroutine get_body_itime_
+
+   <%- %w[ixy iamph].each{|t| -%>
+      subroutine set_body_<%= t %>(self, value)
+         type(Sac), intent(inout):: self
+         Real(kind = SAC_REAL_KIND):: value(:, :)
+
+         Integer(kind = SAC_INTEGER_KIND):: npts
+
+         ASSERT(size(value, 2) == 2) ! [[x1, y1], [x2, y2], ...]
+         npts = size(value, 1)
+
+         call set_iftype(self, '<%= t %>')
+         call set_leven(self, .false.)
+         call set_npts(self, npts)
+         call set_b(self, value(1, 1))
+         call set_e(self, value(npts, 1))
+         call set_depmin(self, minval(value(:, 2)))
+         call set_depmax(self, maxval(value(:, 2)))
+         call set_depmen(self, sum(value(:, 2))/npts)
+         self%body%<%= t %> = value
+
+         if(allocated(self%body%itime)) deallocate(self%body%itime)
+         <%- another = {'ixy' => 'iamph', 'iamph' => 'ixy'} -%>
+         if(allocated(self%body%<%= another[t] %>)) deallocate(self%body%<%= another[t] %>)
+         if(allocated(self%body%irlim)) deallocate(self%body%irlim)
+         if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
+      end subroutine set_body_<%= t %>
+
+      function get_body_<%= t %>(self) result(value)
+         type(Sac), intent(in):: self
+
+         Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
+
+         ASSERT(get_iftype(self) == '<%= t %>')
+         ASSERT(allocated(self%body%<%= t %>))
+         value = self%body%<%= t %>
+         ASSERT(size(value, 1) == get_npts(self))
+      end function get_body_<%= t %>
+   <%- } -%>
+
+   subroutine set_body_irlim(self, value)
+      type(Sac), intent(inout):: self
+      Complex(kind = SAC_REAL_KIND), intent(in):: value(:)
+
+      call set_iftype(self, 'irlim')
+      call set_leven(self, .false.)
+      call set_npts(self, size(value, 1))
+      self%body%irlim = value
+
+      if(allocated(self%body%itime)) deallocate(self%body%ixy)
+      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
+      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
+      if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
+   end subroutine set_body_irlim
+
+   function get_body_irlim(self) result(value)
+      type(Sac), intent(in):: self
+
+      Complex(kind = SAC_REAL_KIND), allocatable:: value(:)
+
+      ASSERT(get_iftype(self) == 'irlim')
+      ASSERT(allocated(self%body%irlim))
+      value = self%body%irlim
+      ASSERT(size(value, 1) == get_npts(self))
+   end function get_body_irlim
+
+   subroutine get_body_irlim_(self, value)
+      type(Sac), intent(in):: self
+      Complex(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
+
+      value = get_body_itime(self)
+   end subroutine get_body_irlim_
+
+   subroutine set_body_ixyz(self, value)
+      type(Sac), intent(inout):: self
+      Real(kind = SAC_REAL_KIND), intent(in):: value(:, :)
+
+      call set_iftype(self, 'ixyz')
+      call set_leven(self, .true.)
+      call set_nxsize(self, size(value, 1))
+      call set_nysize(self, size(value, 2))
+      self%body%ixyz = value
+
+      if(allocated(self%body%itime)) deallocate(self%body%ixy)
+      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
+      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
+      if(allocated(self%body%irlim)) deallocate(self%body%ixyz)
+   end subroutine set_body_ixyz
+
+   function get_body_ixyz(self) result(value)
       type(Sac), intent(in):: self
 
       Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
 
-      ASSERT(get_iftype(self) == '<%= t %>')
-      ASSERT(allocated(self%body%<%= t %>))
-      value = self%body%<%= t %>
-      ASSERT(size(value, 1) == get_npts(self))
-    end function get_body_<%= t %>
-  <%- } -%>
+      ASSERT(get_iftype(self) == 'ixyz')
+      ASSERT(allocated(self%body%ixyz))
+      value = self%body%ixyz
+      ASSERT(size(value, 1) == get_nxsize(self))
+      ASSERT(size(value, 2) == get_nysize(self))
+   end function get_body_ixyz
 
-  subroutine set_body_irlim(self, value)
-    type(Sac), intent(inout):: self
-    Complex(kind = SAC_REAL_KIND), intent(in):: value(:)
-
-    call set_iftype(self, 'irlim')
-    call set_leven(self, .false.)
-    call set_npts(self, size(value, 1))
-    self%body%irlim = value
-
-    if(allocated(self%body%itime)) deallocate(self%body%ixy)
-    if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-    if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-    if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
-  end subroutine set_body_irlim
-
-  function get_body_irlim(self) result(value)
-    type(Sac), intent(in):: self
-
-    Complex(kind = SAC_REAL_KIND), allocatable:: value(:)
-
-    ASSERT(get_iftype(self) == 'irlim')
-    ASSERT(allocated(self%body%irlim))
-    value = self%body%irlim
-    ASSERT(size(value, 1) == get_npts(self))
-  end function get_body_irlim
-
-  subroutine get_body_irlim_(self, value)
-    type(Sac), intent(in):: self
-    Complex(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
-
-    value = get_body_itime(self)
-  end subroutine get_body_irlim_
-
-  subroutine set_body_ixyz(self, value)
-    type(Sac), intent(inout):: self
-    Real(kind = SAC_REAL_KIND), intent(in):: value(:, :)
-
-    call set_iftype(self, 'ixyz')
-    call set_leven(self, .true.)
-    call set_nxsize(self, size(value, 1))
-    call set_nysize(self, size(value, 2))
-    self%body%ixyz = value
-
-    if(allocated(self%body%itime)) deallocate(self%body%ixy)
-    if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-    if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-    if(allocated(self%body%irlim)) deallocate(self%body%ixyz)
-  end subroutine set_body_ixyz
-
-  function get_body_ixyz(self) result(value)
-    type(Sac), intent(in):: self
-
-    Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
-
-    ASSERT(get_iftype(self) == 'ixyz')
-    ASSERT(allocated(self%body%ixyz))
-    value = self%body%ixyz
-    ASSERT(size(value, 1) == get_nxsize(self))
-    ASSERT(size(value, 2) == get_nysize(self))
-  end function get_body_ixyz
-
-  subroutine set_body_ixy_or_iamph_or_ixyz(self, value)
-    type(Sac), intent(inout):: self
-    Real(kind = SAC_REAL_KIND):: value(:, :)
-
-    ASSERT(is_iftype_defined(self))
-    select case(get_iftype(self))
-    <%- %w[ixy iamph ixyz].each{|t| -%>
-      case('<%= t %>')
-        call set_body_<%= t %>(self, value)
-    <%- } -%>
-    case default
-      RAISE('Unknown iftype')
-    end select
-  end subroutine set_body_ixy_or_iamph_or_ixyz
-
-  subroutine get_body_ixy_or_iamph_or_ixyz_(self, value)
-    type(Sac), intent(in):: self
-    Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
-
-    ASSERT(is_iftype_defined(self))
-    select case(get_iftype(self))
-    <%- %w[ixy iamph ixyz].each{|t| -%>
-      case('<%= t %>')
-        value = get_body_<%= t %>(self)
-    <%- } -%>
-    case default
-      RAISE('Unknown iftype')
-    end select
-  end subroutine get_body_ixy_or_iamph_or_ixyz_
-
-  <%- FLOATS.each{|name| -%>
-    function get_<%= name %>(self) result(value)
-      type(Sac), intent(in):: self
-      Real(kind = SAC_REAL_KIND):: value
-
-      value = self%head%<%= name %>
-    end function get_<%= name %>
-
-    function is_<%= name %>_defined(self) result(answer)
-      type(Sac), intent(in):: self
-      Logical:: answer
-
-      answer = (self%head%<%= name %> /= FLOAT_UNDEFINED)
-    end function is_<%= name %>_defined
-
-    subroutine set_<%= name %>(self, value)
+   subroutine set_body_ixy_or_iamph_or_ixyz(self, value)
       type(Sac), intent(inout):: self
-      Real(kind = SAC_REAL_KIND), intent(in):: value
+      Real(kind = SAC_REAL_KIND):: value(:, :)
 
-      self%head%<%= name %> = value
-    end subroutine set_<%= name %>
-  <%- } -%>
+      ASSERT(is_iftype_defined(self))
+      select case(get_iftype(self))
+      <%- %w[ixy iamph ixyz].each{|t| -%>
+         case('<%= t %>')
+            call set_body_<%= t %>(self, value)
+      <%- } -%>
+      case default
+         RAISE('Unknown iftype')
+      end select
+   end subroutine set_body_ixy_or_iamph_or_ixyz
 
-  <%- INTEGERS.each{|name| -%>
-    function get_<%= name %>(self) result(value)
+   subroutine get_body_ixy_or_iamph_or_ixyz_(self, value)
       type(Sac), intent(in):: self
-      Integer(kind = SAC_INTEGER_KIND):: value
+      Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
 
-      value = self%head%<%= name %>
-    end function get_<%= name %>
+      ASSERT(is_iftype_defined(self))
+      select case(get_iftype(self))
+      <%- %w[ixy iamph ixyz].each{|t| -%>
+         case('<%= t %>')
+            value = get_body_<%= t %>(self)
+      <%- } -%>
+      case default
+         RAISE('Unknown iftype')
+      end select
+   end subroutine get_body_ixy_or_iamph_or_ixyz_
 
-    function is_<%= name %>_defined(self) result(answer)
-      type(Sac), intent(in):: self
-      Logical:: answer
+   <%- FLOATS.each{|name| -%>
+      function get_<%= name %>(self) result(value)
+         type(Sac), intent(in):: self
+         Real(kind = SAC_REAL_KIND):: value
 
-      answer = (self%head%<%= name %> /= INTEGER_UNDEFINED)
-    end function is_<%= name %>_defined
+         value = self%head%<%= name %>
+      end function get_<%= name %>
 
-    subroutine set_<%= name %>(self, value)
-      type(Sac), intent(inout):: self
-      Integer(kind = SAC_INTEGER_KIND), intent(in):: value
+      function is_<%= name %>_defined(self) result(answer)
+         type(Sac), intent(in):: self
+         Logical:: answer
 
-      self%head%<%= name %> = value
-    end subroutine set_<%= name %>
-  <%- } -%>
+         answer = (self%head%<%= name %> /= FLOAT_UNDEFINED)
+      end function is_<%= name %>_defined
 
-  <%- ENUMERATED_VALUES.each{|name| -%>
-    function get_<%= name %>(self) result(value)
-      type(Sac), intent(in):: self
-      Character(len = LEN_ENUMERATED_VALUE_MAX):: value
+      subroutine set_<%= name %>(self, value)
+         type(Sac), intent(inout):: self
+         Real(kind = SAC_REAL_KIND), intent(in):: value
 
-      Integer:: internalValue
+         self%head%<%= name %> = value
+      end subroutine set_<%= name %>
+   <%- } -%>
 
-      internalValue = self%head%<%= name %>
-      ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1))
-      value = ENUMERATED_VALUES(internalValue)
-    end function get_<%= name %>
+   <%- INTEGERS.each{|name| -%>
+      function get_<%= name %>(self) result(value)
+         type(Sac), intent(in):: self
+         Integer(kind = SAC_INTEGER_KIND):: value
 
-    function is_<%= name %>_defined(self) result(answer)
-      type(Sac), intent(in):: self
-      Logical:: answer
+         value = self%head%<%= name %>
+      end function get_<%= name %>
 
-      ! 2nd condition is enough since ENUMERATED_VALUE_UNDEFINED is -12345.
-      answer = &
-        (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
-        .and. check_bound(self%head%<%= name %>, ENUMERATED_VALUES, 1)
-    end function is_<%= name %>_defined
+      function is_<%= name %>_defined(self) result(answer)
+         type(Sac), intent(in):: self
+         Logical:: answer
 
-    subroutine set_<%= name %>(self, value)
-      type(Sac), intent(inout):: self
-      Character(len = *), intent(in):: value
+         answer = (self%head%<%= name %> /= INTEGER_UNDEFINED)
+      end function is_<%= name %>_defined
 
-      Integer:: internalValue
+      subroutine set_<%= name %>(self, value)
+         type(Sac), intent(inout):: self
+         Integer(kind = SAC_INTEGER_KIND), intent(in):: value
 
-      do ALL_OF(internalValue, ENUMERATED_VALUES, 1)
-        if(value == ENUMERATED_VALUES(internalValue))then
-          self%head%<%= name %> = internalValue
-          return
-        end if
-      end do
+         self%head%<%= name %> = value
+      end subroutine set_<%= name %>
+   <%- } -%>
 
-      RAISE(value)
-    end subroutine set_<%= name %>
-  <%- } -%>
+   <%- ENUMERATED_VALUES.each{|name| -%>
+      function get_<%= name %>(self) result(value)
+         type(Sac), intent(in):: self
+         Character(len = LEN_ENUMERATED_VALUE_MAX):: value
 
-  <%- LOGICALS.each{|name| -%>
-    function get_<%= name %>(self) result(value)
-      type(Sac), intent(in):: self
-      Logical:: value
+         Integer:: internalValue
 
-      Integer:: internalValue
+         internalValue = self%head%<%= name %>
+         ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1))
+         value = ENUMERATED_VALUES(internalValue)
+      end function get_<%= name %>
 
-      internalValue = self%head%<%= name %>
-      value = (internalValue == 1)
-    end function get_<%= name %>
+      function is_<%= name %>_defined(self) result(answer)
+         type(Sac), intent(in):: self
+         Logical:: answer
 
-    function is_<%= name %>_defined(self) result(answer)
-      type(Sac), intent(in):: self
-      Logical:: answer
+         ! 2nd condition is enough since ENUMERATED_VALUE_UNDEFINED is -12345.
+         answer = &
+            (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
+            .and. check_bound(self%head%<%= name %>, ENUMERATED_VALUES, 1)
+      end function is_<%= name %>_defined
 
-      answer = ((self%head%<%= name %> == 1) .or. (self%head%<%= name %> == 0))
-    end function is_<%= name %>_defined
+      subroutine set_<%= name %>(self, value)
+         type(Sac), intent(inout):: self
+         Character(len = *), intent(in):: value
 
-    subroutine set_<%= name %>(self, value)
-      type(Sac), intent(inout):: self
-      Logical, intent(in):: value
+         Integer:: internalValue
 
-      if(value)then
-        self%head%<%= name %> = 1
-      else
-        self%head%<%= name %> = 0
-      end if
-    end subroutine set_<%= name %>
-  <%- } -%>
+         do ALL_OF(internalValue, ENUMERATED_VALUES, 1)
+            if(value == ENUMERATED_VALUES(internalValue))then
+               self%head%<%= name %> = internalValue
+               return
+            end if
+         end do
 
-  <%- (LONG_STRINGS + SHORT_STRINGS).each{|name, length| -%>
-    function get_<%= name %>(self) result(value)
-      type(Sac), intent(in):: self
-      Character(len = LEN_<%= length %>_STRING):: value
+         RAISE(value)
+      end subroutine set_<%= name %>
+   <%- } -%>
 
-      value = self%head%<%= name %>
-    end function get_<%= name %>
+   <%- LOGICALS.each{|name| -%>
+      function get_<%= name %>(self) result(value)
+         type(Sac), intent(in):: self
+         Logical:: value
+
+         Integer:: internalValue
+
+         internalValue = self%head%<%= name %>
+         value = (internalValue == 1)
+      end function get_<%= name %>
+
+      function is_<%= name %>_defined(self) result(answer)
+         type(Sac), intent(in):: self
+         Logical:: answer
+
+         answer = ((self%head%<%= name %> == 1) .or. (self%head%<%= name %> == 0))
+      end function is_<%= name %>_defined
+
+      subroutine set_<%= name %>(self, value)
+         type(Sac), intent(inout):: self
+         Logical, intent(in):: value
+
+         if(value)then
+            self%head%<%= name %> = 1
+         else
+            self%head%<%= name %> = 0
+         end if
+      end subroutine set_<%= name %>
+   <%- } -%>
+
+   <%- (LONG_STRINGS + SHORT_STRINGS).each{|name, length| -%>
+      function get_<%= name %>(self) result(value)
+         type(Sac), intent(in):: self
+         Character(len = LEN_<%= length %>_STRING):: value
+
+         value = self%head%<%= name %>
+      end function get_<%= name %>
 
 
-    function is_<%= name %>_defined(self) result(answer)
-      type(Sac), intent(in):: self
-      Logical:: answer
+      function is_<%= name %>_defined(self) result(answer)
+         type(Sac), intent(in):: self
+         Logical:: answer
 
-      answer = (self%head%<%= name %> /= STRING_UNDEFINED)
-    end function is_<%= name %>_defined
+         answer = (self%head%<%= name %> /= STRING_UNDEFINED)
+      end function is_<%= name %>_defined
 
-    subroutine set_<%= name %>(self, value)
-      type(Sac), intent(inout):: self
-      Character(len = *), intent(in):: value
+      subroutine set_<%= name %>(self, value)
+         type(Sac), intent(inout):: self
+         Character(len = *), intent(in):: value
 
-      ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
-      self%head%<%= name %> = value
-    end subroutine set_<%= name %>
-  <%- } -%>
+         ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
+         self%head%<%= name %> = value
+      end subroutine set_<%= name %>
+   <%- } -%>
 end module sac_lib
