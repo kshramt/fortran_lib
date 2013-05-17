@@ -19,8 +19,8 @@
 module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use lib_constant, only: TAB
-  use lib_character, only: s, str, operator(+)
+  use, non_intrinsic:: lib_constant, only: TAB
+  use, non_intrinsic:: lib_character, only: s, str, operator(+)
 
   implicit none
 
@@ -28,7 +28,6 @@ module lib_io
   public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
   public:: TMP_DIR
   public:: SHELL_INTERFACE_FILE
-  public:: new_unit
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
   public:: mkdir_p
@@ -38,8 +37,6 @@ module lib_io
   public:: read_shell_interface_file
 
   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
-  integer, parameter:: NEW_UNIT_MIN = max(ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT, 0) + 1 ! 0 is decraled to handle a case where *_UNIT <= -1.
-  integer, parameter:: NEW_UNIT_MAX = huge(0)
   character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
   character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
@@ -47,12 +44,6 @@ module lib_io
   character(len = *), parameter:: TMP_DIR = 'tmp'
   ! Non-intrinsic function `+' can not be used in initialization expression.
   character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
-
-  interface new_unit
-    <%- ::Fort::Type::Integer.multi_provide(dim: 0).each{|t| -%>
-      module procedure new_unit<%= t %>
-    <%- } -%>
-  end interface new_unit
 
   <%- TYPES.each{|t| -%>
     interface write_array
@@ -81,8 +72,7 @@ contains
 
     integer:: ioU
 
-    call new_unit(ioU)
-    open(ioU, file = SHELL_INTERFACE_FILE, status = 'old', action = 'read')
+    open(newunit = ioU, file = SHELL_INTERFACE_FILE, status = 'old', action = 'read')
     read(ioU, *) val
     close(ioU)
   end subroutine read_shell_interface_file
@@ -95,8 +85,7 @@ contains
     ! tempfile name must be quoted since '/' mark is regarded to be end of record (same as namelist).
     call execute_command_line('echo \"$(tempfile)\" > ' + SHELL_INTERFACE_FILE)
     call read_shell_interface_file(file)
-    call new_unit(ioU)
-    open(ioU, file = s(file), status = 'old', action = 'readwrite')
+    open(newunit = ioU, file = s(file), status = 'old', action = 'readwrite')
   end subroutine tempfile
 
   subroutine close_tempfile(ioU)
@@ -139,8 +128,7 @@ contains
     integer:: rU1, ios
     character:: dummy
 
-    call new_unit(rU1)
-    open(rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
+    open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
 
     this = 0
     do
@@ -176,8 +164,7 @@ contains
 
     mode = SEEK_NORMAL_CHAR
     this = 0
-    call new_unit(rU1)
-    open(rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
+    open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
     do i = 1, numberOfHeaders_
       read(rU1, *)
     end do
@@ -221,25 +208,22 @@ contains
 
       call mkdir_p(s(arrayDir))
 
-      call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
       write(wU1, *) VERSION
       close(wU1)
 
-      call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
+      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
       write(wU1) array
       close(wU1)
 
       dataType = DATA_TYPE_FOR_SELF
       dim = DIM_FOR_SELF
       forall(i = 1:dim) sizes(i) = size(array, i)
-      call new_unit(wU1)
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
+      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
       write(wU1, nml = array_meta)
       close(wU1)
 
-      open(unit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
+      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
       <%- (1..NUM_DESC_MAX).each{|i| -%>
         if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
       <%- } -%>
@@ -252,8 +236,7 @@ contains
 
       integer:: rU1, libIoVersion
 
-      call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
+      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
       read(rU1, *) libIoVersion
       close(rU1)
 
@@ -277,8 +260,7 @@ contains
       integer:: rU1
       namelist /array_meta/ dataType, dim, sizes
 
-      call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
+      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
       read(rU1, nml = array_meta)
 
       RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
@@ -288,28 +270,8 @@ contains
 
       allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
 
-      call new_unit(rU1)
-      open(unit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
+      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
       read(rU1) array
     end subroutine read_array_v_1<%= t %>
-  <%- } -%>
-
-
-  <%- ::Fort::Type::Integer.multi_provide(dim: 0).each{|t| -%>
-    subroutine new_unit<%= t %>(n)
-      <%= t.declare %>, intent(out):: n
-      integer(kind(n)):: i
-      logical:: isOpened
-
-      do i = NEW_UNIT_MIN, min(huge(n), NEW_UNIT_MAX)
-        inquire(unit = i, opened = isOpened)
-        if(.not.(isOpened))then
-          n = i
-          return
-        end if
-      end do
-
-      RAISE('No available unit number exist between: ' + str(NEW_UNIT_MIN) + ' and ' + str(NEW_UNIT_MAX))
-    end subroutine new_unit<%= t %>
   <%- } -%>
 end module lib_io

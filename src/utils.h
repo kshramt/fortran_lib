@@ -13,7 +13,7 @@
 #  endif
 #  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); stop 1
-#  define ALL_OF(array, dim_, index) index = lbound(array, dim = dim_, kind = INT64), ubound(array, dim = dim_, kind = INT64)
+#  define ALL_OF(index, array, dim_) index = lbound(array, dim = dim_, kind = kind(index)), ubound(array, dim = dim_, kind = kind(index))
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
@@ -34,6 +34,8 @@
 #  define TEST(isOk) \
      ASSERT(isOk); \
      write(OUTPUT_UNIT, '(a)', advance = 'no') '.'
+#  define check_bound(index, array, dim_) \
+     (lbound(array, dim_) <= index .and. index <= ubound(array, dim_))
 
 #  ifdef DEBUG
 #    define DEBUG_RAISE_IF(isBad) RAISE_IF(isBad)
