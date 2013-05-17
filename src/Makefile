@@ -45,7 +45,7 @@ lib_list_test.exe: lib_comparable.o lib_list.o lib_list_test.o
 lib_fortran-stack_test.exe: lib_fortran.o lib_fortran-stack_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_fortran-queue_test.exe: lib_fortran.o lib_fortran-queue_test.o
+queue_lib_test.exe: queue_lib.o queue_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 lib_io_test.exe: lib_constant.o lib_character.o lib_comparable.o lib_io.o lib_io_test.o
