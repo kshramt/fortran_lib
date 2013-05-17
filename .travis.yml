@@ -9,5 +9,5 @@ script:
   - cd src
   - make check
 env:
-  - MY_ERB="erb -T - -P" MY_FORTRAN='gfortran-4.6 -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall' MY_RUBY=ruby
-  - MY_ERB="erb -T - -P" MY_FORTRAN='/usr/lib/gcc-snapshot/bin/gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall' MY_RUBY=ruby
+  - MY_ERB="erb -T - -P" MY_FORTRAN="gfortran-4.6 -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall" MY_RUBY=ruby
+  - MY_ERB="erb -T - -P" MY_FORTRAN="/usr/lib/gcc-snapshot/bin/gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall" MY_RUBY=ruby
