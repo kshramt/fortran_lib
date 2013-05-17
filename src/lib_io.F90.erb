@@ -20,7 +20,7 @@ module lib_io
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
-  use, intrinsic:: ifport, only: system
+  use, non_intrinsic:: ifport, only: system
 # endif
   use, non_intrinsic:: lib_constant, only: TAB
   use, non_intrinsic:: lib_character, only: s, str_fixed, operator(+)
@@ -61,7 +61,7 @@ contains
     integer:: exitStatus_
 
 # ifdef __INTEL_COMPILER
-    exitStatus_ = (system("mkdir -p " + s(path)) == 0)
+    exitStatus_ = system("mkdir -p " + s(path))
 # else
     call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
 # endif
