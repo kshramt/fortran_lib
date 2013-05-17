@@ -2,12 +2,12 @@
 program lib_character_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: REAL64
-  use lib_character, only: s, str
-  use lib_character, only: operator(+)
+  use lib_character
 
   implicit none
 
   Character(len = 8):: sBuffer
+  Character(len = 17):: dBuffer
 
   ! s
   TEST(s('') == '')
@@ -18,19 +18,21 @@ program lib_character_test
   TEST(s(' a ') == 'a')
   TEST(s(' a b ') == 'a b')
 
-  ! str
-  TEST(str('a') == 'a')
-  TEST(str(0) == '0')
-  TEST(str(-1) == '-1')
-  sBuffer = str(0.0)
+  ! str_fixed
+  TEST(str_fixed('a') == 'a')
+  TEST(str_fixed(0) == '0')
+  TEST(str_fixed(-1) == '-1')
+  sBuffer = str_fixed(0.0)
   TEST(sBuffer == '0.000000')
-  sBuffer = str(1.0)
+  sBuffer = str_fixed(1.0)
   TEST(sBuffer == '1.000000')
-  TEST(str(0.0_REAL64) == '0.0000000000000000')
-  TEST(str(-1.0_REAL64) == '-1.0000000000000000')
-  TEST(str((1.0_REAL64, -1.0_REAL64)) == '(  1.0000000000000000     , -1.0000000000000000     )')
-  TEST(str(.true.) == 'T')
-  TEST(str(.false.) == 'F')
+  dBuffer = str_fixed(0.0_REAL64)
+  TEST(dBuffer == '0.000000000000000')
+  dBuffer = str_fixed(-1.0_REAL64)
+  TEST(dBuffer == '-1.00000000000000')
+  write(OUTPUT_UNIT, *) trim(str_fixed((1, 1)))
+  TEST(str_fixed(.true.) == 'T')
+  TEST(str_fixed(.false.) == 'F')
 
   ! +
   TEST('' + '' == '')

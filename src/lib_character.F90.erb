@@ -18,7 +18,8 @@ module lib_character
 
   public:: s                    ! Same as String#strip method in Ruby.
   public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
-  public:: str                  ! Convert a value to a string. The result is also stripped.
+  ! public:: str
+  public:: str_fixed            ! Convert a value to a string. The result is not stripped.
   public:: STR_LEN              ! Maximum length of str.
 
   integer,   parameter:: STR_LEN  = 1024
@@ -28,9 +29,9 @@ module lib_character
   end interface operator(+)
 
   <%- TYPES.each{|t| -%>
-    interface str
-      module procedure str<%= t %>
-    end interface str
+    ! interface str
+    !   module procedure str<%= t %>
+    ! end interface str
 
     interface str_fixed
       module procedure str_fixed<%= t %>
@@ -62,11 +63,12 @@ contains
       this = s(this)
     end function str_fixed<%= t %>
 
-    pure function str<%= t %>(x) result(this)
-      <%= t.declare %>, intent(in):: x
-      character(len = len(s(str_fixed(x)))):: this
+    ! ! This is not work on ifort
+    ! pure function str<%= t %>(x) result(this)
+    !   <%= t.declare %>, intent(in):: x
+    !   character(len = len(s(str_fixed(x)))):: this
 
-      this = s(str_fixed(x))
-    end function str<%= t %>
+    !   this = s(str_fixed(x))
+    ! end function str<%= t %>
   <%- } -%>
 end module lib_character
