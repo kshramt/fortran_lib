@@ -22,7 +22,7 @@ TESTS := $(TEST_F90_SRCS:%.F90=%.exe) $(TEST_F90_ERB_SRCS:%.F90.erb=%.exe)
 TEST_RUN_COMMANDS := $(TESTS:%.exe=%.tested)
 
 ERRORTEST_RB_SRCS := $(shell git ls-files *_errortest.rb)
-ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb:%.make)
+ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb=%.make)
 
 check: $(TESTS) $(ERRORTESTS)
 
