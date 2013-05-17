@@ -16,7 +16,7 @@
 -%>
 
 # include "utils.h"
-module lib_fortran
+module queue_lib
    USE_UTILS_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    implicit none
@@ -35,9 +35,9 @@ module lib_fortran
          module procedure shift<%= t %>Queue
       end interface shift_queue
 
-      interface is_empty_stack
+      interface is_empty_queue
          module procedure is_empty<%= t %>Queue
-      end interface is_empty_stack
+      end interface is_empty_queue
    <%- } -%>
 
    type, public:: Queue
@@ -110,4 +110,4 @@ contains
          answer = .not.associated(queue%head)
       end function is_empty<%= t %>Queue
    <%- } -%>
-end module lib_fortran
+end module queue_lib
