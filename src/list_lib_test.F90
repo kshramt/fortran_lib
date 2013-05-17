@@ -1,10 +1,10 @@
 #include "utils.h"
-program lib_list_test
+program list_lib_test
   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
 
-  use lib_list, only: IntegerDim0KindINT32List
-  use lib_list, only: size, delete_at, insert_at, val_at, shift, unshift, push, pop, clear, swap, is_size_one, is_empty, array_from_list, equivalent
-  use lib_list, only: operator(.val.), assignment(=)
+  use list_lib, only: IntegerDim0KindINT32List
+  use list_lib, only: size, delete_at, insert_at, val_at, shift, unshift, push, pop, clear, swap, is_size_one, is_empty, array_from_list, equivalent
+  use list_lib, only: operator(.val.), assignment(=)
   
   implicit none
   
@@ -127,4 +127,4 @@ program lib_list_test
   write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
   stop
-end program lib_list_test
+end program list_lib_test

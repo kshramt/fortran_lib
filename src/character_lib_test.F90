@@ -1,8 +1,8 @@
 #include "utils.h"
-program lib_character_test
+program character_lib_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: REAL64
-  use lib_character
+  use character_lib
 
   implicit none
 
@@ -43,4 +43,4 @@ program lib_character_test
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
   stop
-end program lib_character_test
+end program character_lib_test

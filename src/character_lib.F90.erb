@@ -9,7 +9,7 @@
   + ::Fort::Type::Character.multi_provide\
   + INT_TYPES
 %>
-module lib_character
+module character_lib
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
   implicit none
@@ -71,4 +71,4 @@ contains
     !   this = s(str_fixed(x))
     ! end function str<%= t %>
   <%- } -%>
-end module lib_character
+end module character_lib

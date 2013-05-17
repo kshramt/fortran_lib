@@ -4,7 +4,7 @@
   REALS = ::Fort::Type::Real.multi_provide(dim: 0)
 -%>
 
-module lib_constant
+module constant_lib
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   use, intrinsic:: iso_fortran_env, only: INT8
 
@@ -55,4 +55,4 @@ contains
     buf = 'Infinity'
     read(buf, *) this
   end function get_infinity
-end module lib_constant
+end module constant_lib

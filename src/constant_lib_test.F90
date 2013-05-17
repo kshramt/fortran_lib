@@ -1,9 +1,9 @@
 #include "utils.h"
-program lib_constant_test
+program constant_lib_test
   USE_UTILS_H
   use iso_fortran_env, only: OUTPUT_UNIT, REAL64, REAL128
-  use lib_comparable, only: equivalent
-  use lib_constant
+  use comparable_lib, only: equivalent
+  use constant_lib
   
   implicit none
   
@@ -16,4 +16,4 @@ program lib_constant_test
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
   stop
-end program lib_constant_test
+end program constant_lib_test

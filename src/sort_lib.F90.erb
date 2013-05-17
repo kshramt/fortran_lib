@@ -7,10 +7,10 @@
 -%>
 
 #include "utils.h"
-module lib_sort
+module sort_lib
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
   USE_UTILS_H
-  use, non_intrinsic:: lib_comparable, only: is_nan, is_infinity
+  use, non_intrinsic:: comparable_lib, only: is_nan, is_infinity
 
   use, non_intrinsic:: stack_lib, only: push_stack, pop_stack
   use, non_intrinsic:: stack_lib, only: IntegerDim0KindINT64Stack
@@ -262,4 +262,4 @@ contains
       a = swap
     end subroutine swapping<%= t %>
   <%- } -%>
-end module lib_sort
+end module sort_lib

@@ -29,7 +29,7 @@
 
   USERS_MODULES_AND_TYPES = {
     # # You should also edit here to add type(SomeData)
-    # lib_some_data: [::Fort::Type::SomeData]{|klass| klass.provide(dim: 0)}
+    # some_data_lib: [::Fort::Type::SomeData]{|klass| klass.provide(dim: 0)}
   }
   USER_DEFINED_TYPES = USERS_MODULES_AND_TYPES.values.flatten
 
@@ -37,10 +37,10 @@
 %>
 
 #include "utils.h"
-module lib_list
+module list_lib
   USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use, non_intrinsic:: lib_comparable, only: equivalent
+  use, non_intrinsic:: comparable_lib, only: equivalent
   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
     use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
   <%- } -%>
@@ -463,4 +463,4 @@ contains
       new = array_from_list(original)
     end subroutine copy<%= t %>
   <%- } -%>
-end module lib_list
+end module list_lib

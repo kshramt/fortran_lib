@@ -1,11 +1,11 @@
 #include "utils.h"
-program lib_io_test
+program io_lib_test
   use, intrinsic:: iso_fortran_env, only: &
     INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
     REAL64, INT8
-  use lib_io
-  use:: lib_comparable, only: equivalent
-  use:: lib_character, only: operator(+)
+  use:: io_lib
+  use:: comparable_lib, only: equivalent
+  use:: character_lib, only: operator(+)
   
   implicit none
   
@@ -32,4 +32,4 @@ program lib_io_test
   write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
   
   stop
-end program lib_io_test
+end program io_lib_test

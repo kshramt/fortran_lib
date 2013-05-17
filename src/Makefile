@@ -29,19 +29,19 @@ ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb=%.make)
 check: $(TESTS) $(ERRORTESTS)
 
 # Tasks
-lib_comparable_test.exe: lib_constant.o lib_comparable.o lib_comparable_test.o
+comparable_lib_test.exe: constant_lib.o comparable_lib.o comparable_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_character_test.exe: lib_character.o lib_character_test.o
+character_lib_test.exe: character_lib.o character_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_constant_test.exe: lib_comparable.o lib_constant.o lib_constant_test.o
+constant_lib_test.exe: comparable_lib.o constant_lib.o constant_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_sort_test.exe: lib_constant.o stack_lib.o lib_comparable.o lib_sort.o lib_sort_test.o
+sort_lib_test.exe: constant_lib.o stack_lib.o comparable_lib.o sort_lib.o sort_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_list_test.exe: lib_comparable.o lib_list.o lib_list_test.o
+list_lib_test.exe: comparable_lib.o list_lib.o list_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 stack_lib_test.exe: stack_lib.o stack_lib_test.o
@@ -50,7 +50,7 @@ stack_lib_test.exe: stack_lib.o stack_lib_test.o
 queue_lib_test.exe: queue_lib.o queue_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_io_test.exe: lib_constant.o lib_character.o lib_comparable.o lib_io.o lib_io_test.o
+io_lib_test.exe: constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o

@@ -17,7 +17,7 @@
   CHARACTER_PAIRS = characters.product(characters)
 %>
 
-module lib_comparable
+module comparable_lib
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
   implicit none
@@ -166,4 +166,4 @@ contains
       this = (a == b)
     end function equivalent<%= t1 %><%= t2 %>
   <%- } -%>
-end module lib_comparable
+end module comparable_lib

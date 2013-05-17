@@ -16,14 +16,14 @@
 %>
 
 #include "utils.h"
-module lib_io
+module io_lib
   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
   use, non_intrinsic:: ifport, only: system
 # endif
-  use, non_intrinsic:: lib_constant, only: TAB
-  use, non_intrinsic:: lib_character, only: s, str_fixed, operator(+)
+  use, non_intrinsic:: constant_lib, only: TAB
+  use, non_intrinsic:: character_lib, only: s, str_fixed, operator(+)
 
   implicit none
 
@@ -240,4 +240,4 @@ contains
       read(rU1) array
     end subroutine read_array_v_1<%= t %>
   <%- } -%>
-end module lib_io
+end module io_lib
