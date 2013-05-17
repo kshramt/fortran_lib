@@ -25,8 +25,6 @@ module lib_fortran
 
 
    ! = public routine
-   public:: push                 ! Stack
-   public:: pop                  ! Stack
    public:: add                  ! BinaryTreeMap
    public:: has_key              ! BinaryTreeMap
    public:: get_value            ! BinaryTreeMap
@@ -36,12 +34,6 @@ module lib_fortran
    ! == Object
    public:: Object
 
-   ! == Stack
-   public:: Stack
-   <%- TYPES.each{|t| -%>
-      public:: <%= t %>Stack
-   <%- } -%>
-
    ! == BinaryTreeMap
    public:: BinaryTreeMap
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
@@ -49,21 +41,6 @@ module lib_fortran
    <%- } -%>
 
    ! = interface
-   ! == Stack
-   <%- TYPES.each{|t| -%>
-      interface push
-         module procedure push<%= t %>Stack
-      end interface push
-
-      interface pop
-         module procedure pop<%= t %>Stack
-      end interface pop
-
-      interface is_empty
-         module procedure is_empty<%= t %>Stack
-      end interface is_empty
-   <%- } -%>
-
    ! == BinaryTreeMap
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
       interface add
@@ -87,24 +64,6 @@ module lib_fortran
    ! = Object
    type:: Object
    end type Object
-
-   ! == Stack
-   type, extends(Object):: Stack
-   end type Stack
-
-   type, extends(Object):: StackNode
-   end type StackNode
-
-   <%- TYPES.each{|t| -%>
-      type, extends(Stack):: <%= t %>Stack
-         type(<%= t %>StackNode), pointer:: entry => null()
-      end type <%= t %>Stack
-
-      type, extends(StackNode):: <%= t %>StackNode
-         <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>:: value
-         type(<%= t %>StackNode), pointer:: prev => null()
-      end type <%= t %>StackNode
-   <%- } -%>
 
    ! == BinaryTreeMap
    type, extends(Object):: BinaryTreeMap
@@ -131,45 +90,6 @@ contains
 
 
    ! = body
-   ! == Stack
-   <%- TYPES.each{|t| -%>
-      subroutine push<%= t %>Stack(stack, value)
-         type(<%= t %>Stack), intent(inout):: stack
-         <%= t.declare %>, intent(in):: value
-         type(<%= t %>StackNode), pointer:: newNode
-
-         allocate(newNode)
-         newNode%value = value
-         newNode%prev => stack%entry
-         stack%entry => newNode
-      end subroutine push<%= t %>Stack
-
-      function pop<%= t %>Stack(stack, value) result(isSuccess)
-         type(<%= t %>Stack), intent(inout):: stack
-         <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: value
-         Logical:: isSuccess
-         type(<%= t %>StackNode), pointer:: removedNode => null()
-
-         if(is_empty(stack))then
-            isSuccess = .false.
-            return
-         end if
-
-         value = stack%entry%value
-         removedNode => stack%entry
-         stack%entry => stack%entry%prev
-         deallocate(removedNode)
-         isSuccess = .true.
-      end function pop<%= t %>Stack
-
-      function is_empty<%= t %>Stack(stack) result(answer)
-         type(<%= t %>Stack), intent(in):: stack
-         Logical:: answer
-
-         answer = .not.associated(stack%entry)
-      end function is_empty<%= t %>Stack
-   <%- } -%>
-
    ! == BinaryTreeMap
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
       subroutine add<%= key_type %><%= value_type %>BinaryTreeMap(self, key, value)
