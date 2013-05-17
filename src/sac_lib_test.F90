@@ -56,7 +56,9 @@ program sac_lib_test
   TEST(get_kevnm(wHead) == '12345678')
   ! = body
   ! == itime
-  ! call get_body(wBody, body, isRaised)
+  call set_delta(wBody, 0.5)
+  call set_body_itime(wBody, real([1, 2, 3, 4, 5, 6], kind = SAC_REAL_KIND))
+  ! set_body, set_body_itime, get_body, get_body_itime
   ! == ixy
   ! == iamph
   ! == irlim
