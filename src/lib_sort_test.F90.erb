@@ -30,6 +30,11 @@ program lib_sort_test
   implicit none
 
   Integer:: i
+  Integer, allocatable:: seeds(:)
+  Integer:: nSeeds, iSeeds
+  Integer:: t(1:8)
+  Integer, parameter:: YEAR = 1, MONTH = 2, DATE = 3, HOUR = 5
+  Integer, parameter:: nDArray = 10000
   Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
 
   ! size 0
@@ -61,14 +66,30 @@ program lib_sort_test
     <%- } -%>
   <%- } -%>
 
-  <%- 1.times{|i| -%>
-    <%- randoms = (0...10000).map{rand*0.01 - 0.005} -%>
-    dArray = <%= randoms.inspect %>
-    sortedDArray = quick_sort(dArray)
-    TEST(all(sortedDArray(1:size(sortedDArray, 1) - 1) <= sortedDArray(2:size(sortedDArray, 1))))
-    sortedDArray = merge_sort(dArray)
-    TEST(all(sortedDArray(1:size(sortedDArray, 1) - 1) <= sortedDArray(2:size(sortedDArray, 1))))
-  <% } %>
+  call date_and_time(values = t)
+  call random_seed(size = nSeeds)
+  allocate(seeds(1:nSeeds))
+  do iSeeds = 1, nSeeds
+    select case(iSeeds)
+    case(1)
+      seeds(iSeeds) = t(YEAR)
+    case(2)
+      seeds(iSeeds) = t(MONTH)
+    case(3)
+      seeds(iSeeds) = t(DATE)
+    case(4)
+      seeds(iSeeds) = t(HOUR)
+    case(5:)
+      seeds(iSeeds) = iSeeds
+    end select
+  end do
+  allocate(dArray(1:nDArray))
+  call random_number(dArray)
+  dArray = dArray*0.01 - 0.005
+  sortedDArray = quick_sort(dArray)
+  TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
+  sortedDArray = merge_sort(dArray)
+  TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
 
   ! Infinity
   TEST(all(equivalent(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
