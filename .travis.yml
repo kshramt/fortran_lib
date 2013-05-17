@@ -2,11 +2,13 @@ language: Fortran
 rvm:
   - 1.9.3
 before_install:
+  - sudo apt-get update
+  - sudo apt-get upgrade
   - sudo apt-get -qq install gfortran-4.6 gcc-snapshot
   - gem install fort
 script:
   - cd src
-  - rake test --trace
+  - make check
 env:
-  - MY_ERB="erb -T - -P" MY_GFORTRAN=gfortran-4.6
-  - MY_ERB="erb -T - -P" MY_GFORTRAN=/usr/lib/gcc-snapshot/bin/gfortran
+  - MY_ERB="erb -T - -P" MY_FORTRAN=gfortran-4.6
+  - MY_ERB="erb -T - -P" MY_FORTRAN=/usr/lib/gcc-snapshot/bin/gfortran
