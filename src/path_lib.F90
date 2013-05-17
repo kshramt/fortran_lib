@@ -1,5 +1,5 @@
-module lib_path
-  use lib_character, only: s
+module path_lib
+  use character_lib, only: s
 
   implicit none
 
@@ -18,4 +18,4 @@ contains
     lastSeparatorLoc = scan(path, SEPARATOR, .true.)
     this = path(1:lastSeparatorLoc)
   end function dirname
-end module lib_path
+end module path_lib

@@ -1,5 +1,5 @@
-program test_lib_path
-  use lib_path, only: dirname
+program path_lib_test
+  use path_lib, only: dirname
   implicit none
 
   print*, dirname('/a/b/c.d')
@@ -7,4 +7,4 @@ program test_lib_path
   print*, dirname('')
 
   stop
-end program test_lib_path
+end program path_lib_test
