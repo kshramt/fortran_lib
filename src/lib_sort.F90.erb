@@ -204,17 +204,21 @@ contains
       nXs = size(xs, dim = 1, kind = kind(nXs))
       nYs = size(ys, dim = 1, kind = kind(nYs))
       nZs = size(zs, dim = 1, kind = kind(nZs))
-      DEBUG_ASSERT(nXs >= 1)
-      DEBUG_ASSERT(nYs >= 1)
-      DEBUG_ASSERT(nZs >= 1)
-      DEBUG_ASSERT(nXs + nYs == nZs)
+
+      ASSERT(nXs + nYs == nZs)
+      if(nXs < 1)then
+         zs = ys
+         return
+      end if
+      if(nYs < 1)then
+         zs = xs
+         return
+      end if
 
       iXs = 1
       iYs = 1
       iZs = 1
       do while(iXs <= nXs .and. iYs <= nYs)
-        DEBUG_ASSERT(iZs <= nZs)
-
         if(xs(iXs) <= ys(iYs))then
           zs(iZs) = xs(iXs)
           iXs = iXs + 1
