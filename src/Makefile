@@ -2,7 +2,7 @@
 TMP_DIR := $(shell mktemp --directory --suffix=.fortran_lib)
 
 ERB := ${MY_ERB} -T '-' -P
-FORTRAN := ${MY_FORTRAN}  -DDEBUG -ffree-line-length-none -fmax-identifier-length=63 -ggdb -fbacktrace -fcheck=all -pipe -Wall -O0 -C -cpp
+FORTRAN := ${MY_FORTRAN_DEBUG}
 RUBY := ${MY_RUBY}
 
 # Configurations
