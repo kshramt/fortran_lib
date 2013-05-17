@@ -12,7 +12,7 @@
   + LOGICALS\
   + COMPLEXES\
   + CHARACTERS
-  CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: (0..LOG_2_CHAR_LEN_MAX).map{|n| 2**n}).product(TYPES)
+  CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: [1, 2, 2**7]).product(TYPES)
 -%>
 
 # include "utils.h"
