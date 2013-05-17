@@ -33,8 +33,8 @@ program binary_tree_map_lib_test
   TEST(n == -1)
 
   ! has_key or get_value with too long key returns .false.
-  TEST(.not.has_key(treeMap1, '||'))
-  TEST(.not.get_value(treeMap1, '||', n))
+  TEST(.not.has_key_binary_tree_map(treeMap1, '||'))
+  TEST(.not.get_value_binary_tree_map(treeMap1, '||', n))
 
   ! key is not ladjusted
   call add_binary_tree_map(treeMap2, ' |', 0)

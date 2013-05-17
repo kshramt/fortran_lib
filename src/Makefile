@@ -36,7 +36,7 @@ lib_character_test.exe: lib_character.o lib_character_test.o
 lib_constant_test.exe: lib_comparable.o lib_constant.o lib_constant_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_sort_test.exe: lib_constant.o lib_fortran.o lib_comparable.o lib_sort.o lib_sort_test.o
+lib_sort_test.exe: lib_constant.o stack_lib.o lib_comparable.o lib_sort.o lib_sort_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 lib_list_test.exe: lib_comparable.o lib_list.o lib_list_test.o
