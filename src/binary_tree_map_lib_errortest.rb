@@ -1,4 +1,4 @@
-$dependencies << 'lib_fortran.o'
+$dependencies << 'binary_tree_map_lib.o'
 $compiler = ENV['MY_FORTRAN']
 
 setup <<-EOS
