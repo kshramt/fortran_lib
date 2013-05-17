@@ -21,84 +21,84 @@ SML_SETS = [
 
 #include "utils.h"
 program sort_lib_test
-  USE_UTILS_H
-  use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
-  use, non_intrinsic:: constant_lib, only: get_infinity
-  use, non_intrinsic:: comparable_lib, only: equivalent
-  use, non_intrinsic:: sort_lib
+   USE_UTILS_H
+   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
+   use, non_intrinsic:: constant_lib, only: get_infinity
+   use, non_intrinsic:: comparable_lib, only: equivalent
+   use, non_intrinsic:: sort_lib
 
-  implicit none
+   implicit none
 
-  Integer:: i
-  Integer, allocatable:: seeds(:)
-  Integer:: nSeeds, iSeeds
-  Integer:: t(1:8)
-  Integer, parameter:: YEAR = 1, MONTH = 2, DATE = 3, HOUR = 5
-  Integer, parameter:: nDArray = 10000
-  Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
+   Integer:: i
+   Integer, allocatable:: seeds(:)
+   Integer:: nSeeds, iSeeds
+   Integer:: t(1:8)
+   Integer, parameter:: YEAR = 1, MONTH = 2, DATE = 3, HOUR = 5
+   Integer, parameter:: nDArray = 10000
+   Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
 
-  ! size 0
-  TEST(size(quick_sort([(i, i = 1, 0)])) == 0)
-  TEST(size(quick_sort([(dble(i), i = 1, 0)])) == 0)
-  TEST(size(merge_sort([(i, i = 1, 0)])) == 0)
-  TEST(size(merge_sort([(dble(i), i = 1, 0)])) == 0)
+   ! size 0
+   TEST(size(quick_sort([(i, i = 1, 0)])) == 0)
+   TEST(size(quick_sort([(dble(i), i = 1, 0)])) == 0)
+   TEST(size(merge_sort([(i, i = 1, 0)])) == 0)
+   TEST(size(merge_sort([(dble(i), i = 1, 0)])) == 0)
 
-  ! size 1
-  TEST(all(quick_sort([0]) == [0]))
-  TEST(all(equivalent(quick_sort([0.0]), [0.0])))
-  TEST(all(merge_sort([0]) == [0]))
-  TEST(all(equivalent(merge_sort([0.0]), [0.0])))
+   ! size 1
+   TEST(all(quick_sort([0]) == [0]))
+   TEST(all(equivalent(quick_sort([0.0]), [0.0])))
+   TEST(all(merge_sort([0]) == [0]))
+   TEST(all(equivalent(merge_sort([0.0]), [0.0])))
 
-  <%- [SML_SETS.last].each{|sml_set| -%>
-    <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
-      TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-      TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-    <%- } -%>
+   <%- [SML_SETS.last].each{|sml_set| -%>
+      <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
+         TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+         TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+      <%- } -%>
 
-    <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
-      TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-      TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-    <%- } -%>
+      <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
+         TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+         TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+      <%- } -%>
 
-    <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
-      TEST(all(equivalent(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
-      TEST(all(equivalent(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
-    <%- } -%>
-  <%- } -%>
+      <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
+         TEST(all(equivalent(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+         TEST(all(equivalent(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+      <%- } -%>
+   <%- } -%>
 
-  call date_and_time(values = t)
-  call random_seed(size = nSeeds)
-  allocate(seeds(1:nSeeds))
-  do iSeeds = 1, nSeeds
-    select case(iSeeds)
-    case(1)
-      seeds(iSeeds) = t(YEAR)
-    case(2)
-      seeds(iSeeds) = t(MONTH)
-    case(3)
-      seeds(iSeeds) = t(DATE)
-    case(4)
-      seeds(iSeeds) = t(HOUR)
-    case(5:)
-      seeds(iSeeds) = iSeeds
-    end select
-  end do
-  allocate(dArray(1:nDArray))
-  call random_number(dArray)
-  dArray = dArray*0.01 - 0.005
-  sortedDArray = quick_sort(dArray)
-  TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
-  sortedDArray = merge_sort(dArray)
-  TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
+   call date_and_time(values = t)
+   call random_seed(size = nSeeds)
+   allocate(seeds(1:nSeeds))
+   do iSeeds = 1, nSeeds
+      select case(iSeeds)
+      case(1)
+         seeds(iSeeds) = t(YEAR)
+      case(2)
+         seeds(iSeeds) = t(MONTH)
+      case(3)
+         seeds(iSeeds) = t(DATE)
+      case(4)
+         seeds(iSeeds) = t(HOUR)
+      case(5:)
+         seeds(iSeeds) = iSeeds
+      end select
+   end do
+   allocate(dArray(1:nDArray))
+   call random_number(dArray)
+   dArray = dArray*0.01 - 0.005
+   sortedDArray = quick_sort(dArray)
+   TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
+   sortedDArray = merge_sort(dArray)
+   TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
 
-  ! Infinity
-  TEST(all(equivalent(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
-  TEST(all(equivalent(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   ! Infinity
+   TEST(all(equivalent(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   TEST(all(equivalent(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
 
-  ! Bug check
-  TEST(all(equivalent(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
-  TEST(all(equivalent(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   ! Bug check
+   TEST(all(equivalent(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   TEST(all(equivalent(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
 
-  write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
-  stop
+   write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
+   stop
 end program sort_lib_test

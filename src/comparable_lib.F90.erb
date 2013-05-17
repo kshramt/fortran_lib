@@ -18,152 +18,152 @@
 %>
 
 module comparable_lib
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
-  implicit none
+   implicit none
 
-  private
-  public:: equivalent
-  public:: is_nan
-  public:: is_infinity
+   private
+   public:: equivalent
+   public:: is_nan
+   public:: is_infinity
 
-  <%- (REALS + INTEGERS).each{|t| -%>
-    interface is_nan
-      module procedure is_nan<%= t %>
-    end interface is_nan
+   <%- (REALS + INTEGERS).each{|t| -%>
+      interface is_nan
+         module procedure is_nan<%= t %>
+      end interface is_nan
 
-    interface is_infinity
-      module procedure is_infinity<%= t %>
-    end interface is_infinity
-  <%- } -%>
+      interface is_infinity
+         module procedure is_infinity<%= t %>
+      end interface is_infinity
+   <%- } -%>
 
-  interface equivalent
-    <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
-      module procedure equivalent<%= t1 %><%= t2 %>
-    <%- } -%>
-  end interface equivalent
+   interface equivalent
+      <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
+         module procedure equivalent<%= t1 %><%= t2 %>
+      <%- } -%>
+   end interface equivalent
 
 contains
 
-  <%- REALS.each{|t| -%>
-    elemental function is_nan<%= t %>(x) result(this)
-      logical:: this
-      <%= t.declare %>, intent(in):: x
+   <%- REALS.each{|t| -%>
+      elemental function is_nan<%= t %>(x) result(this)
+         logical:: this
+         <%= t.declare %>, intent(in):: x
 
-      this = (x /= x)
-    end function is_nan<%= t %>
+         this = (x /= x)
+      end function is_nan<%= t %>
 
-    elemental function is_infinity<%= t %>(x) result(answer)
-      Logical:: answer
-      <%= t.declare %>, intent(in):: x
+      elemental function is_infinity<%= t %>(x) result(answer)
+         Logical:: answer
+         <%= t.declare %>, intent(in):: x
 
-      answer = x > huge(x)
-    end function is_infinity<%= t %>
-  <%- } -%>
+         answer = x > huge(x)
+      end function is_infinity<%= t %>
+   <%- } -%>
 
-  <%- INTEGERS.each{|t| -%>
-    elemental function is_nan<%= t %>(n) result(this)
-      logical:: this
-      <%= t.declare %>, intent(in):: n
+   <%- INTEGERS.each{|t| -%>
+      elemental function is_nan<%= t %>(n) result(this)
+         logical:: this
+         <%= t.declare %>, intent(in):: n
 
-      this = .false.
-    end function is_nan<%= t %>
+         this = .false.
+      end function is_nan<%= t %>
 
-    elemental function is_infinity<%= t %>(x) result(answer)
-      Logical:: answer
-      <%= t.declare %>, intent(in):: x
+      elemental function is_infinity<%= t %>(x) result(answer)
+         Logical:: answer
+         <%= t.declare %>, intent(in):: x
 
-      answer = .false.
-    end function is_infinity<%= t %>
-  <%- } -%>
+         answer = .false.
+      end function is_infinity<%= t %>
+   <%- } -%>
 
-  <%- REAL_PAIRS.each{|t1, t2| -%>
-    ! This function assumes gradual underflow is not flushed to zero.
-    ! For example, -no-ftz option should be added when you compile this module by ifort.
-    elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
-      logical:: this
-      <%= t1.declare %>, intent(in):: a
-      <%= t2.declare %>, intent(in):: b
-      real(max(kind(a), kind(b))), intent(in), optional:: delta
+   <%- REAL_PAIRS.each{|t1, t2| -%>
+      ! This function assumes gradual underflow is not flushed to zero.
+      ! For example, -no-ftz option should be added when you compile this module by ifort.
+      elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
+         logical:: this
+         <%= t1.declare %>, intent(in):: a
+         <%= t2.declare %>, intent(in):: b
+         real(max(kind(a), kind(b))), intent(in), optional:: delta
 
-      real(kind(delta)):: delta_, deltaRelative, deltaAbsolute
-      real(min(kind(a), kind(b))):: lowerPrecision
-      Logical:: isAInfinity, isBInfinity, isAMinusInfinity, isBMinusInfinity
+         real(kind(delta)):: delta_, deltaRelative, deltaAbsolute
+         real(min(kind(a), kind(b))):: lowerPrecision
+         Logical:: isAInfinity, isBInfinity, isAMinusInfinity, isBMinusInfinity
 
-      if(is_nan(a) .and. is_nan(b))then
-        this = .true.
-        return
-      end if
+         if(is_nan(a) .and. is_nan(b))then
+            this = .true.
+            return
+         end if
 
-      isAInfinity = is_infinity(a)
-      isBInfinity = is_infinity(b)
-      isAMinusInfinity = is_infinity(-a)
-      isBMinusInfinity = is_infinity(-b)
+         isAInfinity = is_infinity(a)
+         isBInfinity = is_infinity(b)
+         isAMinusInfinity = is_infinity(-a)
+         isBMinusInfinity = is_infinity(-b)
 
-      if((isAInfinity .and. isBInfinity) .or. (isAMinusInfinity .and. isBMinusInfinity))then
-        this = .true.
-        return
-      end if
+         if((isAInfinity .and. isBInfinity) .or. (isAMinusInfinity .and. isBMinusInfinity))then
+            this = .true.
+            return
+         end if
 
-      if(isAInfinity .or. isBInfinity .or. isAMinusInfinity .or. isBMinusInfinity)then
-        this = .false.
-        return
-      end if
+         if(isAInfinity .or. isBInfinity .or. isAMinusInfinity .or. isBMinusInfinity)then
+            this = .false.
+            return
+         end if
 
-      if(present(delta))then
-        delta_ = delta*max(abs(a), abs(b))
-      else
-        deltaRelative = max(epsilon(a)*abs(a), epsilon(b)*abs(b))
-        deltaAbsolute = epsilon(lowerPrecision)*tiny(lowerPrecision)
-        delta_ = max(deltaRelative, deltaAbsolute)
-      end if
+         if(present(delta))then
+            delta_ = delta*max(abs(a), abs(b))
+         else
+            deltaRelative = max(epsilon(a)*abs(a), epsilon(b)*abs(b))
+            deltaAbsolute = epsilon(lowerPrecision)*tiny(lowerPrecision)
+            delta_ = max(deltaRelative, deltaAbsolute)
+         end if
 
-      this = (abs(a - b) <= 2*delta_)
-    end function equivalent<%= t1 %><%= t2 %>
-  <%- } -%>
+         this = (abs(a - b) <= 2*delta_)
+      end function equivalent<%= t1 %><%= t2 %>
+   <%- } -%>
 
-  <%- COMPLEX_PAIRS.each{|t1, t2| -%>
-    elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
-      logical:: this
-      <%= t1.declare %>, intent(in):: a
-      <%= t2.declare %>, intent(in):: b
-      real(max(kind(a), kind(b))), intent(in), optional:: delta
+   <%- COMPLEX_PAIRS.each{|t1, t2| -%>
+      elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
+         logical:: this
+         <%= t1.declare %>, intent(in):: a
+         <%= t2.declare %>, intent(in):: b
+         real(max(kind(a), kind(b))), intent(in), optional:: delta
 
-      if(present(delta))then
-        this = equivalent(real(a), real(b), delta) .and. equivalent(aimag(a), aimag(b), delta)
-      else
-        this = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
-      end if
-    end function equivalent<%= t1 %><%= t2 %>
-  <%- } -%>
+         if(present(delta))then
+            this = equivalent(real(a), real(b), delta) .and. equivalent(aimag(a), aimag(b), delta)
+         else
+            this = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
+         end if
+      end function equivalent<%= t1 %><%= t2 %>
+   <%- } -%>
 
-  <%- INTEGER_PAIRS.each{|t1, t2| -%>
-    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
-      logical:: this
-      <%= t1.declare %>, intent(in):: a
-      <%= t2.declare %>, intent(in):: b
+   <%- INTEGER_PAIRS.each{|t1, t2| -%>
+      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
+         logical:: this
+         <%= t1.declare %>, intent(in):: a
+         <%= t2.declare %>, intent(in):: b
 
-      this = (a == b)
-    end function equivalent<%= t1 %><%= t2 %>
-  <%- } -%>
+         this = (a == b)
+      end function equivalent<%= t1 %><%= t2 %>
+   <%- } -%>
 
-  <%- LOGICAL_PAIRS.each{|t1, t2| -%>
-    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
-      logical:: this
-      <%= t1.declare %>, intent(in):: a
-      <%= t2.declare %>, intent(in):: b
+   <%- LOGICAL_PAIRS.each{|t1, t2| -%>
+      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
+         logical:: this
+         <%= t1.declare %>, intent(in):: a
+         <%= t2.declare %>, intent(in):: b
 
-      this = a .eqv. b
-    end function equivalent<%= t1 %><%= t2 %>
-  <%- } -%>
+         this = a .eqv. b
+      end function equivalent<%= t1 %><%= t2 %>
+   <%- } -%>
 
-  <%- CHARACTER_PAIRS.each{|t1, t2| -%>
-    elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
-      logical:: this
-      <%= t1.declare %>, intent(in):: a
-      <%= t2.declare %>, intent(in):: b
+   <%- CHARACTER_PAIRS.each{|t1, t2| -%>
+      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(this)
+         logical:: this
+         <%= t1.declare %>, intent(in):: a
+         <%= t2.declare %>, intent(in):: b
 
-      this = (a == b)
-    end function equivalent<%= t1 %><%= t2 %>
-  <%- } -%>
+         this = (a == b)
+      end function equivalent<%= t1 %><%= t2 %>
+   <%- } -%>
 end module comparable_lib

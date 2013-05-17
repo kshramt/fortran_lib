@@ -51,39 +51,39 @@ EOS
 
 #include "utils.h"
 program comparable_lib_test
-  USE_UTILS_H
-  use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
-  use, non_intrinsic:: constant_lib, only: get_nan, get_infinity
-  use, non_intrinsic:: comparable_lib
-  implicit none
+   USE_UTILS_H
+   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
+   use, non_intrinsic:: constant_lib, only: get_nan, get_infinity
+   use, non_intrinsic:: comparable_lib
+   implicit none
 
-  TEST(.not.is_nan(0.0))
-  TEST(.not.is_nan(0.0_REAL64))
-  TEST(.not.is_nan(0))
-  TEST(.not.is_nan(0_INT64))
-  TEST(is_nan(get_nan()))
+   TEST(.not.is_nan(0.0))
+   TEST(.not.is_nan(0.0_REAL64))
+   TEST(.not.is_nan(0))
+   TEST(.not.is_nan(0_INT64))
+   TEST(is_nan(get_nan()))
 
-  TEST(.not.is_infinity(0.0))
-  TEST(.not.is_infinity(0.0_REAL64))
-  TEST(.not.is_infinity(0))
-  TEST(.not.is_infinity(0_INT64))
-  TEST(is_infinity(get_infinity()))
+   TEST(.not.is_infinity(0.0))
+   TEST(.not.is_infinity(0.0_REAL64))
+   TEST(.not.is_infinity(0))
+   TEST(.not.is_infinity(0_INT64))
+   TEST(is_infinity(get_infinity()))
 
-  TEST(.not.equivalent(get_nan(), 0.0))
-  TEST(equivalent(get_nan(), get_nan()))
+   TEST(.not.equivalent(get_nan(), 0.0))
+   TEST(equivalent(get_nan(), get_nan()))
 
-  TEST(.not.equivalent(get_infinity(), 0.0))
-  TEST(.not.equivalent(get_infinity(), -get_infinity()))
-  TEST(equivalent(get_infinity(), get_infinity()))
+   TEST(.not.equivalent(get_infinity(), 0.0))
+   TEST(.not.equivalent(get_infinity(), -get_infinity()))
+   TEST(equivalent(get_infinity(), get_infinity()))
 
-  <%- TRUE_PAIRS.each{|i1, i2| -%>
-    TEST(equivalent(<%= i1 %>, <%= i2 %>))
-  <%- } -%>
+   <%- TRUE_PAIRS.each{|i1, i2| -%>
+      TEST(equivalent(<%= i1 %>, <%= i2 %>))
+   <%- } -%>
 
-  <%- FALSE_PAIRS.each{|i1, i2| -%>
-    TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
-  <%- } -%>
+   <%- FALSE_PAIRS.each{|i1, i2| -%>
+      TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
+   <%- } -%>
 
-  write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
-  stop
+   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
+   stop
 end program comparable_lib_test

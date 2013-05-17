@@ -10,65 +10,65 @@
   + INT_TYPES
 %>
 module character_lib
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
-  implicit none
+   implicit none
 
-  private
+   private
 
-  public:: s                    ! Same as String#strip method in Ruby.
-  public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
-  ! public:: str
-  public:: str_fixed            ! Convert a value to a string. The result is not stripped.
-  public:: STR_LEN              ! Maximum length of str.
+   public:: s                    ! Same as String#strip method in Ruby.
+   public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
+   ! public:: str
+   public:: str_fixed            ! Convert a value to a string. The result is not stripped.
+   public:: STR_LEN              ! Maximum length of str.
 
-  integer,   parameter:: STR_LEN  = 1024
+   integer,   parameter:: STR_LEN  = 1024
 
-  interface operator(+)
-    module procedure add
-  end interface operator(+)
+   interface operator(+)
+      module procedure add
+   end interface operator(+)
 
-  <%- TYPES.each{|t| -%>
-    ! interface str
-    !   module procedure str<%= t %>
-    ! end interface str
+   <%- TYPES.each{|t| -%>
+      ! interface str
+      !    module procedure str<%= t %>
+      ! end interface str
 
-    interface str_fixed
-      module procedure str_fixed<%= t %>
-    end interface str_fixed
-  <%- } -%>
+      interface str_fixed
+         module procedure str_fixed<%= t %>
+      end interface str_fixed
+   <%- } -%>
 
 contains
 
-  pure function s(str) result(this)
-    character(len = *), intent(in):: str
-    character(len = len_trim(adjustl(str))):: this
+   pure function s(str) result(this)
+      character(len = *), intent(in):: str
+      character(len = len_trim(adjustl(str))):: this
 
-    this = trim(adjustl(str))
-  end function s
+      this = trim(adjustl(str))
+   end function s
 
-  elemental function add(str1, str2) result(this)
-    character(len = *), intent(in):: str1, str2
-    character(len = len(str1) + len(str2)):: this
+   elemental function add(str1, str2) result(this)
+      character(len = *), intent(in):: str1, str2
+      character(len = len(str1) + len(str2)):: this
 
-    this = str1 // str2
-  end function add
+      this = str1 // str2
+   end function add
 
-  <%- TYPES.each{|t| -%>
-    pure function str_fixed<%= t %>(x) result(this)
-      character(len = STR_LEN):: this
-      <%= t.declare %>, intent(in):: x
+   <%- TYPES.each{|t| -%>
+      pure function str_fixed<%= t %>(x) result(this)
+         character(len = STR_LEN):: this
+         <%= t.declare %>, intent(in):: x
 
-      write(this, *) x
-      this = s(this)
-    end function str_fixed<%= t %>
+         write(this, *) x
+         this = s(this)
+      end function str_fixed<%= t %>
 
-    ! ! This is not work on ifort
-    ! pure function str<%= t %>(x) result(this)
-    !   <%= t.declare %>, intent(in):: x
-    !   character(len = len(s(str_fixed(x)))):: this
+      ! ! This is not work on ifort
+      ! pure function str<%= t %>(x) result(this)
+      !    <%= t.declare %>, intent(in):: x
+      !    character(len = len(s(str_fixed(x)))):: this
 
-    !   this = s(str_fixed(x))
-    ! end function str<%= t %>
-  <%- } -%>
+      !    this = s(str_fixed(x))
+      ! end function str<%= t %>
+   <%- } -%>
 end module character_lib

@@ -17,227 +17,227 @@
 
 #include "utils.h"
 module io_lib
-  use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
-  use, non_intrinsic:: ifport, only: system
+   use, non_intrinsic:: ifport, only: system
 # endif
-  use, non_intrinsic:: constant_lib, only: TAB
-  use, non_intrinsic:: character_lib, only: s, str_fixed, operator(+)
+   use, non_intrinsic:: constant_lib, only: TAB
+   use, non_intrinsic:: character_lib, only: s, str_fixed, operator(+)
 
-  implicit none
+   implicit none
 
-  private
-  public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
-  public:: write_array, read_array
-  public:: number_of_lines, number_of_columns, file_shape
-  public:: mkdir_p
+   private
+   public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
+   public:: write_array, read_array
+   public:: number_of_lines, number_of_columns, file_shape
+   public:: mkdir_p
 
-  integer, parameter:: VERSION = 1 ! Array file format's compatibility.
-  character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
-  character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
-  character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
-  character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
+   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
+   character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
+   character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
+   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
+   character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
 
-  <%- TYPES.each{|t| -%>
-    interface write_array
-      module procedure write_array<%= t %>
-    end interface write_array
+   <%- TYPES.each{|t| -%>
+      interface write_array
+         module procedure write_array<%= t %>
+      end interface write_array
 
-    interface read_array
-      module procedure read_array<%= t %>
-    end interface read_array
+      interface read_array
+         module procedure read_array<%= t %>
+      end interface read_array
 
-    interface read_array_v_1
-      module procedure read_array_v_1<%= t %>
-    end interface read_array_v_1
-  <%- } -%>
+      interface read_array_v_1
+         module procedure read_array_v_1<%= t %>
+      end interface read_array_v_1
+   <%- } -%>
 
 contains
 
-  subroutine mkdir_p(path, exitStatus)
-    character(len = *) path
-    integer, intent(out), optional:: exitStatus
-    integer:: exitStatus_
+   subroutine mkdir_p(path, exitStatus)
+      character(len = *) path
+      integer, intent(out), optional:: exitStatus
+      integer:: exitStatus_
 
 # ifdef __INTEL_COMPILER
-    exitStatus_ = system("mkdir -p " + s(path))
+      exitStatus_ = system("mkdir -p " + s(path))
 # else
-    call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
+      call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
 # endif
 
-    if(present(exitStatus))then
-      exitStatus = exitStatus_
-    elseif(exitStatus_ /= 0)then
-      RAISE('Failed to execute mkdir -p ' + s(path))
-    end if
-  end subroutine mkdir_p
+      if(present(exitStatus))then
+         exitStatus = exitStatus_
+      elseif(exitStatus_ /= 0)then
+         RAISE('Failed to execute mkdir -p ' + s(path))
+      end if
+   end subroutine mkdir_p
 
-  ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
-  function file_shape(fileName, numberOfHeaders) result(this)
-    integer(8):: this(1:2)
-    character(len = *), intent(in):: fileName
-    integer, intent(in), optional:: numberOfHeaders
+   ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
+   function file_shape(fileName, numberOfHeaders) result(this)
+      integer(8):: this(1:2)
+      character(len = *), intent(in):: fileName
+      integer, intent(in), optional:: numberOfHeaders
 
-    integer:: numberOfHeaders_
+      integer:: numberOfHeaders_
 
-    numberOfHeaders_ = 0
-    if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
+      numberOfHeaders_ = 0
+      if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
-    this = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
-  end function file_shape
+      this = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
+   end function file_shape
 
-  function number_of_lines(fileName) result(this)
-    integer(8):: this
-    character(len = *), intent(in):: fileName
+   function number_of_lines(fileName) result(this)
+      integer(8):: this
+      character(len = *), intent(in):: fileName
 
-    integer:: rU1, ios
-    character:: dummy
+      integer:: rU1, ios
+      character:: dummy
 
-    open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
+      open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
 
-    this = 0
-    do
-      read(rU1, *, iostat = ios) dummy
-      if(is_iostat_bad(ios)) exit
-      RAISE_IF(this >= huge(this))
+      this = 0
+      do
+         read(rU1, *, iostat = ios) dummy
+         if(is_iostat_bad(ios)) exit
+         RAISE_IF(this >= huge(this))
 
-      this = this + 1
-    end do
-    close(rU1)
-  end function number_of_lines
-
-  ! @desc Return number of columns at line (numberOfHeaders + 1) in file fileName.
-  ! @desc The line is separated by space and tabs character.
-  ! @desc Quoted string containing space/tab characteres is not considared.
-  function number_of_columns(fileName, numberOfHeaders) result(this)
-    integer(8):: this
-    character(len = *), intent(in):: fileName
-    integer, intent(in), optional:: numberOfHeaders
-
-    enum, bind(c)
-      enumerator:: SEEK_NORMAL_CHAR, SEEK_SEPARATOR
-    end enum
-    character, parameter:: SEPARATORS(1:2) = [' ', TAB]
-
-    integer:: rU1, ios, i, mode
-    character:: c
-
-    integer:: numberOfHeaders_
-
-    numberOfHeaders_ = 0
-    if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
-
-    mode = SEEK_NORMAL_CHAR
-    this = 0
-    open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
-    do i = 1, numberOfHeaders_
-      read(rU1, *)
-    end do
-    do
-      read(rU1, '(a1)', advance = 'no', iostat = ios) c
-      if(is_iostat_bad(ios) .or. c == new_line('_')) exit
-
-      select case(mode)
-      case(SEEK_SEPARATOR)
-        if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
-      case(SEEK_NORMAL_CHAR)
-        if(.not.has_val(SEPARATORS, c))then
-          RAISE_IF(this >= huge(this))
-
-          this = this + 1
-          mode = SEEK_SEPARATOR
-        end if
-      end select
-    end do
-    close(rU1)
-  end function number_of_columns
-
-  <%- TYPES.each{|t| -%>
-    subroutine write_array<%= t %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
-      character(len = *), intent(in):: arrayDir
-      <%= t.declare %>, intent(in):: array
-      <%- if NUM_DESC_MAX >= 1 -%>
-        character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
-      <%- end -%>
-
-      character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
-      integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
-
-      character(len = len(DATA_TYPE_FOR_SELF)) dataType
-      integer:: dim
-      integer:: sizes(1:DIM_FOR_SELF)
-      integer:: wU1
-      integer:: i
-
-      namelist /array_meta/ dataType, dim, sizes
-
-      call mkdir_p(s(arrayDir))
-
-      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
-      write(wU1, *) VERSION
-      close(wU1)
-
-      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
-      write(wU1) array
-      close(wU1)
-
-      dataType = DATA_TYPE_FOR_SELF
-      dim = DIM_FOR_SELF
-      forall(i = 1:dim) sizes(i) = size(array, i)
-      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
-      write(wU1, nml = array_meta)
-      close(wU1)
-
-      open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
-      <%- (1..NUM_DESC_MAX).each{|i| -%>
-        if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
-      <%- } -%>
-      close(wU1)
-    end subroutine write_array<%= t %>
-
-    subroutine read_array<%= t %>(arrayDir, array)
-      character(len = *), intent(in):: arrayDir
-      <%= t.declare %>, intent(out), allocatable:: array
-
-      integer:: rU1, libIoVersion
-
-      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
-      read(rU1, *) libIoVersion
+         this = this + 1
+      end do
       close(rU1)
+   end function number_of_lines
 
-      select case(libIoVersion)
-      case(1)
-        call read_array_v_1(arrayDir, array)
-      case default
-        RAISE('Unsupported version: ' + trim(str_fixed(libIoVersion)))
-      end select
-    end subroutine read_array<%= t %>
+   ! @desc Return number of columns at line (numberOfHeaders + 1) in file fileName.
+   ! @desc The line is separated by space and tabs character.
+   ! @desc Quoted string containing space/tab characteres is not considared.
+   function number_of_columns(fileName, numberOfHeaders) result(this)
+      integer(8):: this
+      character(len = *), intent(in):: fileName
+      integer, intent(in), optional:: numberOfHeaders
 
-    subroutine read_array_v_1<%= t %>(arrayDir, array)
-      character(len = *), intent(in):: arrayDir
-      <%= t.declare %>, intent(out), allocatable:: array
+      enum, bind(c)
+         enumerator:: SEEK_NORMAL_CHAR, SEEK_SEPARATOR
+      end enum
+      character, parameter:: SEPARATORS(1:2) = [' ', TAB]
 
-      character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
-      integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
-      character(len = <%= TYPES.map{|_| _.to_s.size}.max %>):: dataType
-      integer:: dim
-      integer:: sizes(1:DIM_FOR_SELF)
-      integer:: rU1
-      namelist /array_meta/ dataType, dim, sizes
+      integer:: rU1, ios, i, mode
+      character:: c
 
-      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
-      read(rU1, nml = array_meta)
+      integer:: numberOfHeaders_
 
-      RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
-      RAISE_IF(dim /= DIM_FOR_SELF)
+      numberOfHeaders_ = 0
+      if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
+      mode = SEEK_NORMAL_CHAR
+      this = 0
+      open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
+      do i = 1, numberOfHeaders_
+         read(rU1, *)
+      end do
+      do
+         read(rU1, '(a1)', advance = 'no', iostat = ios) c
+         if(is_iostat_bad(ios) .or. c == new_line('_')) exit
+
+         select case(mode)
+         case(SEEK_SEPARATOR)
+            if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
+         case(SEEK_NORMAL_CHAR)
+            if(.not.has_val(SEPARATORS, c))then
+               RAISE_IF(this >= huge(this))
+
+               this = this + 1
+               mode = SEEK_SEPARATOR
+            end if
+         end select
+      end do
       close(rU1)
+   end function number_of_columns
 
-      allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
+   <%- TYPES.each{|t| -%>
+      subroutine write_array<%= t %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+         character(len = *), intent(in):: arrayDir
+         <%= t.declare %>, intent(in):: array
+         <%- if NUM_DESC_MAX >= 1 -%>
+            character(len = *), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
+         <%- end -%>
 
-      open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
-      read(rU1) array
-    end subroutine read_array_v_1<%= t %>
-  <%- } -%>
+         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
+         integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
+
+         character(len = len(DATA_TYPE_FOR_SELF)) dataType
+         integer:: dim
+         integer:: sizes(1:DIM_FOR_SELF)
+         integer:: wU1
+         integer:: i
+
+         namelist /array_meta/ dataType, dim, sizes
+
+         call mkdir_p(s(arrayDir))
+
+         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
+         write(wU1, *) VERSION
+         close(wU1)
+
+         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
+         write(wU1) array
+         close(wU1)
+
+         dataType = DATA_TYPE_FOR_SELF
+         dim = DIM_FOR_SELF
+         forall(i = 1:dim) sizes(i) = size(array, i)
+         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
+         write(wU1, nml = array_meta)
+         close(wU1)
+
+         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
+         <%- (1..NUM_DESC_MAX).each{|i| -%>
+            if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
+         <%- } -%>
+         close(wU1)
+      end subroutine write_array<%= t %>
+
+      subroutine read_array<%= t %>(arrayDir, array)
+         character(len = *), intent(in):: arrayDir
+         <%= t.declare %>, intent(out), allocatable:: array
+
+         integer:: rU1, libIoVersion
+
+         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
+         read(rU1, *) libIoVersion
+         close(rU1)
+
+         select case(libIoVersion)
+         case(1)
+            call read_array_v_1(arrayDir, array)
+         case default
+            RAISE('Unsupported version: ' + trim(str_fixed(libIoVersion)))
+         end select
+      end subroutine read_array<%= t %>
+
+      subroutine read_array_v_1<%= t %>(arrayDir, array)
+         character(len = *), intent(in):: arrayDir
+         <%= t.declare %>, intent(out), allocatable:: array
+
+         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
+         integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
+         character(len = <%= TYPES.map{|_| _.to_s.size}.max %>):: dataType
+         integer:: dim
+         integer:: sizes(1:DIM_FOR_SELF)
+         integer:: rU1
+         namelist /array_meta/ dataType, dim, sizes
+
+         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
+         read(rU1, nml = array_meta)
+
+         RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
+         RAISE_IF(dim /= DIM_FOR_SELF)
+
+         close(rU1)
+
+         allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
+
+         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
+         read(rU1) array
+      end subroutine read_array_v_1<%= t %>
+   <%- } -%>
 end module io_lib

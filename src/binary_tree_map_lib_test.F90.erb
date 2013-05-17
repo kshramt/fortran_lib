@@ -4,46 +4,46 @@
 -%>
 # include "utils.h"
 program binary_tree_map_lib_test
-  USE_UTILS_H
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use, non_intrinsic:: binary_tree_map_lib
-  implicit none
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, non_intrinsic:: binary_tree_map_lib
+   implicit none
 
-  type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap1
-  type(CharacterDim0Len2IntegerDim0KindINT32BinaryTreeMap):: treeMap2
-  Integer:: n, n1, n2
-  Logical:: lTmp
+   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap1
+   type(CharacterDim0Len2IntegerDim0KindINT32BinaryTreeMap):: treeMap2
+   Integer:: n, n1, n2
+   Logical:: lTmp
 
-  <%- pairs.shuffle.each{|c, i| -%>
-    call add_binary_tree_map(treeMap1, '<%= c %>', <%= i %>)
-  <%- } -%>
-  <%- pairs.shuffle.each{|c, i| -%>
-    TEST(has_key_binary_tree_map(treeMap1, '<%= c %>'))
-    TEST(get_value_binary_tree_map(treeMap1, '<%= c %>', n))
-    TEST(n == <%= i %>)
-  <%- } -%>
+   <%- pairs.shuffle.each{|c, i| -%>
+      call add_binary_tree_map(treeMap1, '<%= c %>', <%= i %>)
+   <%- } -%>
+   <%- pairs.shuffle.each{|c, i| -%>
+      TEST(has_key_binary_tree_map(treeMap1, '<%= c %>'))
+      TEST(get_value_binary_tree_map(treeMap1, '<%= c %>', n))
+      TEST(n == <%= i %>)
+   <%- } -%>
 
-  TEST(.not.has_key_binary_tree_map(treeMap1, '/'))
-  TEST(.not.get_value_binary_tree_map(treeMap1, '/', n))
+   TEST(.not.has_key_binary_tree_map(treeMap1, '/'))
+   TEST(.not.get_value_binary_tree_map(treeMap1, '/', n))
 
-  ! key is trimed
-  call add_binary_tree_map(treeMap1, '| ', -1)
-  TEST(has_key_binary_tree_map(treeMap1, '| '))
-  TEST(get_value_binary_tree_map(treeMap1, '| ', n))
-  TEST(n == -1)
+   ! key is trimed
+   call add_binary_tree_map(treeMap1, '| ', -1)
+   TEST(has_key_binary_tree_map(treeMap1, '| '))
+   TEST(get_value_binary_tree_map(treeMap1, '| ', n))
+   TEST(n == -1)
 
-  ! has_key or get_value with too long key returns .false.
-  TEST(.not.has_key_binary_tree_map(treeMap1, '||'))
-  TEST(.not.get_value_binary_tree_map(treeMap1, '||', n))
+   ! has_key or get_value with too long key returns .false.
+   TEST(.not.has_key_binary_tree_map(treeMap1, '||'))
+   TEST(.not.get_value_binary_tree_map(treeMap1, '||', n))
 
-  ! key is not ladjusted
-  call add_binary_tree_map(treeMap2, ' |', 0)
-  call add_binary_tree_map(treeMap2, '|', 1)
-  lTmp = get_value_binary_tree_map(treeMap2, ' |', n1)
-  lTmp = get_value_binary_tree_map(treeMap2, '|', n2)
-  ASSERT(n1 /= n2)
+   ! key is not ladjusted
+   call add_binary_tree_map(treeMap2, ' |', 0)
+   call add_binary_tree_map(treeMap2, '|', 1)
+   lTmp = get_value_binary_tree_map(treeMap2, ' |', n1)
+   lTmp = get_value_binary_tree_map(treeMap2, '|', n2)
+   ASSERT(n1 /= n2)
 
-  write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
+   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
 
-  stop
+   stop
 end program binary_tree_map_lib_test

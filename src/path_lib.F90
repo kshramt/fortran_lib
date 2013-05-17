@@ -1,21 +1,21 @@
 module path_lib
-  use, non_intrinsic:: character_lib, only: s
+   use, non_intrinsic:: character_lib, only: s
 
-  implicit none
+   implicit none
 
-  private
-  public:: dirname
+   private
+   public:: dirname
 
-  character, parameter:: SEPARATOR = '/'
+   character, parameter:: SEPARATOR = '/'
 contains
 
-  function dirname(path) result(this)
-    character(len = *), intent(in):: path
-    character(len = len(s(path))):: this
+   function dirname(path) result(this)
+      character(len = *), intent(in):: path
+      character(len = len(s(path))):: this
 
-    integer:: lastSeparatorLoc
+      integer:: lastSeparatorLoc
 
-    lastSeparatorLoc = scan(path, SEPARATOR, .true.)
-    this = path(1:lastSeparatorLoc)
-  end function dirname
+      lastSeparatorLoc = scan(path, SEPARATOR, .true.)
+      this = path(1:lastSeparatorLoc)
+   end function dirname
 end module path_lib

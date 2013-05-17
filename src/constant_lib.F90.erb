@@ -5,54 +5,54 @@
 -%>
 
 module constant_lib
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use, intrinsic:: iso_fortran_env, only: INT8
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, intrinsic:: iso_fortran_env, only: INT8
 
-  implicit none
+   implicit none
 
-  private
+   private
 
-  public:: TAB
-  <%- REALS.each{|t| -%>
-    public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
-    public:: DEG_FROM_RAD_<%= t.kind %>
-    public:: RAD_FROM_DEG_<%= t.kind %>
-    public:: PI<%= t %>         ! Expected to be used by erb generate code.
-    public:: DEG_FROM_RAD<%= t %>
-    public:: RAD_FROM_DEG<%= t %>
-  <%- } -%>
-  public:: get_nan
-  public:: get_infinity
-  public:: ZERO, ONE
+   public:: TAB
+   <%- REALS.each{|t| -%>
+      public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
+      public:: DEG_FROM_RAD_<%= t.kind %>
+      public:: RAD_FROM_DEG_<%= t.kind %>
+      public:: PI<%= t %>         ! Expected to be used by erb generate code.
+      public:: DEG_FROM_RAD<%= t %>
+      public:: RAD_FROM_DEG<%= t %>
+   <%- } -%>
+   public:: get_nan
+   public:: get_infinity
+   public:: ZERO, ONE
 
-  character, parameter:: TAB      = char(9)
-  <%- REALS.each{|t| -%>
-    <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
-    <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = 180/PI<%= t %>
-    <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = PI<%= t %>/180
-    <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>
-    <%= t.declare %>, parameter:: DEG_FROM_RAD_<%= t.kind %> = DEG_FROM_RAD<%= t %>
-    <%= t.declare %>, parameter:: RAD_FROM_DEG_<%= t.kind %> = RAD_FROM_DEG<%= t %>
-  <%- } -%>
-  Integer, parameter:: ZERO = 0_INT8, ONE = 1_INT8
+   character, parameter:: TAB      = char(9)
+   <%- REALS.each{|t| -%>
+      <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
+      <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = 180/PI<%= t %>
+      <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = PI<%= t %>/180
+      <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>
+      <%= t.declare %>, parameter:: DEG_FROM_RAD_<%= t.kind %> = DEG_FROM_RAD<%= t %>
+      <%= t.declare %>, parameter:: RAD_FROM_DEG_<%= t.kind %> = RAD_FROM_DEG<%= t %>
+   <%- } -%>
+   Integer, parameter:: ZERO = 0_INT8, ONE = 1_INT8
 
 contains
 
-  elemental function get_nan() result(this)
-    real(REAL32):: this
+   elemental function get_nan() result(this)
+      real(REAL32):: this
 
-    character(len = len('NaN')):: buf ! buf can not be a parameter.
+      character(len = len('NaN')):: buf ! buf can not be a parameter.
 
-    buf = 'NaN'
-    read(buf, *) this
-  end function get_nan
+      buf = 'NaN'
+      read(buf, *) this
+   end function get_nan
 
-  elemental function get_infinity() result(this)
-    real(REAL32):: this
+   elemental function get_infinity() result(this)
+      real(REAL32):: this
 
-    character(len = len('Infinity')):: buf ! buf can not be a parameter.
+      character(len = len('Infinity')):: buf ! buf can not be a parameter.
 
-    buf = 'Infinity'
-    read(buf, *) this
-  end function get_infinity
+      buf = 'Infinity'
+      read(buf, *) this
+   end function get_infinity
 end module constant_lib

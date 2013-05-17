@@ -38,429 +38,429 @@
 
 #include "utils.h"
 module list_lib
-  USE_UTILS_H
-  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use, non_intrinsic:: comparable_lib, only: equivalent
-  <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
-    use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
-  <%- } -%>
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, non_intrinsic:: comparable_lib, only: equivalent
+   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
+      use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
+   <%- } -%>
 
-  implicit none
+   implicit none
 
-  private
+   private
 
 
-  public:: size      ! Size of a list.
-  public:: delete_at ! Delete the N-th node and return a value of the node.
-  public:: insert_at ! Insert a node to N-th position.
-  ! list: -(1)-(2)-(3)-(4)-
-  !    N: 1   2   3   4   5
-  public:: val_at              ! Value at N-th node.
-  public:: operator(.val.)     ! Same to val_at.
-  public:: shift ! Delete the head node and return a value of the node.
-  public:: unshift              ! Insert a node to the head.
-  public:: push    ! Insert a node to the tail.
-  public:: pop  ! Delete the tail node and return a value of the node.
-  public:: clear                ! Delete all nodes.
-  public:: swap                 ! Swap nodes in a list.
-  public:: assignment(=)        ! List to array, array to list, deep copy of list.
-  public:: is_size_one          ! .true. if size of list is one.
-  public:: is_empty             ! .true. if size of list is zero.
-  public:: array_from_list      ! List to array converter.
-  public:: equivalent           ! .true. if size and components are equivalent.
-                                ! XXX: More array like interface?
-  <%- TYPES.each{|t| -%>
-    public:: <%= t %>List
-  <%- } -%>
+   public:: size      ! Size of a list.
+   public:: delete_at ! Delete the N-th node and return a value of the node.
+   public:: insert_at ! Insert a node to N-th position.
+   ! list: -(1)-(2)-(3)-(4)-
+   !    N: 1   2   3   4   5
+   public:: val_at              ! Value at N-th node.
+   public:: operator(.val.)     ! Same to val_at.
+   public:: shift ! Delete the head node and return a value of the node.
+   public:: unshift              ! Insert a node to the head.
+   public:: push    ! Insert a node to the tail.
+   public:: pop  ! Delete the tail node and return a value of the node.
+   public:: clear                ! Delete all nodes.
+   public:: swap                 ! Swap nodes in a list.
+   public:: assignment(=)        ! List to array, array to list, deep copy of list.
+   public:: is_size_one          ! .true. if size of list is one.
+   public:: is_empty             ! .true. if size of list is zero.
+   public:: array_from_list      ! List to array converter.
+   public:: equivalent           ! .true. if size and components are equivalent.
+                                 ! XXX: More array like interface?
+   <%- TYPES.each{|t| -%>
+      public:: <%= t %>List
+   <%- } -%>
 
-  <%- TYPES.each{|t| -%>
-    type <%= t %>ListNode
-      <%= t.declare %>:: val
-      type(<%= t %>ListNode), pointer:: prev => null()
-      type(<%= t %>ListNode), pointer:: next => null()
-    end type <%= t %>ListNode
+   <%- TYPES.each{|t| -%>
+      type <%= t %>ListNode
+         <%= t.declare %>:: val
+         type(<%= t %>ListNode), pointer:: prev => null()
+         type(<%= t %>ListNode), pointer:: next => null()
+      end type <%= t %>ListNode
 
-    type <%= t %>List
-      type(<%= t %>ListNode), pointer:: entry => null()
-      Integer:: size            ! Currently, integer is enough since max size of a dimension of an array is huge(0).
-    end type <%= t %>List
-  <%- } -%>
+      type <%= t %>List
+         type(<%= t %>ListNode), pointer:: entry => null()
+         Integer:: size            ! Currently, integer is enough since max size of a dimension of an array is huge(0).
+      end type <%= t %>List
+   <%- } -%>
 
-  <%- TYPES.each{|t| -%>
-    interface size
-      module procedure size<%= t %>
-    end interface size
+   <%- TYPES.each{|t| -%>
+      interface size
+         module procedure size<%= t %>
+      end interface size
 
-    interface delete_at
-      module procedure delete_at<%= t %>
-    end interface delete_at
+      interface delete_at
+         module procedure delete_at<%= t %>
+      end interface delete_at
 
-    interface insert_at
-      module procedure insert_at<%= t %>
-    end interface insert_at
+      interface insert_at
+         module procedure insert_at<%= t %>
+      end interface insert_at
 
-    interface val_at
-      module procedure val_at<%= t %>
-    end interface val_at
+      interface val_at
+         module procedure val_at<%= t %>
+      end interface val_at
 
-    interface operator(.val.)
-      module procedure val_at<%= t %>
-    end interface operator(.val.)
+      interface operator(.val.)
+         module procedure val_at<%= t %>
+      end interface operator(.val.)
 
-    interface shift
-      module procedure shift<%= t %>
-    end interface shift
+      interface shift
+         module procedure shift<%= t %>
+      end interface shift
 
-    interface unshift
-      module procedure unshift<%= t %>
-    end interface unshift
+      interface unshift
+         module procedure unshift<%= t %>
+      end interface unshift
 
-    interface push
-      module procedure push<%= t %>
-    end interface push
+      interface push
+         module procedure push<%= t %>
+      end interface push
 
-    interface pop
-      module procedure pop<%= t %>
-    end interface pop
+      interface pop
+         module procedure pop<%= t %>
+      end interface pop
 
-    interface clear
-      module procedure clear<%= t %>
-    end interface clear
+      interface clear
+         module procedure clear<%= t %>
+      end interface clear
 
-    interface swap
-      module procedure swap<%= t %>
-    end interface swap
+      interface swap
+         module procedure swap<%= t %>
+      end interface swap
 
-    interface assignment(=)
-      module procedure copy<%= t %>
-      module procedure list_from_array_coercion<%= t %>
-      module procedure array_from_list_coercion<%= t %>
-    end interface assignment(=)
+      interface assignment(=)
+         module procedure copy<%= t %>
+         module procedure list_from_array_coercion<%= t %>
+         module procedure array_from_list_coercion<%= t %>
+      end interface assignment(=)
 
-    interface is_size_one
-      module procedure is_size_one<%= t %>
-    end interface is_size_one
+      interface is_size_one
+         module procedure is_size_one<%= t %>
+      end interface is_size_one
 
-    interface is_empty
-      module procedure is_empty<%= t %>
-    end interface is_empty
+      interface is_empty
+         module procedure is_empty<%= t %>
+      end interface is_empty
 
-    interface array_from_list
-      module procedure array_from_list<%= t %>
-    end interface array_from_list
+      interface array_from_list
+         module procedure array_from_list<%= t %>
+      end interface array_from_list
 
-    interface equivalent
-      module procedure equivalent<%= t %>
-    end interface equivalent
+      interface equivalent
+         module procedure equivalent<%= t %>
+      end interface equivalent
 
-    ! Internal
+      ! Internal
 
-    interface new
-      module procedure new<%= t %>
-    end interface new
+      interface new
+         module procedure new<%= t %>
+      end interface new
 
-    interface node_at
-      module procedure node_at<%= t %>
-    end interface node_at
+      interface node_at
+         module procedure node_at<%= t %>
+      end interface node_at
 
-    interface copy
-      module procedure copy<%= t %>
-    end interface copy
-  <%- } -%>
+      interface copy
+         module procedure copy<%= t %>
+      end interface copy
+   <%- } -%>
 
 contains
 
-  <%- TYPES.each{|t| -%>
-    subroutine swap<%= t %>(list, pos1, pos2)
-      type(<%= t %>List), intent(inout):: list
-      integer, intent(in):: pos1, pos2
-
-      type(<%= t %>ListNode), pointer:: posLNodePrev, posLNode, posLNodeNext
-      type(<%= t %>ListNode), pointer:: posRNodePrev, posRNode, posRNodeNext
-      integer:: posL, posR, nList
-
-      posL = min(pos1, pos2)
-      posR = max(pos1, pos2)
-      nList = size(list)
-      RAISE_IF(posL < 1 .or. nList < posR)
-      if(posL == posR) return
-
-      posLNode => node_at(list, posL)
-      posLNodePrev => posLNode%prev
-      posRNode => node_at(list, posR)
-      posRNodeNext => posRNode%next
-      if(posR - posL == 1)then
-        if(associated(posLNodePrev)) posLNodePrev%next => posRNode
-        posLNode%next => posRNodeNext
-        posRNode%next => posLNode
-        if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
-        posRNode%prev => posLNodePrev
-        posLNode%prev => posRNode
-      else
-        posLNodeNext => posLNode%next
-        posRNodePrev => posRNode%prev
-
-        if(associated(posLNodePrev)) posLNodePrev%next => posRNode
-        posLNode%next => posRNodeNext
-        posRNodePrev%next => posLNode
-        posRNode%next => posLNodeNext
-        if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
-        posRNode%prev => posLNodePrev
-        posLNodeNext%prev => posRNode
-        posLNode%prev => posRNodePrev
-      end if
-
-      if(posR == nList) list%entry => posLNode
-    end subroutine swap<%= t %>
-
-    subroutine list_from_array_coercion<%= t %>(list, array)
-      type(<%= t %>List), intent(inout):: list
-      <%= t.declare %>, intent(in):: array(:)
-
-      Integer(kind = INT64):: i
-
-      if(.not.is_empty(list)) call clear(list)
-
-      do ALL_OF(i, array, 1)
-        call push(list, array(i))
-      end do
-    end subroutine list_from_array_coercion<%= t %>
-
-    subroutine array_from_list_coercion<%= t %>(array, list)
-      <%= t.declare %>, allocatable, intent(out):: array(:)
-      type(<%= t %>List), intent(in):: list
-
-      integer:: i, nList
-      type(<%= t %>ListNode), pointer:: walker
-
-      nList = size(list)
-      allocate(array(1:nList))
-      if(is_empty(list)) return
-
-      i = nList
-      walker => list%entry
-      array(i) = walker%val
-      do while(i > 1)
-        walker => walker%prev
-        i = i - 1
-        array(i) = walker%val
-      end do
-    end subroutine array_from_list_coercion<%= t %>
-
-    function val_at<%= t %>(list, pos) result(this)
-      <%= t.declare %>:: this
-      type(<%= t %>List), intent(in):: list
-      integer, intent(in):: pos
-
-      type(<%= t %>ListNode), pointer:: targetNode
-
-      targetNode => node_at(list, pos)
-      this = targetNode%val
-    end function val_at<%= t %>
-
-    function shift<%= t %>(list) result(this)
-      <%= t.declare %>:: this
-      type(<%= t %>List), intent(inout):: list
-
-      this = delete_at(list, 1)
-    end function shift<%= t %>
-
-    subroutine unshift<%= t %>(list, val)
-      type(<%= t %>List), intent(inout):: list
-      <%= t.declare %>, intent(in):: val
-
-      call insert_at(list, val, 1)
-    end subroutine unshift<%= t %>
-
-    function delete_at<%= t %>(list, pos) result(this)
-      <%= t.declare %>:: this
-      type(<%= t %>List), intent(inout):: list
-      integer:: pos
-
-      type(<%= t %>ListNode), pointer:: targetNode
-
-      if(pos == size(list))then
-        this = pop(list)
-        return
-      end if
-
-      targetNode => node_at(list, pos)
-      this = targetNode%val
-      if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
-      targetNode%next%prev => targetNode%prev
-      deallocate(targetNode)
-    end function delete_at<%= t %>
-
-    function pop<%= t %>(list) result(this)
-      <%= t.declare %>:: this
-      type(<%= t %>List), intent(inout):: list
-
-      type(<%= t %>ListNode), pointer:: targetNode
-
-      targetNode => list%entry
-      this = targetNode%val
-      if(is_size_one(list))then
-        deallocate(list%entry)
-        return
-      end if
-
-      list%entry => targetNode%prev
-      list%entry%next => targetNode%next
-
-      deallocate(targetNode)
-    end function pop<%= t %>
-
-    recursive subroutine clear<%= t %>(list)
-      type(<%= t %>List), intent(inout):: list
-
-      <%= t.declare %>:: trash
-
-      do while(associated(list%entry))
-        trash = pop(list)
-      end do
-    end subroutine clear<%= t %>
-
-    subroutine insert_at<%= t %>(list, val, pos)
-      type(<%= t %>List), intent(inout):: list
-      <%= t.declare %>, intent(in):: val
-      integer, intent(in):: pos
-
-      type(<%= t %>ListNode), pointer:: nextNode, newNode
-
-      if(pos == size(list) + 1)then
-        call push(list, val)
-        return
-      end if
-
-      nextNode => node_at(list, pos)
-      allocate(newNode)
-      newNode%val = val
-      newNode%prev => nextNode%prev
-      newNode%next => nextNode
-      nextNode%prev => newNode
-      if(associated(newNode%prev)) newNode%prev%next => newNode
-    end subroutine insert_at<%= t %>
-
-    subroutine push<%= t %>(list, val)
-      type(<%= t %>List), intent(inout):: list
-      <%= t.declare %>, intent(in):: val
-
-      type(<%= t %>ListNode), pointer:: newNode
-
-      if(is_empty(list))then
-        call new(list, val)
-        return
-      end if
-
-      allocate(newNode)
-      newNode%val = val
-      newNode%prev => list%entry
-      newNode%next => list%entry%next
-      list%entry%next => newNode
-      list%entry => newNode
-    end subroutine push<%= t %>
-
-    function is_empty<%= t %>(list) result(this)
-      logical:: this
-      type(<%= t %>List), intent(in):: list
-
-      this = .not.associated(list%entry)
-    end function is_empty<%= t %>
-
-    function is_size_one<%= t %>(list) result(this)
-      logical:: this
-      type(<%= t %>List), intent(in):: list
-
-      this = .true.
-
-      if(is_empty(list))then
-         this = .false.
-         return
-      end if
-
-      if(associated(list%entry%prev))then
-         this = .false.
-         return
-      end if
-    end function is_size_one<%= t %>
-
-    function size<%= t %>(list) result(this)
-      ! "this" is integer since maximum size(array, 1) is huge(0).
-      integer:: this
-      type(<%= t %>List), intent(in):: list
-
-      type(<%= t %>ListNode), pointer:: walker
-
-      if(is_empty(list))then
-        this = 0
-        return
-      end if
-
-      walker => list%entry
-      this = 1
-      do while(associated(walker%prev))
-        walker => walker%prev
-        this = this + 1
-      end do
-    end function size<%= t %>
-
-    function array_from_list<%= t %>(list) result(answer)
-      <%= t.declare %>, allocatable:: answer(:)
-      type(<%= t %>List), intent(in):: list
-
-      answer = list
-    end function array_from_list<%= t %>
-
-    function equivalent<%= t %>(list1, list2) result(answer)
-      type(<%= t %>List), intent(in):: list1, list2
-      Logical:: answer
-
-      answer = all(equivalent(array_from_list(list1), array_from_list(list2)))
-    end function equivalent<%= t %>
-
-    ! Internal
-
-    ! Create a size 1 list.
-    subroutine new<%= t %>(list, val)
-      type(<%= t %>List), intent(inout):: list
-      <%= t.declare %>, intent(in):: val
-
-      if(.not.is_empty(list))then
-        call clear(list)
-      end if
-
-      allocate(list%entry)
-      list%entry%val = val
-    end subroutine new<%= t %>
-
-    ! N-th node.
-    ! WARNING: Returns pointer!
-    ! BAD: targetNode =  node_at(list, pos)
-    ! OK:  targetNode => node_at(list, pos)
-    function node_at<%= t %>(list, pos) result(this)
-      type(<%= t %>ListNode), pointer:: this
-      type(<%= t %>List), intent(in):: list
-      integer, intent(in):: pos
-
-      integer:: posNow
-
-      RAISE_IF(pos < 1 .or. size(list) < pos)
-
-      this => list%entry
-      posNow = size(list)
-
-      do while(posNow > pos)
-        this => this%prev
-        posNow = posNow - 1
-      end do
-    end function node_at<%= t %>
-
-    ! Cleate a deep copy of a list.
-    subroutine copy<%= t %>(new, original)
-      type(<%= t %>List), intent(inout):: new
-      type(<%= t %>List), intent(in):: original
-
-      new = array_from_list(original)
-    end subroutine copy<%= t %>
-  <%- } -%>
+   <%- TYPES.each{|t| -%>
+      subroutine swap<%= t %>(list, pos1, pos2)
+         type(<%= t %>List), intent(inout):: list
+         integer, intent(in):: pos1, pos2
+
+         type(<%= t %>ListNode), pointer:: posLNodePrev, posLNode, posLNodeNext
+         type(<%= t %>ListNode), pointer:: posRNodePrev, posRNode, posRNodeNext
+         integer:: posL, posR, nList
+
+         posL = min(pos1, pos2)
+         posR = max(pos1, pos2)
+         nList = size(list)
+         RAISE_IF(posL < 1 .or. nList < posR)
+         if(posL == posR) return
+
+         posLNode => node_at(list, posL)
+         posLNodePrev => posLNode%prev
+         posRNode => node_at(list, posR)
+         posRNodeNext => posRNode%next
+         if(posR - posL == 1)then
+            if(associated(posLNodePrev)) posLNodePrev%next => posRNode
+            posLNode%next => posRNodeNext
+            posRNode%next => posLNode
+            if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
+            posRNode%prev => posLNodePrev
+            posLNode%prev => posRNode
+         else
+            posLNodeNext => posLNode%next
+            posRNodePrev => posRNode%prev
+
+            if(associated(posLNodePrev)) posLNodePrev%next => posRNode
+            posLNode%next => posRNodeNext
+            posRNodePrev%next => posLNode
+            posRNode%next => posLNodeNext
+            if(associated(posRNodeNext)) posRNodeNext%prev => posLNode
+            posRNode%prev => posLNodePrev
+            posLNodeNext%prev => posRNode
+            posLNode%prev => posRNodePrev
+         end if
+
+         if(posR == nList) list%entry => posLNode
+      end subroutine swap<%= t %>
+
+      subroutine list_from_array_coercion<%= t %>(list, array)
+         type(<%= t %>List), intent(inout):: list
+         <%= t.declare %>, intent(in):: array(:)
+
+         Integer(kind = INT64):: i
+
+         if(.not.is_empty(list)) call clear(list)
+
+         do ALL_OF(i, array, 1)
+            call push(list, array(i))
+         end do
+      end subroutine list_from_array_coercion<%= t %>
+
+      subroutine array_from_list_coercion<%= t %>(array, list)
+         <%= t.declare %>, allocatable, intent(out):: array(:)
+         type(<%= t %>List), intent(in):: list
+
+         integer:: i, nList
+         type(<%= t %>ListNode), pointer:: walker
+
+         nList = size(list)
+         allocate(array(1:nList))
+         if(is_empty(list)) return
+
+         i = nList
+         walker => list%entry
+         array(i) = walker%val
+         do while(i > 1)
+            walker => walker%prev
+            i = i - 1
+            array(i) = walker%val
+         end do
+      end subroutine array_from_list_coercion<%= t %>
+
+      function val_at<%= t %>(list, pos) result(this)
+         <%= t.declare %>:: this
+         type(<%= t %>List), intent(in):: list
+         integer, intent(in):: pos
+
+         type(<%= t %>ListNode), pointer:: targetNode
+
+         targetNode => node_at(list, pos)
+         this = targetNode%val
+      end function val_at<%= t %>
+
+      function shift<%= t %>(list) result(this)
+         <%= t.declare %>:: this
+         type(<%= t %>List), intent(inout):: list
+
+         this = delete_at(list, 1)
+      end function shift<%= t %>
+
+      subroutine unshift<%= t %>(list, val)
+         type(<%= t %>List), intent(inout):: list
+         <%= t.declare %>, intent(in):: val
+
+         call insert_at(list, val, 1)
+      end subroutine unshift<%= t %>
+
+      function delete_at<%= t %>(list, pos) result(this)
+         <%= t.declare %>:: this
+         type(<%= t %>List), intent(inout):: list
+         integer:: pos
+
+         type(<%= t %>ListNode), pointer:: targetNode
+
+         if(pos == size(list))then
+            this = pop(list)
+            return
+         end if
+
+         targetNode => node_at(list, pos)
+         this = targetNode%val
+         if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
+         targetNode%next%prev => targetNode%prev
+         deallocate(targetNode)
+      end function delete_at<%= t %>
+
+      function pop<%= t %>(list) result(this)
+         <%= t.declare %>:: this
+         type(<%= t %>List), intent(inout):: list
+
+         type(<%= t %>ListNode), pointer:: targetNode
+
+         targetNode => list%entry
+         this = targetNode%val
+         if(is_size_one(list))then
+            deallocate(list%entry)
+            return
+         end if
+
+         list%entry => targetNode%prev
+         list%entry%next => targetNode%next
+
+         deallocate(targetNode)
+      end function pop<%= t %>
+
+      recursive subroutine clear<%= t %>(list)
+         type(<%= t %>List), intent(inout):: list
+
+         <%= t.declare %>:: trash
+
+         do while(associated(list%entry))
+            trash = pop(list)
+         end do
+      end subroutine clear<%= t %>
+
+      subroutine insert_at<%= t %>(list, val, pos)
+         type(<%= t %>List), intent(inout):: list
+         <%= t.declare %>, intent(in):: val
+         integer, intent(in):: pos
+
+         type(<%= t %>ListNode), pointer:: nextNode, newNode
+
+         if(pos == size(list) + 1)then
+            call push(list, val)
+            return
+         end if
+
+         nextNode => node_at(list, pos)
+         allocate(newNode)
+         newNode%val = val
+         newNode%prev => nextNode%prev
+         newNode%next => nextNode
+         nextNode%prev => newNode
+         if(associated(newNode%prev)) newNode%prev%next => newNode
+      end subroutine insert_at<%= t %>
+
+      subroutine push<%= t %>(list, val)
+         type(<%= t %>List), intent(inout):: list
+         <%= t.declare %>, intent(in):: val
+
+         type(<%= t %>ListNode), pointer:: newNode
+
+         if(is_empty(list))then
+            call new(list, val)
+            return
+         end if
+
+         allocate(newNode)
+         newNode%val = val
+         newNode%prev => list%entry
+         newNode%next => list%entry%next
+         list%entry%next => newNode
+         list%entry => newNode
+      end subroutine push<%= t %>
+
+      function is_empty<%= t %>(list) result(this)
+         logical:: this
+         type(<%= t %>List), intent(in):: list
+
+         this = .not.associated(list%entry)
+      end function is_empty<%= t %>
+
+      function is_size_one<%= t %>(list) result(this)
+         logical:: this
+         type(<%= t %>List), intent(in):: list
+
+         this = .true.
+
+         if(is_empty(list))then
+             this = .false.
+             return
+         end if
+
+         if(associated(list%entry%prev))then
+             this = .false.
+             return
+         end if
+      end function is_size_one<%= t %>
+
+      function size<%= t %>(list) result(this)
+         ! "this" is integer since maximum size(array, 1) is huge(0).
+         integer:: this
+         type(<%= t %>List), intent(in):: list
+
+         type(<%= t %>ListNode), pointer:: walker
+
+         if(is_empty(list))then
+            this = 0
+            return
+         end if
+
+         walker => list%entry
+         this = 1
+         do while(associated(walker%prev))
+            walker => walker%prev
+            this = this + 1
+         end do
+      end function size<%= t %>
+
+      function array_from_list<%= t %>(list) result(answer)
+         <%= t.declare %>, allocatable:: answer(:)
+         type(<%= t %>List), intent(in):: list
+
+         answer = list
+      end function array_from_list<%= t %>
+
+      function equivalent<%= t %>(list1, list2) result(answer)
+         type(<%= t %>List), intent(in):: list1, list2
+         Logical:: answer
+
+         answer = all(equivalent(array_from_list(list1), array_from_list(list2)))
+      end function equivalent<%= t %>
+
+      ! Internal
+
+      ! Create a size 1 list.
+      subroutine new<%= t %>(list, val)
+         type(<%= t %>List), intent(inout):: list
+         <%= t.declare %>, intent(in):: val
+
+         if(.not.is_empty(list))then
+            call clear(list)
+         end if
+
+         allocate(list%entry)
+         list%entry%val = val
+      end subroutine new<%= t %>
+
+      ! N-th node.
+      ! WARNING: Returns pointer!
+      ! BAD: targetNode =   node_at(list, pos)
+      ! OK:  targetNode => node_at(list, pos)
+      function node_at<%= t %>(list, pos) result(this)
+         type(<%= t %>ListNode), pointer:: this
+         type(<%= t %>List), intent(in):: list
+         integer, intent(in):: pos
+
+         integer:: posNow
+
+         RAISE_IF(pos < 1 .or. size(list) < pos)
+
+         this => list%entry
+         posNow = size(list)
+
+         do while(posNow > pos)
+            this => this%prev
+            posNow = posNow - 1
+         end do
+      end function node_at<%= t %>
+
+      ! Cleate a deep copy of a list.
+      subroutine copy<%= t %>(new, original)
+         type(<%= t %>List), intent(inout):: new
+         type(<%= t %>List), intent(in):: original
+
+         new = array_from_list(original)
+      end subroutine copy<%= t %>
+   <%- } -%>
 end module list_lib
