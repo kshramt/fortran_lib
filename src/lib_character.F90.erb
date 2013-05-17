@@ -64,7 +64,7 @@ contains
 
     pure function str<%= t %>(x) result(this)
       <%= t.declare %>, intent(in):: x
-      character(len = len(s(str_fixed<%= t %>(x)))):: this
+      character(len = len(s(str_fixed(x)))):: this
 
       this = s(str_fixed(x))
     end function str<%= t %>
