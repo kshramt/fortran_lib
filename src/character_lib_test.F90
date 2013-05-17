@@ -2,7 +2,7 @@
 program character_lib_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: REAL64
-  use character_lib
+  use, non_intrinsic:: character_lib
 
   implicit none
 

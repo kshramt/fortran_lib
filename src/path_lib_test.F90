@@ -1,7 +1,7 @@
 # include "utils.h"
 program path_lib_test
   USE_UTILS_H
-  use path_lib, only: dirname
+  use, non_intrinsic:: path_lib, only: dirname
   implicit none
 
   TEST(dirname('/a/b/c.d') == '/a/b/')

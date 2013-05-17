@@ -2,7 +2,7 @@
 program sac_lib_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
-  use:: sac_lib
+  use, non_intrinsic:: sac_lib
 
   implicit none
 

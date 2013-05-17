@@ -1,5 +1,5 @@
 module path_lib
-  use character_lib, only: s
+  use, non_intrinsic:: character_lib, only: s
 
   implicit none
 

@@ -3,9 +3,9 @@ program io_lib_test
   use, intrinsic:: iso_fortran_env, only: &
     INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
     REAL64, INT8
-  use:: io_lib
-  use:: comparable_lib, only: equivalent
-  use:: character_lib, only: operator(+)
+  use, non_intrinsic:: io_lib
+  use, non_intrinsic:: comparable_lib, only: equivalent
+  use, non_intrinsic:: character_lib, only: operator(+)
   
   implicit none
   

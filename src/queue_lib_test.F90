@@ -2,8 +2,8 @@
 program queue_lib_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only:OUTPUT_UNIT
-  use queue_lib, only: IntegerDim0KindINT32Queue, IntegerDim1KindINT32Queue, IntegerDim2KindINT32Queue
-  use queue_lib, only: push_queue, shift_queue
+  use, non_intrinsic:: queue_lib, only: IntegerDim0KindINT32Queue, IntegerDim1KindINT32Queue, IntegerDim2KindINT32Queue
+  use, non_intrinsic:: queue_lib, only: push_queue, shift_queue
 
   implicit none
 

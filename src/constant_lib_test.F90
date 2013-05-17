@@ -1,9 +1,9 @@
 #include "utils.h"
 program constant_lib_test
   USE_UTILS_H
-  use iso_fortran_env, only: OUTPUT_UNIT, REAL64, REAL128
-  use comparable_lib, only: equivalent
-  use constant_lib
+  use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64, REAL128
+  use, non_intrinsic:: comparable_lib, only: equivalent
+  use, non_intrinsic:: constant_lib
   
   implicit none
   
