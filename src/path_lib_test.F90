@@ -1,10 +1,14 @@
+# include "utils.h"
 program path_lib_test
+  USE_UTILS_H
   use path_lib, only: dirname
   implicit none
 
-  print*, dirname('/a/b/c.d')
-  print*, dirname('/')
-  print*, dirname('')
+  TEST(dirname('/a/b/c.d') == '/a/b/')
+  TEST(dirname('/') == '/')
+  TEST(dirname('') == '')
+
+  write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
   stop
 end program path_lib_test
