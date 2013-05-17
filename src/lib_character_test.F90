@@ -3,7 +3,7 @@ program lib_character_test
   USE_UTILS_H
   use, intrinsic:: iso_fortran_env, only: REAL64
   use lib_character, only: s, str
-  use lib_character, only: operator(+), operator(*)
+  use lib_character, only: operator(+)
 
   implicit none
 
@@ -34,12 +34,6 @@ program lib_character_test
   TEST('a' + '' == 'a')
   TEST('a' + 'b' == 'ab')
   TEST(' a ' + 'b' == ' a b')
-
-  ! *
-  TEST('a'*0 == '')
-  TEST('a'*1 == 'a')
-  TEST('a'*2 == 'aa')
-  TEST('ab'*2 == 'abab')
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
   stop
