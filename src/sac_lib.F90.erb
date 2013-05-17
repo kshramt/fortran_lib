@@ -286,7 +286,7 @@ contains
          amplitudes(:), thetas(:), &
          reals(:), imaginaries(:)
 
-      open( newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
+      open(newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
 
       <%- ALL_HEADS.each{|name, _| -%>
          read(io) self%head%<%= name %>
