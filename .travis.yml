@@ -7,10 +7,7 @@ before_install:
   - gem install fort
 script:
   - cd src
-  - echo MY_ERB
-  - echo MY_FORTRAN
-  - echo MY_RUBY
   - make check
 env:
-  - MY_ERB="erb -T - -P" MY_FORTRAN="gfortran-4.6 -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall" MY_RUBY=ruby
-  - MY_ERB="erb -T - -P" MY_FORTRAN="/usr/lib/gcc-snapshot/bin/gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall" MY_RUBY=ruby
+  - MY_ERB="erb -T - -P" MY_FORTRAN_DEBUG="gfortran-4.6 -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG" MY_RUBY=ruby
+  - MY_ERB="erb -T - -P" MY_FORTRAN_DEBUG="/usr/lib/gcc-snapshot/bin/gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG" MY_RUBY=ruby
