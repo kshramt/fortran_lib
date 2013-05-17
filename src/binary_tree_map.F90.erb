@@ -1,6 +1,6 @@
 <%-
   require 'fort'
-  LOG_2_CHAR_LEN_MAX = 8
+  LOG_2_CHAR_LEN_MAX = 10
   REALS = ::Fort::Type::Real.multi_provide
   INTEGERS = ::Fort::Type::Integer.multi_provide
   LOGICALS = ::Fort::Type::Logical.multi_provide
@@ -23,57 +23,36 @@ module lib_fortran
 
    private
 
+   public:: add_binary_tree_map
+   public:: has_key_binary_tree_map
+   public:: get_value_binary_tree_map
 
-   ! = public routine
-   public:: add                  ! BinaryTreeMap
-   public:: has_key              ! BinaryTreeMap
-   public:: get_value            ! BinaryTreeMap
-
-
-   ! = public type
-   ! == Object
-   public:: Object
-
-   ! == BinaryTreeMap
-   public:: BinaryTreeMap
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-      public:: <%= key_type %><%= value_type %>BinaryTreeMap
-   <%- } -%>
-
-   ! = interface
-   ! == BinaryTreeMap
-   <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-      interface add
+      interface add_binary_tree_map
          module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMap
          module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMapNode
-      end interface add
+      end interface add_binary_tree_map
 
-      interface has_key
+      interface has_key_binary_tree_map
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface has_key
+      end interface has_key_binary_tree_map
 
-      interface get_value
+      interface get_value_binary_tree_map
          module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
          module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface get_value
+      end interface get_value_binary_tree_map
    <%- } -%>
 
 
-   ! = type
-   ! = Object
-   type:: Object
-   end type Object
-
-   ! == BinaryTreeMap
-   type, extends(Object):: BinaryTreeMap
+   type, public:: BinaryTreeMap
    end type BinaryTreeMap
 
-   type, extends(Object):: BinaryTreeMapNode
+   type:: BinaryTreeMapNode
    end type BinaryTreeMapNode
 
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-      type, extends(BinaryTreeMap):: <%= key_type %><%= value_type %>BinaryTreeMap
+      type, extends(BinaryTreeMap), public:: <%= key_type %><%= value_type %>BinaryTreeMap
          type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: root => null()
       end type <%= key_type %><%= value_type %>BinaryTreeMap
 
@@ -85,12 +64,8 @@ module lib_fortran
       end type <%= key_type %><%= value_type %>BinaryTreeMapNode
    <%- } -%>
 
-
 contains
 
-
-   ! = body
-   ! == BinaryTreeMap
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
       subroutine add<%= key_type %><%= value_type %>BinaryTreeMap(self, key, value)
          type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(inout):: self
@@ -98,7 +73,7 @@ contains
          <%= value_type.declare %>, intent(in):: value
 
          ASSERT(len_trim(key) <= <%= key_type.len %>)
-         call add(self%root, key, value)
+         call add_binary_tree_map(self%root, key, value)
       end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
 
       recursive subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode(self, key, value)
@@ -108,9 +83,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               call add(self%small, key, value)
+               call add_binary_tree_map(self%small, key, value)
             else if(key > self%key)then
-               call add(self%large, key, value)
+               call add_binary_tree_map(self%large, key, value)
             else
                self%value = value
             end if
@@ -127,7 +102,7 @@ contains
          Logical:: answer
 
          if(len_trim(key) <= <%= key_type.len %>)then
-            answer = has_key(self%root, key)
+            answer = has_key_binary_tree_map(self%root, key)
          else
             answer = .false.
          end if
@@ -140,9 +115,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               answer = has_key(self%small, key)
+               answer = has_key_binary_tree_map(self%small, key)
             else if(key > self%key)then
-               answer = has_key(self%large, key)
+               answer = has_key_binary_tree_map(self%large, key)
             else
                answer = .true.
             end if
@@ -158,7 +133,7 @@ contains
          Logical:: isSuccess
 
          if(len_trim(key) <= <%= key_type.len %>)then
-            isSuccess = get_value(self%root, key, value)
+            isSuccess = get_value_binary_tree_map(self%root, key, value)
          else
             isSuccess = .false.
          end if
@@ -172,9 +147,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               isSuccess = get_value(self%small, key, value)
+               isSuccess = get_value_binary_tree_map(self%small, key, value)
             else if(key > self%key)then
-               isSuccess = get_value(self%large, key, value)
+               isSuccess = get_value_binary_tree_map(self%large, key, value)
             else
                value = self%value
                isSuccess = .true.

@@ -5,14 +5,14 @@ setup <<-EOS
 # include "../utils.h"
 program runner
   USE_UTILS_H
-  use, non_intrinsic:: lib_fortran
+  use, non_intrinsic:: binary_tree_map_lib
 
   implicit none
 
   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap
 EOS
 
-errortest 'add_too_long_key', "call add(treeMap, '||', -1)"
+errortest 'add too long key', "call add_binary_tree_map(treeMap, '||', -1)"
 
 teardown <<-EOS
   stop

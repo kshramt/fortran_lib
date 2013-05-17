@@ -51,7 +51,7 @@ queue_lib_test.exe: queue_lib.o queue_lib_test.o
 lib_io_test.exe: lib_constant.o lib_character.o lib_comparable.o lib_io.o lib_io_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-lib_fortran_binary_tree_map_test.exe: lib_fortran.o lib_fortran_binary_tree_map_test.o
+binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 sac_lib_test.exe: sac_lib.o sac_lib_test.o

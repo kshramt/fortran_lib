@@ -3,10 +3,10 @@
   pairs = ('a'..'z').map{|c| [c, c.ord]}
 -%>
 # include "utils.h"
-program test_lib_comparable
+program binary_tree_map_lib_test
   USE_UTILS_H
   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-  use, non_intrinsic:: lib_fortran
+  use, non_intrinsic:: binary_tree_map_lib
   implicit none
 
   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap1
@@ -15,21 +15,21 @@ program test_lib_comparable
   Logical:: lTmp
 
   <%- pairs.shuffle.each{|c, i| -%>
-    call add(treeMap1, '<%= c %>', <%= i %>)
+    call add_binary_tree_map(treeMap1, '<%= c %>', <%= i %>)
   <%- } -%>
   <%- pairs.shuffle.each{|c, i| -%>
-    TEST(has_key(treeMap1, '<%= c %>'))
-    TEST(get_value(treeMap1, '<%= c %>', n))
+    TEST(has_key_binary_tree_map(treeMap1, '<%= c %>'))
+    TEST(get_value_binary_tree_map(treeMap1, '<%= c %>', n))
     TEST(n == <%= i %>)
   <%- } -%>
 
-  TEST(.not.has_key(treeMap1, '/'))
-  TEST(.not.get_value(treeMap1, '/', n))
+  TEST(.not.has_key_binary_tree_map(treeMap1, '/'))
+  TEST(.not.get_value_binary_tree_map(treeMap1, '/', n))
 
   ! key is trimed
-  call add(treeMap1, '| ', -1)
-  TEST(has_key(treeMap1, '| '))
-  TEST(get_value(treeMap1, '| ', n))
+  call add_binary_tree_map(treeMap1, '| ', -1)
+  TEST(has_key_binary_tree_map(treeMap1, '| '))
+  TEST(get_value_binary_tree_map(treeMap1, '| ', n))
   TEST(n == -1)
 
   ! has_key or get_value with too long key returns .false.
@@ -37,13 +37,13 @@ program test_lib_comparable
   TEST(.not.get_value(treeMap1, '||', n))
 
   ! key is not ladjusted
-  call add(treeMap2, ' |', 0)
-  call add(treeMap2, '|', 1)
-  lTmp = get_value(treeMap2, ' |', n1)
-  lTmp = get_value(treeMap2, '|', n2)
+  call add_binary_tree_map(treeMap2, ' |', 0)
+  call add_binary_tree_map(treeMap2, '|', 1)
+  lTmp = get_value_binary_tree_map(treeMap2, ' |', n1)
+  lTmp = get_value_binary_tree_map(treeMap2, '|', n2)
   ASSERT(n1 /= n2)
 
   write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
 
   stop
-end program test_lib_comparable
+end program binary_tree_map_lib_test
