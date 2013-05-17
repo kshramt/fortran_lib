@@ -24,6 +24,8 @@ TEST_RUN_COMMANDS := $(TESTS:%.exe=%.tested)
 ERRORTEST_RB_SRCS := $(shell git ls-files *_errortest.rb)
 ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb=%.make)
 
+.PRECIOUS: $(LIB_F90_ERB_SRCS:%.erb=%) $(TEST_F90_ERB_SRCS:%.erb=%)
+
 check: $(TESTS) $(ERRORTESTS)
 
 # Tasks
