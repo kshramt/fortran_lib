@@ -78,6 +78,8 @@ contains
   <%- } -%>
 
   <%- REAL_PAIRS.each{|t1, t2| -%>
+    ! This function assumes gradual underflow is not flushed to zero.
+    ! For example, -no-ftz option should be added when you compile this module by ifort.
     elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(this)
       logical:: this
       <%= t1.declare %>, intent(in):: a
