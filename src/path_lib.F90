@@ -1,6 +1,4 @@
 module path_lib
-   use, non_intrinsic:: character_lib, only: s
-
    implicit none
 
    private
@@ -11,7 +9,7 @@ contains
 
    function dirname(path) result(this)
       character(len = *), intent(in):: path
-      character(len = len(s(path))):: this
+      character(len = len_trim(path)):: this
 
       integer:: lastSeparatorLoc
 
