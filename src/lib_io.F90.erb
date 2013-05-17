@@ -26,24 +26,15 @@ module lib_io
 
   private
   public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
-  public:: TMP_DIR
-  public:: SHELL_INTERFACE_FILE
   public:: write_array, read_array
   public:: number_of_lines, number_of_columns, file_shape
   public:: mkdir_p
-  public:: tempfile
-  public:: close_tempfile
-  public:: init_shell_interface_file
-  public:: read_shell_interface_file
 
   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
   character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
   character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
   character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
   character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
-  character(len = *), parameter:: TMP_DIR = 'tmp'
-  ! Non-intrinsic function `+' can not be used in initialization expression.
-  character(len = *), parameter:: SHELL_INTERFACE_FILE = TMP_DIR // '/' // 'shell_interface.dat'
 
   <%- TYPES.each{|t| -%>
     interface write_array
@@ -60,39 +51,6 @@ module lib_io
   <%- } -%>
 
 contains
-
-  subroutine init_shell_interface_file()
-    call mkdir_p(TMP_DIR)
-    call execute_command_line("cat /dev/null > " + SHELL_INTERFACE_FILE)
-  end subroutine init_shell_interface_file
-
-  ! YAGNI: this can easily expand to val for r, R, i, I, z, Z, and l.
-  subroutine read_shell_interface_file(val)
-    character(len = *), intent(out):: val
-
-    integer:: ioU
-
-    open(newunit = ioU, file = SHELL_INTERFACE_FILE, status = 'old', action = 'read')
-    read(ioU, *) val
-    close(ioU)
-  end subroutine read_shell_interface_file
-
-  subroutine tempfile(ioU, file)
-    integer, intent(out):: ioU
-    character(len = *), intent(out):: file
-
-    call init_shell_interface_file()
-    ! tempfile name must be quoted since '/' mark is regarded to be end of record (same as namelist).
-    call execute_command_line('echo \"$(tempfile)\" > ' + SHELL_INTERFACE_FILE)
-    call read_shell_interface_file(file)
-    open(newunit = ioU, file = s(file), status = 'old', action = 'readwrite')
-  end subroutine tempfile
-
-  subroutine close_tempfile(ioU)
-    integer, intent(in):: ioU
-
-    close(ioU, status = 'delete')
-  end subroutine close_tempfile
 
   subroutine mkdir_p(path, exitStatus)
     character(len = *) path
