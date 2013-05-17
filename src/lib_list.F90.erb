@@ -371,7 +371,17 @@ contains
       logical:: this
       type(<%= t %>List), intent(in):: list
 
-      this = (.not.is_empty(list)) .and. (.not.associated(list%entry%prev))
+      this = .true.
+
+      if(is_empty(list))then
+         this = .false.
+         return
+      end if
+
+      if(associated(list%entry%prev))then
+         this = .false.
+         return
+      end if
     end function is_size_one<%= t %>
 
     function size<%= t %>(list) result(this)
