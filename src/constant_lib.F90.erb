@@ -12,29 +12,26 @@ module constant_lib
 
    private
 
-   public:: TAB
-   <%- REALS.each{|t| -%>
-      public:: PI_<%= t.kind %>   ! Expected to be used by human writing code.
-      public:: DEG_FROM_RAD_<%= t.kind %>
-      public:: RAD_FROM_DEG_<%= t.kind %>
-      public:: PI<%= t %>         ! Expected to be used by erb generate code.
-      public:: DEG_FROM_RAD<%= t %>
-      public:: RAD_FROM_DEG<%= t %>
-   <%- } -%>
    public:: get_nan
    public:: get_infinity
-   public:: ZERO, ONE
+   public:: rad_from_deg, deg_from_rad
 
-   character, parameter:: TAB      = char(9)
+   character, parameter, public:: TAB = char(9)
    <%- REALS.each{|t| -%>
-      <%= t.declare %>, parameter:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
-      <%= t.declare %>, parameter:: DEG_FROM_RAD<%= t %> = 180/PI<%= t %>
-      <%= t.declare %>, parameter:: RAD_FROM_DEG<%= t %> = PI<%= t %>/180
-      <%= t.declare %>, parameter:: PI_<%= t.kind %> = PI<%= t %>
-      <%= t.declare %>, parameter:: DEG_FROM_RAD_<%= t.kind %> = DEG_FROM_RAD<%= t %>
-      <%= t.declare %>, parameter:: RAD_FROM_DEG_<%= t.kind %> = RAD_FROM_DEG<%= t %>
+      <%= t.declare %>, parameter, public:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
+      <%= t.declare %>, parameter, public:: PI_<%= t.kind %> = PI<%= t %>
    <%- } -%>
-   Integer, parameter:: ZERO = 0_INT8, ONE = 1_INT8
+   Integer, parameter, public:: ZERO = 0_INT8, ONE = 1_INT8
+
+   <%- REALS.each{|t| -%>
+      interface deg_from_rad
+         module procedure deg_from_rad<%= t %>
+      end interface deg_from_rad
+
+      interface rad_from_deg
+         module procedure rad_from_deg<%= t %>
+      end interface rad_from_deg
+   <%- } -%>
 
 contains
 
@@ -55,4 +52,22 @@ contains
       buf = 'Infinity'
       read(buf, *) this
    end function get_infinity
+
+   <%- REALS.each{|t| -%>
+      elemental function rad_from_deg<%= t %>(deg) result(rad)
+         <%= t.declare %>, parameter:: PI = PI<%= t %>
+         <%= t.declare %>, intent(in):: deg
+         <%= t.declare %>:: rad
+
+         rad = PI*deg/180
+      end function rad_from_deg<%= t %>
+
+      elemental function deg_from_rad<%= t %>(rad) result(deg)
+         <%= t.declare %>, parameter:: PI = PI<%= t %>
+         <%= t.declare %>, intent(in):: rad
+         <%= t.declare %>:: deg
+
+         deg = 180*rad/PI
+      end function deg_from_rad<%= t %>
+   <%- } -%>
 end module constant_lib
