@@ -23,19 +23,19 @@ huge(0);	huge(0)
 huge(0.0);	huge(0.0)
 0.0;	2*epsilon(0.0)*tiny(0.0)
 0.0;	-2*epsilon(0.0)*tiny(0.0)
-1.0;	1.0 + 2*epsilon(0.0)*tiny(0.0)
-1.0;	1.0 - 2*epsilon(0.0)*tiny(0.0)
+1.0;	1.0 + 2*epsilon(0.0)
+1.0;	1.0 - 2*epsilon(0.0)
 0.0_REAL32;	0.0_REAL64
 1.0_REAL32;	1.0_REAL64
 0.0d0;	2*epsilon(0.0)*tiny(0.0)
 0.0d0;	-2*epsilon(0.0)*tiny(0.0)
-1.0d0;	1.0 + 2*epsilon(0.0)*tiny(0.0)
-1.0d0;	1.0 - 2*epsilon(0.0)*tiny(0.0)
+1.0d0;	1.0 + 2*epsilon(0.0)
+1.0d0;	1.0 - 1*epsilon(0.0)
 
 cmplx(0.0, 0.0);	cmplx(0.0, 0.0)
 cmplx(1.0, -1.0);	cmplx(1.0, -1.0)
 cmplx(0.0, 2*epsilon(0.0)*tiny(0.0));	cmplx(-2*epsilon(0.0)*tiny(0.0), 0)
-cmplx(1.0, 1.0 - 2*epsilon(0.0)*tiny(0.0));	cmplx(1.0 + 2*epsilon(0.0)*tiny(0.0), 1.0)
+cmplx(1.0, 1.0 - 2*epsilon(0.0));	cmplx(1.0 + 2*epsilon(0.0), 1.0)
 EOS
 
 FALSE_PAIRS = array_from_str(<<-EOS)
