@@ -131,7 +131,7 @@ contains
          <%= t.declare %>:: lonLatH(1:3) ! (rad, rad, m)
          <%= t.declare %>:: lon, lat, xy, dLat, lat0, lat0Min, zDiff, zDiffMin
          Real(kind = kind(lon)), parameter:: PI = PI<%= t %>
-         Integer, parameter:: scale = 2**3
+         Integer, parameter:: N_DIVISION = 2**3
          Integer:: iLat
 
          lon = atan2(y, x)
@@ -139,11 +139,11 @@ contains
 
          ! Grid search for the best lat.
          lat0Min = 0
-         dLat = PI/2/scale
+         dLat = PI/2/N_DIVISION
          zDiffMin = huge(zDiffMin)
          do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/2)
             lat0 = lat0Min
-            do iLat = -scale + 1, scale - 1
+            do iLat = -N_DIVISION + 1, N_DIVISION - 1
                lat = lat0 + iLat*dLat
                zDiff = abs(z - get_z(lat, xy))
                if(zDiff < zDiffMin)then
@@ -151,7 +151,7 @@ contains
                   zDiffMin = zDiff
                end if
             end do
-            dLat = dLat/scale ! Increase precision
+            dLat = dLat/N_DIVISION ! Increase precision
          end do
 
          lonLatH(1) = lon
