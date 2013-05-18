@@ -1,7 +1,7 @@
 # Constants
 TMP_DIR := $(shell mktemp --directory --suffix=.fortran_lib)
 
-MY_ERB ?= erb -T '-' -P
+MY_ERB ?= erb -T - -P
 MY_GFORTRAN_DEBUG ?= gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
 MY_IFORT_DEBUG ?= ifort -fpp -warn -assume realloc_lhs -no-ftz -check -trace -O0 -p -g -DDEBUG
 MY_FORTRAN_DEBUG ?= $(MY_GFORTRAN_DEBUG)
