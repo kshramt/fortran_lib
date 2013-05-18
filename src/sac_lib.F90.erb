@@ -154,7 +154,8 @@
 
   BODIES = %w[itime ixy iamph irlim ixyz]
 -%>
-<%= File.read('utils.h') %>
+
+# include "utils.h"
 ! LICENSE: GPL Ver. 3
 ! REFERENCE: http://www.iris.edu/software/sac/manual/file_format.html
 ! COMPILE: gfortran -ffree-line-length-none -fmax-identifier-length=63 -C -c sac_lib.F90
