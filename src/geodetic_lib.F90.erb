@@ -134,6 +134,8 @@ contains
          Integer, parameter:: N_DIVISION = 2**3
          Integer:: iLat
 
+         ASSERT(N_DIVISION >= 2)
+
          lon = atan2(y, x)
          xy = hypot(x, y)
 
