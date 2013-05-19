@@ -129,7 +129,7 @@ contains
          <%= t.declare %>, intent(in):: y ! (m)
          <%= t.declare %>, intent(in):: z ! (m)
          <%= t.declare %>:: lonLatH(1:3) ! (rad, rad, m)
-         <%= t.declare %>:: lon, lat, xy, dLat, lat0, lat0Min, zDiff, zDiffMin
+         <%= t.declare %>:: lon, lat, xy, dLat, lat0Min, zDiff, zDiffMin
          Real(kind = kind(lon)), parameter:: PI = PI<%= t %>
          Integer, parameter:: N_DIVISION = 2**3
          Integer:: iLat
@@ -141,12 +141,22 @@ contains
 
          ! Grid search for the best lat.
          lat0Min = 0
+         lat = lat0Min
          dLat = PI/2/N_DIVISION
-         zDiffMin = huge(zDiffMin)
+         zDiffMin = abs(z - get_z(lat, xy))
          do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/2)
-            lat0 = lat0Min
-            do iLat = -N_DIVISION + 1, N_DIVISION - 1
-               lat = lat0 + iLat*dLat
+            ! XXX:
+            do iLat = -N_DIVISION + 1, -1
+               lat = lat0Min + iLat*dLat
+               zDiff = abs(z - get_z(lat, xy))
+               if(zDiff < zDiffMin)then
+                  lat0Min = lat
+                  zDiffMin = zDiff
+               end if
+            end do
+            ! Skip iLat = 0
+            do iLat = 1, N_DIVISION - 1
+               lat = lat0Min + iLat*dLat
                zDiff = abs(z - get_z(lat, xy))
                if(zDiff < zDiffMin)then
                   lat0Min = lat
