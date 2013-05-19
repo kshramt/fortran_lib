@@ -157,8 +157,8 @@ contains
          end do
 
          lonLatH(1) = lon
-         lonLatH(2) = lat
-         lonLatH(3) = x/cos(lat) - get_l(lat)
+         lonLatH(2) = lat0Min
+         lonLatH(3) = x/cos(lat0Min) - get_l(lat0Min)
       end function wgs84_rad_from_ecef<%= t %>
 
       function get_l<%= t %>(lat) result(ret)
