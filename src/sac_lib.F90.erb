@@ -172,6 +172,7 @@ module sac_lib
    use, intrinsic:: iso_fortran_env, only: &
       INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
       REAL32, INT32
+   use, non_intrinsic:: character_lib, only: s, operator(+)
 
    implicit none
 
@@ -347,7 +348,7 @@ contains
 
          read(io) self%body%ixyz
       case default
-         RAISE('Unknown iftype')
+         RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
 
       close(io)
@@ -384,7 +385,7 @@ contains
       case('ixyz')
          write(io) get_body_ixyz(self)
       case default
-         RAISE('Unknown iftype')
+         RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
 
       close(io)
@@ -548,7 +549,7 @@ contains
             call set_body_<%= t %>(self, value)
       <%- } -%>
       case default
-         RAISE('Unknown iftype')
+         RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
    end subroutine set_body_ixy_or_iamph_or_ixyz
 
@@ -563,7 +564,7 @@ contains
             value = get_body_<%= t %>(self)
       <%- } -%>
       case default
-         RAISE('Unknown iftype')
+         RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
    end subroutine get_body_ixy_or_iamph_or_ixyz_
 
@@ -648,7 +649,7 @@ contains
             end if
          end do
 
-         RAISE(value)
+         RAISE('Unknown <%= name %>: ' + s(value))
       end subroutine set_<%= name %>
    <%- } -%>
 

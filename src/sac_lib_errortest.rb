@@ -1,3 +1,4 @@
+$dependencies << 'character_lib.o'
 $dependencies << 'sac_lib.o'
 $compiler = ENV['MY_FORTRAN_DEBUG']
 

@@ -71,7 +71,7 @@ io_lib_test.exe: constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib
 binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-sac_lib_test.exe: sac_lib.o sac_lib_test.o
+sac_lib_test.exe: character_lib.o sac_lib.o sac_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 path_lib_test.exe: path_lib.o path_lib_test.o
