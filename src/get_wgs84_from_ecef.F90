@@ -1,7 +1,7 @@
 # include "utils.h"
 program runner
    USE_UTILS_H
-   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, REAL128, REAL64
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, REAL128
    use, non_intrinsic:: character_lib, only: str_fixed, s
    use, non_intrinsic:: geodetic_lib, only: wgs84_from_ecef
    
