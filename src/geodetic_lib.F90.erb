@@ -150,9 +150,9 @@ contains
 
             isLatGe45Degree = (z >= xy - (A**2 - B**2)/sqrt(A**2 + B**2))
             if(isLatGe45Degree)then
-               call solve(get_x, xy, z, (3*PI)/8, PI/8, lat)
+               call get_lat(get_x, xy, z, (3*PI)/8, PI/8, lat)
             else
-               call solve(get_z, z, xy, PI/8, PI/8, lat)
+               call get_lat(get_z, z, xy, PI/8, PI/8, lat)
             end if
 
             lonLatH(1) = lon
@@ -169,7 +169,7 @@ contains
 
       contains
 
-         subroutine solve(get_p, p, q, lat0, latWidth, lat)
+         subroutine get_lat(get_p, p, q, lat0, latWidth, lat)
             interface
                function get_p (lat, c) result(ret)
                   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
@@ -211,7 +211,7 @@ contains
             end do
 
             lat = latBest
-         end subroutine solve
+         end subroutine get_lat
 
          function get_x(lat, z) result(ret)
             <%= t.declare %>, intent(in):: lat ! (rad)
