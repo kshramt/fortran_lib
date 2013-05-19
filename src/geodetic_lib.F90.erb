@@ -28,8 +28,8 @@ module geodetic_lib
    Real(kind = REAL64), parameter, public:: WGS84_GM_PRIME  = 3986000.9_REAL64*10**8          ! gravitational constant (mass of earth's atmosphere not included) (m**3/s**2) 1 sigma is +/- 0.1*10**8 (m**3/s**2)
    Real(kind = REAL32), parameter, public:: WGS84_GM_A      = 3.5_REAL32*10**8                ! gm of the earth's atmosphere (m**3/s**2) 1 sigma is +/- 0.1*10**8 (m**3/s**2)
    Real(kind = REAL64), parameter, public:: WGS84_B         = 6356752.3142_REAL64             ! semi-minor axis (m)
-   Real(kind = REAL64), parameter, public:: WGS84_E         = 8.1819190842622_REAL64*10**(-2) ! first eccentricity: sqrt(1 - b**2/a**2)
-   Real(kind = REAL64), parameter, public:: WGS84_E_2       = 6.69437999014_REAL64*10**(-3)   ! first eccentricity squared
+   Real(kind = REAL64), parameter, public:: WGS84_E_2 = (WGS84_A**2 - WGS84_B**2)/WGS84_A**2 ! first eccentricity squared (original: 6.69437999014_REAL64*10**(-3))
+   Real(kind = REAL64), parameter, public:: WGS84_E = sqrt(WGS84_E_2) ! first eccentricity: sqrt(1 - b**2/a**2) (original: 8.1819190842622_REAL64*10**(-2))
    Real(kind = REAL64), parameter, public:: WGS84_E_PRIME   = 8.2094437949696_REAL64*10**(-2) ! second eccentricity: sqrt(a**2/b**2 - 1)
    Real(kind = REAL64), parameter, public:: WGS84_E_PRIME_2 = 6.73949674228_REAL64*10**(-3)   ! second eccentricity squared
 
