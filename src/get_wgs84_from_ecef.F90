@@ -2,14 +2,14 @@
 program runner
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, REAL128, REAL64
+   use, non_intrinsic:: character_lib, only: str_fixed, s
    use, non_intrinsic:: geodetic_lib, only: wgs84_from_ecef
    
    implicit none
    
    Real(kind = REAL128):: x, y, z
-   Real(kind = kind(x)):: lonLatH(1:3)
    Integer:: ios
-   Integer:: iLonLatH
+   Character(len = 2**7):: format
 
    if(command_argument_count() >= 1)then
       write(OUTPUT_UNIT, *) 'Read x-y-z data from stdin and return lon-lat-height data to stdout.'
@@ -29,6 +29,7 @@ program runner
       stop
    end if
 
+   format = '(3g' // s(str_fixed(precision(x) + 9)) // '.' // s(str_fixed(precision(x))) // ')'
    do
       read(INPUT_UNIT, *, iostat = ios) x, y, z
       select case(ios)
@@ -37,8 +38,7 @@ program runner
       case(-1) ! EOF
          exit
       case(0)
-         lonLatH = wgs84_from_ecef(x, y, z)
-         write(OUTPUT_UNIT, *)  (lonLatH(iLonLatH), ALL_OF(iLonLatH, lonLatH, 1))
+         write(OUTPUT_UNIT, s(format)) wgs84_from_ecef(x, y, z)
       case(1:)
          RAISE('Bad input')
       end select

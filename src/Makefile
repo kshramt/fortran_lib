@@ -39,9 +39,9 @@ check: $(TESTS) $(ERRORTESTS)
 
 # Tasks
 # Executables
-../bin/get_wgs84_from_ecef.exe: constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
+../bin/get_wgs84_from_ecef.exe: character_lib.o constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
 	$(FORTRAN) -o $@ $^
-../bin/get_ecef_from_wgs84.exe: constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
+../bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
 	$(FORTRAN) -o $@ $^
 # Tests
 comparable_lib_test.exe: constant_lib.o comparable_lib.o comparable_lib_test.o
