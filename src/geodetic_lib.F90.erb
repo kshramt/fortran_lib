@@ -151,17 +151,14 @@ contains
             isLatGe45Degree = (z >= xy - (A**2 - B**2)/sqrt(A**2 + B**2))
             if(isLatGe45Degree)then
                call get_lat(get_x, xy, z, (3*PI)/8, PI/8, lat)
+               lonLatH(3) = z/sin(lat) - (1 - WGS84_E_2)*get_l(lat)
             else
                call get_lat(get_z, z, xy, PI/8, PI/8, lat)
+               lonLatH(3) = x/cos(lat) - get_l(lat)
             end if
 
             lonLatH(1) = lon
             lonLatH(2) = lat
-            if(isLatGe45Degree)then
-               lonLatH(3) = z/sin(lat) - (1 - WGS84_E_2)*get_l(lat)
-            else
-               lonLatH(3) = x/cos(lat) - get_l(lat)
-            end if
          end if
 
          ASSERT(-PI <= lonLatH(1) .and. lonLatH(1) <= PI)
