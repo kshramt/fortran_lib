@@ -63,14 +63,6 @@ module geodetic_lib
      interface get_l
         module procedure get_l<%= t %>
      end interface get_l
-
-     interface get_xy
-        module procedure get_xy<%= t %>
-     end interface get_xy
-
-     interface get_z
-        module procedure get_z<%= t %>
-     end interface get_z
    <%- } -%>
 
 contains
@@ -112,7 +104,7 @@ contains
       function wgs84_from_ecef_array<%= t %>(xyz) result(lonLatH)
          <%= t.declare %>, intent(in):: xyz(1:3) ! (m, m, m)
          <%= t.declare %>:: lonLatH(1:3)
-         
+
          lonLatH = wgs84_from_ecef(xyz(1), xyz(2), xyz(3))
 
          ASSERT(-180 <= lonLatH(1) .and. lonLatH(1) <= 180)
@@ -143,10 +135,8 @@ contains
          <%= t.declare %>, intent(in):: y ! (m)
          <%= t.declare %>, intent(in):: z ! (m)
          <%= t.declare %>:: lonLatH(1:3) ! (rad, rad, m)
-         <%= t.declare %>:: lon, lat, xy, dLat, lat0, lat0Min
-         <%= t.declare %>:: zDiff, zDiffMin
-         <%= t.declare %>:: xyDiff, xyDiffMin
-         Integer:: iLat
+         <%= t.declare %>:: lon, lat
+         <%= t.declare %>:: xy
          Logical:: isLatGe45Degree
 
          ASSERT(N_DIVISION >= 2)
@@ -160,55 +150,84 @@ contains
 
             isLatGe45Degree = (z >= xy - (A**2 - B**2)/sqrt(A**2 + B**2))
             if(isLatGe45Degree)then
-               lat0 = PI/2
-               lat0Min = lat0
-               lat = lat0Min
-               xyDiffMin = abs(xy - get_xy(lat, z))
-               dLat = PI/4/N_DIVISION
-               ! Grid search for the best lat.
-               do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/N_DIVISION)
-                  do iLat = 0, N_DIVISION - 1
-                     lat = lat0 - iLat*dLat
-                     xyDiff = abs(xy - get_xy(lat, z))
-                     if(xyDiff < xyDiffMin)then
-                        lat0Min = lat
-                        xyDiffMin = xyDiff
-                     end if
-                  end do
-                  lat0 = lat0Min + dLat
-                  dLat = dLat/N_DIVISION ! Increase precision
-               end do
+               call solve(get_x, xy, z, (3*PI)/8, PI/8, lat)
             else
-               lat0 = 0
-               lat0Min = lat0
-               lat = lat0Min
-               zDiffMin = abs(z - get_z(lat, xy))
-               dLat = PI/4/N_DIVISION
-               do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/N_DIVISION)
-                  do iLat = 0, N_DIVISION - 1
-                     lat = lat0 + iLat*dLat
-                     zDiff = abs(z - get_z(lat, xy))
-                     if(zDiff < zDiffMin)then
-                        lat0Min = lat
-                        zDiffMin = zDiff
-                     end if
-                  end do
-                  lat0 = lat0Min + dLat
-                  dLat = dLat/N_DIVISION ! Increase precision
-               end do
+               call solve(get_z, z, xy, PI/8, PI/8, lat)
             end if
 
             lonLatH(1) = lon
-            lonLatH(2) = lat0Min
+            lonLatH(2) = lat
             if(isLatGe45Degree)then
-               lonLatH(3) = z/sin(lat0Min) - (1 - WGS84_E_2)*get_l(lat0Min)
+               lonLatH(3) = z/sin(lat) - (1 - WGS84_E_2)*get_l(lat)
             else
-               lonLatH(3) = x/cos(lat0Min) - get_l(lat0Min)
+               lonLatH(3) = x/cos(lat) - get_l(lat)
             end if
          end if
 
          ASSERT(-PI <= lonLatH(1) .and. lonLatH(1) <= PI)
          ASSERT(-PI/2 <= lonLatH(2) .and. lonLatH(2) <= PI/2)
+
+      contains
+
+         subroutine solve(get_p, p, q, lat0, latWidth, lat)
+            interface
+               function get_p (lat, c) result(ret)
+                  <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+
+                  <%= t.declare %>, intent(in):: lat
+                  <%= t.declare %>, intent(in):: c
+                  <%= t.declare %>:: ret
+               end function get_p
+            end interface
+
+            Integer, parameter:: N_DIVISION = 2**3
+
+            <%= t.declare %>, intent(in):: p ! (m)
+            <%= t.declare %>, intent(in):: q ! (m)
+            <%= t.declare %>, intent(in):: lat0 ! Initial value (rad)
+            <%= t.declare %>, intent(in):: latWidth ! (rad)
+            <%= t.declare %>, intent(out):: lat ! (rad)
+            <%= t.declare %>:: latBest, lat0_, lat_, dLat
+            <%= t.declare %>:: residualMin, residual
+            Integer:: iLat
+
+            lat0_ = lat0
+            latBest = lat0_
+            lat_ = latBest
+            residualMin = abs(p - get_p(lat_, q))
+            dLat = latWidth
+            ! Grid search for the best lat.
+            do while(dLat >= tiny(dLat) .and. dLat >= latBest*epsilon(latBest)/N_DIVISION)
+               dLat = dLat/N_DIVISION ! Increase precision
+               do iLat = -N_DIVISION + 1, N_DIVISION - 1
+                  lat_ = lat0_ + iLat*dLat
+                  residual = abs(p - get_p(lat_, z))
+                  if(residual < residualMin)then
+                     latBest = lat_
+                     residualMin = residual
+                  end if
+               end do
+               lat0_ = latBest
+            end do
+
+            lat = latBest
+         end subroutine solve
+
+         function get_x(lat, z) result(ret)
+            <%= t.declare %>, intent(in):: lat ! (rad)
+            <%= t.declare %>, intent(in):: z ! (m)
+            <%= t.declare %>:: ret
+
+            ret = (z/sin(lat) + WGS84_E_2*get_l(lat))*cos(lat)
+         end function get_x
+
+         function get_z(lat, xy) result(ret)
+            <%= t.declare %>, intent(in):: lat ! (rad)
+            <%= t.declare %>, intent(in):: xy ! (m)
+            <%= t.declare %>:: ret
+
+            ret = (xy - WGS84_E_2*get_l(lat)*cos(lat))*tan(lat)
+         end function get_z
       end function wgs84_rad_from_ecef<%= t %>
 
       function get_l<%= t %>(lat) result(ret)
@@ -217,22 +236,6 @@ contains
 
          ret = WGS84_A/sqrt(1 - WGS84_E_2*(sin(lat)**2))
       end function get_l<%= t %>
-
-      function get_xy<%= t %>(lat, z) result(ret)
-         <%= t.declare %>, intent(in):: lat ! (rad)
-         <%= t.declare %>, intent(in):: z ! (m)
-         <%= t.declare %>:: ret
-
-         ret = (z/sin(lat) + WGS84_E_2*get_l(lat))*cos(lat)
-      end function get_xy<%= t %>
-
-      function get_z<%= t %>(lat, xy) result(ret)
-         <%= t.declare %>, intent(in):: lat ! (rad)
-         <%= t.declare %>, intent(in):: xy ! (m)
-         <%= t.declare %>:: ret
-
-         ret = (xy - WGS84_E_2*get_l(lat)*cos(lat))*tan(lat)
-      end function get_z<%= t %>
 
       function normalize_lon<%= t %>(lon) result(ret)
          <%= t.declare %>, intent(in):: lon ! (deg)
