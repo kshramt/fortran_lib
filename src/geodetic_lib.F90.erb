@@ -201,7 +201,7 @@ contains
                dLat = dLat/N_DIVISION ! Increase precision
                do iLat = -N_DIVISION + 1, N_DIVISION - 1
                   lat_ = lat0_ + iLat*dLat
-                  residual = abs(p - get_p(lat_, z))
+                  residual = abs(p - get_p(lat_, q))
                   if(residual < residualMin)then
                      latBest = lat_
                      residualMin = residual

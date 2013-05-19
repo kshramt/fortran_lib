@@ -49,6 +49,9 @@ program geodetic_lib_test
    lonLatH128 = wgs84_from_ecef(epsilon(ONE128), ZERO128, ZERO128)
    TEST(lonLatH128(2) > 89)
 
+   lonLatH128 = wgs84_from_ecef(ONE128*6380000, ZERO128, ONE128*1000000)
+   TEST(lonLatH128(2) < 45) ! Debug
+
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
    stop
