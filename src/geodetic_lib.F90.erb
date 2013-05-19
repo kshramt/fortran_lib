@@ -201,12 +201,12 @@ contains
       end function normalize_lon<%= t %>
 
       elemental function normalize_lon_rad<%= t %>(lon) result(ret)
-         <%= t.declare %>, parameter:: HALF_PI = PI<%= t %>/2
+         <%= t.declare %>, parameter:: PI = PI<%= t %>
          <%= t.declare %>, intent(in):: lon ! (rad)
          <%= t.declare %>:: ret ! (rad)
 
-         if(lon < HALF_PI .or. HALF_PI < lon)then
-            ret = lon - floor(lon/HALF_PI)*HALF_PI
+         if(lon < PI .or. PI < lon)then
+            ret = lon - floor(lon/PI)*PI
          else
             ret = lon
          end if
