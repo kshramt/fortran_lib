@@ -1,5 +1,5 @@
 $dependencies << 'binary_tree_map_lib.o'
-$compiler = ENV['MY_FORTRAN']
+$compiler = ENV['MY_FORTRAN_DEBUG']
 
 setup <<-EOS
 # include "../utils.h"
