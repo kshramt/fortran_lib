@@ -139,32 +139,37 @@ contains
          lon = atan2(y, x)
          xy = hypot(x, y)
 
-         ! Grid search for the best lat.
-         lat0Min = 0
-         lat = lat0Min
-         dLat = PI/2/N_DIVISION
-         zDiffMin = abs(z - get_z(lat, xy))
-         do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/2)
-            ! XXX:
-            do iLat = -N_DIVISION + 1, -1
-               lat = lat0Min + iLat*dLat
-               zDiff = abs(z - get_z(lat, xy))
-               if(zDiff < zDiffMin)then
-                  lat0Min = lat
-                  zDiffMin = zDiff
-               end if
+         if(z > get_z(PI/2*(1 - epsilon(PI)), xy))then
+            lat0Min = PI/2
+         else
+            ! Grid search for the best lat.
+            lat0Min = 0
+            lat = lat0Min
+            dLat = PI/2/N_DIVISION
+            zDiffMin = abs(z - get_z(lat, xy))
+            do while(dLat > tiny(dLat) .and. dLat >= lat0Min*epsilon(lat0Min)/(N_DIVISION**2))
+               ! XXX:
+               do iLat = -N_DIVISION + 1, -1
+                  lat = lat0Min + iLat*dLat
+                  zDiff = abs(z - get_z(lat, xy))
+                  write(ERROR_UNIT, *) lat, zDiff, dLat
+                  if(zDiff < zDiffMin)then
+                     lat0Min = lat
+                     zDiffMin = zDiff
+                  end if
+               end do
+               ! Skip iLat = 0
+               do iLat = 1, N_DIVISION - 1
+                  lat = lat0Min + iLat*dLat
+                  zDiff = abs(z - get_z(lat, xy))
+                  if(zDiff < zDiffMin)then
+                     lat0Min = lat
+                     zDiffMin = zDiff
+                  end if
+               end do
+               dLat = dLat/N_DIVISION ! Increase precision
             end do
-            ! Skip iLat = 0
-            do iLat = 1, N_DIVISION - 1
-               lat = lat0Min + iLat*dLat
-               zDiff = abs(z - get_z(lat, xy))
-               if(zDiff < zDiffMin)then
-                  lat0Min = lat
-                  zDiffMin = zDiff
-               end if
-            end do
-            dLat = dLat/N_DIVISION ! Increase precision
-         end do
+         end if
 
          lonLatH(1) = lon
          lonLatH(2) = lat0Min
