@@ -7,7 +7,9 @@ program runner
    implicit none
    
    Real(kind = REAL128):: x, y, z
+   Real(kind = kind(x)):: lonLatH(1:3)
    Integer:: ios
+   Integer:: iLonLatH
 
    if(command_argument_count() >= 1)then
       write(OUTPUT_UNIT, *) 'Read x-y-z data from stdin and return lon-lat-height data to stdout.'
@@ -35,7 +37,8 @@ program runner
       case(-1) ! EOF
          exit
       case(0)
-         write(OUTPUT_UNIT, *) wgs84_from_ecef(x, y, z)
+         lonLatH = wgs84_from_ecef(x, y, z)
+         write(OUTPUT_UNIT, *)  (lonLatH(iLonLatH), ALL_OF(iLonLatH, lonLatH, 1))
       case(1:)
          RAISE('Bad input')
       end select
