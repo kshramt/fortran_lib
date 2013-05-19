@@ -86,7 +86,7 @@ contains
          <%= t.declare %>:: xyz(1:3) ! (m, m, m)
 
          ASSERT(-90 <= lat .and. lat <= 90)
-         xyz = ecef_from_wgs84_rad(rad_from_deg(normalize_lon(lon)), rad_from_deg(lat), h)
+         xyz = ecef_from_wgs84_rad(rad_from_deg(lon), rad_from_deg(lat), h)
       end function ecef_from_wgs84<%= t %>
 
       function ecef_from_wgs84_rad<%= t %>(lon, lat, h) result(xyz)
