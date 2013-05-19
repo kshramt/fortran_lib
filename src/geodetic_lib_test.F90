@@ -18,8 +18,8 @@ program geodetic_lib_test
    TEST(equivalent(xyz64(3), ZERO64))
 
    xyz64 = ecef_from_wgs84(0.0_REAL64, 90.0_REAL64, 0.0_REAL64)
-   TEST(abs(xyz64(1)) < 1e-7)
-   TEST(abs(xyz64(2)) < 1e-7)
+   TEST(abs(xyz64(1)) < sqrt(epsilon(xyz64(1))))
+   TEST(abs(xyz64(2)) < sqrt(epsilon(xyz64(2))))
    TEST(equivalent(xyz64(3), WGS84_B))
 
    ! wgs84_from_ecef
@@ -28,17 +28,17 @@ program geodetic_lib_test
    TEST(lonLatH128(2) > 89)
 
    lonLatH128 = wgs84_from_ecef(ONE128*6000000, ZERO128, ZERO128)
-   TEST(lonLatH128(1) == 0)
-   TEST(lonLatH128(2) == 0)
+   TEST(equivalent(lonLatH128(1), ZERO128))
+   TEST(abs(lonLatH128(2)) < sqrt(epsilon(lonLatH128(2))))
    lonLatH128 = wgs84_from_ecef(-ONE128*6000000, ZERO128, ZERO128)
    TEST(lonLatH128(1) == 180)
-   TEST(lonLatH128(2) == 0)
+   TEST(abs(lonLatH128(2)) < sqrt(epsilon(lonLatH128(2))))
    lonLatH128 = wgs84_from_ecef(ONE128*6000000, ONE128*6000000, ZERO128)
    TEST(lonLatH128(1) == 45)
-   TEST(lonLatH128(2) == 0)
+   TEST(abs(lonLatH128(2)) < sqrt(epsilon(lonLatH128(2))))
    lonLatH128 = wgs84_from_ecef(ONE128*6000000, -ONE128*6000000, ZERO128)
    TEST(lonLatH128(1) == -45)
-   TEST(lonLatH128(2) == 0)
+   TEST(abs(lonLatH128(2)) < sqrt(epsilon(lonLatH128(2))))
    lonLatH128 = wgs84_from_ecef(ONE128, ZERO128, ONE128)
    TEST(lonLatH128(1) == 0)
    TEST(lonLatH128(2) >= 0)
