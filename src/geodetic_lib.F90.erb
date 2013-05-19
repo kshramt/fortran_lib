@@ -182,14 +182,14 @@ contains
       end function wgs84_rad_from_ecef<%= t %>
 
       function get_l<%= t %>(lat) result(ret)
-         <%= t.declare %>, intent(in):: lat ! (deg)
+         <%= t.declare %>, intent(in):: lat ! (rad)
          <%= t.declare %>:: ret
 
          ret = WGS84_A/sqrt(1 - (WGS84_E_2*sin(lat))**2)
       end function get_l<%= t %>
 
       function get_z<%= t %>(lat, xy) result(ret)
-         <%= t.declare %>, intent(in):: lat ! (deg)
+         <%= t.declare %>, intent(in):: lat ! (rad)
          <%= t.declare %>, intent(in):: xy ! (m)
          <%= t.declare %>:: ret
          <%= t.declare %>:: l
