@@ -86,6 +86,7 @@ contains
       end function ecef_from_wgs84<%= t %>
 
       function ecef_from_wgs84_rad<%= t %>(lon, lat, h) result(xyz)
+         Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
          <%= t.declare %>, parameter:: HALF_PI = PI<%= t %>/2
          <%= t.declare %>, intent(in):: lat ! (rad)
          <%= t.declare %>, intent(in):: lon ! (rad)
@@ -98,7 +99,7 @@ contains
          l = get_l(lat)
          xyz(1) = (l + h)*cos(lat)*cos(lon)
          xyz(2) = (l + h)*cos(lat)*sin(lon)
-         xyz(3) = ((1 - WGS84_E_2)*l + h)*sin(lat)
+         xyz(3) = ((1 - E_2)*l + h)*sin(lat)
       end function ecef_from_wgs84_rad<%= t %>
 
       function wgs84_from_ecef_array<%= t %>(xyz) result(lonLatH)
@@ -130,6 +131,7 @@ contains
          <%= t.declare %>, parameter:: PI = PI<%= t %>
          Real(kind = kind(WGS84_A)), parameter:: A = WGS84_A
          Real(kind = kind(WGS84_B)), parameter:: B = WGS84_B
+         Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
          Integer, parameter:: N_DIVISION = 2**3
          <%= t.declare %>, intent(in):: x ! (m)
          <%= t.declare %>, intent(in):: y ! (m)
@@ -151,7 +153,7 @@ contains
             isLatGe45Degree = (z >= xy - (A**2 - B**2)/sqrt(A**2 + B**2))
             if(isLatGe45Degree)then
                call get_lat(get_x, xy, z, (3*PI)/8, PI/8, lat)
-               lonLatH(3) = z/sin(lat) - (1 - WGS84_E_2)*get_l(lat)
+               lonLatH(3) = z/sin(lat) - (1 - E_2)*get_l(lat)
             else
                call get_lat(get_z, z, xy, PI/8, PI/8, lat)
                lonLatH(3) = x/cos(lat) - get_l(lat)
@@ -211,27 +213,31 @@ contains
          end subroutine get_lat
 
          function get_x(lat, z) result(ret)
+            Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
             <%= t.declare %>, intent(in):: lat ! (rad)
             <%= t.declare %>, intent(in):: z ! (m)
             <%= t.declare %>:: ret
 
-            ret = (z/sin(lat) + WGS84_E_2*get_l(lat))*cos(lat)
+            ret = (z/sin(lat) + E_2*get_l(lat))*cos(lat)
          end function get_x
 
          function get_z(lat, xy) result(ret)
+            Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
             <%= t.declare %>, intent(in):: lat ! (rad)
             <%= t.declare %>, intent(in):: xy ! (m)
             <%= t.declare %>:: ret
 
-            ret = (xy - WGS84_E_2*get_l(lat)*cos(lat))*tan(lat)
+            ret = (xy - E_2*get_l(lat)*cos(lat))*tan(lat)
          end function get_z
       end function wgs84_rad_from_ecef<%= t %>
 
       function get_l<%= t %>(lat) result(ret)
+         Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
+         Real(kind = min(<%= t.kind %>, kind(WGS84_A))), parameter:: A = real(WGS84_A, kind = min(<%= t.kind %>, kind(WGS84_A)))
          <%= t.declare %>, intent(in):: lat ! (rad)
          <%= t.declare %>:: ret
 
-         ret = WGS84_A/sqrt(1 - WGS84_E_2*(sin(lat)**2))
+         ret = A/sqrt(1 - E_2*(sin(lat)**2))
       end function get_l<%= t %>
 
       function normalize_lon<%= t %>(lon) result(ret)
