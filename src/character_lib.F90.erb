@@ -40,35 +40,35 @@ module character_lib
 
 contains
 
-   pure function s(str) result(ret)
+   pure function s(str) result(answer)
       character(len = *), intent(in):: str
-      character(len = len_trim(adjustl(str))):: ret
+      character(len = len_trim(adjustl(str))):: answer
 
-      ret = trim(adjustl(str))
+      answer = trim(adjustl(str))
    end function s
 
-   elemental function add(str1, str2) result(ret)
+   elemental function add(str1, str2) result(answer)
       character(len = *), intent(in):: str1, str2
-      character(len = len(str1) + len(str2)):: ret
+      character(len = len(str1) + len(str2)):: answer
 
-      ret = str1 // str2
+      answer = str1 // str2
    end function add
 
    <%- TYPES.each{|t| -%>
-      pure function str_fixed<%= t %>(x) result(ret)
-         character(len = STR_LEN):: ret
+      pure function str_fixed<%= t %>(x) result(answer)
+         character(len = STR_LEN):: answer
          <%= t.declare %>, intent(in):: x
 
-         write(ret, *) x
-         ret = s(ret)
+         write(answer, *) x
+         answer = s(answer)
       end function str_fixed<%= t %>
 
       ! ! This is not work on ifort
-      ! pure function str<%= t %>(x) result(ret)
+      ! pure function str<%= t %>(x) result(answer)
       !    <%= t.declare %>, intent(in):: x
-      !    character(len = len(s(str_fixed(x)))):: ret
+      !    character(len = len(s(str_fixed(x)))):: answer
 
-      !    ret = s(str_fixed(x))
+      !    answer = s(str_fixed(x))
       ! end function str<%= t %>
    <%- } -%>
 end module character_lib
