@@ -35,22 +35,22 @@ module constant_lib
 
 contains
 
-   elemental function get_nan() result(this)
-      real(REAL32):: this
+   elemental function get_nan() result(ret)
+      real(REAL32):: ret
 
       character(len = len('NaN')):: buf ! buf can not be a parameter.
 
       buf = 'NaN'
-      read(buf, *) this
+      read(buf, *) ret
    end function get_nan
 
-   elemental function get_infinity() result(this)
-      real(REAL32):: this
+   elemental function get_infinity() result(ret)
+      real(REAL32):: ret
 
       character(len = len('Infinity')):: buf ! buf can not be a parameter.
 
       buf = 'Infinity'
-      read(buf, *) this
+      read(buf, *) ret
    end function get_infinity
 
    <%- REALS.each{|t| -%>

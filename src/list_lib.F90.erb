@@ -247,22 +247,22 @@ contains
          end do
       end subroutine array_from_list_coercion<%= t %>
 
-      function val_at<%= t %>(list, pos) result(this)
-         <%= t.declare %>:: this
+      function val_at<%= t %>(list, pos) result(ret)
+         <%= t.declare %>:: ret
          type(<%= t %>List), intent(in):: list
          integer, intent(in):: pos
 
          type(<%= t %>ListNode), pointer:: targetNode
 
          targetNode => node_at(list, pos)
-         this = targetNode%val
+         ret = targetNode%val
       end function val_at<%= t %>
 
-      function shift<%= t %>(list) result(this)
-         <%= t.declare %>:: this
+      function shift<%= t %>(list) result(ret)
+         <%= t.declare %>:: ret
          type(<%= t %>List), intent(inout):: list
 
-         this = delete_at(list, 1)
+         ret = delete_at(list, 1)
       end function shift<%= t %>
 
       subroutine unshift<%= t %>(list, val)
@@ -272,33 +272,33 @@ contains
          call insert_at(list, val, 1)
       end subroutine unshift<%= t %>
 
-      function delete_at<%= t %>(list, pos) result(this)
-         <%= t.declare %>:: this
+      function delete_at<%= t %>(list, pos) result(ret)
+         <%= t.declare %>:: ret
          type(<%= t %>List), intent(inout):: list
          integer:: pos
 
          type(<%= t %>ListNode), pointer:: targetNode
 
          if(pos == size(list))then
-            this = pop(list)
+            ret = pop(list)
             return
          end if
 
          targetNode => node_at(list, pos)
-         this = targetNode%val
+         ret = targetNode%val
          if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
          targetNode%next%prev => targetNode%prev
          deallocate(targetNode)
       end function delete_at<%= t %>
 
-      function pop<%= t %>(list) result(this)
-         <%= t.declare %>:: this
+      function pop<%= t %>(list) result(ret)
+         <%= t.declare %>:: ret
          type(<%= t %>List), intent(inout):: list
 
          type(<%= t %>ListNode), pointer:: targetNode
 
          targetNode => list%entry
-         this = targetNode%val
+         ret = targetNode%val
          if(is_size_one(list))then
             deallocate(list%entry)
             return
@@ -360,47 +360,47 @@ contains
          list%entry => newNode
       end subroutine push<%= t %>
 
-      function is_empty<%= t %>(list) result(this)
-         logical:: this
+      function is_empty<%= t %>(list) result(ret)
+         logical:: ret
          type(<%= t %>List), intent(in):: list
 
-         this = .not.associated(list%entry)
+         ret = .not.associated(list%entry)
       end function is_empty<%= t %>
 
-      function is_size_one<%= t %>(list) result(this)
-         logical:: this
+      function is_size_one<%= t %>(list) result(ret)
+         logical:: ret
          type(<%= t %>List), intent(in):: list
 
-         this = .true.
+         ret = .true.
 
          if(is_empty(list))then
-             this = .false.
+             ret = .false.
              return
          end if
 
          if(associated(list%entry%prev))then
-             this = .false.
+             ret = .false.
              return
          end if
       end function is_size_one<%= t %>
 
-      function size<%= t %>(list) result(this)
-         ! "this" is integer since maximum size(array, 1) is huge(0).
-         integer:: this
+      function size<%= t %>(list) result(ret)
+         ! ret is integer since maximum size(array, 1) is huge(0).
+         integer:: ret
          type(<%= t %>List), intent(in):: list
 
          type(<%= t %>ListNode), pointer:: walker
 
          if(is_empty(list))then
-            this = 0
+            ret = 0
             return
          end if
 
          walker => list%entry
-         this = 1
+         ret = 1
          do while(associated(walker%prev))
             walker => walker%prev
-            this = this + 1
+            ret = ret + 1
          end do
       end function size<%= t %>
 
@@ -437,8 +437,8 @@ contains
       ! WARNING: Returns pointer!
       ! BAD: targetNode =   node_at(list, pos)
       ! OK:  targetNode => node_at(list, pos)
-      function node_at<%= t %>(list, pos) result(this)
-         type(<%= t %>ListNode), pointer:: this
+      function node_at<%= t %>(list, pos) result(ret)
+         type(<%= t %>ListNode), pointer:: ret
          type(<%= t %>List), intent(in):: list
          integer, intent(in):: pos
 
@@ -446,11 +446,11 @@ contains
 
          RAISE_IF(pos < 1 .or. size(list) < pos)
 
-         this => list%entry
+         ret => list%entry
          posNow = size(list)
 
          do while(posNow > pos)
-            this => this%prev
+            ret => ret%prev
             posNow = posNow - 1
          end do
       end function node_at<%= t %>

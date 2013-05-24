@@ -74,8 +74,8 @@ contains
    end subroutine mkdir_p
 
    ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
-   function file_shape(fileName, numberOfHeaders) result(this)
-      integer(8):: this(1:2)
+   function file_shape(fileName, numberOfHeaders) result(ret)
+      integer(8):: ret(1:2)
       character(len = *), intent(in):: fileName
       integer, intent(in), optional:: numberOfHeaders
 
@@ -84,11 +84,11 @@ contains
       numberOfHeaders_ = 0
       if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
-      this = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
+      ret = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
    end function file_shape
 
-   function number_of_lines(fileName) result(this)
-      integer(8):: this
+   function number_of_lines(fileName) result(ret)
+      integer(8):: ret
       character(len = *), intent(in):: fileName
 
       integer:: rU1, ios
@@ -96,13 +96,13 @@ contains
 
       open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
 
-      this = 0
+      ret = 0
       do
          read(rU1, *, iostat = ios) dummy
          if(is_iostat_bad(ios)) exit
-         RAISE_IF(this >= huge(this))
+         RAISE_IF(ret >= huge(ret))
 
-         this = this + 1
+         ret = ret + 1
       end do
       close(rU1)
    end function number_of_lines
@@ -110,8 +110,8 @@ contains
    ! @desc Return number of columns at line (numberOfHeaders + 1) in file fileName.
    ! @desc The line is separated by space and tabs character.
    ! @desc Quoted string containing space/tab characteres is not considared.
-   function number_of_columns(fileName, numberOfHeaders) result(this)
-      integer(8):: this
+   function number_of_columns(fileName, numberOfHeaders) result(ret)
+      integer(8):: ret
       character(len = *), intent(in):: fileName
       integer, intent(in), optional:: numberOfHeaders
 
@@ -129,7 +129,7 @@ contains
       if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
       mode = SEEK_NORMAL_CHAR
-      this = 0
+      ret = 0
       open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
       do i = 1, numberOfHeaders_
          read(rU1, *)
@@ -143,9 +143,9 @@ contains
             if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
          case(SEEK_NORMAL_CHAR)
             if(.not.has_val(SEPARATORS, c))then
-               RAISE_IF(this >= huge(this))
+               RAISE_IF(ret >= huge(ret))
 
-               this = this + 1
+               ret = ret + 1
                mode = SEEK_SEPARATOR
             end if
          end select
