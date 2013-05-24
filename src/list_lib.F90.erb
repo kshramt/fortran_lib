@@ -171,23 +171,23 @@ module list_lib
 contains
 
    <%- TYPES.each{|t| -%>
-      subroutine swap<%= t %>(list, pos1, pos2)
-         type(<%= t %>List), intent(inout):: list
+      subroutine swap<%= t %>(self, pos1, pos2)
+         type(<%= t %>List), intent(inout):: self
          integer, intent(in):: pos1, pos2
 
          type(<%= t %>ListNode), pointer:: posLNodePrev, posLNode, posLNodeNext
          type(<%= t %>ListNode), pointer:: posRNodePrev, posRNode, posRNodeNext
-         integer:: posL, posR, nList
+         integer:: posL, posR, nSelf
 
          posL = min(pos1, pos2)
          posR = max(pos1, pos2)
-         nList = size(list)
-         RAISE_IF(posL < 1 .or. nList < posR)
+         nSelf = size(self)
+         RAISE_IF(posL < 1 .or. nSelf < posR)
          if(posL == posR) return
 
-         posLNode => node_at(list, posL)
+         posLNode => node_at(self, posL)
          posLNodePrev => posLNode%prev
-         posRNode => node_at(list, posR)
+         posRNode => node_at(self, posR)
          posRNodeNext => posRNode%next
          if(posR - posL == 1)then
             if(associated(posLNodePrev)) posLNodePrev%next => posRNode
@@ -210,19 +210,19 @@ contains
             posLNode%prev => posRNodePrev
          end if
 
-         if(posR == nList) list%entry => posLNode
+         if(posR == nSelf) self%entry => posLNode
       end subroutine swap<%= t %>
 
-      subroutine list_from_array_coercion<%= t %>(list, array)
-         type(<%= t %>List), intent(inout):: list
+      subroutine list_from_array_coercion<%= t %>(self, array)
+         type(<%= t %>List), intent(inout):: self
          <%= t.declare %>, intent(in):: array(:)
 
          Integer(kind = INT64):: i
 
-         if(.not.is_empty(list)) call clear(list)
+         if(.not.is_empty(self)) call clear(self)
 
          do ALL_OF(i, array, 1)
-            call push(list, array(i))
+            call push(self, array(i))
          end do
       end subroutine list_from_array_coercion<%= t %>
 
@@ -247,92 +247,92 @@ contains
          end do
       end subroutine array_from_list_coercion<%= t %>
 
-      function val_at<%= t %>(list, pos) result(ret)
+      function val_at<%= t %>(self, pos) result(ret)
          <%= t.declare %>:: ret
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
          integer, intent(in):: pos
 
          type(<%= t %>ListNode), pointer:: targetNode
 
-         targetNode => node_at(list, pos)
+         targetNode => node_at(self, pos)
          ret = targetNode%val
       end function val_at<%= t %>
 
-      function shift<%= t %>(list) result(ret)
+      function shift<%= t %>(self) result(ret)
          <%= t.declare %>:: ret
-         type(<%= t %>List), intent(inout):: list
+         type(<%= t %>List), intent(inout):: self
 
-         ret = delete_at(list, 1)
+         ret = delete_at(self, 1)
       end function shift<%= t %>
 
-      subroutine unshift<%= t %>(list, val)
-         type(<%= t %>List), intent(inout):: list
+      subroutine unshift<%= t %>(self, val)
+         type(<%= t %>List), intent(inout):: self
          <%= t.declare %>, intent(in):: val
 
-         call insert_at(list, val, 1)
+         call insert_at(self, val, 1)
       end subroutine unshift<%= t %>
 
-      function delete_at<%= t %>(list, pos) result(ret)
+      function delete_at<%= t %>(self, pos) result(ret)
          <%= t.declare %>:: ret
-         type(<%= t %>List), intent(inout):: list
+         type(<%= t %>List), intent(inout):: self
          integer:: pos
 
          type(<%= t %>ListNode), pointer:: targetNode
 
-         if(pos == size(list))then
-            ret = pop(list)
+         if(pos == size(self))then
+            ret = pop(self)
             return
          end if
 
-         targetNode => node_at(list, pos)
+         targetNode => node_at(self, pos)
          ret = targetNode%val
          if(associated(targetNode%prev)) targetNode%prev%next => targetNode%next
          targetNode%next%prev => targetNode%prev
          deallocate(targetNode)
       end function delete_at<%= t %>
 
-      function pop<%= t %>(list) result(ret)
+      function pop<%= t %>(self) result(ret)
          <%= t.declare %>:: ret
-         type(<%= t %>List), intent(inout):: list
+         type(<%= t %>List), intent(inout):: self
 
          type(<%= t %>ListNode), pointer:: targetNode
 
-         targetNode => list%entry
+         targetNode => self%entry
          ret = targetNode%val
-         if(is_size_one(list))then
-            deallocate(list%entry)
+         if(is_size_one(self))then
+            deallocate(self%entry)
             return
          end if
 
-         list%entry => targetNode%prev
-         list%entry%next => targetNode%next
+         self%entry => targetNode%prev
+         self%entry%next => targetNode%next
 
          deallocate(targetNode)
       end function pop<%= t %>
 
-      recursive subroutine clear<%= t %>(list)
-         type(<%= t %>List), intent(inout):: list
+      recursive subroutine clear<%= t %>(self)
+         type(<%= t %>List), intent(inout):: self
 
          <%= t.declare %>:: trash
 
-         do while(associated(list%entry))
-            trash = pop(list)
+         do while(associated(self%entry))
+            trash = pop(self)
          end do
       end subroutine clear<%= t %>
 
-      subroutine insert_at<%= t %>(list, val, pos)
-         type(<%= t %>List), intent(inout):: list
+      subroutine insert_at<%= t %>(self, val, pos)
+         type(<%= t %>List), intent(inout):: self
          <%= t.declare %>, intent(in):: val
          integer, intent(in):: pos
 
          type(<%= t %>ListNode), pointer:: nextNode, newNode
 
-         if(pos == size(list) + 1)then
-            call push(list, val)
+         if(pos == size(self) + 1)then
+            call push(self, val)
             return
          end if
 
-         nextNode => node_at(list, pos)
+         nextNode => node_at(self, pos)
          allocate(newNode)
          newNode%val = val
          newNode%prev => nextNode%prev
@@ -341,62 +341,62 @@ contains
          if(associated(newNode%prev)) newNode%prev%next => newNode
       end subroutine insert_at<%= t %>
 
-      subroutine push<%= t %>(list, val)
-         type(<%= t %>List), intent(inout):: list
+      subroutine push<%= t %>(self, val)
+         type(<%= t %>List), intent(inout):: self
          <%= t.declare %>, intent(in):: val
 
          type(<%= t %>ListNode), pointer:: newNode
 
-         if(is_empty(list))then
-            call new(list, val)
+         if(is_empty(self))then
+            call new(self, val)
             return
          end if
 
          allocate(newNode)
          newNode%val = val
-         newNode%prev => list%entry
-         newNode%next => list%entry%next
-         list%entry%next => newNode
-         list%entry => newNode
+         newNode%prev => self%entry
+         newNode%next => self%entry%next
+         self%entry%next => newNode
+         self%entry => newNode
       end subroutine push<%= t %>
 
-      function is_empty<%= t %>(list) result(ret)
+      function is_empty<%= t %>(self) result(ret)
          logical:: ret
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
 
-         ret = .not.associated(list%entry)
+         ret = .not.associated(self%entry)
       end function is_empty<%= t %>
 
-      function is_size_one<%= t %>(list) result(ret)
+      function is_size_one<%= t %>(self) result(ret)
          logical:: ret
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
 
          ret = .true.
 
-         if(is_empty(list))then
+         if(is_empty(self))then
              ret = .false.
              return
          end if
 
-         if(associated(list%entry%prev))then
+         if(associated(self%entry%prev))then
              ret = .false.
              return
          end if
       end function is_size_one<%= t %>
 
-      function size<%= t %>(list) result(ret)
+      function size<%= t %>(self) result(ret)
          ! ret is integer since maximum size(array, 1) is huge(0).
          integer:: ret
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
 
          type(<%= t %>ListNode), pointer:: walker
 
-         if(is_empty(list))then
+         if(is_empty(self))then
             ret = 0
             return
          end if
 
-         walker => list%entry
+         walker => self%entry
          ret = 1
          do while(associated(walker%prev))
             walker => walker%prev
@@ -404,50 +404,50 @@ contains
          end do
       end function size<%= t %>
 
-      function array_from_list<%= t %>(list) result(answer)
+      function array_from_list<%= t %>(self) result(answer)
          <%= t.declare %>, allocatable:: answer(:)
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
 
-         answer = list
+         answer = self
       end function array_from_list<%= t %>
 
-      function equivalent<%= t %>(list1, list2) result(answer)
-         type(<%= t %>List), intent(in):: list1, list2
+      function equivalent<%= t %>(self, other) result(answer)
+         type(<%= t %>List), intent(in):: self, other
          Logical:: answer
 
-         answer = all(equivalent(array_from_list(list1), array_from_list(list2)))
+         answer = all(equivalent(array_from_list(self), array_from_list(other)))
       end function equivalent<%= t %>
 
       ! Internal
 
       ! Create a size 1 list.
-      subroutine new<%= t %>(list, val)
-         type(<%= t %>List), intent(inout):: list
+      subroutine new<%= t %>(self, val)
+         type(<%= t %>List), intent(inout):: self
          <%= t.declare %>, intent(in):: val
 
-         if(.not.is_empty(list))then
-            call clear(list)
+         if(.not.is_empty(self))then
+            call clear(self)
          end if
 
-         allocate(list%entry)
-         list%entry%val = val
+         allocate(self%entry)
+         self%entry%val = val
       end subroutine new<%= t %>
 
       ! N-th node.
       ! WARNING: Returns pointer!
-      ! BAD: targetNode =   node_at(list, pos)
-      ! OK:  targetNode => node_at(list, pos)
-      function node_at<%= t %>(list, pos) result(ret)
+      ! BAD: targetNode =   node_at(self, pos)
+      ! OK:  targetNode => node_at(self, pos)
+      function node_at<%= t %>(self, pos) result(ret)
          type(<%= t %>ListNode), pointer:: ret
-         type(<%= t %>List), intent(in):: list
+         type(<%= t %>List), intent(in):: self
          integer, intent(in):: pos
 
          integer:: posNow
 
-         RAISE_IF(pos < 1 .or. size(list) < pos)
+         RAISE_IF(pos < 1 .or. size(self) < pos)
 
-         ret => list%entry
-         posNow = size(list)
+         ret => self%entry
+         posNow = size(self)
 
          do while(posNow > pos)
             ret => ret%prev
