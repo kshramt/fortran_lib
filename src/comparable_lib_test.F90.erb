@@ -20,32 +20,34 @@ huge(0);	huge(0)
 
 0.0;	0.0
 1.0;	1.0
+-1.0;	-1.0
 huge(0.0);	huge(0.0)
-0.0;	2*epsilon(0.0)*tiny(0.0)
-0.0;	-2*epsilon(0.0)*tiny(0.0)
-1.0;	1.0 + 2*epsilon(0.0)
-1.0;	1.0 - 2*epsilon(0.0)
+-huge(0.0);	-huge(0.0)
+0.0;	1*epsilon(0.0)*tiny(0.0)
+0.0;	-1*epsilon(0.0)*tiny(0.0)
+1.0;	1.0 + 1*epsilon(0.0)
+1.0;	1.0 - 1*epsilon(0.0)
 0.0_REAL32;	0.0_REAL64
 1.0_REAL32;	1.0_REAL64
-0.0d0;	2*epsilon(0.0)*tiny(0.0)
-0.0d0;	-2*epsilon(0.0)*tiny(0.0)
-1.0d0;	1.0 + 2*epsilon(0.0)
-1.0d0;	1.0 - 1*epsilon(0.0)
+0.0d0;	1*epsilon(0.0)*tiny(0.0)
+0.0d0;	-1*epsilon(0.0)*tiny(0.0)
+1.0d0;	1.0 + 1*epsilon(0.0)
 
 cmplx(0.0, 0.0);	cmplx(0.0, 0.0)
 cmplx(1.0, -1.0);	cmplx(1.0, -1.0)
-cmplx(0.0, 2*epsilon(0.0)*tiny(0.0));	cmplx(-2*epsilon(0.0)*tiny(0.0), 0)
-cmplx(1.0, 1.0 - 2*epsilon(0.0));	cmplx(1.0 + 2*epsilon(0.0), 1.0)
+cmplx(0.0, 1*epsilon(0.0)*tiny(0.0));	cmplx(-1*epsilon(0.0)*tiny(0.0), 0)
+cmplx(1.0, 1.0 - 1*epsilon(0.0));	cmplx(1.0 + 1*epsilon(0.0), 1.0)
 EOS
 
 FALSE_PAIRS = array_from_str(<<-EOS)
-0.0;	3*epsilon(0.0)*tiny(0.0)
-0.0;	-3*epsilon(0.0)*tiny(0.0)
+0.0;	2*epsilon(0.0)*tiny(0.0)
+0.0;	-2*epsilon(0.0)*tiny(0.0)
 1.0;	1.0 + 3*epsilon(0.0)
-1.0;	1.0 - 3*epsilon(0.0)
+1.0;	1.0 - 2*epsilon(0.0)
+1.0d0;	1.0 - 2*epsilon(0.0)
 
-cmplx(0.0, 3*epsilon(0.0)*tiny(0.0));	cmplx(0.0, 0.0)
-cmplx(1.0, 1.0 + 3*epsilon(0.0));	cmplx(1.0, 1.0)
+cmplx(0.0, 2*epsilon(0.0)*tiny(0.0));	cmplx(0.0, 0.0)
+cmplx(1.0, 1.0 - 2*epsilon(0.0));	cmplx(1.0, 1.0)
 EOS
 -%>
 
@@ -83,6 +85,14 @@ program comparable_lib_test
    <%- FALSE_PAIRS.each{|i1, i2| -%>
       TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
    <%- } -%>
+
+   ! relative
+   TEST(.not.equivalent(1.0, 0.9, relative = 0.1))
+   TEST(equivalent(1.0, 0.9*(1 + epsilon(0.0)), relative = 0.1))
+
+   ! absolute
+   TEST(.not.equivalent(0.0, 0.1, absolute = 0.1))
+   TEST(equivalent(0.0, 0.1*(1 - epsilon(0.0)), absolute = 0.1))
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
    stop
