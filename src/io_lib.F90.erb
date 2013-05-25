@@ -100,6 +100,7 @@ contains
                file = file_
             end if
 
+            ASSERT(sh('chmod og-rwx ' + trim(file_)))
             return
          end if
       end do
