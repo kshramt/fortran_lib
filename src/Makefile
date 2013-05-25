@@ -68,12 +68,18 @@ queue_lib_test.exe: queue_lib.o queue_lib_test.o
 io_lib_test.exe: constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
+io_lib_errortest.make: io_lib_errortest.rb constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
+	${RUBY} errortest_generate.rb $<
 binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
+binary_tree_map_lib_errortest.make: binary_tree_map_lib_errortest.rb binary_tree_map_lib.o binary_tree_map_lib_test.o
+	${RUBY} errortest_generate.rb $<
 sac_lib_test.exe: character_lib.o sac_lib.o sac_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
+sac_lib_errortest.make: sac_lib_errortest.rb character_lib.o sac_lib.o sac_lib_test.o
+	${RUBY} errortest_generate.rb $<
 path_lib_test.exe: path_lib.o path_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
@@ -89,5 +95,3 @@ geodetic_lib_test.exe: constant_lib.o comparable_lib.o geodetic_lib.o geodetic_l
 	$(FORTRAN) -c -o $@ $(filter-out %.h,$^)
 %.tested: %.exe
 	./$<
-%_errortest.make: %_errortest.rb
-	${RUBY} errortest_generate.rb $<
