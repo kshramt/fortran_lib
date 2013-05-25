@@ -16,7 +16,7 @@ RUBY := ${MY_RUBY}
 .SUFFIXES:
 
 # Commands
-.PHONY: all check
+.PHONY: all test
 
 EXECS := ../bin/get_wgs84_from_ecef.exe ../bin/get_ecef_from_wgs84.exe
 
@@ -35,7 +35,7 @@ ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb=%.make)
 
 .PRECIOUS: $(LIB_F90_ERB_SRCS:%.erb=%) $(TEST_F90_ERB_SRCS:%.erb=%)
 
-check: $(TESTS) $(ERRORTESTS)
+test: $(TESTS) $(ERRORTESTS)
 
 # Tasks
 # Executables
