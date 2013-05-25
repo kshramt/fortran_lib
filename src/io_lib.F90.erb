@@ -18,6 +18,7 @@
 #include "utils.h"
 module io_lib
    use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+   use, intrinsic:: iso_fortran_env, only: INT64
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
    use, non_intrinsic:: ifport, only: system
@@ -32,6 +33,7 @@ module io_lib
    public:: write_array, read_array
    public:: number_of_lines, number_of_columns, file_shape
    public:: mkdir_p
+   public:: mktemp
 
    integer, parameter:: VERSION = 1 ! Array file format's compatibility.
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
@@ -54,6 +56,42 @@ module io_lib
    <%- } -%>
 
 contains
+
+   subroutine mktemp(io, form, file)
+      Character(len = *), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
+
+      Integer, intent(out):: io
+      Character(len = *), intent(in), optional:: form
+      Character(len = *), intent(out), optional:: file
+
+      Integer(kind = INT64):: i
+      Logical:: isFileExist
+      Character(len = len(PREFIX) + ceiling(log10(real(huge(i))))):: file_
+      Character(len = max(len('unformatted'), len('formatted'))):: form_
+
+      form_ = 'formatted'
+      if(present(form))then
+         ASSERT(len_trim(form) <= len(form_))
+         form_ = form
+      end if
+
+      do i = 0, huge(i)
+         file_ = PREFIX + s(str_fixed(i))
+         inquire(file = trim(file_), exist = isFileExist)
+         if(.not.isFileExist)then
+            open(newunit = io, file = trim(file_), status = 'new', action = 'readwrite', form = trim(form_))
+
+            if(present(file))then
+               ASSERT(len_trim(file_) <= len(file))
+               file = file_
+            end if
+
+            return
+         end if
+      end do
+
+      RAISE('Could not create temp file')
+   end subroutine mktemp
 
    subroutine mkdir_p(path, exitStatus)
       character(len = *) path
