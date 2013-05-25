@@ -87,7 +87,7 @@ contains
 
       form_ = 'formatted'
       if(present(form))then
-         ASSERT(len_trim(form) <= len(form_))
+         ASSERT(form == 'formatted' .or. form == 'unformatted')
          form_ = form
       end if
 
