@@ -71,16 +71,18 @@ contains
       isSuccess = (exitStatus == 0)
    end function sh
 
-   subroutine mktemp(io, form, file)
+   subroutine mktemp(io, suffixMin, form, file, suffix)
       Character(len = *), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
 
       Integer, intent(out):: io
+      Integer(kind = INT64), intent(in), optional:: suffixMin
       Character(len = *), intent(in), optional:: form
       Character(len = *), intent(out), optional:: file
+      Integer(kind = kind(suffixMin)), intent(out), optional:: suffix
 
-      Integer(kind = INT64):: i
-      Logical:: isFileExist
-      Character(len = len(PREFIX) + ceiling(log10(real(huge(i))))):: file_
+      Integer(kind = kind(suffixMin)):: suffix_, suffixMin_
+      Integer:: openStatus
+      Character(len = len(PREFIX) + ceiling(log10(real(huge(suffix_))))):: file_
       Character(len = max(len('unformatted'), len('formatted'))):: form_
 
       form_ = 'formatted'
@@ -89,18 +91,20 @@ contains
          form_ = form
       end if
 
-      do i = 0, huge(i)
-         file_ = PREFIX + s(str_fixed(i))
-         inquire(file = trim(file_), exist = isFileExist)
-         if(.not.isFileExist)then
-            open(newunit = io, file = trim(file_), status = 'new', action = 'readwrite', form = trim(form_))
+      suffixMin_ = 0
+      if(present(suffixMin)) suffixMin_ = suffixMin
+      do suffix_ = suffixMin_, huge(suffix)
+         file_ = PREFIX + s(str_fixed(suffix_))
+         open(newunit = io, file = trim(file_), status = 'new', action = 'readwrite', form = trim(form_), iostat = openStatus)
+         if(openStatus == 0)then
+            ASSERT(sh('chmod og-rwx ' + trim(file_)))
 
             if(present(file))then
                ASSERT(len_trim(file_) <= len(file))
                file = file_
             end if
+            if(present(suffix)) suffix = suffix_
 
-            ASSERT(sh('chmod og-rwx ' + trim(file_)))
             return
          end if
       end do
