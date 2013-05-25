@@ -32,7 +32,6 @@ module io_lib
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
    public:: write_array, read_array
    public:: number_of_lines, number_of_columns, file_shape
-   public:: mkdir_p
    public:: mktemp
    public:: sh
 
@@ -107,24 +106,6 @@ contains
 
       RAISE('Could not create temp file')
    end subroutine mktemp
-
-   subroutine mkdir_p(path, exitStatus)
-      character(len = *) path
-      integer, intent(out), optional:: exitStatus
-      integer:: exitStatus_
-
-# ifdef __INTEL_COMPILER
-      exitStatus_ = system("mkdir -p " + s(path))
-# else
-      call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
-# endif
-
-      if(present(exitStatus))then
-         exitStatus = exitStatus_
-      elseif(exitStatus_ /= 0)then
-         RAISE('Failed to execute mkdir -p ' + s(path))
-      end if
-   end subroutine mkdir_p
 
    ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
    function file_shape(fileName, numberOfHeaders) result(answer)
@@ -225,7 +206,7 @@ contains
 
          namelist /array_meta/ dataType, dim, sizes
 
-         call mkdir_p(s(arrayDir))
+         ASSERT(sh('mkdir -p ' + trim(arrayDir)))
 
          open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
          write(wU1, *) VERSION
