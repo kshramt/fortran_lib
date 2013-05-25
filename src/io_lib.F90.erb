@@ -34,6 +34,7 @@ module io_lib
    public:: number_of_lines, number_of_columns, file_shape
    public:: mkdir_p
    public:: mktemp
+   public:: sh
 
    integer, parameter:: VERSION = 1 ! Array file format's compatibility.
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
@@ -56,6 +57,20 @@ module io_lib
    <%- } -%>
 
 contains
+
+   function sh(cmd) result(isSuccess)
+      Character(len = *), intent(in):: cmd
+      Logical:: isSuccess
+      Integer:: exitStatus
+
+# ifdef __INTEL_COMPILER
+      exitStatus = system(trim(cmd))
+# else
+      call execute_command_line(trim(cmd), exitstat = exitStatus)
+# endif
+
+      isSuccess = (exitStatus == 0)
+   end function sh
 
    subroutine mktemp(io, form, file)
       Character(len = *), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
