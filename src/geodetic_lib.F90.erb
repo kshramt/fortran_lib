@@ -170,12 +170,12 @@ contains
 
          subroutine get_lat(get_p, p, q, lat0, latWidth, lat)
             interface
-               function get_p (lat, c) result(ret)
+               function get_p (lat, c) result(answer)
                   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
                   <%= t.declare %>, intent(in):: lat
                   <%= t.declare %>, intent(in):: c
-                  <%= t.declare %>:: ret
+                  <%= t.declare %>:: answer
                end function get_p
             end interface
 
@@ -212,56 +212,56 @@ contains
             lat = latBest
          end subroutine get_lat
 
-         function get_x(lat, z) result(ret)
+         function get_x(lat, z) result(answer)
             Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
             <%= t.declare %>, intent(in):: lat ! (rad)
             <%= t.declare %>, intent(in):: z ! (m)
-            <%= t.declare %>:: ret
+            <%= t.declare %>:: answer
 
-            ret = (z/sin(lat) + E_2*get_l(lat))*cos(lat)
+            answer = (z/sin(lat) + E_2*get_l(lat))*cos(lat)
          end function get_x
 
-         function get_z(lat, xy) result(ret)
+         function get_z(lat, xy) result(answer)
             Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
             <%= t.declare %>, intent(in):: lat ! (rad)
             <%= t.declare %>, intent(in):: xy ! (m)
-            <%= t.declare %>:: ret
+            <%= t.declare %>:: answer
 
-            ret = (xy - E_2*get_l(lat)*cos(lat))*tan(lat)
+            answer = (xy - E_2*get_l(lat)*cos(lat))*tan(lat)
          end function get_z
       end function wgs84_rad_from_ecef<%= t %>
 
-      function get_l<%= t %>(lat) result(ret)
+      function get_l<%= t %>(lat) result(answer)
          Real(kind = min(<%= t.kind %>, kind(WGS84_E_2))), parameter:: E_2 = real(WGS84_E_2, kind = min(<%= t.kind %>, kind(WGS84_E_2)))
          Real(kind = min(<%= t.kind %>, kind(WGS84_A))), parameter:: A = real(WGS84_A, kind = min(<%= t.kind %>, kind(WGS84_A)))
          <%= t.declare %>, intent(in):: lat ! (rad)
-         <%= t.declare %>:: ret
+         <%= t.declare %>:: answer
 
-         ret = A/sqrt(1 - E_2*(sin(lat)**2))
+         answer = A/sqrt(1 - E_2*(sin(lat)**2))
       end function get_l<%= t %>
 
-      function normalize_lon<%= t %>(lon) result(ret)
+      function normalize_lon<%= t %>(lon) result(answer)
          <%= t.declare %>, intent(in):: lon ! (deg)
-         <%= t.declare %>:: ret ! (deg)
+         <%= t.declare %>:: answer ! (deg)
 
          if(lon < -180 .or. 180 < lon)then
-            ret = lon - floor(lon/180)*180
+            answer = lon - floor(lon/180)*180
          else
-            ret = lon
+            answer = lon
          end if
 
          ASSERT(-180 <= lon .and. lon <= 180)
       end function normalize_lon<%= t %>
 
-      function normalize_lon_rad<%= t %>(lon) result(ret)
+      function normalize_lon_rad<%= t %>(lon) result(answer)
          <%= t.declare %>, parameter:: PI = PI<%= t %>
          <%= t.declare %>, intent(in):: lon ! (rad)
-         <%= t.declare %>:: ret ! (rad)
+         <%= t.declare %>:: answer ! (rad)
 
          if(lon < PI .or. PI < lon)then
-            ret = lon - floor(lon/PI)*PI
+            answer = lon - floor(lon/PI)*PI
          else
-            ret = lon
+            answer = lon
          end if
 
          ASSERT(-PI <= lon .and. lon <= PI)

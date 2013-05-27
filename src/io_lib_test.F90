@@ -11,6 +11,25 @@ program io_lib_test
    
    Real(kind = REAL64), allocatable:: xs(:), xsOriginal(:)
    Integer(kind = INT8), allocatable:: ns(:, :), nsOriginal(:, :)
+   Integer:: io
+   Character(len = len('readwrite') + 1):: action
+   Character(len = 2**10):: form, fileMktemp, fileInquire
+   Logical:: isNamed
+
+   call mktemp(io)
+   inquire(io, action = action, named = isNamed, form = form)
+   TEST(action == 'READWRITE')
+   TEST(form == 'FORMATTED')
+   TEST(isNamed)
+   close(io)
+
+   call mktemp(io, form = 'unformatted', file = fileMktemp)
+   inquire(io, action = action, name = fileInquire, form = form, named = isNamed)
+   TEST(form == 'UNFORMATTED')
+   TEST(action == 'READWRITE')
+   TEST(fileMktemp == fileInquire)
+   TEST(isNamed)
+   close(io)
 
    ! = read_array, write_array, number_of_lines
    ! == Real 1D

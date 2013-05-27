@@ -18,6 +18,7 @@
 #include "utils.h"
 module io_lib
    use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
+   use, intrinsic:: iso_fortran_env, only: INT64
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
    use, non_intrinsic:: ifport, only: system
@@ -31,7 +32,8 @@ module io_lib
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
    public:: write_array, read_array
    public:: number_of_lines, number_of_columns, file_shape
-   public:: mkdir_p
+   public:: mktemp
+   public:: sh
 
    integer, parameter:: VERSION = 1 ! Array file format's compatibility.
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
@@ -55,27 +57,64 @@ module io_lib
 
 contains
 
-   subroutine mkdir_p(path, exitStatus)
-      character(len = *) path
-      integer, intent(out), optional:: exitStatus
-      integer:: exitStatus_
+   function sh(cmd) result(isSuccess)
+      Character(len = *), intent(in):: cmd
+      Logical:: isSuccess
+      Integer:: exitStatus
 
 # ifdef __INTEL_COMPILER
-      exitStatus_ = system("mkdir -p " + s(path))
+      exitStatus = system(trim(cmd))
 # else
-      call execute_command_line("mkdir -p " + s(path), .true., exitStatus_)
+      call execute_command_line(trim(cmd), exitstat = exitStatus)
 # endif
 
-      if(present(exitStatus))then
-         exitStatus = exitStatus_
-      elseif(exitStatus_ /= 0)then
-         RAISE('Failed to execute mkdir -p ' + s(path))
+      isSuccess = (exitStatus == 0)
+   end function sh
+
+   subroutine mktemp(io, suffixMin, form, file, suffix)
+      Character(len = *), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
+
+      Integer, intent(out):: io
+      Integer(kind = INT64), intent(in), optional:: suffixMin
+      Character(len = *), intent(in), optional:: form
+      Character(len = *), intent(out), optional:: file
+      Integer(kind = kind(suffixMin)), intent(out), optional:: suffix
+
+      Integer(kind = kind(suffixMin)):: suffix_, suffixMin_
+      Integer:: openStatus
+      Character(len = len(PREFIX) + ceiling(log10(real(huge(suffix_))))):: file_
+      Character(len = max(len('unformatted'), len('formatted'))):: form_
+
+      form_ = 'formatted'
+      if(present(form))then
+         ASSERT(form == 'formatted' .or. form == 'unformatted')
+         form_ = form
       end if
-   end subroutine mkdir_p
+
+      suffixMin_ = 0
+      if(present(suffixMin)) suffixMin_ = suffixMin
+      do suffix_ = suffixMin_, huge(suffix)
+         file_ = PREFIX + s(str_fixed(suffix_))
+         open(newunit = io, file = trim(file_), status = 'new', action = 'readwrite', form = trim(form_), iostat = openStatus)
+         if(openStatus == 0)then
+            ASSERT(sh('chmod og-rwx ' + trim(file_)))
+
+            if(present(file))then
+               ASSERT(len_trim(file_) <= len(file))
+               file = file_
+            end if
+            if(present(suffix)) suffix = suffix_
+
+            return
+         end if
+      end do
+
+      RAISE('Could not create temp file')
+   end subroutine mktemp
 
    ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
-   function file_shape(fileName, numberOfHeaders) result(this)
-      integer(8):: this(1:2)
+   function file_shape(fileName, numberOfHeaders) result(answer)
+      integer(8):: answer(1:2)
       character(len = *), intent(in):: fileName
       integer, intent(in), optional:: numberOfHeaders
 
@@ -84,11 +123,11 @@ contains
       numberOfHeaders_ = 0
       if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
-      this = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
+      answer = (/number_of_lines(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
    end function file_shape
 
-   function number_of_lines(fileName) result(this)
-      integer(8):: this
+   function number_of_lines(fileName) result(answer)
+      integer(8):: answer
       character(len = *), intent(in):: fileName
 
       integer:: rU1, ios
@@ -96,13 +135,13 @@ contains
 
       open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
 
-      this = 0
+      answer = 0
       do
          read(rU1, *, iostat = ios) dummy
          if(is_iostat_bad(ios)) exit
-         RAISE_IF(this >= huge(this))
+         RAISE_IF(answer >= huge(answer))
 
-         this = this + 1
+         answer = answer + 1
       end do
       close(rU1)
    end function number_of_lines
@@ -110,8 +149,8 @@ contains
    ! @desc Return number of columns at line (numberOfHeaders + 1) in file fileName.
    ! @desc The line is separated by space and tabs character.
    ! @desc Quoted string containing space/tab characteres is not considared.
-   function number_of_columns(fileName, numberOfHeaders) result(this)
-      integer(8):: this
+   function number_of_columns(fileName, numberOfHeaders) result(answer)
+      integer(8):: answer
       character(len = *), intent(in):: fileName
       integer, intent(in), optional:: numberOfHeaders
 
@@ -129,7 +168,7 @@ contains
       if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
 
       mode = SEEK_NORMAL_CHAR
-      this = 0
+      answer = 0
       open(newunit = rU1, file = fileName, status = 'old', action = 'read', delim = 'quote')
       do i = 1, numberOfHeaders_
          read(rU1, *)
@@ -143,9 +182,9 @@ contains
             if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
          case(SEEK_NORMAL_CHAR)
             if(.not.has_val(SEPARATORS, c))then
-               RAISE_IF(this >= huge(this))
+               RAISE_IF(answer >= huge(answer))
 
-               this = this + 1
+               answer = answer + 1
                mode = SEEK_SEPARATOR
             end if
          end select
@@ -172,7 +211,7 @@ contains
 
          namelist /array_meta/ dataType, dim, sizes
 
-         call mkdir_p(s(arrayDir))
+         ASSERT(sh('mkdir -p ' + trim(arrayDir)))
 
          open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
          write(wU1, *) VERSION

@@ -61,8 +61,8 @@ module queue_lib
 contains
 
    <%- TYPES.each{|t| -%>
-      subroutine push<%= t %>Queue(queue, value)
-         type(<%= t %>Queue), intent(inout):: queue
+      subroutine push<%= t %>Queue(self, value)
+         type(<%= t %>Queue), intent(inout):: self
          <%= t.declare %>, intent(in):: value
          type(<%= t %>QueueNode), pointer:: newNode
 
@@ -76,38 +76,38 @@ contains
          !    type(<%= t %>QueueNode), pointer:: head => root%next
          ! end type <%= t %>Queue
          ! ! and the following if-statement could be simplified as:
-         ! queue%tail%next => newNode
-         if(is_empty_queue(queue))then
-            queue%head => newNode
+         ! self%tail%next => newNode
+         if(is_empty_queue(self))then
+            self%head => newNode
          else
-            queue%tail%next => newNode
+            self%tail%next => newNode
          end if
-         queue%tail => newNode
+         self%tail => newNode
       end subroutine push<%= t %>Queue
 
-      function shift<%= t %>Queue(queue, value) result(isSuccess)
-         type(<%= t %>Queue), intent(inout):: queue
+      function shift<%= t %>Queue(self, value) result(isSuccess)
+         type(<%= t %>Queue), intent(inout):: self
          <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: value
          Logical:: isSuccess
          type(<%= t %>QueueNode), pointer:: removedNode => null()
 
-         if(is_empty_queue(queue))then
+         if(is_empty_queue(self))then
             isSuccess = .false.
             return
          end if
 
-         value = queue%head%value
-         removedNode => queue%head
-         queue%head => queue%head%next
+         value = self%head%value
+         removedNode => self%head
+         self%head => self%head%next
          deallocate(removedNode)
          isSuccess = .true.
       end function shift<%= t %>Queue
 
-      function is_empty<%= t %>Queue(queue) result(answer)
-         type(<%= t %>Queue), intent(in):: queue
+      function is_empty<%= t %>Queue(self) result(answer)
+         type(<%= t %>Queue), intent(in):: self
          Logical:: answer
 
-         answer = .not.associated(queue%head)
+         answer = .not.associated(self%head)
       end function is_empty<%= t %>Queue
    <%- } -%>
 end module queue_lib
