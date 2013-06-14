@@ -1,0 +1,55 @@
+<%
+  require 'fort'
+
+  TYPES\
+  = ::Fort::Type::Logical.multi_provide(dim: [0])\
+  + ::Fort::Type::Integer.multi_provide(dim: [0])\
+  + ::Fort::Type::Real.multi_provide(dim: [0])\
+  + ::Fort::Type::Complex.multi_provide(dim: [0])\
+  + ::Fort::Type::Character.multi_provide(dim: [0], len: [:'*'])
+%>
+
+# include "utils.h"
+module config_lib
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+
+   implicit none
+
+   private
+   public:: get_config_value
+
+   interface get_config_value
+      <%- TYPES.each{|t| -%>
+          module procedure get_config_value<%= t %>
+      <%- } -%>
+   end interface get_config_value
+
+contains
+
+   <%- TYPES.each{|t| -%>
+      function get_config_value<%= t %>(io, key, value) result(isKeyExist)
+         Integer:: io
+         Character(len=*), intent(in):: key
+         <%= t.declare %>, intent(out):: value
+         Logical:: isKeyExist
+
+         Integer:: ios
+         Character(len = len_trim(key) + 1):: keyBuf
+
+         rewind(io)
+         isKeyExist = .false.
+         do
+            read(io, *, iostat = ios) keyBuf
+            if(keyBuf == key)then
+               backspace(io)
+               read(io, *) keyBuf, value
+               isKeyExist = .true.
+               return
+            end if
+            if(ios /= 0) exit
+         end do
+      end function get_config_value<%= t %>
+   <%- } -%>
+end module config_lib
