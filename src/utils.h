@@ -18,7 +18,7 @@
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
 #  define I (0, 1)
-#  define PRINT(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
+#  define PRINT_(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
 #  define PRINT_VARIABLE(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, quote(x), ": ", (x)
 #  define DUMP_KEY_VALUE(io, value) write(io, *, delim='none') quote(value), ' ', value
 
