@@ -20,6 +20,7 @@
 #  define I (0, 1)
 #  define PRINT(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, (x)
 #  define PRINT_VARIABLE(x) write(ERROR_UNIT, *) "INFO: ", WHERE_AM_I, quote(x), ": ", (x)
+#  define DUMP_KEY_VALUE(io, value) write(io, *, delim='none') quote(value), ' ', value
 
 #  define WARN_IF(isBad) \
      if(isBad)then; \
