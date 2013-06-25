@@ -1,5 +1,6 @@
 $dependencies << 'character_lib.o'
 $dependencies << 'io_lib.o'
+$dependencies << 'config_lib.o'
 $compiler = ENV.fetch('MY_FORTRAN_DEBUG', 'gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG')
 
 setup <<-EOS

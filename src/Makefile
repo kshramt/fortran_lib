@@ -65,13 +65,13 @@ stack_lib_test.exe: stack_lib.o stack_lib_test.o
 queue_lib_test.exe: queue_lib.o queue_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-io_lib_test.exe: constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
+io_lib_test.exe: config_lib.o constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
 config_lib_test.exe: config_lib.o config_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
-io_lib_errortest.make: io_lib_errortest.rb constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
+io_lib_errortest.make: io_lib_errortest.rb config_lib.o constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
 	${RUBY} errortest_generate.rb $<
 binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o
 	$(FORTRAN) -o $@ $^

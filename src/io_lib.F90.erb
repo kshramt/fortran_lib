@@ -25,6 +25,7 @@ module io_lib
 # endif
    use, non_intrinsic:: constant_lib, only: TAB
    use, non_intrinsic:: character_lib, only: s, str_fixed, operator(+)
+   use, non_intrinsic:: config_lib, only: get_config_value
 
    implicit none
 
@@ -35,9 +36,11 @@ module io_lib
    public:: mktemp
    public:: sh
 
-   integer, parameter:: VERSION = 1 ! Array file format's compatibility.
+   integer, parameter:: VERSION = 2 ! Array file format's compatibility.
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
-   character(len = *), parameter:: ARRAY_META_FILE = 'meta.nml'
+   character(len=*), parameter:: ARRAY_META_FILE_V_1 = 'meta.nml'
+   character(len=*), parameter:: ARRAY_META_FILE_V_2 = 'meta.kv'
+   character(len=*), parameter:: ARRAY_META_FILE = ARRAY_META_FILE_V_2
    character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
    character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
 
@@ -49,6 +52,10 @@ module io_lib
       interface read_array
          module procedure read_array<%= t %>
       end interface read_array
+
+      interface read_array_v_2
+         module procedure read_array_v_2<%= t %>
+      end interface read_array_v_2
 
       interface read_array_v_1
          module procedure read_array_v_1<%= t %>
@@ -209,8 +216,6 @@ contains
          integer:: wU1
          integer:: i
 
-         namelist /array_meta/ dataType, dim, sizes
-
          ASSERT(sh('mkdir -p ' + trim(arrayDir)))
 
          open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'replace', action = 'write')
@@ -224,8 +229,12 @@ contains
          dataType = DATA_TYPE_FOR_SELF
          dim = DIM_FOR_SELF
          forall(i = 1:dim) sizes(i) = size(array, i)
-         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write', delim = 'quote')
-         write(wU1, nml = array_meta)
+         open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'replace', action = 'write')
+         WRITE_KEY_VALUE(wU1, dim)
+         WRITE_KEY_VALUE(wU1, dataType)
+         <%- t.dim.times.each{|dim| -%>
+           WRITE_KEY_VALUE(wU1, sizes(<%= dim + 1 %>))
+         <%- } -%>
          close(wU1)
 
          open(newunit = wU1, file = s(arrayDir) + '/' + ARRAY_DESCRIPTION_FILE, status = 'replace', action = 'write')
@@ -248,10 +257,40 @@ contains
          select case(libIoVersion)
          case(1)
             call read_array_v_1(arrayDir, array)
+         case(2)
+            call read_array_v_2(arrayDir, array)
          case default
             RAISE('Unsupported version: ' + trim(str_fixed(libIoVersion)))
          end select
       end subroutine read_array<%= t %>
+
+      subroutine read_array_v_2<%= t %>(arrayDir, array)
+         character(len = *), intent(in):: arrayDir
+         <%= t.declare %>, intent(out), allocatable:: array
+
+         character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
+         integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
+         character(len = <%= TYPES.map{|_| _.to_s.size}.max %>):: dataType
+         integer:: dim
+         integer:: sizes(1:DIM_FOR_SELF)
+         integer:: io
+
+         open(newunit=io, file=s(arrayDir) + '/' + ARRAY_META_FILE_V_2, status='old', action='read')
+         ASSERT(get_config_value(io, 'dataType', dataType))
+         ASSERT(get_config_value(io, 'dim', dim))
+         <%- t.dim.times.each{|dim| -%>
+           ASSERT(get_config_value(io, 'sizes(<%= dim + 1 %>)', sizes(<%= dim + 1 %>)))
+         <%- } -%>
+         close(io)
+
+         RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
+         RAISE_IF(dim /= DIM_FOR_SELF)
+
+         allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
+
+         open(newunit=io, file=s(arrayDir) + '/' + ARRAY_DATA_FILE, status='old', action='read', form='unformatted', access='stream')
+         read(io) array
+      end subroutine read_array_v_2<%= t %>
 
       subroutine read_array_v_1<%= t %>(arrayDir, array)
          character(len = *), intent(in):: arrayDir
@@ -265,7 +304,7 @@ contains
          integer:: rU1
          namelist /array_meta/ dataType, dim, sizes
 
-         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE, status = 'old', action = 'read', delim = 'quote')
+         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE_V_1, status = 'old', action = 'read', delim = 'quote')
          read(rU1, nml = array_meta)
 
          RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
