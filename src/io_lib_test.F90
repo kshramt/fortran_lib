@@ -3,7 +3,7 @@ program io_lib_test
    use, intrinsic:: iso_fortran_env, only: &
       INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
       REAL64, INT8
-   use, non_intrinsic:: io_lib
+   use, non_intrinsic:: io_lib, IO_LIB_VERSION => VERSION
    use, non_intrinsic:: comparable_lib, only: equivalent
    use, non_intrinsic:: character_lib, only: operator(+)
    
@@ -15,6 +15,7 @@ program io_lib_test
    Character(len = len('readwrite') + 1):: action
    Character(len = 2**10):: form, fileMktemp, fileInquire
    Logical:: isNamed
+   type(ArrayMeta):: meta
 
    call mktemp(io)
    inquire(io, action = action, named = isNamed, form = form)
@@ -31,12 +32,17 @@ program io_lib_test
    TEST(isNamed)
    close(io)
 
-   ! = read_array, write_array, number_of_lines
+   ! = read_array, write_array
    ! == Real 1D
    xs = [1, 2, 3, 4, 5]
    xsOriginal = xs
    call write_array('xs.array', xs, 'Real 1D test', 'Multiple descriptions.')
    TEST(all(equivalent(xs, xsOriginal)))
+   TEST(read_array_version('xs.array') == IO_LIB_VERSION)
+   call read_array_meta(meta, 'xs.array')
+   TEST(meta%dataType == 'RealDim1KindREAL64')
+   TEST(meta%dim == 1)
+   TEST(all(meta%sizes == shape(xs)))
    call read_array('xs.array', xs)
    TEST(all(equivalent(xs, xsOriginal)))
 

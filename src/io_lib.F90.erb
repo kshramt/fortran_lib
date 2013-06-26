@@ -13,6 +13,7 @@
   end
 
   NUM_DESC_MAX = 10
+  LEN_TYPE_STR_MAX = TYPES.map(&:to_s).map(&:size).max
 %>
 
 #include "utils.h"
@@ -31,18 +32,25 @@ module io_lib
 
    private
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
-   public:: write_array, read_array
+   public:: write_array, read_array, read_array_version, read_array_meta
    public:: number_of_lines, number_of_columns, file_shape
    public:: mktemp
    public:: sh
 
    integer, parameter:: VERSION = 2 ! Array file format's compatibility.
+   Integer, parameter:: LEN_DATA_TYPE_STR_MAX = <%= LEN_TYPE_STR_MAX %>
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
    character(len=*), parameter:: ARRAY_META_FILE_V_1 = 'meta.nml'
    character(len=*), parameter:: ARRAY_META_FILE_V_2 = 'meta.kv'
    character(len=*), parameter:: ARRAY_META_FILE = ARRAY_META_FILE_V_2
    character(len = *), parameter:: ARRAY_VERSION_FILE = 'version.dat'
    character(len = *), parameter:: ARRAY_DESCRIPTION_FILE = 'description.txt'
+
+   type, public:: ArrayMeta
+      Character(len=LEN_DATA_TYPE_STR_MAX):: dataType
+      Integer:: dim
+      Integer, allocatable:: sizes(:)
+   end type ArrayMeta
 
    <%- TYPES.each{|t| -%>
       interface write_array
@@ -199,6 +207,48 @@ contains
       close(rU1)
    end function number_of_columns
 
+   function read_array_version(arrayDir) result(version_)
+      Character(len=*), intent(in):: arrayDir
+      Integer:: version_
+      Integer:: io
+
+      open(newunit=io, file=s(arrayDir) + '/' + ARRAY_VERSION_FILE, status='old', action='read')
+      read(io, *) version_
+      close(io)
+   end function read_array_version
+
+   subroutine read_array_meta(self, arrayDir)
+      type(ArrayMeta), intent(inout):: self
+      Character(len=*), intent(in):: arrayDir
+      Integer:: version_
+
+      version_ = read_array_version(trim(arrayDir))
+      select case(version_)
+      case(2)
+         call read_array_meta_v_2(self, trim(arrayDir))
+      case default
+         RAISE('Unsupported version ' + trim(str_fixed(version_)) + ' for ' + trim(arrayDir))
+      end select
+   end subroutine read_array_meta
+
+   subroutine read_array_meta_v_2(self, arrayDir)
+      type(ArrayMeta), intent(inout):: self
+      Character(len=*), intent(in):: arrayDir
+
+      Integer:: io
+      Integer:: dim
+
+      open(newunit=io, file=s(arrayDir) + '/' + ARRAY_META_FILE_V_2, status='old', action='read')
+      ASSERT(get_config_value(io, 'dataType', self%dataType))
+      ASSERT(get_config_value(io, 'dim', self%dim))
+      if(allocated(self%sizes)) deallocate(self%sizes)
+      allocate(self%sizes(1:self%dim))
+      do ALL_OF(dim, self%sizes, 1)
+         ASSERT(get_config_value(io, 'sizes(' + s(str_fixed(dim)) + ')', self%sizes(dim)))
+      end do
+      close(io)
+   end subroutine read_array_meta_v_2
+
    <%- TYPES.each{|t| -%>
       subroutine write_array<%= t %>(arrayDir, array<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
          character(len = *), intent(in):: arrayDir
@@ -248,19 +298,16 @@ contains
          character(len = *), intent(in):: arrayDir
          <%= t.declare %>, intent(out), allocatable:: array
 
-         integer:: rU1, libIoVersion
+         Integer:: version_
 
-         open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_VERSION_FILE, status = 'old', action = 'read')
-         read(rU1, *) libIoVersion
-         close(rU1)
-
-         select case(libIoVersion)
+         version_ = read_array_version(trim(arrayDir))
+         select case(version_)
          case(1)
             call read_array_v_1(arrayDir, array)
          case(2)
             call read_array_v_2(arrayDir, array)
          case default
-            RAISE('Unsupported version: ' + trim(str_fixed(libIoVersion)))
+            RAISE('Unsupported version ' + trim(str_fixed(version_)) + ' for ' + trim(arrayDir))
          end select
       end subroutine read_array<%= t %>
 
@@ -270,23 +317,15 @@ contains
 
          character(len = *), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
          integer, parameter:: DIM_FOR_SELF = <%= t.dim %>
-         character(len = <%= TYPES.map{|_| _.to_s.size}.max %>):: dataType
-         integer:: dim
-         integer:: sizes(1:DIM_FOR_SELF)
+         type(ArrayMeta):: meta
          integer:: io
 
-         open(newunit=io, file=s(arrayDir) + '/' + ARRAY_META_FILE_V_2, status='old', action='read')
-         ASSERT(get_config_value(io, 'dataType', dataType))
-         ASSERT(get_config_value(io, 'dim', dim))
-         <%- t.dim.times.each{|dim| -%>
-           ASSERT(get_config_value(io, 'sizes(<%= dim + 1 %>)', sizes(<%= dim + 1 %>)))
-         <%- } -%>
-         close(io)
+         call read_array_meta_v_2(meta, trim(arrayDir))
 
-         ASSERT(s(dataType) == DATA_TYPE_FOR_SELF)
-         ASSERT(dim == DIM_FOR_SELF)
+         ASSERT(meta%dataType == DATA_TYPE_FOR_SELF)
+         ASSERT(meta%dim == DIM_FOR_SELF)
 
-         allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
+         allocate(array(<%= list(t.dim){|i| "1:meta%sizes(#{i})"} %>))
 
          open(newunit=io, file=s(arrayDir) + '/' + ARRAY_DATA_FILE, status='old', action='read', form='unformatted', access='stream')
          read(io) array
