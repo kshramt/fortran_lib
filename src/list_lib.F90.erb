@@ -69,18 +69,21 @@ module list_lib
    public:: array_from_list      ! List to array converter.
    public:: equivalent           ! .true. if size and components are equivalent.
                                  ! XXX: More array like interface?
-   <%- TYPES.each{|t| -%>
-      public:: <%= t %>List
-   <%- } -%>
+
+   type:: ListNode
+   end type ListNode
+
+   type, public:: List
+   end type List
 
    <%- TYPES.each{|t| -%>
-      type <%= t %>ListNode
+      type, extends(ListNode):: <%= t %>ListNode
          <%= t.declare %>:: val
          type(<%= t %>ListNode), pointer:: prev => null()
          type(<%= t %>ListNode), pointer:: next => null()
       end type <%= t %>ListNode
 
-      type <%= t %>List
+      type, extends(List), public:: <%= t %>List
          type(<%= t %>ListNode), pointer:: entry => null()
          Integer:: size            ! Currently, integer is enough since max size of a dimension of an array is huge(0).
       end type <%= t %>List
