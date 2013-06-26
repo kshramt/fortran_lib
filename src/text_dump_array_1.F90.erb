@@ -1,0 +1,63 @@
+<%
+  require 'fort'
+
+  TYPES\
+  = ::Fort::Type::Logical.multi_provide(dim: [1])\
+  + ::Fort::Type::Integer.multi_provide(dim: [1])\
+  + ::Fort::Type::Real.multi_provide(dim: [1])\
+  + ::Fort::Type::Complex.multi_provide(dim: [1])
+%>
+
+# include "utils.h"
+! Text dump arbitrary 1-D array (except for Character array) stored by io_lib/write_array
+program main
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+   use, non_intrinsic:: character_lib, only: operator(+)
+   use, non_intrinsic:: io_lib, only: ArrayMeta
+   use, non_intrinsic:: io_lib, only: read_array, read_array_meta
+
+   implicit none
+
+   <%- TYPES.each{|t| -%>
+     <%= t.declare %>, allocatable:: array<%= t %>
+   <%- } -%>
+   Character(len=2**10):: arrayDir
+   type(ArrayMeta):: meta
+   Integer:: i
+   Integer:: status
+
+
+   if(command_argument_count() /= 1) call usage_and_exit()
+   call get_command_argument(1, value=arrayDir, status=status)
+   ASSERT(status == 0)
+
+   if(arrayDir == '-h' .or. arrayDir == '--help') call usage_and_exit()
+   call read_array_meta(meta, trim(arrayDir))
+
+   select case(meta%dataType)
+   <%- TYPES.each{|t| -%>
+     case('<%= t %>')
+        call read_array(array<%= t %>, trim(arrayDir))
+        do ALL_OF(i, array<%= t %>, 1)
+           write(OUTPUT_UNIT, *) array<%= t %>(i)
+        end do
+   <%- } -%>
+   case default
+      RAISE('Unsupported data type: ' + trim(meta%dataType))
+   end select
+
+   stop
+
+contains
+
+   subroutine usage_and_exit()
+      Character(len=2**10):: programName
+
+      call get_command_argument(0, value=programName)
+      write(ERROR_UNIT, *) trim(programName), ' ', 'ARRAY_DIR'
+
+      error stop
+   end subroutine usage_and_exit
+end program main

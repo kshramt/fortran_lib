@@ -18,7 +18,7 @@ RUBY := ${MY_RUBY}
 # Commands
 .PHONY: all test
 
-EXECS := ../bin/get_wgs84_from_ecef.exe ../bin/get_ecef_from_wgs84.exe
+EXECS := ../bin/get_wgs84_from_ecef.exe ../bin/get_ecef_from_wgs84.exe ../bin/text_dump_array_1.exe
 
 LIB_F90_SRCS := $(shell git ls-files *_lib.F90)
 LIB_F90_ERB_SRCS := $(shell git ls-files *_lib.F90.erb)
@@ -39,6 +39,8 @@ test: $(TESTS) $(ERRORTESTS)
 
 # Tasks
 # Executables
+../bin/text_dump_array_1.exe: constant_lib.o character_lib.o config_lib.o io_lib.o text_dump_array_1.o
+	$(FORTRAN) -o $@ $^
 ../bin/get_wgs84_from_ecef.exe: character_lib.o constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
 	$(FORTRAN) -o $@ $^
 ../bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
