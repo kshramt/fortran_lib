@@ -182,7 +182,7 @@ contains
          posL = min(pos1, pos2)
          posR = max(pos1, pos2)
          nSelf = size(self)
-         RAISE_IF(posL < 1 .or. nSelf < posR)
+         ASSERT(1 <= posL .and. posR <= nSelf)
          if(posL == posR) return
 
          posLNode => node_at(self, posL)
@@ -444,7 +444,7 @@ contains
 
          integer:: posNow
 
-         RAISE_IF(pos < 1 .or. size(self) < pos)
+         ASSERT(1 <= pos .and. pos <= size(self))
 
          answer => self%entry
          posNow = size(self)

@@ -82,7 +82,7 @@ contains
          Integer(kind = INT64):: iL, iR, iLOriginal, iROriginal
          Logical:: isUniform
 
-         RAISE_IF(any(is_nan(xs)))
+         ASSERT(.not.any(is_nan(xs)))
 
          call push_stack(iLs, 1_INT64)
          call push_stack(iRs, size(xs, dim = 1, kind = kind(iR)))
@@ -169,7 +169,7 @@ contains
       subroutine merge_sorting<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
 
-         RAISE_IF(any(is_nan(xs)))
+         ASSERT(.not.any(is_nan(xs)))
          call merge_sorting_substance<%= t %>(xs)
       end subroutine merge_sorting<%= t %>
 

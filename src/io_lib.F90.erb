@@ -146,7 +146,7 @@ contains
       do
          read(rU1, *, iostat = ios) dummy
          if(is_iostat_bad(ios)) exit
-         RAISE_IF(answer >= huge(answer))
+         ASSERT(answer <= huge(answer) - 1)
 
          answer = answer + 1
       end do
@@ -189,7 +189,7 @@ contains
             if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
          case(SEEK_NORMAL_CHAR)
             if(.not.has_val(SEPARATORS, c))then
-               RAISE_IF(answer >= huge(answer))
+               ASSERT(answer <= huge(answer) - 1)
 
                answer = answer + 1
                mode = SEEK_SEPARATOR
@@ -283,8 +283,8 @@ contains
          <%- } -%>
          close(io)
 
-         RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
-         RAISE_IF(dim /= DIM_FOR_SELF)
+         ASSERT(s(dataType) == DATA_TYPE_FOR_SELF)
+         ASSERT(dim == DIM_FOR_SELF)
 
          allocate(array(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
 
@@ -307,8 +307,8 @@ contains
          open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_META_FILE_V_1, status = 'old', action = 'read', delim = 'quote')
          read(rU1, nml = array_meta)
 
-         RAISE_IF(s(dataType) /= DATA_TYPE_FOR_SELF)
-         RAISE_IF(dim /= DIM_FOR_SELF)
+         ASSERT(s(dataType) == DATA_TYPE_FOR_SELF)
+         ASSERT(dim == DIM_FOR_SELF)
 
          close(rU1)
 
