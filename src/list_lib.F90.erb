@@ -40,7 +40,7 @@
 module list_lib
    USE_UTILS_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-   use, non_intrinsic:: comparable_lib, only: equivalent
+   use, non_intrinsic:: comparable_lib, only: almost_equal
    <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
       use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
    <%- } -%>
@@ -67,7 +67,7 @@ module list_lib
    public:: is_size_one          ! .true. if size of list is one.
    public:: is_empty             ! .true. if size of list is zero.
    public:: array_from_list      ! List to array converter.
-   public:: equivalent           ! .true. if size and components are equivalent.
+   public:: almost_equal           ! .true. if size and components are almost_equal.
                                  ! XXX: More array like interface?
 
    type:: ListNode
@@ -152,9 +152,9 @@ module list_lib
          module procedure array_from_list<%= t %>
       end interface array_from_list
 
-      interface equivalent
-         module procedure equivalent<%= t %>
-      end interface equivalent
+      interface almost_equal
+         module procedure almost_equal<%= t %>
+      end interface almost_equal
 
       ! Internal
 
@@ -414,12 +414,12 @@ contains
          answer = self
       end function array_from_list<%= t %>
 
-      function equivalent<%= t %>(self, other) result(answer)
+      function almost_equal<%= t %>(self, other) result(answer)
          type(<%= t %>List), intent(in):: self, other
          Logical:: answer
 
-         answer = all(equivalent(array_from_list(self), array_from_list(other)))
-      end function equivalent<%= t %>
+         answer = all(almost_equal(array_from_list(self), array_from_list(other)))
+      end function almost_equal<%= t %>
 
       ! Internal
 

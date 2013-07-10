@@ -76,28 +76,28 @@ program comparable_lib_test
    TEST(.not.is_infinity(0_INT64))
    TEST(is_infinity(get_infinity()))
 
-   TEST(.not.equivalent(get_nan(), 0.0))
-   TEST(equivalent(get_nan(), get_nan()))
+   TEST(.not.almost_equal(get_nan(), 0.0))
+   TEST(almost_equal(get_nan(), get_nan()))
 
-   TEST(.not.equivalent(get_infinity(), 0.0))
-   TEST(.not.equivalent(get_infinity(), -get_infinity()))
-   TEST(equivalent(get_infinity(), get_infinity()))
+   TEST(.not.almost_equal(get_infinity(), 0.0))
+   TEST(.not.almost_equal(get_infinity(), -get_infinity()))
+   TEST(almost_equal(get_infinity(), get_infinity()))
 
    <%- TRUE_PAIRS.each{|i1, i2| -%>
-      TEST(equivalent(<%= i1 %>, <%= i2 %>))
+      TEST(almost_equal(<%= i1 %>, <%= i2 %>))
    <%- } -%>
 
    <%- FALSE_PAIRS.each{|i1, i2| -%>
-      TEST(.not.equivalent(<%= i1 %>, <%= i2 %>))
+      TEST(.not.almost_equal(<%= i1 %>, <%= i2 %>))
    <%- } -%>
 
    ! relative
-   TEST(.not.equivalent(1.0, 0.9, relative = 0.1))
-   TEST(equivalent(1.0, 0.9*(1 + epsilon(0.0)), relative = 0.1))
+   TEST(.not.almost_equal(1.0, 0.9, relative = 0.1))
+   TEST(almost_equal(1.0, 0.9*(1 + epsilon(0.0)), relative = 0.1))
 
    ! absolute
-   TEST(.not.equivalent(0.0, 0.1, absolute = 0.1))
-   TEST(equivalent(0.0, 0.1*(1 - epsilon(0.0)), absolute = 0.1))
+   TEST(.not.almost_equal(0.0, 0.1, absolute = 0.1))
+   TEST(almost_equal(0.0, 0.1*(1 - epsilon(0.0)), absolute = 0.1))
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
    stop

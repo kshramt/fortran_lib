@@ -3,7 +3,7 @@ program list_lib_test
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
 
    use, non_intrinsic:: list_lib, only: IntegerDim0KindINT32List
-   use, non_intrinsic:: list_lib, only: size, delete_at, insert_at, val_at, shift, unshift, push, pop, clear, swap, is_size_one, is_empty, array_from_list, equivalent
+   use, non_intrinsic:: list_lib, only: size, delete_at, insert_at, val_at, shift, unshift, push, pop, clear, swap, is_size_one, is_empty, array_from_list, almost_equal
    use, non_intrinsic:: list_lib, only: operator(.val.), assignment(=)
    
    implicit none
@@ -29,7 +29,7 @@ program list_lib_test
    TEST(all(a == b))
    TEST(size(l) == size(a))
    m = l                         ! list  <- list
-   TEST(equivalent(m, l))
+   TEST(almost_equal(m, l))
    l = emptyList
    TEST(size(l) == 0)
 

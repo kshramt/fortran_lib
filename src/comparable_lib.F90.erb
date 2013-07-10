@@ -23,7 +23,7 @@ module comparable_lib
    implicit none
 
    private
-   public:: equivalent
+   public:: almost_equal
    public:: is_nan
    public:: is_infinity
 
@@ -37,11 +37,11 @@ module comparable_lib
       end interface is_infinity
    <%- } -%>
 
-   interface equivalent
+   interface almost_equal
       <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
-         module procedure equivalent<%= t1 %><%= t2 %>
+         module procedure almost_equal<%= t1 %><%= t2 %>
       <%- } -%>
-   end interface equivalent
+   end interface almost_equal
 
 contains
 
@@ -80,7 +80,7 @@ contains
    <%- REAL_PAIRS.each{|t1, t2| -%>
       ! This function assumes gradual underflow is not flushed to zero.
       ! For example, -no-ftz option should be added when you compile this module by ifort.
-      elemental function equivalent<%= t1 %><%= t2 %>(a, b, relative, absolute) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b, relative, absolute) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
@@ -125,51 +125,51 @@ contains
 
          delta = max(deltaRelative, deltaAbsolute)
          answer = (abs(a - b) < delta)
-      end function equivalent<%= t1 %><%= t2 %>
+      end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 
    <%- COMPLEX_PAIRS.each{|t1, t2| -%>
-      elemental function equivalent<%= t1 %><%= t2 %>(a, b, delta) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b, delta) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
          real(max(kind(a), kind(b))), intent(in), optional:: delta
 
          if(present(delta))then
-            answer = equivalent(real(a), real(b), delta) .and. equivalent(aimag(a), aimag(b), delta)
+            answer = almost_equal(real(a), real(b), delta) .and. almost_equal(aimag(a), aimag(b), delta)
          else
-            answer = equivalent(real(a), real(b)) .and. equivalent(aimag(a), aimag(b))
+            answer = almost_equal(real(a), real(b)) .and. almost_equal(aimag(a), aimag(b))
          end if
-      end function equivalent<%= t1 %><%= t2 %>
+      end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 
    <%- INTEGER_PAIRS.each{|t1, t2| -%>
-      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
 
          answer = (a == b)
-      end function equivalent<%= t1 %><%= t2 %>
+      end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 
    <%- LOGICAL_PAIRS.each{|t1, t2| -%>
-      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
 
          answer = a .eqv. b
-      end function equivalent<%= t1 %><%= t2 %>
+      end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 
    <%- CHARACTER_PAIRS.each{|t1, t2| -%>
-      elemental function equivalent<%= t1 %><%= t2 %>(a, b) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
 
          answer = (a == b)
-      end function equivalent<%= t1 %><%= t2 %>
+      end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 end module comparable_lib

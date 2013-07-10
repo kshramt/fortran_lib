@@ -24,7 +24,7 @@ program sort_lib_test
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
    use, non_intrinsic:: constant_lib, only: get_infinity
-   use, non_intrinsic:: comparable_lib, only: equivalent
+   use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: sort_lib
 
    implicit none
@@ -45,9 +45,9 @@ program sort_lib_test
 
    ! size 1
    TEST(all(quick_sort([0]) == [0]))
-   TEST(all(equivalent(quick_sort([0.0]), [0.0])))
+   TEST(all(almost_equal(quick_sort([0.0]), [0.0])))
    TEST(all(merge_sort([0]) == [0]))
-   TEST(all(equivalent(merge_sort([0.0]), [0.0])))
+   TEST(all(almost_equal(merge_sort([0.0]), [0.0])))
 
    <%- [SML_SETS.last].each{|sml_set| -%>
       <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
@@ -61,8 +61,8 @@ program sort_lib_test
       <%- } -%>
 
       <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
-         TEST(all(equivalent(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
-         TEST(all(equivalent(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+         TEST(all(almost_equal(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+         TEST(all(almost_equal(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
       <%- } -%>
    <%- } -%>
 
@@ -92,12 +92,12 @@ program sort_lib_test
    TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
 
    ! Infinity
-   TEST(all(equivalent(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
-   TEST(all(equivalent(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   TEST(all(almost_equal(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   TEST(all(almost_equal(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
 
    ! Bug check
-   TEST(all(equivalent(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
-   TEST(all(equivalent(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   TEST(all(almost_equal(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   TEST(all(almost_equal(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
    stop
