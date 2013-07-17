@@ -17,6 +17,13 @@ program io_lib_test
    Logical:: isNamed
    type(ArrayMeta):: meta
 
+   TEST(len(get_column_format_string(1.0, 1)) == len('(1(1x, g13.6))'))
+   TEST(len(get_column_format_string(1.0, 2)) == len('(2(1x, g13.6))'))
+   TEST(len(get_column_format_string(1.0, 10)) == len('(10(1x, g13.6))'))
+   TEST(get_column_format_string(1.0, 1) == '(1(1x, g13.6))')
+   TEST(get_column_format_string(1.0, 2) == '(2(1x, g13.6))')
+   TEST(get_column_format_string(1.0, 10) == '(10(1x, g13.6))')
+
    call mktemp(io)
    inquire(io, action = action, named = isNamed, form = form)
    TEST(action == 'READWRITE')

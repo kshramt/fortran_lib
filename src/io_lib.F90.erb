@@ -8,6 +8,8 @@
   + ::Fort::Type::Complex.multi_provide(dim: (1..7))\
   + ::Fort::Type::Character.multi_provide(dim: (1..7))
 
+  REAL_DIM_0S = ::Fort::Type::Real.multi_provide(dim: 0)
+
   def list(n, joint = ', ', &block)
     (1..n).to_a.map(&block).join(joint)
   end
@@ -32,6 +34,7 @@ module io_lib
 
    private
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
+   public:: get_column_format_string
    public:: write_array, read_array, read_array_version, read_array_meta
    public:: number_of_lines, number_of_columns, file_shape
    public:: mktemp
@@ -52,6 +55,12 @@ module io_lib
       Integer, allocatable:: sizes(:)
    end type ArrayMeta
 
+   <%- REAL_DIM_0S.each{|t| -%>
+      interface get_column_format_string
+         module procedure get_column_format_string<%= t %>
+      end interface get_column_format_string
+   <%- } -%>
+
    <%- TYPES.each{|t| -%>
       interface write_array
          module procedure write_array<%= t %>
@@ -71,6 +80,29 @@ module io_lib
    <%- } -%>
 
 contains
+
+   <%- REAL_DIM_0S.each{|t| -%>
+      ! '(256(1x, g15.6))'
+      function get_column_format_string<%= t %>(x, n) result(ret)
+         Integer, parameter:: paddingForG = 7
+
+         <%= t.declare %>, intent(in):: x
+         Integer, intent(in):: n
+
+         !              (   256                    (1x, g   15                                                   .   6                                     ))
+         Character(len=(1 + floor(log10(real(n))) + 1 + 6 + floor(log10(real(precision(x) + paddingForG))) + 1 + 1 + floor(log10(real(precision(x)))) + 1 + 2)):: ret
+
+         Integer:: prec
+         Character(len=2**10):: nBuffer, widthBuffer, precisionBuffer
+
+         write(nBuffer, *) n
+         prec = precision(x)
+         write(widthBuffer, *) prec + paddingForG
+         write(precisionBuffer, *) prec
+
+         ret = '(' // trim(adjustl(nBuffer)) // '(1x, g' // trim(adjustl(widthBuffer)) // '.' // trim(adjustl(precisionBuffer)) // '))'
+      end function get_column_format_string<%= t %>
+   <%- } -%>
 
    function sh(cmd) result(isSuccess)
       Character(len = *), intent(in):: cmd
