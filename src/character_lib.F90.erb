@@ -20,9 +20,8 @@ module character_lib
    public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
    ! public:: str
    public:: str_fixed            ! Convert a value to a string. The result is not stripped.
-   public:: STR_LEN              ! Maximum length of str.
 
-   integer,   parameter:: STR_LEN  = 1024
+   integer, parameter, public:: MAX_STR_LEN = 2**11  ! Maximum length of str.
 
    interface operator(+)
       module procedure add
