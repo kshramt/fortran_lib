@@ -89,20 +89,22 @@ contains
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
 
-         !              (   256                    (1x, g   15                                                   .   6                                     ))
-         Character(len=(1 + floor(log10(real(n))) + 1 + 6 + floor(log10(real(precision(x) + paddingForG))) + 1 + 1 + floor(log10(real(precision(x)))) + 1 + 2)):: ret
+         !              (   256           (1x, g   15                                          .   6                            ))
+         Character(len=(1 + get_int_width(n) + 6 + get_int_width(precision(x) + paddingForG) + 1 + get_int_width(precision(x)) + 2)):: ret
 
          Integer:: prec
-         Character(len=2**10):: nBuffer, widthBuffer, precisionBuffer
 
-         write(nBuffer, *) n
          prec = precision(x)
-         write(widthBuffer, *) prec + paddingForG
-         write(precisionBuffer, *) prec
-
-         ret = '(' // trim(adjustl(nBuffer)) // '(1x, g' // trim(adjustl(widthBuffer)) // '.' // trim(adjustl(precisionBuffer)) // '))'
+         ret = '(' + str(n) + '(1x, g' + str(prec + paddingForG) + '.' + str(prec) + '))'
       end function get_column_format_string<%= t %>
    <%- } -%>
+
+   pure function get_int_width(n) result(ret)
+      Integer, intent(in):: n
+      Integer(kind=kind(n)):: ret
+
+      ret = floor(log10(real(n))) + 1
+   end function get_int_width
 
    function sh(cmd) result(isSuccess)
       Character(len = *), intent(in):: cmd
