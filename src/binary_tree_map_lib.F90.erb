@@ -41,7 +41,7 @@ module binary_tree_map_lib
       end interface get_value_binary_tree_map
 
       interface add_binary_tree_map_node
-         module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMapNode
+         module procedure:: add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
       end interface add_binary_tree_map_node
 
       interface has_key_binary_tree_map_node
@@ -62,15 +62,15 @@ module binary_tree_map_lib
 
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
       type, extends(BinaryTreeMap), public:: <%= key_type %><%= value_type %>BinaryTreeMap
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: root => null()
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer:: root => null()
       end type <%= key_type %><%= value_type %>BinaryTreeMap
 
-      type, extends(BinaryTreeMapNode):: <%= key_type %><%= value_type %>BinaryTreeMapNode
+      type, extends(BinaryTreeMapNode):: <%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
          <%= key_type.declare %>:: key
          <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>:: value
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: small => null()
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer:: large => null()
-      end type <%= key_type %><%= value_type %>BinaryTreeMapNode
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer:: small => null()
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer:: large => null()
+      end type <%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
    <%- } -%>
 
 contains
@@ -85,8 +85,8 @@ contains
          call add_binary_tree_map_node(self%root, key, value)
       end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
 
-      recursive subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode(self, key, value)
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(inout):: self
+      recursive subroutine add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value)
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer, intent(inout):: self
          Character(len = *), intent(in):: key
          <%= value_type.declare %>, intent(in):: value
 
@@ -103,7 +103,7 @@ contains
             self%key = key
             self%value = value
          end if
-      end subroutine add<%= key_type %><%= value_type %>BinaryTreeMapNode
+      end subroutine add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
 
       function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap(self, key) result(answer)
          type(<%= key_type %><%= value_type %>BinaryTreeMap), intent(in):: self
@@ -118,7 +118,7 @@ contains
       end function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
 
       recursive function has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key) result(answer)
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(in):: self
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer, intent(in):: self
          Character(len = *), intent(in):: key
          Logical:: answer
 
@@ -149,7 +149,7 @@ contains
       end function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
 
       recursive function get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value) result(isSuccess)
-         type(<%= key_type %><%= value_type %>BinaryTreeMapNode), pointer, intent(in):: self
+         type(<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode), pointer, intent(in):: self
          Character(len = *), intent(in):: key
          <%= value_type.declare %><%= (value_type.dim > 0) ? ', allocatable' : '' %>, intent(out):: value
          Logical:: isSuccess
