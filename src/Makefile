@@ -96,7 +96,10 @@ geodetic_lib_test.exe: constant_lib.o constant_lib.mod comparable_lib.o comparab
 %.F90: %.F90.erb
 	$(ERB) $(filter-out %.mod, $^) > $(TMP_DIR)/$@
 	mv -f $(TMP_DIR)/$@ $@
-%.mod %.o: %.F90 utils.h
+%.o: %.F90 utils.h
 	$(FORTRAN) -c $(filter-out %.h, $^)
+%.mod: %.F90 utils.h
+	$(FORTRAN) -c $(filter-out %.h, $^)
+	touch $@
 %.tested: %.exe
 	./$<
