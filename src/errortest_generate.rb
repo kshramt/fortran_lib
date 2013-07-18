@@ -48,6 +48,7 @@ open(makefile, 'w'){|io|
   io.puts "all: " + $case_codes.keys.map{|title| File.join(DIR, title) + '.exe'}.join(' ')
   $case_codes.each{|title, _|
     base =  File.join(DIR, title)
+    io.puts ".SUFFIXES:"
     io.puts "#{base}.exe: #{$dependencies.join(' ')} #{base}.F90"
     io.puts "\t#{$compiler} -o $@ $^"
   }
