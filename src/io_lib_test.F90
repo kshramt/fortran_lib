@@ -14,15 +14,20 @@ program io_lib_test
    Integer:: io
    Character(len = len('readwrite') + 1):: action
    Character(len = 2**10):: form, fileMktemp, fileInquire
-   Logical:: isNamed
+   Logical:: isNamed, isEqual
    type(ArrayMeta):: meta
 
-   TEST(len(get_column_format_string(1.0, 1)) == len('(1(1x, g13.6))'))
-   TEST(len(get_column_format_string(1.0, 2)) == len('(2(1x, g13.6))'))
-   TEST(len(get_column_format_string(1.0, 10)) == len('(10(1x, g13.6))'))
-   TEST(get_column_format_string(1.0, 1) == '(1(1x, g13.6))')
-   TEST(get_column_format_string(1.0, 2) == '(2(1x, g13.6))')
-   TEST(get_column_format_string(1.0, 10) == '(10(1x, g13.6))')
+   TEST(get_column_format_string(.true., 2) == '(2(1x, l1))')
+   TEST(get_column_format_string(.false., 10) == '(10(1x, l1))')
+   TEST(get_column_format_string(1, 2) == '(2(1x, i11))')
+   TEST(get_column_format_string(1, 10) == '(10(1x, i11))')
+   TEST(get_column_format_string(1.0, 1) == '(1(1x, es13.7))')
+   TEST(get_column_format_string(1.0, 2) == '(2(1x, es13.7))')
+   TEST(get_column_format_string(1.0, 10) == '(10(1x, es13.7))')
+   isEqual = get_column_format_string((1.2, 2.3), 2) == '(2(1x, "(", es13.7, ",", es13.7, ")"))'
+   TEST(isEqual)
+   isEqual = get_column_format_string((1.2, 2.3), 10) == '(10(1x, "(", es13.7, ",", es13.7, ")"))'
+   TEST(isEqual)
 
    call mktemp(io)
    inquire(io, action = action, named = isNamed, form = form)
