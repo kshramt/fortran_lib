@@ -2,7 +2,7 @@
 program runner
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, REAL128
-   use, non_intrinsic:: character_lib, only: str_fixed, s
+   use, non_intrinsic:: character_lib, only: str, s
    use, non_intrinsic:: geodetic_lib, only: ecef_from_wgs84
    
    implicit none
@@ -29,7 +29,7 @@ program runner
       stop
    end if
 
-   format = '(3g' // s(str_fixed(precision(lon) + 9)) // '.' // s(str_fixed(precision(lon))) // ')'
+   format = '(3g' // str(precision(lon) + 9) // '.' // str(precision(lon)) // ')'
    do
       read(INPUT_UNIT, *, iostat = ios) lon, lat, h
       select case(ios)
