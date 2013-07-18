@@ -27,7 +27,7 @@ module io_lib
    use, non_intrinsic:: ifport, only: system
 # endif
    use, non_intrinsic:: constant_lib, only: TAB
-   use, non_intrinsic:: character_lib, only: s, str_fixed, operator(+)
+   use, non_intrinsic:: character_lib, only: s, str, operator(+)
    use, non_intrinsic:: config_lib, only: get_config_value
 
    implicit none
@@ -141,7 +141,7 @@ contains
       suffixMin_ = 0
       if(present(suffixMin)) suffixMin_ = suffixMin
       do suffix_ = suffixMin_, huge(suffix)
-         file_ = PREFIX + s(str_fixed(suffix_))
+         file_ = PREFIX + str(suffix_)
          open(newunit = io, file = trim(file_), status = 'new', action = 'readwrite', form = trim(form_), iostat = openStatus)
          if(openStatus == 0)then
             ASSERT(sh('chmod og-rwx ' + trim(file_)))
@@ -259,7 +259,7 @@ contains
       case(2)
          call read_array_meta_v_2(self, trim(arrayDir))
       case default
-         RAISE('Unsupported version ' + trim(str_fixed(version_)) + ' for ' + trim(arrayDir))
+         RAISE('Unsupported version ' + str(version_) + ' for ' + trim(arrayDir))
       end select
    end subroutine read_array_meta
 
@@ -276,7 +276,7 @@ contains
       if(allocated(self%sizes)) deallocate(self%sizes)
       allocate(self%sizes(1:self%dim))
       do ALL_OF(dim, self%sizes, 1)
-         ASSERT(get_config_value(io, 'sizes(' + s(str_fixed(dim)) + ')', self%sizes(dim)))
+         ASSERT(get_config_value(io, 'sizes(' + str(dim) + ')', self%sizes(dim)))
       end do
       close(io)
    end subroutine read_array_meta_v_2
@@ -339,7 +339,7 @@ contains
          case(2)
             call read_array_v_2(self, arrayDir)
          case default
-            RAISE('Unsupported version ' + trim(str_fixed(version_)) + ' for ' + trim(arrayDir))
+            RAISE('Unsupported version ' + str(version_) + ' for ' + trim(arrayDir))
          end select
       end subroutine read_array<%= t %>
 

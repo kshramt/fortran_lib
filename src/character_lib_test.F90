@@ -18,21 +18,21 @@ program character_lib_test
    TEST(s(' a ') == 'a')
    TEST(s(' a b ') == 'a b')
 
-   ! str_fixed
-   TEST(str_fixed('a') == 'a')
-   TEST(str_fixed(0) == '0')
-   TEST(str_fixed(-1) == '-1')
-   sBuffer = str_fixed(0.0)
+   ! str
+   TEST(str('a') == 'a')
+   TEST(str(0) == '0')
+   TEST(str(-1) == '-1')
+   sBuffer = str(0.0)
    TEST(sBuffer == '0.000000')
-   sBuffer = str_fixed(1.0)
+   sBuffer = str(1.0)
    TEST(sBuffer == '1.000000')
-   dBuffer = str_fixed(0.0_REAL64)
+   dBuffer = str(0.0_REAL64)
    TEST(dBuffer == '0.000000000000000')
-   dBuffer = str_fixed(-1.0_REAL64)
+   dBuffer = str(-1.0_REAL64)
    TEST(dBuffer == '-1.00000000000000')
-   write(OUTPUT_UNIT, *) trim(str_fixed((1, 1)))
-   TEST(str_fixed(.true.) == 'T')
-   TEST(str_fixed(.false.) == 'F')
+   write(OUTPUT_UNIT, *) trim(str((1, 1)))
+   TEST(str(.true.) == 'T')
+   TEST(str(.false.) == 'F')
 
    ! +
    TEST('' + '' == '')
