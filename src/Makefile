@@ -14,6 +14,7 @@ RUBY := ${MY_RUBY}
 
 # Configurations
 .SUFFIXES:
+.DELETE_ON_ERROR:
 
 # Commands
 .PHONY: all test
