@@ -14,6 +14,7 @@
 #  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); error stop
 #  define ALL_OF(index, array, dim_) index = lbound(array, dim=dim_, kind=kind(index)), ubound(array, dim=dim_, kind=kind(index))
+#  define CONCURRENT_ALL_OF(index, array, dim_) concurrent (index = lbound(array, dim=dim_, kind=kind(index)):ubound(array, dim=dim_, kind=kind(index)))
 #  define has_val(array, val) (any((array) == (val)))
 #  define is_iostat_ok(ios) (ios == 0)
 #  define is_iostat_bad(ios) (.not.is_iostat_ok(ios))
