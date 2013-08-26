@@ -23,14 +23,14 @@ module binary_tree_map_lib
 
    private
 
-   public:: add_binary_tree_map
+   public:: append_binary_tree_map
    public:: has_key_binary_tree_map
    public:: get_value_binary_tree_map
 
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-      interface add_binary_tree_map
+      interface append_binary_tree_map
          module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMap
-      end interface add_binary_tree_map
+      end interface append_binary_tree_map
 
       interface has_key_binary_tree_map
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
@@ -40,9 +40,9 @@ module binary_tree_map_lib
          module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
       end interface get_value_binary_tree_map
 
-      interface add_binary_tree_map_node
+      interface append_binary_tree_map_node
          module procedure:: add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface add_binary_tree_map_node
+      end interface append_binary_tree_map_node
 
       interface has_key_binary_tree_map_node
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
@@ -82,7 +82,7 @@ contains
          <%= value_type.declare %>, intent(in):: value
 
          ASSERT(len_trim(key) <= <%= key_type.len %>)
-         call add_binary_tree_map_node(self%root, key, value)
+         call append_binary_tree_map_node(self%root, key, value)
       end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
 
       recursive subroutine add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value)
@@ -92,9 +92,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               call add_binary_tree_map_node(self%small, key, value)
+               call append_binary_tree_map_node(self%small, key, value)
             else if(key > self%key)then
-               call add_binary_tree_map_node(self%large, key, value)
+               call append_binary_tree_map_node(self%large, key, value)
             else
                self%value = value
             end if
