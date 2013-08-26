@@ -38,7 +38,7 @@ module io_lib
    private
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
    public:: get_column_format_string
-   public:: write_array, read_array, read_array_version, read_array_meta
+   public:: dump_array, load_array, load_array_version, load_array_meta
    public:: get_line_number, number_of_columns, file_shape
    public:: mktemp
    public:: sh
@@ -66,21 +66,21 @@ module io_lib
    <%- } -%>
 
    <%- TYPES.each{|t| -%>
-      interface write_array
-         module procedure write_array<%= t %>
-      end interface write_array
+      interface dump_array
+         module procedure dump_array<%= t %>
+      end interface dump_array
 
-      interface read_array
-         module procedure read_array<%= t %>
-      end interface read_array
+      interface load_array
+         module procedure load_array<%= t %>
+      end interface load_array
 
-      interface read_array_v_2
-         module procedure read_array_v_2<%= t %>
-      end interface read_array_v_2
+      interface load_array_v_2
+         module procedure load_array_v_2<%= t %>
+      end interface load_array_v_2
 
-      interface read_array_v_1
-         module procedure read_array_v_1<%= t %>
-      end interface read_array_v_1
+      interface load_array_v_1
+         module procedure load_array_v_1<%= t %>
+      end interface load_array_v_1
    <%- } -%>
 
 contains
@@ -283,7 +283,7 @@ contains
       close(rU1)
    end function number_of_columns
 
-   function read_array_version(arrayDir) result(version_)
+   function load_array_version(arrayDir) result(version_)
       Character(len=*), intent(in):: arrayDir
       Integer:: version_
       Integer:: io
@@ -291,23 +291,23 @@ contains
       open(newunit=io, file=s(arrayDir) + '/' + ARRAY_VERSION_FILE, status='old', action='read')
       read(io, *) version_
       close(io)
-   end function read_array_version
+   end function load_array_version
 
-   subroutine read_array_meta(self, arrayDir)
+   subroutine load_array_meta(self, arrayDir)
       type(ArrayMeta), intent(inout):: self
       Character(len=*), intent(in):: arrayDir
       Integer:: version_
 
-      version_ = read_array_version(trim(arrayDir))
+      version_ = load_array_version(trim(arrayDir))
       select case(version_)
       case(2)
-         call read_array_meta_v_2(self, trim(arrayDir))
+         call load_array_meta_v_2(self, trim(arrayDir))
       case default
          RAISE('Unsupported version ' + str(version_) + ' for ' + trim(arrayDir))
       end select
-   end subroutine read_array_meta
+   end subroutine load_array_meta
 
-   subroutine read_array_meta_v_2(self, arrayDir)
+   subroutine load_array_meta_v_2(self, arrayDir)
       type(ArrayMeta), intent(inout):: self
       Character(len=*), intent(in):: arrayDir
 
@@ -323,10 +323,10 @@ contains
          ASSERT(get_config_value(io, 'sizes(' + str(dim) + ')', self%sizes(dim)))
       end do
       close(io)
-   end subroutine read_array_meta_v_2
+   end subroutine load_array_meta_v_2
 
    <%- TYPES.each{|t| -%>
-      subroutine write_array<%= t %>(self, arrayDir<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+      subroutine dump_array<%= t %>(self, arrayDir<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
          <%= t.declare %>, intent(in):: self
          character(len = *), intent(in):: arrayDir
          <%- if NUM_DESC_MAX >= 1 -%>
@@ -368,26 +368,26 @@ contains
             if(present(desc<%= i %>)) write(wU1, *) desc<%= i %>
          <%- } -%>
          close(wU1)
-      end subroutine write_array<%= t %>
+      end subroutine dump_array<%= t %>
 
-      subroutine read_array<%= t %>(self, arrayDir)
+      subroutine load_array<%= t %>(self, arrayDir)
          <%= t.declare %>, intent(inout), allocatable:: self
          character(len = *), intent(in):: arrayDir
 
          Integer:: version_
 
-         version_ = read_array_version(trim(arrayDir))
+         version_ = load_array_version(trim(arrayDir))
          select case(version_)
          case(1)
-            call read_array_v_1(self, arrayDir)
+            call load_array_v_1(self, arrayDir)
          case(2)
-            call read_array_v_2(self, arrayDir)
+            call load_array_v_2(self, arrayDir)
          case default
             RAISE('Unsupported version ' + str(version_) + ' for ' + trim(arrayDir))
          end select
-      end subroutine read_array<%= t %>
+      end subroutine load_array<%= t %>
 
-      subroutine read_array_v_2<%= t %>(self, arrayDir)
+      subroutine load_array_v_2<%= t %>(self, arrayDir)
          <%= t.declare %>, intent(inout), allocatable:: self
          character(len = *), intent(in):: arrayDir
 
@@ -396,7 +396,7 @@ contains
          type(ArrayMeta):: meta
          integer:: io
 
-         call read_array_meta_v_2(meta, trim(arrayDir))
+         call load_array_meta_v_2(meta, trim(arrayDir))
 
          ASSERT(meta%dataType == DATA_TYPE_FOR_SELF)
          ASSERT(meta%dim == DIM_FOR_SELF)
@@ -406,9 +406,9 @@ contains
 
          open(newunit=io, file=s(arrayDir) + '/' + ARRAY_DATA_FILE, status='old', action='read', form='unformatted', access='stream')
          read(io) self
-      end subroutine read_array_v_2<%= t %>
+      end subroutine load_array_v_2<%= t %>
 
-      subroutine read_array_v_1<%= t %>(self, arrayDir)
+      subroutine load_array_v_1<%= t %>(self, arrayDir)
          <%= t.declare %>, intent(inout), allocatable:: self
          character(len = *), intent(in):: arrayDir
 
@@ -433,6 +433,6 @@ contains
 
          open(newunit = rU1, file = s(arrayDir) + '/' + ARRAY_DATA_FILE, status = 'old', action = 'read', form = 'unformatted', access = 'stream')
          read(rU1) self
-      end subroutine read_array_v_1<%= t %>
+      end subroutine load_array_v_1<%= t %>
    <%- } -%>
 end module io_lib
