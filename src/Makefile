@@ -40,62 +40,62 @@ test: $(TESTS) $(ERRORTESTS)
 
 # Tasks
 # Executables
-../bin/text_dump_array.exe: constant_lib.o constant_lib.mod character_lib.o character_lib.mod config_lib.o config_lib.mod io_lib.o io_lib.mod text_dump_array.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
-../bin/get_wgs84_from_ecef.exe: character_lib.o character_lib.mod constant_lib.o constant_lib.mod geodetic_lib.o geodetic_lib.mod get_wgs84_from_ecef.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
-../bin/get_ecef_from_wgs84.exe: character_lib.o character_lib.mod constant_lib.o constant_lib.mod geodetic_lib.o geodetic_lib.mod get_ecef_from_wgs84.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+../bin/text_dump_array.exe: constant_lib.o character_lib.o config_lib.o io_lib.o text_dump_array.o
+	$(FORTRAN) -o $@ $^
+../bin/get_wgs84_from_ecef.exe: character_lib.o constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
+	$(FORTRAN) -o $@ $^
+../bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
+	$(FORTRAN) -o $@ $^
 # Tests
-comparable_lib_test.exe: constant_lib.o constant_lib.mod comparable_lib.o comparable_lib.mod comparable_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+comparable_lib_test.exe: constant_lib.o comparable_lib.o comparable_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-character_lib_test.exe: character_lib.o character_lib.mod character_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+character_lib_test.exe: character_lib.o character_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-constant_lib_test.exe: comparable_lib.o comparable_lib.mod constant_lib.o constant_lib.mod constant_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+constant_lib_test.exe: comparable_lib.o constant_lib.o constant_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-sort_lib_test.exe: constant_lib.o constant_lib.mod stack_lib.o stack_lib.mod comparable_lib.o comparable_lib.mod sort_lib.o sort_lib.mod sort_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+sort_lib_test.exe: constant_lib.o stack_lib.o comparable_lib.o sort_lib.o sort_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-list_lib_test.exe: comparable_lib.o comparable_lib.mod list_lib.o list_lib.mod list_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+list_lib_test.exe: comparable_lib.o list_lib.o list_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-stack_lib_test.exe: stack_lib.o stack_lib.mod stack_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+stack_lib_test.exe: stack_lib.o stack_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-queue_lib_test.exe: queue_lib.o queue_lib.mod queue_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+queue_lib_test.exe: queue_lib.o queue_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-io_lib_test.exe: config_lib.o config_lib.mod constant_lib.o constant_lib.mod character_lib.o character_lib.mod comparable_lib.o comparable_lib.mod io_lib.o io_lib.mod io_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+io_lib_test.exe: config_lib.o constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-config_lib_test.exe: config_lib.o config_lib.mod config_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+config_lib_test.exe: config_lib.o config_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-io_lib_errortest.make: io_lib_errortest.rb config_lib.o config_lib.mod constant_lib.o constant_lib.mod character_lib.o character_lib.mod comparable_lib.o comparable_lib.mod io_lib.o io_lib.mod io_lib_test.o
+io_lib_errortest.make: io_lib_errortest.rb config_lib.o constant_lib.o character_lib.o comparable_lib.o io_lib.o io_lib_test.o
 	${RUBY} errortest_generate.rb $<
-binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib.mod binary_tree_map_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+binary_tree_map_lib_test.exe: binary_tree_map_lib.o binary_tree_map_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-binary_tree_map_lib_errortest.make: binary_tree_map_lib_errortest.rb binary_tree_map_lib.o binary_tree_map_lib.mod binary_tree_map_lib_test.o
+binary_tree_map_lib_errortest.make: binary_tree_map_lib_errortest.rb binary_tree_map_lib.o binary_tree_map_lib_test.o
 	${RUBY} errortest_generate.rb $<
-sac_lib_test.exe: character_lib.o character_lib.mod sac_lib.o sac_lib.mod sac_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+sac_lib_test.exe: character_lib.o sac_lib.o sac_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
-sac_lib_errortest.make: sac_lib_errortest.rb character_lib.o character_lib.mod sac_lib.o sac_lib.mod sac_lib_test.o
+sac_lib_errortest.make: sac_lib_errortest.rb character_lib.o sac_lib.o sac_lib_test.o
 	${RUBY} errortest_generate.rb $<
 path_lib_test.exe: path_lib.o path_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+	$(FORTRAN) -o $@ $^
 	./$@
-geodetic_lib_test.exe: constant_lib.o constant_lib.mod comparable_lib.o comparable_lib.mod geodetic_lib.o geodetic_lib.mod geodetic_lib_test.o
-	$(FORTRAN) -o $@ $(filter-out %.mod, $^)
+geodetic_lib_test.exe: constant_lib.o comparable_lib.o geodetic_lib.o geodetic_lib_test.o
+	$(FORTRAN) -o $@ $^
 	./$@
 
 # Rules
 %.F90: %.F90.erb
-	$(ERB) $(filter-out %.mod, $^) > $(TMP_DIR)/$@
+	$(ERB) $^ > $(TMP_DIR)/$@
 	mv -f $(TMP_DIR)/$@ $@
 %.o: %.F90 utils.h
 	$(FORTRAN) -c $(filter-out %.h, $^)
