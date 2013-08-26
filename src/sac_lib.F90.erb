@@ -178,7 +178,7 @@ module sac_lib
 
    private
 
-   public:: read_sac, write_sac
+   public:: load_sac, dump_sac
    public:: set_body, get_body
    <%- BODIES.each{|name| -%>
       public:: set_body_<%= name %>, get_body_<%= name %>
@@ -277,7 +277,7 @@ module sac_lib
 
 contains
 
-   subroutine read_sac(self, fileName)
+   subroutine load_sac(self, fileName)
       type(Sac), intent(out):: self
       Character(len = *), intent(in):: fileName
 
@@ -352,9 +352,9 @@ contains
       end select
 
       close(io)
-   end subroutine read_sac
+   end subroutine load_sac
 
-   subroutine write_sac(self, fileName)
+   subroutine dump_sac(self, fileName)
       type(Sac), intent(inout):: self
       Character(len = *), intent(in):: fileName
 
@@ -389,7 +389,7 @@ contains
       end select
 
       close(io)
-   end subroutine write_sac
+   end subroutine dump_sac
 
    subroutine set_body_itime(self, value)
       type(Sac), intent(inout):: self
