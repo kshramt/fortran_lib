@@ -12,7 +12,7 @@ program runner
   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap
 EOS
 
-errortest 'add too long key', "call append_binary_tree_map(treeMap, '||', -1)"
+errortest 'add too long key', "call append(treeMap, '||', -1)"
 
 teardown <<-EOS
   stop

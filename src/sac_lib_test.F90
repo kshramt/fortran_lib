@@ -69,8 +69,8 @@ program sac_lib_test
    call set_delta(wIo, 0.05)  ! required
 
    call set_body(wIo, real([1, 2, 3, 4, 5, 6, 7])) ! npts should be larger than 5 (SAC's limitation).
-   call dump_sac(wIo, 'tmp.sac')
-   call load_sac(wIo, 'tmp.sac')
+   call dump(wIo, 'tmp.sac')
+   call load(wIo, 'tmp.sac')
    call get_body(wIo, body)
    print*, body
 

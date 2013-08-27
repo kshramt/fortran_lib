@@ -38,7 +38,7 @@ module io_lib
    private
    public:: VERSION, ARRAY_DATA_FILE, ARRAY_META_FILE, ARRAY_VERSION_FILE, ARRAY_DESCRIPTION_FILE
    public:: get_column_format_string
-   public:: dump_array, load_array, load_array_version, load_array_meta
+   public:: dump, load, load_version, load_meta
    public:: get_line_number, number_of_columns, file_shape
    public:: mktemp
    public:: sh
@@ -65,22 +65,30 @@ module io_lib
       end interface get_column_format_string
    <%- } -%>
 
+   interface load_meta
+      module procedure load_array_meta
+   end interface load_meta
+
+   interface load_version
+      module procedure load_array_version
+   end interface load_version
+
    <%- TYPES.each{|t| -%>
-      interface dump_array
+      interface dump
          module procedure dump_array<%= t %>
-      end interface dump_array
+      end interface dump
 
-      interface load_array
+      interface load
          module procedure load_array<%= t %>
-      end interface load_array
+      end interface load
 
-      interface load_array_v_2
+      interface load_v_2
          module procedure load_array_v_2<%= t %>
-      end interface load_array_v_2
+      end interface load_v_2
 
-      interface load_array_v_1
+      interface load_v_1
          module procedure load_array_v_1<%= t %>
-      end interface load_array_v_1
+      end interface load_v_1
    <%- } -%>
 
 contains
@@ -379,9 +387,9 @@ contains
          version_ = load_array_version(trim(arrayDir))
          select case(version_)
          case(1)
-            call load_array_v_1(self, arrayDir)
+            call load_v_1(self, arrayDir)
          case(2)
-            call load_array_v_2(self, arrayDir)
+            call load_v_2(self, arrayDir)
          case default
             RAISE('Unsupported version ' + str(version_) + ' for ' + trim(arrayDir))
          end select

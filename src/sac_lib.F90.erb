@@ -178,7 +178,7 @@ module sac_lib
 
    private
 
-   public:: load_sac, dump_sac
+   public:: load, dump
    public:: set_body, get_body
    <%- BODIES.each{|name| -%>
       public:: set_body_<%= name %>, get_body_<%= name %>
@@ -186,6 +186,14 @@ module sac_lib
    <%- ALL_HEADS.each{|name, _| -%>
       public:: set_<%= name %>, is_<%= name %>_defined, get_<%= name %>
    <%- } -%>
+
+   interface load
+      module procedure load
+   end interface load
+
+   interface dump
+      module procedure dump
+   end interface dump
 
    Integer(kind = INT32), parameter, public:: SAC_INTEGER_KIND = INT32
    Integer(kind = INT32), parameter, public:: SAC_REAL_KIND = REAL32
@@ -277,7 +285,7 @@ module sac_lib
 
 contains
 
-   subroutine load_sac(self, fileName)
+   subroutine load(self, fileName)
       type(Sac), intent(out):: self
       Character(len = *), intent(in):: fileName
 
@@ -352,9 +360,9 @@ contains
       end select
 
       close(io)
-   end subroutine load_sac
+   end subroutine load
 
-   subroutine dump_sac(self, fileName)
+   subroutine dump(self, fileName)
       type(Sac), intent(inout):: self
       Character(len = *), intent(in):: fileName
 
@@ -389,7 +397,7 @@ contains
       end select
 
       close(io)
-   end subroutine dump_sac
+   end subroutine dump
 
    subroutine set_body_itime(self, value)
       type(Sac), intent(inout):: self

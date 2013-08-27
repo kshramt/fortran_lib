@@ -17,14 +17,14 @@
 %>
 
 # include "utils.h"
-! Text dump arbitrary 1-D array (except for Character array) stored by io_lib/write_array
+! Text dump arbitrary 1-D array (except for Character array) stored by io_lib/dump
 program main
    USE_UTILS_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, non_intrinsic:: character_lib, only: operator(+)
    use, non_intrinsic:: io_lib, only: ArrayMeta
-   use, non_intrinsic:: io_lib, only: read_array, read_array_meta, get_column_format_string, LEN_FORMAT_STRING_MAX
+   use, non_intrinsic:: io_lib, only: load, load_meta, get_column_format_string, LEN_FORMAT_STRING_MAX
 
    implicit none
 
@@ -42,19 +42,19 @@ program main
    ASSERT(status == 0)
 
    if(arrayDir == '-h' .or. arrayDir == '--help') call usage_and_exit()
-   call read_array_meta(meta, trim(arrayDir))
+   call load_meta(meta, trim(arrayDir))
 
    select case(meta%dataType)
    <%- TYPES_1.each{|t| -%>
      case('<%= t %>')
-        call read_array(array<%= t %>, trim(arrayDir))
+        call load(array<%= t %>, trim(arrayDir))
         do ALL_OF(i, array<%= t %>, 1)
            write(OUTPUT_UNIT, *) array<%= t %>(i)
         end do
    <%- } -%>
    <%- TYPES_2.each{|t| -%>
      case('<%= t %>')
-        call read_array(array<%= t %>, trim(arrayDir))
+        call load(array<%= t %>, trim(arrayDir))
         format = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2))
         do ALL_OF(i, array<%= t %>, 1)
            write(OUTPUT_UNIT, trim(format)) array<%= t %>(i, :)

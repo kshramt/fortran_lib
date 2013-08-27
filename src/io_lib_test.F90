@@ -44,26 +44,26 @@ program io_lib_test
    TEST(isNamed)
    close(io)
 
-   ! = load_array, dump_array
+   ! = load, dump
    ! == Real 1D
    xs = [1, 2, 3, 4, 5]
    xsOriginal = xs
-   call dump_array(xs, 'xs.array', 'Real 1D test', 'Multiple descriptions.')
+   call dump(xs, 'xs.array', 'Real 1D test', 'Multiple descriptions.')
    TEST(all(almost_equal(xs, xsOriginal)))
-   TEST(load_array_version('xs.array') == IO_LIB_VERSION)
-   call load_array_meta(meta, 'xs.array')
+   TEST(load_version('xs.array') == IO_LIB_VERSION)
+   call load_meta(meta, 'xs.array')
    TEST(meta%dataType == 'RealDim1KindREAL64')
    TEST(meta%dim == 1)
    TEST(all(meta%sizes == shape(xs)))
-   call load_array(xs, 'xs.array')
+   call load(xs, 'xs.array')
    TEST(all(almost_equal(xs, xsOriginal)))
 
    ! == Integer 2D
    ns = reshape(int([1, 2, 3, 4, 5, 6], kind = kind(ns)), [2, 3])
    nsOriginal = ns
-   call dump_array(ns, 'ns.array')
+   call dump(ns, 'ns.array')
    TEST(all(almost_equal(ns, nsOriginal)))
-   call load_array(ns, 'ns.array')
+   call load(ns, 'ns.array')
    TEST(all(almost_equal(ns, nsOriginal)))
 
    write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__

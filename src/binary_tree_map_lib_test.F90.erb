@@ -15,32 +15,32 @@ program binary_tree_map_lib_test
    Logical:: lTmp
 
    <%- pairs.shuffle.each{|c, i| -%>
-      call append_binary_tree_map(treeMap1, '<%= c %>', <%= i %>)
+      call append(treeMap1, '<%= c %>', <%= i %>)
    <%- } -%>
    <%- pairs.shuffle.each{|c, i| -%>
-      TEST(has_key_binary_tree_map(treeMap1, '<%= c %>'))
-      TEST(get_value_binary_tree_map(treeMap1, '<%= c %>', n))
+      TEST(has_key(treeMap1, '<%= c %>'))
+      TEST(get_value(treeMap1, '<%= c %>', n))
       TEST(n == <%= i %>)
    <%- } -%>
 
-   TEST(.not.has_key_binary_tree_map(treeMap1, '/'))
-   TEST(.not.get_value_binary_tree_map(treeMap1, '/', n))
+   TEST(.not.has_key(treeMap1, '/'))
+   TEST(.not.get_value(treeMap1, '/', n))
 
    ! key is trimed
-   call append_binary_tree_map(treeMap1, '| ', -1)
-   TEST(has_key_binary_tree_map(treeMap1, '| '))
-   TEST(get_value_binary_tree_map(treeMap1, '| ', n))
+   call append(treeMap1, '| ', -1)
+   TEST(has_key(treeMap1, '| '))
+   TEST(get_value(treeMap1, '| ', n))
    TEST(n == -1)
 
    ! has_key or get_value with too long key returns .false.
-   TEST(.not.has_key_binary_tree_map(treeMap1, '||'))
-   TEST(.not.get_value_binary_tree_map(treeMap1, '||', n))
+   TEST(.not.has_key(treeMap1, '||'))
+   TEST(.not.get_value(treeMap1, '||', n))
 
    ! key is not ladjusted
-   call append_binary_tree_map(treeMap2, ' |', 0)
-   call append_binary_tree_map(treeMap2, '|', 1)
-   lTmp = get_value_binary_tree_map(treeMap2, ' |', n1)
-   lTmp = get_value_binary_tree_map(treeMap2, '|', n2)
+   call append(treeMap2, ' |', 0)
+   call append(treeMap2, '|', 1)
+   lTmp = get_value(treeMap2, ' |', n1)
+   lTmp = get_value(treeMap2, '|', n2)
    ASSERT(n1 /= n2)
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__

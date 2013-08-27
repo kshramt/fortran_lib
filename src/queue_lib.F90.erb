@@ -23,21 +23,21 @@ module queue_lib
 
    private
 
-   public:: push_queue
-   public:: shift_queue
+   public:: push
+   public:: shift
 
    <%- TYPES.each{|t| -%>
-      interface push_queue
+      interface push
          module procedure push<%= t %>Queue
-      end interface push_queue
+      end interface push
 
-      interface shift_queue
+      interface shift
          module procedure shift<%= t %>Queue
-      end interface shift_queue
+      end interface shift
 
-      interface is_empty_queue
+      interface is_empty
          module procedure is_empty<%= t %>Queue
-      end interface is_empty_queue
+      end interface is_empty
    <%- } -%>
 
    type, public:: Queue
@@ -77,7 +77,7 @@ contains
          ! end type <%= t %>Queue
          ! ! and the following if-statement could be simplified as:
          ! self%tail%next => newNode
-         if(is_empty_queue(self))then
+         if(is_empty(self))then
             self%head => newNode
          else
             self%tail%next => newNode
@@ -91,7 +91,7 @@ contains
          Logical:: isSuccess
          type(<%= t %>QueueNode), pointer:: removedNode => null()
 
-         if(is_empty_queue(self))then
+         if(is_empty(self))then
             isSuccess = .false.
             return
          end if

@@ -23,34 +23,34 @@ module binary_tree_map_lib
 
    private
 
-   public:: append_binary_tree_map
-   public:: has_key_binary_tree_map
-   public:: get_value_binary_tree_map
+   public:: append
+   public:: has_key
+   public:: get_value
 
    <%- CHARACTERS_DIM0_BY_TYPES.each{|key_type, value_type| -%>
-      interface append_binary_tree_map
+      interface append
          module procedure:: add<%= key_type %><%= value_type %>BinaryTreeMap
-      end interface append_binary_tree_map
+      end interface append
 
-      interface has_key_binary_tree_map
+      interface has_key
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMap
-      end interface has_key_binary_tree_map
+      end interface has_key
 
-      interface get_value_binary_tree_map
+      interface get_value
          module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMap
-      end interface get_value_binary_tree_map
+      end interface get_value
 
-      interface append_binary_tree_map_node
+      interface append_node
          module procedure:: add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface append_binary_tree_map_node
+      end interface append_node
 
-      interface has_key_binary_tree_map_node
+      interface has_key_node
          module procedure:: has_key<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface has_key_binary_tree_map_node
+      end interface has_key_node
 
-      interface get_value_binary_tree_map_node
+      interface get_value_node
          module procedure:: get_value<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode
-      end interface get_value_binary_tree_map_node
+      end interface get_value_node
    <%- } -%>
 
 
@@ -82,7 +82,7 @@ contains
          <%= value_type.declare %>, intent(in):: value
 
          ASSERT(len_trim(key) <= <%= key_type.len %>)
-         call append_binary_tree_map_node(self%root, key, value)
+         call append_node(self%root, key, value)
       end subroutine add<%= key_type %><%= value_type %>BinaryTreeMap
 
       recursive subroutine add<%= key_type.id %><%= value_type.id %>BinaryTreeMapNode(self, key, value)
@@ -92,9 +92,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               call append_binary_tree_map_node(self%small, key, value)
+               call append_node(self%small, key, value)
             else if(key > self%key)then
-               call append_binary_tree_map_node(self%large, key, value)
+               call append_node(self%large, key, value)
             else
                self%value = value
             end if
@@ -111,7 +111,7 @@ contains
          Logical:: answer
 
          if(len_trim(key) <= <%= key_type.len %>)then
-            answer = has_key_binary_tree_map_node(self%root, key)
+            answer = has_key_node(self%root, key)
          else
             answer = .false.
          end if
@@ -124,9 +124,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               answer = has_key_binary_tree_map_node(self%small, key)
+               answer = has_key_node(self%small, key)
             else if(key > self%key)then
-               answer = has_key_binary_tree_map_node(self%large, key)
+               answer = has_key_node(self%large, key)
             else
                answer = .true.
             end if
@@ -142,7 +142,7 @@ contains
          Logical:: isSuccess
 
          if(len_trim(key) <= <%= key_type.len %>)then
-            isSuccess = get_value_binary_tree_map_node(self%root, key, value)
+            isSuccess = get_value_node(self%root, key, value)
          else
             isSuccess = .false.
          end if
@@ -156,9 +156,9 @@ contains
 
          if(associated(self))then
             if(key < self%key)then
-               isSuccess = get_value_binary_tree_map_node(self%small, key, value)
+               isSuccess = get_value_node(self%small, key, value)
             else if(key > self%key)then
-               isSuccess = get_value_binary_tree_map_node(self%large, key, value)
+               isSuccess = get_value_node(self%large, key, value)
             else
                value = self%value
                isSuccess = .true.

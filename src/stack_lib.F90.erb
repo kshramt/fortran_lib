@@ -22,21 +22,21 @@ module stack_lib
 
    private
 
-   public:: push_stack
-   public:: pop_stack
+   public:: push
+   public:: pop
 
    <%- TYPES.each{|t| -%>
-      interface push_stack
+      interface push
          module procedure push<%= t %>Stack
-      end interface push_stack
+      end interface push
 
-      interface pop_stack
+      interface pop
          module procedure pop<%= t %>Stack
-      end interface pop_stack
+      end interface pop
 
-      interface is_empty_stack
+      interface is_empty
          module procedure is_empty<%= t %>Stack
-      end interface is_empty_stack
+      end interface is_empty
    <%- } -%>
 
    type, public:: Stack
@@ -76,7 +76,7 @@ contains
          Logical:: isSuccess
          type(<%= t %>StackNode), pointer:: removedNode => null()
 
-         if(is_empty_stack(self))then
+         if(is_empty(self))then
             isSuccess = .false.
             return
          end if
