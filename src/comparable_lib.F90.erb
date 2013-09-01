@@ -112,13 +112,13 @@ contains
          end if
 
          if(present(relative))then
-            deltaRelative = max(abs(a*relative), abs(b*relative))
+            deltaRelative = max(abs(a)*relative, abs(b)*relative)
          else
             deltaRelative = 2*max(epsilon(a)*abs(a), epsilon(b)*abs(b))
          end if
 
          if(present(absolute))then
-            deltaAbsolute = abs(absolute)
+            deltaAbsolute = absolute
          else
             deltaAbsolute = 2*epsilon(lowerPrecision)*tiny(lowerPrecision)
          end if
