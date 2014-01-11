@@ -204,8 +204,8 @@ module sac_lib
    Integer(kind=SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
    Integer(kind=SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
    Real(kind=SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
-   Character(len = *), parameter, public:: STRING_UNDEFINED = '-12345'
-   Character(len = LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
+   Character(len=*), parameter, public:: STRING_UNDEFINED = '-12345'
+   Character(len=LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
       "itime   ", "irlim   ", "iamph   ", "ixy     ", "iunkn   ", "idisp   ", "ivel    ", "iacc    ", &
       "ib      ", "iday    ", "io      ", "ia      ", "it0     ", "it1     ", "it2     ", "it3     ", &
       "it4     ", "it5     ", "it6     ", "it7     ", "it8     ", "it9     ", "iradnv  ", "itannv  ", &
@@ -246,11 +246,11 @@ module sac_lib
       <%- } -%>
 
       <%- LONG_STRINGS.each{|name, _| -%>
-         Character(len = LEN_LONG_STRING):: <%= name %> = STRING_UNDEFINED
+         Character(len=LEN_LONG_STRING):: <%= name %> = STRING_UNDEFINED
       <%- } -%>
 
       <%- SHORT_STRINGS.each{|name, _| -%>
-         Character(len = LEN_SHORT_STRING):: <%= name %> = STRING_UNDEFINED
+         Character(len=LEN_SHORT_STRING):: <%= name %> = STRING_UNDEFINED
       <%- } -%>
    end type SacHead
 
@@ -303,7 +303,7 @@ contains
 
    subroutine load(self, fileName)
       type(Sac), intent(out):: self
-      Character(len = *), intent(in):: fileName
+      Character(len=*), intent(in):: fileName
 
       Integer(kind=SAC_INTEGER_KIND):: npts, nxsize, nysize
       Integer(kind=INT32):: io
@@ -374,7 +374,7 @@ contains
 
    subroutine dump(self, fileName)
       type(Sac), intent(inout):: self
-      Character(len = *), intent(in):: fileName
+      Character(len=*), intent(in):: fileName
 
       Integer(kind=INT32):: io
       Real(kind=SAC_REAL_KIND), allocatable:: ixy(:, :)
@@ -670,7 +670,7 @@ contains
       function get_<%= name %>_v_i(self, isDefined) result(value)
          type(Sac), intent(in):: self
          Logical, intent(out):: isDefined
-         Character(len = LEN_ENUMERATED_VALUE_MAX):: value
+         Character(len=LEN_ENUMERATED_VALUE_MAX):: value
 
          value = get_<%= name %>(self)
          isDefined = is_<%= name %>_defined(self)
@@ -678,7 +678,7 @@ contains
 
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
-         Character(len = LEN_ENUMERATED_VALUE_MAX), intent(out):: value
+         Character(len=LEN_ENUMERATED_VALUE_MAX), intent(out):: value
          Logical:: isDefined
 
          value = get_<%= name %>(self)
@@ -687,7 +687,7 @@ contains
 
       function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
-         Character(len = LEN_ENUMERATED_VALUE_MAX):: value
+         Character(len=LEN_ENUMERATED_VALUE_MAX):: value
 
          Integer:: internalValue
 
@@ -708,7 +708,7 @@ contains
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
-         Character(len = *), intent(in):: value
+         Character(len=*), intent(in):: value
 
          Integer:: internalValue
 
@@ -765,7 +765,7 @@ contains
    <%- (LONG_STRINGS + SHORT_STRINGS).each{|name, length| -%>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
-         Character(len = LEN_<%= length %>_STRING), intent(out):: value
+         Character(len=LEN_<%= length %>_STRING), intent(out):: value
          Logical:: isDefined
 
          value = get_<%= name %>(self)
@@ -775,7 +775,7 @@ contains
       function get_<%= name %>_v_i(self, isDefined) result(value)
          type(Sac), intent(in):: self
          Logical, intent(out):: isDefined
-         Character(len = LEN_<%= length %>_STRING):: value
+         Character(len=LEN_<%= length %>_STRING):: value
 
          value = get_<%= name %>(self)
          isDefined = is_<%= name %>_defined(self)
@@ -783,7 +783,7 @@ contains
 
       function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
-         Character(len = LEN_<%= length %>_STRING):: value
+         Character(len=LEN_<%= length %>_STRING):: value
 
          value = self%head%<%= name %>
       end function get_<%= name %>_v
@@ -797,7 +797,7 @@ contains
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
-         Character(len = *), intent(in):: value
+         Character(len=*), intent(in):: value
 
          ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
          self%head%<%= name %> = value
