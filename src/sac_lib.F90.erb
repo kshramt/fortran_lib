@@ -607,11 +607,11 @@ contains
          value = self%head%<%= name %>
       end function get_<%= name %>
 
-      function is_<%= name %>_defined(self) result(answer)
+      function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
-         Logical:: answer
+         Logical:: ret
 
-         answer = (self%head%<%= name %> /= INTEGER_UNDEFINED)
+         ret = (self%head%<%= name %> /= INTEGER_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -634,12 +634,12 @@ contains
          value = ENUMERATED_VALUES(internalValue)
       end function get_<%= name %>
 
-      function is_<%= name %>_defined(self) result(answer)
+      function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
-         Logical:: answer
+         Logical:: ret
 
          ! 2nd condition is enough since ENUMERATED_VALUE_UNDEFINED is -12345.
-         answer = &
+         ret = &
             (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
             .and. check_bound(self%head%<%= name %>, ENUMERATED_VALUES, 1)
       end function is_<%= name %>_defined
@@ -672,11 +672,11 @@ contains
          value = (internalValue == 1)
       end function get_<%= name %>
 
-      function is_<%= name %>_defined(self) result(answer)
+      function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
-         Logical:: answer
+         Logical:: ret
 
-         answer = ((self%head%<%= name %> == 1) .or. (self%head%<%= name %> == 0))
+         ret = ((self%head%<%= name %> == 1) .or. (self%head%<%= name %> == 0))
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -700,11 +700,11 @@ contains
       end function get_<%= name %>
 
 
-      function is_<%= name %>_defined(self) result(answer)
+      function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
-         Logical:: answer
+         Logical:: ret
 
-         answer = (self%head%<%= name %> /= STRING_UNDEFINED)
+         ret = (self%head%<%= name %> /= STRING_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
