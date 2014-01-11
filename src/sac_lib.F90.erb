@@ -195,15 +195,15 @@ module sac_lib
       module procedure dump
    end interface dump
 
-   Integer(kind = INT32), parameter, public:: SAC_INTEGER_KIND = INT32
-   Integer(kind = INT32), parameter, public:: SAC_REAL_KIND = REAL32
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_SHORT_STRING = 8
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_LONG_STRING = 2*LEN_SHORT_STRING
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: LEN_ENUMERATED_VALUE_MAX = 8
+   Integer(kind=INT32), parameter, public:: SAC_INTEGER_KIND = INT32
+   Integer(kind=INT32), parameter, public:: SAC_REAL_KIND = REAL32
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: LEN_SHORT_STRING = 8
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: LEN_LONG_STRING = 2*LEN_SHORT_STRING
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: LEN_ENUMERATED_VALUE_MAX = 8
 
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
-   Real(kind = SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: INTEGER_UNDEFINED = -12345
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: ENUMERATED_VALUE_UNDEFINED = -12345
+   Real(kind=SAC_REAL_KIND), parameter, public:: FLOAT_UNDEFINED = -12345
    Character(len = *), parameter, public:: STRING_UNDEFINED = '-12345'
    Character(len = LEN_ENUMERATED_VALUE_MAX), parameter, public:: ENUMERATED_VALUES(1:86) = [ &
       "itime   ", "irlim   ", "iamph   ", "ixy     ", "iunkn   ", "idisp   ", "ivel    ", "iacc    ", &
@@ -217,8 +217,8 @@ module sac_lib
       "illnl   ", "ievloc  ", "ijsop   ", "iuser   ", "iunknown", "iqb     ", "iqb1    ", "iqb2    ", &
       "iqbx    ", "iqmt    ", "ieq     ", "ieq1    ", "ieq2    ", "ime     ", "iex     ", "inu     ", &
       "inc     ", "io      ", "il      ", "ir      ", "it      ", "iu      "]
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: NVHDR_DEFAULT = 6
-   Integer(kind = SAC_INTEGER_KIND), parameter, public:: SAC_TRUE = 1, SAC_FALSE = 0
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: NVHDR_DEFAULT = 6
+   Integer(kind=SAC_INTEGER_KIND), parameter, public:: SAC_TRUE = 1, SAC_FALSE = 0
 
    type:: Object
    end type Object
@@ -228,21 +228,21 @@ module sac_lib
       private
 
       <%- (FLOATS - %w[b]).each{|name| -%>
-         Real(kind = SAC_REAL_KIND):: <%= name %> = FLOAT_UNDEFINED
+         Real(kind=SAC_REAL_KIND):: <%= name %> = FLOAT_UNDEFINED
       <%- } -%>
-      Real(kind = SAC_REAL_KIND):: b = 0
+      Real(kind=SAC_REAL_KIND):: b = 0
 
       <%- (INTEGERS - %w[nvhdr]).each{|name| -%>
-         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = INTEGER_UNDEFINED
+         Integer(kind=SAC_INTEGER_KIND):: <%= name %> = INTEGER_UNDEFINED
       <%- } -%>
-      Integer(kind = SAC_INTEGER_KIND):: nvhdr = NVHDR_DEFAULT
+      Integer(kind=SAC_INTEGER_KIND):: nvhdr = NVHDR_DEFAULT
 
       <%- ENUMERATED_VALUES.each{|name| -%>
-         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = ENUMERATED_VALUE_UNDEFINED
+         Integer(kind=SAC_INTEGER_KIND):: <%= name %> = ENUMERATED_VALUE_UNDEFINED
       <%- } -%>
 
       <%- LOGICALS.each{|name| -%>
-         Integer(kind = SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
+         Integer(kind=SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
       <%- } -%>
 
       <%- LONG_STRINGS.each{|name, _| -%>
@@ -257,12 +257,12 @@ module sac_lib
    type, extends(Object), public:: SacBody
       private
 
-      Real(kind = SAC_REAL_KIND), allocatable:: &
+      Real(kind=SAC_REAL_KIND), allocatable:: &
          itime(:), &
          ixy(:, :), &
          iamph(:, :), &
          ixyz(:, :)
-      Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
+      Complex(kind=SAC_REAL_KIND), allocatable:: irlim(:)
    end type SacBody
 
    type, extends(Object), public:: Sac
@@ -289,9 +289,9 @@ contains
       type(Sac), intent(out):: self
       Character(len = *), intent(in):: fileName
 
-      Integer(kind = SAC_INTEGER_KIND):: npts, nxsize, nysize
-      Integer(kind = INT32):: io
-      Real(kind = SAC_REAL_KIND), allocatable:: &
+      Integer(kind=SAC_INTEGER_KIND):: npts, nxsize, nysize
+      Integer(kind=INT32):: io
+      Real(kind=SAC_REAL_KIND), allocatable:: &
          xs(:), ys(:), &
          amplitudes(:), thetas(:), &
          reals(:), imaginaries(:)
@@ -366,9 +366,9 @@ contains
       type(Sac), intent(inout):: self
       Character(len = *), intent(in):: fileName
 
-      Integer(kind = INT32):: io
-      Real(kind = SAC_REAL_KIND), allocatable:: ixy(:, :)
-      Complex(kind = SAC_REAL_KIND), allocatable:: irlim(:)
+      Integer(kind=INT32):: io
+      Real(kind=SAC_REAL_KIND), allocatable:: ixy(:, :)
+      Complex(kind=SAC_REAL_KIND), allocatable:: irlim(:)
 
       open(newunit = io, file = trim(fileName), status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
 
@@ -401,10 +401,10 @@ contains
 
    subroutine set_body_itime(self, value)
       type(Sac), intent(inout):: self
-      Real(kind = SAC_REAL_KIND), intent(in):: value(:)
+      Real(kind=SAC_REAL_KIND), intent(in):: value(:)
 
-      Real(kind = SAC_REAL_KIND):: b, delta
-      Integer(kind = SAC_INTEGER_KIND):: npts
+      Real(kind=SAC_REAL_KIND):: b, delta
+      Integer(kind=SAC_INTEGER_KIND):: npts
 
       npts = size(value, 1)
       ASSERT(is_b_defined(self))
@@ -430,7 +430,7 @@ contains
    function get_body_itime(self) result(value)
       type(Sac), intent(in):: self
 
-      Real(kind = SAC_REAL_KIND), allocatable:: value(:)
+      Real(kind=SAC_REAL_KIND), allocatable:: value(:)
 
       ASSERT(is_iftype_defined(self))
       ASSERT(get_iftype(self) == 'itime')
@@ -441,7 +441,7 @@ contains
 
    subroutine get_body_itime_(self, value)
       type(Sac), intent(in):: self
-      Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
+      Real(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:)
 
       value = get_body_itime(self)
    end subroutine get_body_itime_
@@ -449,9 +449,9 @@ contains
    <%- %w[ixy iamph].each{|t| -%>
       subroutine set_body_<%= t %>(self, value)
          type(Sac), intent(inout):: self
-         Real(kind = SAC_REAL_KIND):: value(:, :)
+         Real(kind=SAC_REAL_KIND):: value(:, :)
 
-         Integer(kind = SAC_INTEGER_KIND):: npts
+         Integer(kind=SAC_INTEGER_KIND):: npts
 
          ASSERT(size(value, 2) == 2) ! [[x1, y1], [x2, y2], ...]
          npts = size(value, 1)
@@ -476,7 +476,7 @@ contains
       function get_body_<%= t %>(self) result(value)
          type(Sac), intent(in):: self
 
-         Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
+         Real(kind=SAC_REAL_KIND), allocatable:: value(:, :)
 
          ASSERT(get_iftype(self) == '<%= t %>')
          ASSERT(allocated(self%body%<%= t %>))
@@ -487,7 +487,7 @@ contains
 
    subroutine set_body_irlim(self, value)
       type(Sac), intent(inout):: self
-      Complex(kind = SAC_REAL_KIND), intent(in):: value(:)
+      Complex(kind=SAC_REAL_KIND), intent(in):: value(:)
 
       call set_iftype(self, 'irlim')
       call set_leven(self, .false.)
@@ -503,7 +503,7 @@ contains
    function get_body_irlim(self) result(value)
       type(Sac), intent(in):: self
 
-      Complex(kind = SAC_REAL_KIND), allocatable:: value(:)
+      Complex(kind=SAC_REAL_KIND), allocatable:: value(:)
 
       ASSERT(get_iftype(self) == 'irlim')
       ASSERT(allocated(self%body%irlim))
@@ -513,14 +513,14 @@ contains
 
    subroutine get_body_irlim_(self, value)
       type(Sac), intent(in):: self
-      Complex(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:)
+      Complex(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:)
 
       value = get_body_itime(self)
    end subroutine get_body_irlim_
 
    subroutine set_body_ixyz(self, value)
       type(Sac), intent(inout):: self
-      Real(kind = SAC_REAL_KIND), intent(in):: value(:, :)
+      Real(kind=SAC_REAL_KIND), intent(in):: value(:, :)
 
       call set_iftype(self, 'ixyz')
       call set_leven(self, .true.)
@@ -537,7 +537,7 @@ contains
    function get_body_ixyz(self) result(value)
       type(Sac), intent(in):: self
 
-      Real(kind = SAC_REAL_KIND), allocatable:: value(:, :)
+      Real(kind=SAC_REAL_KIND), allocatable:: value(:, :)
 
       ASSERT(get_iftype(self) == 'ixyz')
       ASSERT(allocated(self%body%ixyz))
@@ -548,7 +548,7 @@ contains
 
    subroutine set_body_ixy_or_iamph_or_ixyz(self, value)
       type(Sac), intent(inout):: self
-      Real(kind = SAC_REAL_KIND):: value(:, :)
+      Real(kind=SAC_REAL_KIND):: value(:, :)
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
@@ -563,7 +563,7 @@ contains
 
    subroutine get_body_ixy_or_iamph_or_ixyz_(self, value)
       type(Sac), intent(in):: self
-      Real(kind = SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
+      Real(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
@@ -579,7 +579,7 @@ contains
    <%- FLOATS.each{|name| -%>
       function get_<%= name %>(self) result(value)
          type(Sac), intent(in):: self
-         Real(kind = SAC_REAL_KIND):: value
+         Real(kind=SAC_REAL_KIND):: value
 
          value = self%head%<%= name %>
       end function get_<%= name %>
@@ -593,7 +593,7 @@ contains
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
-         Real(kind = SAC_REAL_KIND), intent(in):: value
+         Real(kind=SAC_REAL_KIND), intent(in):: value
 
          self%head%<%= name %> = value
       end subroutine set_<%= name %>
@@ -602,7 +602,7 @@ contains
    <%- INTEGERS.each{|name| -%>
       function get_<%= name %>(self) result(value)
          type(Sac), intent(in):: self
-         Integer(kind = SAC_INTEGER_KIND):: value
+         Integer(kind=SAC_INTEGER_KIND):: value
 
          value = self%head%<%= name %>
       end function get_<%= name %>
@@ -616,7 +616,7 @@ contains
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
-         Integer(kind = SAC_INTEGER_KIND), intent(in):: value
+         Integer(kind=SAC_INTEGER_KIND), intent(in):: value
 
          self%head%<%= name %> = value
       end subroutine set_<%= name %>
