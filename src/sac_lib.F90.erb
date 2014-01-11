@@ -283,6 +283,22 @@ module sac_lib
       module procedure get_body_ixy_or_iamph_or_ixyz_
    end interface get_body
 
+   <%- (ALL_HEADS - LOGICALS).each{|name, _| -%>
+      interface get_<%= name %>
+         module procedure get_<%= name %>_i_v
+         module procedure get_<%= name %>_v_i
+         module procedure get_<%= name %>_v
+      end interface get_<%= name %>
+   <%- } -%>
+
+   <%- LOGICALS.each{|name, _| -%>
+      interface get_<%= name %>
+         module procedure get_<%= name %>_i_v
+         module procedure get_<%= name %>_v
+      end interface get_<%= name %>
+   <%- } -%>
+
+
 contains
 
    subroutine load(self, fileName)
@@ -577,18 +593,36 @@ contains
    end subroutine get_body_ixy_or_iamph_or_ixyz_
 
    <%- FLOATS.each{|name| -%>
-      function get_<%= name %>(self) result(value)
+      function get_<%= name %>_i_v(self, value) result(isDefined)
+         type(Sac), intent(in):: self
+         Real(kind=SAC_REAL_KIND), intent(out):: value
+         Logical:: isDefined
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_i_v
+
+      function get_<%= name %>_v_i(self, isDefined) result(value)
+         type(Sac), intent(in):: self
+         Logical, intent(out):: isDefined
+         Real(kind=SAC_REAL_KIND):: value
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_v_i
+
+      function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
          Real(kind=SAC_REAL_KIND):: value
 
          value = self%head%<%= name %>
-      end function get_<%= name %>
+      end function get_<%= name %>_v
 
-      function is_<%= name %>_defined(self) result(answer)
+      function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
-         Logical:: answer
+         Logical:: ret
 
-         answer = (self%head%<%= name %> /= FLOAT_UNDEFINED)
+         ret = (self%head%<%= name %> /= FLOAT_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -600,12 +634,30 @@ contains
    <%- } -%>
 
    <%- INTEGERS.each{|name| -%>
-      function get_<%= name %>(self) result(value)
+      function get_<%= name %>_i_v(self, value) result(isDefined)
+         type(Sac), intent(in):: self
+         Integer(kind=SAC_INTEGER_KIND), intent(out):: value
+         Logical:: isDefined
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_i_v
+
+      function get_<%= name %>_v_i(self, isDefined) result(value)
+         type(Sac), intent(in):: self
+         Logical, intent(out):: isDefined
+         Integer(kind=SAC_INTEGER_KIND):: value
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_v_i
+
+      function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
          Integer(kind=SAC_INTEGER_KIND):: value
 
          value = self%head%<%= name %>
-      end function get_<%= name %>
+      end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
@@ -623,7 +675,25 @@ contains
    <%- } -%>
 
    <%- ENUMERATED_VALUES.each{|name| -%>
-      function get_<%= name %>(self) result(value)
+      function get_<%= name %>_v_i(self, isDefined) result(value)
+         type(Sac), intent(in):: self
+         Logical, intent(out):: isDefined
+         Character(len = LEN_ENUMERATED_VALUE_MAX):: value
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_v_i
+
+      function get_<%= name %>_i_v(self, value) result(isDefined)
+         type(Sac), intent(in):: self
+         Character(len = LEN_ENUMERATED_VALUE_MAX), intent(out):: value
+         Logical:: isDefined
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_i_v
+
+      function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
          Character(len = LEN_ENUMERATED_VALUE_MAX):: value
 
@@ -632,7 +702,7 @@ contains
          internalValue = self%head%<%= name %>
          ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1))
          value = ENUMERATED_VALUES(internalValue)
-      end function get_<%= name %>
+      end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
@@ -662,7 +732,16 @@ contains
    <%- } -%>
 
    <%- LOGICALS.each{|name| -%>
-      function get_<%= name %>(self) result(value)
+      function get_<%= name %>_i_v(self, value) result(isDefined)
+         type(Sac), intent(in):: self
+         Logical, intent(out):: value
+         Logical:: isDefined
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_i_v
+
+      function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
          Logical:: value
 
@@ -670,7 +749,7 @@ contains
 
          internalValue = self%head%<%= name %>
          value = (internalValue == 1)
-      end function get_<%= name %>
+      end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
@@ -692,13 +771,30 @@ contains
    <%- } -%>
 
    <%- (LONG_STRINGS + SHORT_STRINGS).each{|name, length| -%>
-      function get_<%= name %>(self) result(value)
+      function get_<%= name %>_i_v(self, value) result(isDefined)
+         type(Sac), intent(in):: self
+         Character(len = LEN_<%= length %>_STRING), intent(out):: value
+         Logical:: isDefined
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_i_v
+
+      function get_<%= name %>_v_i(self, isDefined) result(value)
+         type(Sac), intent(in):: self
+         Logical, intent(out):: isDefined
+         Character(len = LEN_<%= length %>_STRING):: value
+
+         value = get_<%= name %>(self)
+         isDefined = is_<%= name %>_defined(self)
+      end function get_<%= name %>_v_i
+
+      function get_<%= name %>_v(self) result(value)
          type(Sac), intent(in):: self
          Character(len = LEN_<%= length %>_STRING):: value
 
          value = self%head%<%= name %>
-      end function get_<%= name %>
-
+      end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
