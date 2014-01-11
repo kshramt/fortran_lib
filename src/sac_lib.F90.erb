@@ -429,10 +429,10 @@ contains
       call set_depmen(self, sum(value)/npts)
       self%body%itime = value
 
-      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-      if(allocated(self%body%irlim)) deallocate(self%body%irlim)
-      if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
+      ENSURE_DEALLOCATED(self%body%ixy)
+      ENSURE_DEALLOCATED(self%body%iamph)
+      ENSURE_DEALLOCATED(self%body%irlim)
+      ENSURE_DEALLOCATED(self%body%ixyz)
    end subroutine set_body_itime
 
    function get_body_itime(self) result(value)
@@ -474,11 +474,11 @@ contains
          call set_depmen(self, sum(value(:, 2))/npts)
          self%body%<%= t %> = value
 
-         if(allocated(self%body%itime)) deallocate(self%body%itime)
+         ENSURE_DEALLOCATED(self%body%itime)
          <%- another = {'ixy' => 'iamph', 'iamph' => 'ixy'} -%>
-         if(allocated(self%body%<%= another[t] %>)) deallocate(self%body%<%= another[t] %>)
-         if(allocated(self%body%irlim)) deallocate(self%body%irlim)
-         if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
+         ENSURE_DEALLOCATED(self%body%<%= another[t] %>)
+         ENSURE_DEALLOCATED(self%body%irlim)
+         ENSURE_DEALLOCATED(self%body%ixyz)
       end subroutine set_body_<%= t %>
 
       function get_body_<%= t %>(self) result(value)
@@ -502,10 +502,10 @@ contains
       call set_npts(self, size(value, 1))
       self%body%irlim = value
 
-      if(allocated(self%body%itime)) deallocate(self%body%ixy)
-      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-      if(allocated(self%body%ixyz)) deallocate(self%body%ixyz)
+      ENSURE_DEALLOCATED(self%body%itime)
+      ENSURE_DEALLOCATED(self%body%ixy)
+      ENSURE_DEALLOCATED(self%body%iamph)
+      ENSURE_DEALLOCATED(self%body%ixyz)
    end subroutine set_body_irlim
 
    function get_body_irlim(self) result(value)
@@ -536,10 +536,10 @@ contains
       call set_nysize(self, size(value, 2))
       self%body%ixyz = value
 
-      if(allocated(self%body%itime)) deallocate(self%body%ixy)
-      if(allocated(self%body%ixy)) deallocate(self%body%ixy)
-      if(allocated(self%body%iamph)) deallocate(self%body%iamph)
-      if(allocated(self%body%irlim)) deallocate(self%body%ixyz)
+      ENSURE_DEALLOCATED(self%body%itime)
+      ENSURE_DEALLOCATED(self%body%ixy)
+      ENSURE_DEALLOCATED(self%body%iamph)
+      ENSURE_DEALLOCATED(self%body%irlim)
    end subroutine set_body_ixyz
 
    function get_body_ixyz(self) result(value)
