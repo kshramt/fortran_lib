@@ -90,15 +90,15 @@ contains
    end function get_len_of_replaced_str
 
    pure function s(str) result(answer)
-      character(len = *), intent(in):: str
-      character(len = len_trim(adjustl(str))):: answer
+      character(len=*), intent(in):: str
+      character(len=len_trim(adjustl(str))):: answer
 
       answer = trim(adjustl(str))
    end function s
 
    elemental function add(str1, str2) result(answer)
-      character(len = *), intent(in):: str1, str2
-      character(len = len(str1) + len(str2)):: answer
+      character(len=*), intent(in):: str1, str2
+      character(len=len(str1) + len(str2)):: answer
 
       answer = str1 // str2
    end function add
