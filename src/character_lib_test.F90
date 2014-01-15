@@ -9,6 +9,11 @@ program character_lib_test
    Character(len = 8):: sBuffer
    Character(len = 17):: dBuffer
 
+   ! replace
+   TEST(replace('a', 'a', 'bc') == 'bc')
+   TEST(replace('a_a', 'a', 'bc') == 'bc_bc')
+   TEST(replace('abcdabcdab', 'ab', 'PQR') == 'PQRcdPQRcdPQR')
+
    ! s
    TEST(s('') == '')
    TEST(s('a') == 'a')

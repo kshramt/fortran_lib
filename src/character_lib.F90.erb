@@ -16,6 +16,7 @@ module character_lib
 
    private
 
+   public:: replace ! replace all substring `from` in string `s` to `to`
    public:: s                    ! Same as String#strip method in Ruby.
    public:: operator(+)          ! Syntax sugar of `//'. This will be useful if you want to use `//' within macro where `//' is discarded.
    public:: str ! Convert a value to a string. The result is not stripped.
@@ -33,6 +34,60 @@ module character_lib
    <%- } -%>
 
 contains
+
+   pure function replace(s, from, to) result(ret)
+      Character(len=*), intent(in):: s, from, to
+      Character(len=get_len_of_replaced_str(s, from, to)) ret
+
+      Integer(kind=INT64):: lenS, lenFrom, lenTo, posSeek, posMatch, posRet
+
+      lenS = len(s)
+      lenFrom = len(from)
+      lenTo = len(to)
+      posSeek = 1
+      posRet = 1
+      do while(posSeek <= lenS)
+         posMatch = index(s(posSeek:), from)
+         select case(posMatch)
+         case(:0)
+            ret(posRet:) = s(posSeek:)
+            exit
+         case(1)
+            ret(posRet:posRet + lenTo - 1) = to
+            posRet = posRet + lenTo
+            posSeek = posSeek + lenFrom
+         case(2:)
+            ret(posRet:posRet + posMatch - 2) = s(posSeek:posSeek + posMatch - 2)
+            ret(posRet + posMatch - 1:posRet + posMatch - 1 + lenTo - 1) = to
+            posRet = posRet + posMatch - 1 + lenTo - 1 + 1
+            posSeek = posSeek + posMatch - 1 + lenFrom - 1 + 1
+         end select
+      end do
+   end function replace
+
+   pure function get_len_of_replaced_str(s, from, to) result(ret)
+      Character(len=*), intent(in):: s, from, to
+      Integer(kind=INT64):: ret
+
+      Integer(kind=kind(ret)):: lenS, lenFrom, posSeek, posMatch, nMatch
+
+      lenS = len(s)
+      lenFrom = len(from)
+
+      nMatch = 0
+      posSeek = 1
+      do while(posSeek <= lenS)
+         posMatch = index(s(posSeek:), from)
+         if(posMatch > 0)then
+            nMatch = nMatch + 1
+            posSeek = posSeek + posMatch + lenFrom - 1
+         else
+            exit
+         end if
+      end do
+
+      ret = lenS + nMatch*(len(to) - lenFrom)
+   end function get_len_of_replaced_str
 
    pure function s(str) result(answer)
       character(len = *), intent(in):: str
