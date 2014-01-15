@@ -13,6 +13,7 @@ program character_lib_test
    TEST(replace('a', 'a', 'bc') == 'bc')
    TEST(replace('a_a', 'a', 'bc') == 'bc_bc')
    TEST(replace('abcdabcdab', 'ab', 'PQR') == 'PQRcdPQRcdPQR')
+   TEST(replace('abcabca', 'a', '') == 'bcbc')
 
    ! s
    TEST(s('') == '')
