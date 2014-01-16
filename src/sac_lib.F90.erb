@@ -122,36 +122,33 @@
     lhdr5
   ]
 
-  LONG_STRINGS = %w[
-    kstnm
-  ].map{|name| [name, 'LONG']}
+  STRINGS = [
+             ['kstnm', 'SHORT'],
+             ['kevnm', 'LONG'],
+             ['khole', 'SHORT'],
+             ['ko', 'SHORT'],
+             ['ka', 'SHORT'],
+             ['kt0', 'SHORT'],
+             ['kt1', 'SHORT'],
+             ['kt2', 'SHORT'],
+             ['kt3', 'SHORT'],
+             ['kt4', 'SHORT'],
+             ['kt5', 'SHORT'],
+             ['kt6', 'SHORT'],
+             ['kt7', 'SHORT'],
+             ['kt8', 'SHORT'],
+             ['kt9', 'SHORT'],
+             ['kf', 'SHORT'],
+             ['kuser0', 'SHORT'],
+             ['kuser1', 'SHORT'],
+             ['kuser2', 'SHORT'],
+             ['kcmpnm', 'SHORT'],
+             ['knetwk', 'SHORT'],
+             ['kdatrd', 'SHORT'],
+             ['kinst', 'SHORT'],
+            ]
 
-  SHORT_STRINGS = %w[
-    kevnm
-    khole
-    ko
-    ka
-    kt0
-    kt1
-    kt2
-    kt3
-    kt4
-    kt5
-    kt6
-    kt7
-    kt8
-    kt9
-    kf
-    kuser0
-    kuser1
-    kuser2
-    kcmpnm
-    knetwk
-    kdatrd
-    kinst
-  ].map{|name| [name, 'SHORT']}
-
-  ALL_HEADS = FLOATS + INTEGERS + ENUMERATED_VALUES + LOGICALS + LONG_STRINGS + SHORT_STRINGS
+  ALL_HEADS = FLOATS + INTEGERS + ENUMERATED_VALUES + LOGICALS + STRINGS
 
   BODIES = %w[itime ixy iamph irlim ixyz]
 -%>
@@ -246,12 +243,8 @@ module sac_lib
          Integer(kind=SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
       <%- } -%>
 
-      <%- LONG_STRINGS.each{|name, _| -%>
-         Character(len=LEN_LONG_STRING):: <%= name %> = STRING_UNDEFINED
-      <%- } -%>
-
-      <%- SHORT_STRINGS.each{|name, _| -%>
-         Character(len=LEN_SHORT_STRING):: <%= name %> = STRING_UNDEFINED
+      <%- STRINGS.each{|name, length| -%>
+         Character(len=LEN_<%= length %>_STRING):: <%= name %> = STRING_UNDEFINED
       <%- } -%>
    end type SacHead
 
@@ -444,7 +437,7 @@ contains
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
       <%- } -%>
-      <%- (last_name, _), *strings = LONG_STRINGS + SHORT_STRINGS -%>
+      <%- (last_name, _), *strings = STRINGS -%>
       <%- strings.each{|name, _| -%>
          if(is_<%= name %>_defined(self))then
             write(io, *, delim='none') '"<%= name %>": ', '"' + replace(trim(get_<%= name %>(self)), '"', '\"') + '"', ','
@@ -870,7 +863,7 @@ contains
       end subroutine set_<%= name %>
    <%- } -%>
 
-   <%- (LONG_STRINGS + SHORT_STRINGS).each{|name, length| -%>
+   <%- STRINGS.each{|name, length| -%>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
          Character(len=LEN_<%= length %>_STRING), intent(out):: value
