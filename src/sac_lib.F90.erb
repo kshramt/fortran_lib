@@ -443,8 +443,8 @@ contains
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
       <%- } -%>
-      <%- (last_name, _), *ss = LONG_STRINGS + SHORT_STRINGS -%>
-      <%- ss.each{|name, _| -%>
+      <%- (last_name, _), *strings = LONG_STRINGS + SHORT_STRINGS -%>
+      <%- strings.each{|name, _| -%>
          if(is_<%= name %>_defined(self))then
             write(io, *, delim='none') '"<%= name %>": ', '"' + trim(get_<%= name %>(self)) + '"', ','
          else
