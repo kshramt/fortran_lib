@@ -447,13 +447,13 @@ contains
       <%- (last_name, _), *strings = LONG_STRINGS + SHORT_STRINGS -%>
       <%- strings.each{|name, _| -%>
          if(is_<%= name %>_defined(self))then
-            write(io, *, delim='none') '"<%= name %>": ', '"' + trim(get_<%= name %>(self)) + '"', ','
+            write(io, *, delim='none') '"<%= name %>": ', '"' + replace(trim(get_<%= name %>(self)), '"', '\"') + '"', ','
          else
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
       <%- } -%>
       if(is_<%= last_name %>_defined(self))then
-         write(io, *, delim='none') '"<%= last_name %>": ', '"' + trim(get_<%= last_name %>(self)) + '"'
+         write(io, *, delim='none') '"<%= last_name %>": ', '"' + replace(trim(get_<%= last_name %>(self)), '"', '\"') + '"'
       else
          write(io, *, delim='none') '"<%= last_name %>": null'
       end if
