@@ -15,6 +15,10 @@ RUBY := ${MY_RUBY}
 # Configurations
 .SUFFIXES:
 .DELETE_ON_ERROR:
+.ONESHELL:
+.SECONDARY:
+export SHELL := /bin/bash
+export SHELLOPTS := pipefail:errexit:nounset:noclobber
 
 # Commands
 .PHONY: all test
