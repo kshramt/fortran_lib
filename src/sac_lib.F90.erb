@@ -171,14 +171,14 @@ module sac_lib
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: &
       INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
-      REAL32, INT32
-   use, non_intrinsic:: character_lib, only: s, operator(+)
+      REAL32, INT32, INT64
+   use, non_intrinsic:: character_lib, only: s, operator(+), replace
 
    implicit none
 
    private
 
-   public:: load, dump
+   public:: load, dump, dump_json
    public:: set_body, get_body
    <%- BODIES.each{|name| -%>
       public:: set_body_<%= name %>, get_body_<%= name %>
@@ -408,6 +408,113 @@ contains
 
       close(io)
    end subroutine dump
+
+   subroutine dump_json(self, io)
+      type(Sac), intent(in):: self
+      Integer, intent(in):: io
+
+      Integer(kind=INT64):: iData, nData, iX, uX, lY, iY, uY
+      Real(kind=SAC_REAL_KIND), allocatable:: itime(:), ixy(:, :), iamph(:, :), ixyz(:, :)
+      Complex(kind=SAC_REAL_KIND), allocatable:: irlim(:)
+
+      write(io, '(a)') '{"meta": {'
+      <%- (FLOATS + INTEGERS).each{|name, _| -%>
+         if(is_<%= name %>_defined(self))then
+            write(io, *, delim='none') '"<%= name %>": ', get_<%= name %>(self), ','
+         else
+            write(io, *, delim='none') '"<%= name %>": null,'
+         end if
+      <%- } -%>
+      <%- ENUMERATED_VALUES.each{|name, _| -%>
+         if(is_<%= name %>_defined(self))then
+            write(io, *, delim='none') '"<%= name %>": ', '"' + trim(get_<%= name %>(self)) + '"', ','
+         else
+            write(io, *, delim='none') '"<%= name %>": null,'
+         end if
+      <%- } -%>
+      <%- LOGICALS.each{|name, _| -%>
+         if(is_<%= name %>_defined(self))then
+            if(get_<%= name %>(self))then
+               write(io, *, delim='none') '"<%= name %>": true,'
+            else
+               write(io, *, delim='none') '"<%= name %>": false,'
+            end if
+         else
+            write(io, *, delim='none') '"<%= name %>": null,'
+         end if
+      <%- } -%>
+      <%- (last_name, _), *ss = LONG_STRINGS + SHORT_STRINGS -%>
+      <%- ss.each{|name, _| -%>
+         if(is_<%= name %>_defined(self))then
+            write(io, *, delim='none') '"<%= name %>": ', '"' + trim(get_<%= name %>(self)) + '"', ','
+         else
+            write(io, *, delim='none') '"<%= name %>": null,'
+         end if
+      <%- } -%>
+      if(is_<%= last_name %>_defined(self))then
+         write(io, *, delim='none') '"<%= last_name %>": ', '"' + trim(get_<%= last_name %>(self)) + '"'
+      else
+         write(io, *, delim='none') '"<%= last_name %>": null'
+      end if
+      write(io, '(a)') '         },'
+      write(io, '(a)') '"data": ['
+
+      ASSERT(is_iftype_defined(self))
+      select case(get_iftype(self))
+      case('itime')
+         itime = get_body_itime(self)
+         nData = ubound(itime, dim=1, kind=kind(iData))
+         do iData = lbound(itime, dim=1, kind=kind(iData)), nData - 1
+            write(io, *, delim='none') itime(iData), ','
+         end do
+         write(io, *, delim='none') itime(nData)
+      case('ixy')
+         ixy = get_body_ixy(self)
+         nData = ubound(ixy, dim=1, kind=kind(iData))
+         do iData = lbound(ixy, dim=1, kind=kind(iData)), nData - 1
+            write(io, *, delim='none') '[', ixy(iData, 1), ', ', ixy(iData, 2), '],'
+         end do
+         write(io, *, delim='none') '[', ixy(nData, 1), ', ', ixy(nData, 2), ']'
+      case('iamph')
+         iamph = get_body_iamph(self)
+         nData = ubound(iamph, dim=1, kind=kind(iData))
+         do iData = lbound(iamph, dim=1, kind=kind(iData)), nData - 1
+            write(io, *, delim='none') '[', iamph(iData, 1), ', ', iamph(iData, 2), '],'
+         end do
+         write(io, *, delim='none') '[', iamph(nData, 1), ', ', iamph(nData, 2), ']'
+      case('irlim')
+         irlim = get_body_irlim(self)
+         nData = ubound(irlim, dim=1, kind=kind(iData))
+         do iData = lbound(irlim, dim=1, kind=kind(iData)), nData - 1
+            write(io, *, delim='none') '[', real(irlim(iData)), ', ', imag(irlim(iData)), '],'
+         end do
+         write(io, *, delim='none') '[', real(irlim(iData)), ', ', imag(irlim(iData)), ']'
+      case('ixyz')
+         ixyz = get_body_ixyz(self)
+         uX = ubound(ixyz, 1, kind=kind(iX))
+         lY = lbound(ixyz, 2, kind=kind(iY))
+         uY = ubound(ixyz, 2, kind=kind(iY))
+         do iX = lbound(ixyz, 1, kind=kind(iX)), uX - 1
+            write(io, *, delim='none') '['
+            do iY = lY, uY - 1
+               write(io, *, delim='none') ixyz(iX, iY), ','
+            end do
+            write(io, *, delim='none') ixyz(iX, uY)
+            write(io, *, delim='none') '],'
+         end do
+         write(io, *, delim='none') '['
+         do iY = lY, uY - 1
+            write(io, *, delim='none') ixyz(uX, iY), ','
+         end do
+         write(io, *, delim='none') ixyz(uX, uY)
+         write(io, *, delim='none') ']'
+      case default
+         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+      end select
+
+      write(io, '(a)') '         ]'
+      write(io, '(a)') '}'
+   end subroutine dump_json
 
    subroutine set_body_itime(self, value)
       type(Sac), intent(inout):: self
