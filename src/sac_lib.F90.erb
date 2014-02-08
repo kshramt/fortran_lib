@@ -148,7 +148,7 @@
              ['kinst', 'SHORT'],
             ]
 
-  ALL_HEADS = FLOATS + INTEGERS + ENUMERATED_VALUES + LOGICALS + STRINGS
+  ALL_METAS = FLOATS + INTEGERS + ENUMERATED_VALUES + LOGICALS + STRINGS
 
   BODIES = %w[itime ixy iamph irlim ixyz]
 -%>
@@ -177,11 +177,11 @@ module sac_lib
    private
 
    public:: load, dump, dump_json
-   public:: set_body, get_body
+   public:: set_data, get_data
    <%- BODIES.each{|name| -%>
-      public:: set_body_<%= name %>, get_body_<%= name %>
+      public:: set_data_<%= name %>, get_data_<%= name %>
    <%- } -%>
-   <%- ALL_HEADS.each{|name, _| -%>
+   <%- ALL_METAS.each{|name, _| -%>
       public:: set_<%= name %>, is_<%= name %>_defined, get_<%= name %>
    <%- } -%>
 
@@ -222,7 +222,7 @@ module sac_lib
    end type Object
 
    ! npts, nvhdr, b, e, iftype, leven and delta are required variables.
-   type, extends(Object), public:: SacHead
+   type, extends(Object), public:: SacMeta
       private
 
       <%- (FLOATS - %w[b]).each{|name| -%>
@@ -246,9 +246,9 @@ module sac_lib
       <%- STRINGS.each{|name, length| -%>
          Character(len=LEN_<%= length %>_STRING):: <%= name %> = STRING_UNDEFINED
       <%- } -%>
-   end type SacHead
+   end type SacMeta
 
-   type, extends(Object), public:: SacBody
+   type, extends(Object), public:: SacData
       private
 
       Real(kind=SAC_REAL_KIND), allocatable:: &
@@ -257,27 +257,27 @@ module sac_lib
          iamph(:, :), &
          ixyz(:, :)
       Complex(kind=SAC_REAL_KIND), allocatable:: irlim(:)
-   end type SacBody
+   end type SacData
 
    type, extends(Object), public:: Sac
       ! I left these parameters public so that a head or body of a SAC data can easily be copied to another SAC data.
-      type(SacHead):: head
-      type(SacBody):: body
+      type(SacMeta):: meta
+      type(SacData):: data
    end type Sac
 
-   interface set_body
-      module procedure set_body_itime
-      module procedure set_body_irlim
-      module procedure set_body_ixy_or_iamph_or_ixyz
-   end interface set_body
+   interface set_data
+      module procedure set_data_itime
+      module procedure set_data_irlim
+      module procedure set_data_ixy_or_iamph_or_ixyz
+   end interface set_data
 
-   interface get_body
-      module procedure get_body_itime_
-      module procedure get_body_irlim_
-      module procedure get_body_ixy_or_iamph_or_ixyz_
-   end interface get_body
+   interface get_data
+      module procedure get_data_itime_
+      module procedure get_data_irlim_
+      module procedure get_data_ixy_or_iamph_or_ixyz_
+   end interface get_data
 
-   <%- (ALL_HEADS - LOGICALS).each{|name, _| -%>
+   <%- (ALL_METAS - LOGICALS).each{|name, _| -%>
       interface get_<%= name %>
          module procedure get_<%= name %>_i_v
          module procedure get_<%= name %>_v_i
@@ -308,8 +308,8 @@ contains
 
       open(newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
 
-      <%- ALL_HEADS.each{|name, _| -%>
-         read(io) self%head%<%= name %>
+      <%- ALL_METAS.each{|name, _| -%>
+         read(io) self%meta%<%= name %>
       <%- } -%>
 
       ASSERT(is_iftype_defined(self))
@@ -317,48 +317,48 @@ contains
       case('itime')
          ASSERT(get_npts(self, npts))
 
-         allocate(self%body%itime(1:npts))
+         allocate(self%data%itime(1:npts))
 
-         read(io) self%body%itime
+         read(io) self%data%itime
       case('ixy')
          ASSERT(get_npts(self, npts))
 
-         allocate(self%body%ixy(1:npts, 2))
+         allocate(self%data%ixy(1:npts, 2))
          allocate(xs(1:npts))
          allocate(ys(1:npts))
 
          read(io) ys, xs
 
-         self%body%ixy(:, 1) = xs
-         self%body%ixy(:, 2) = ys
+         self%data%ixy(:, 1) = xs
+         self%data%ixy(:, 2) = ys
       case('iamph')
          ASSERT(get_npts(self, npts))
 
-         allocate(self%body%iamph(1:npts, 2))
+         allocate(self%data%iamph(1:npts, 2))
          allocate(amplitudes(1:npts))
          allocate(thetas(1:npts))
 
          read(io) amplitudes, thetas
 
-         self%body%iamph(:, 1) = amplitudes
-         self%body%iamph(:, 2) = thetas
+         self%data%iamph(:, 1) = amplitudes
+         self%data%iamph(:, 2) = thetas
       case('irlim')
          ASSERT(get_npts(self, npts))
 
-         allocate(self%body%irlim(1:npts))
+         allocate(self%data%irlim(1:npts))
          allocate(reals(1:npts))
          allocate(imaginaries(1:npts))
 
          read(io) reals, imaginaries
 
-         self%body%irlim = cmplx(reals, imaginaries)
+         self%data%irlim = cmplx(reals, imaginaries)
       case('ixyz')
          ASSERT(get_nxsize(self, nxsize))
          ASSERT(get_nysize(self, nysize))
 
-         allocate(self%body%ixyz(1:nxsize, 1:nysize))
+         allocate(self%data%ixyz(1:nxsize, 1:nysize))
 
-         read(io) self%body%ixyz
+         read(io) self%data%ixyz
       case default
          RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
@@ -376,26 +376,26 @@ contains
 
       open(newunit = io, file = trim(fileName), status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
 
-      <%- ALL_HEADS.each{|name, _| -%>
-         write(io) self%head%<%= name %>
+      <%- ALL_METAS.each{|name, _| -%>
+         write(io) self%meta%<%= name %>
       <%- } -%>
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
       case('itime')
-         write(io) get_body_itime(self)
+         write(io) get_data_itime(self)
       case('ixy')
-         ixy = get_body_ixy(self)
+         ixy = get_data_ixy(self)
 
          write(io) ixy(:, 2), ixy(:, 1)
       case('iamph')
-         write(io) get_body_iamph(self)
+         write(io) get_data_iamph(self)
       case('irlim')
-         irlim = get_body_irlim(self)
+         irlim = get_data_irlim(self)
 
          write(io) real(irlim), aimag(irlim)
       case('ixyz')
-         write(io) get_body_ixyz(self)
+         write(io) get_data_ixyz(self)
       case default
          RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
@@ -456,35 +456,35 @@ contains
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
       case('itime')
-         itime = get_body_itime(self)
+         itime = get_data_itime(self)
          nData = ubound(itime, dim=1, kind=kind(iData))
          do iData = lbound(itime, dim=1, kind=kind(iData)), nData - 1
             write(io, *, delim='none') itime(iData), ','
          end do
          write(io, *, delim='none') itime(nData)
       case('ixy')
-         ixy = get_body_ixy(self)
+         ixy = get_data_ixy(self)
          nData = ubound(ixy, dim=1, kind=kind(iData))
          do iData = lbound(ixy, dim=1, kind=kind(iData)), nData - 1
             write(io, *, delim='none') '[', ixy(iData, 1), ', ', ixy(iData, 2), '],'
          end do
          write(io, *, delim='none') '[', ixy(nData, 1), ', ', ixy(nData, 2), ']'
       case('iamph')
-         iamph = get_body_iamph(self)
+         iamph = get_data_iamph(self)
          nData = ubound(iamph, dim=1, kind=kind(iData))
          do iData = lbound(iamph, dim=1, kind=kind(iData)), nData - 1
             write(io, *, delim='none') '[', iamph(iData, 1), ', ', iamph(iData, 2), '],'
          end do
          write(io, *, delim='none') '[', iamph(nData, 1), ', ', iamph(nData, 2), ']'
       case('irlim')
-         irlim = get_body_irlim(self)
+         irlim = get_data_irlim(self)
          nData = ubound(irlim, dim=1, kind=kind(iData))
          do iData = lbound(irlim, dim=1, kind=kind(iData)), nData - 1
             write(io, *, delim='none') '[', real(irlim(iData)), ', ', imag(irlim(iData)), '],'
          end do
          write(io, *, delim='none') '[', real(irlim(iData)), ', ', imag(irlim(iData)), ']'
       case('ixyz')
-         ixyz = get_body_ixyz(self)
+         ixyz = get_data_ixyz(self)
          uX = ubound(ixyz, 1, kind=kind(iX))
          lY = lbound(ixyz, 2, kind=kind(iY))
          uY = ubound(ixyz, 2, kind=kind(iY))
@@ -510,7 +510,7 @@ contains
       write(io, '(a)') '}'
    end subroutine dump_json
 
-   subroutine set_body_itime(self, value)
+   subroutine set_data_itime(self, value)
       type(Sac), intent(inout):: self
       Real(kind=SAC_REAL_KIND), intent(in):: value(:)
 
@@ -528,35 +528,35 @@ contains
       call set_depmin(self, minval(value))
       call set_depmax(self, maxval(value))
       call set_depmen(self, sum(value)/npts)
-      self%body%itime = value
+      self%data%itime = value
 
-      ENSURE_DEALLOCATED(self%body%ixy)
-      ENSURE_DEALLOCATED(self%body%iamph)
-      ENSURE_DEALLOCATED(self%body%irlim)
-      ENSURE_DEALLOCATED(self%body%ixyz)
-   end subroutine set_body_itime
+      ENSURE_DEALLOCATED(self%data%ixy)
+      ENSURE_DEALLOCATED(self%data%iamph)
+      ENSURE_DEALLOCATED(self%data%irlim)
+      ENSURE_DEALLOCATED(self%data%ixyz)
+   end subroutine set_data_itime
 
-   function get_body_itime(self) result(value)
+   function get_data_itime(self) result(value)
       type(Sac), intent(in):: self
 
       Real(kind=SAC_REAL_KIND), allocatable:: value(:)
 
       ASSERT(is_iftype_defined(self))
       ASSERT(get_iftype(self) == 'itime')
-      ASSERT(allocated(self%body%itime))
-      value = self%body%itime
+      ASSERT(allocated(self%data%itime))
+      value = self%data%itime
       ASSERT(size(value, 1) == get_npts(self))
-   end function get_body_itime
+   end function get_data_itime
 
-   subroutine get_body_itime_(self, value)
+   subroutine get_data_itime_(self, value)
       type(Sac), intent(in):: self
       Real(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:)
 
-      value = get_body_itime(self)
-   end subroutine get_body_itime_
+      value = get_data_itime(self)
+   end subroutine get_data_itime_
 
    <%- %w[ixy iamph].each{|t| -%>
-      subroutine set_body_<%= t %>(self, value)
+      subroutine set_data_<%= t %>(self, value)
          type(Sac), intent(inout):: self
          Real(kind=SAC_REAL_KIND):: value(:, :)
 
@@ -573,61 +573,61 @@ contains
          call set_depmin(self, minval(value(:, 2)))
          call set_depmax(self, maxval(value(:, 2)))
          call set_depmen(self, sum(value(:, 2))/npts)
-         self%body%<%= t %> = value
+         self%data%<%= t %> = value
 
-         ENSURE_DEALLOCATED(self%body%itime)
+         ENSURE_DEALLOCATED(self%data%itime)
          <%- another = {'ixy' => 'iamph', 'iamph' => 'ixy'} -%>
-         ENSURE_DEALLOCATED(self%body%<%= another[t] %>)
-         ENSURE_DEALLOCATED(self%body%irlim)
-         ENSURE_DEALLOCATED(self%body%ixyz)
-      end subroutine set_body_<%= t %>
+         ENSURE_DEALLOCATED(self%data%<%= another[t] %>)
+         ENSURE_DEALLOCATED(self%data%irlim)
+         ENSURE_DEALLOCATED(self%data%ixyz)
+      end subroutine set_data_<%= t %>
 
-      function get_body_<%= t %>(self) result(value)
+      function get_data_<%= t %>(self) result(value)
          type(Sac), intent(in):: self
 
          Real(kind=SAC_REAL_KIND), allocatable:: value(:, :)
 
          ASSERT(get_iftype(self) == '<%= t %>')
-         ASSERT(allocated(self%body%<%= t %>))
-         value = self%body%<%= t %>
+         ASSERT(allocated(self%data%<%= t %>))
+         value = self%data%<%= t %>
          ASSERT(size(value, 1) == get_npts(self))
-      end function get_body_<%= t %>
+      end function get_data_<%= t %>
    <%- } -%>
 
-   subroutine set_body_irlim(self, value)
+   subroutine set_data_irlim(self, value)
       type(Sac), intent(inout):: self
       Complex(kind=SAC_REAL_KIND), intent(in):: value(:)
 
       call set_iftype(self, 'irlim')
       call set_leven(self, .false.)
       call set_npts(self, size(value, 1))
-      self%body%irlim = value
+      self%data%irlim = value
 
-      ENSURE_DEALLOCATED(self%body%itime)
-      ENSURE_DEALLOCATED(self%body%ixy)
-      ENSURE_DEALLOCATED(self%body%iamph)
-      ENSURE_DEALLOCATED(self%body%ixyz)
-   end subroutine set_body_irlim
+      ENSURE_DEALLOCATED(self%data%itime)
+      ENSURE_DEALLOCATED(self%data%ixy)
+      ENSURE_DEALLOCATED(self%data%iamph)
+      ENSURE_DEALLOCATED(self%data%ixyz)
+   end subroutine set_data_irlim
 
-   function get_body_irlim(self) result(value)
+   function get_data_irlim(self) result(value)
       type(Sac), intent(in):: self
 
       Complex(kind=SAC_REAL_KIND), allocatable:: value(:)
 
       ASSERT(get_iftype(self) == 'irlim')
-      ASSERT(allocated(self%body%irlim))
-      value = self%body%irlim
+      ASSERT(allocated(self%data%irlim))
+      value = self%data%irlim
       ASSERT(size(value, 1) == get_npts(self))
-   end function get_body_irlim
+   end function get_data_irlim
 
-   subroutine get_body_irlim_(self, value)
+   subroutine get_data_irlim_(self, value)
       type(Sac), intent(in):: self
       Complex(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:)
 
-      value = get_body_itime(self)
-   end subroutine get_body_irlim_
+      value = get_data_itime(self)
+   end subroutine get_data_irlim_
 
-   subroutine set_body_ixyz(self, value)
+   subroutine set_data_ixyz(self, value)
       type(Sac), intent(inout):: self
       Real(kind=SAC_REAL_KIND), intent(in):: value(:, :)
 
@@ -635,27 +635,27 @@ contains
       call set_leven(self, .true.)
       call set_nxsize(self, size(value, 1))
       call set_nysize(self, size(value, 2))
-      self%body%ixyz = value
+      self%data%ixyz = value
 
-      ENSURE_DEALLOCATED(self%body%itime)
-      ENSURE_DEALLOCATED(self%body%ixy)
-      ENSURE_DEALLOCATED(self%body%iamph)
-      ENSURE_DEALLOCATED(self%body%irlim)
-   end subroutine set_body_ixyz
+      ENSURE_DEALLOCATED(self%data%itime)
+      ENSURE_DEALLOCATED(self%data%ixy)
+      ENSURE_DEALLOCATED(self%data%iamph)
+      ENSURE_DEALLOCATED(self%data%irlim)
+   end subroutine set_data_ixyz
 
-   function get_body_ixyz(self) result(value)
+   function get_data_ixyz(self) result(value)
       type(Sac), intent(in):: self
 
       Real(kind=SAC_REAL_KIND), allocatable:: value(:, :)
 
       ASSERT(get_iftype(self) == 'ixyz')
-      ASSERT(allocated(self%body%ixyz))
-      value = self%body%ixyz
+      ASSERT(allocated(self%data%ixyz))
+      value = self%data%ixyz
       ASSERT(size(value, 1) == get_nxsize(self))
       ASSERT(size(value, 2) == get_nysize(self))
-   end function get_body_ixyz
+   end function get_data_ixyz
 
-   subroutine set_body_ixy_or_iamph_or_ixyz(self, value)
+   subroutine set_data_ixy_or_iamph_or_ixyz(self, value)
       type(Sac), intent(inout):: self
       Real(kind=SAC_REAL_KIND):: value(:, :)
 
@@ -663,14 +663,14 @@ contains
       select case(get_iftype(self))
       <%- %w[ixy iamph ixyz].each{|t| -%>
          case('<%= t %>')
-            call set_body_<%= t %>(self, value)
+            call set_data_<%= t %>(self, value)
       <%- } -%>
       case default
          RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
-   end subroutine set_body_ixy_or_iamph_or_ixyz
+   end subroutine set_data_ixy_or_iamph_or_ixyz
 
-   subroutine get_body_ixy_or_iamph_or_ixyz_(self, value)
+   subroutine get_data_ixy_or_iamph_or_ixyz_(self, value)
       type(Sac), intent(in):: self
       Real(kind=SAC_REAL_KIND), allocatable, intent(out):: value(:, :)
 
@@ -678,12 +678,12 @@ contains
       select case(get_iftype(self))
       <%- %w[ixy iamph ixyz].each{|t| -%>
          case('<%= t %>')
-            value = get_body_<%= t %>(self)
+            value = get_data_<%= t %>(self)
       <%- } -%>
       case default
          RAISE('Unknown iftype: ' + s(get_iftype(self)))
       end select
-   end subroutine get_body_ixy_or_iamph_or_ixyz_
+   end subroutine get_data_ixy_or_iamph_or_ixyz_
 
    <%- FLOATS.each{|name| -%>
       function get_<%= name %>_i_v(self, value) result(isDefined)
@@ -708,21 +708,21 @@ contains
          type(Sac), intent(in):: self
          Real(kind=SAC_REAL_KIND):: value
 
-         value = self%head%<%= name %>
+         value = self%meta%<%= name %>
       end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
          Logical:: ret
 
-         ret = (self%head%<%= name %> /= FLOAT_UNDEFINED)
+         ret = (self%meta%<%= name %> /= FLOAT_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
          Real(kind=SAC_REAL_KIND), intent(in):: value
 
-         self%head%<%= name %> = value
+         self%meta%<%= name %> = value
       end subroutine set_<%= name %>
    <%- } -%>
 
@@ -749,21 +749,21 @@ contains
          type(Sac), intent(in):: self
          Integer(kind=SAC_INTEGER_KIND):: value
 
-         value = self%head%<%= name %>
+         value = self%meta%<%= name %>
       end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
          Logical:: ret
 
-         ret = (self%head%<%= name %> /= INTEGER_UNDEFINED)
+         ret = (self%meta%<%= name %> /= INTEGER_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
          type(Sac), intent(inout):: self
          Integer(kind=SAC_INTEGER_KIND), intent(in):: value
 
-         self%head%<%= name %> = value
+         self%meta%<%= name %> = value
       end subroutine set_<%= name %>
    <%- } -%>
 
@@ -792,7 +792,7 @@ contains
 
          Integer:: internalValue
 
-         internalValue = self%head%<%= name %>
+         internalValue = self%meta%<%= name %>
          ASSERT(check_bound(internalValue, ENUMERATED_VALUES, 1))
          value = ENUMERATED_VALUES(internalValue)
       end function get_<%= name %>_v
@@ -803,8 +803,8 @@ contains
 
          ! 2nd condition is enough since ENUMERATED_VALUE_UNDEFINED is -12345.
          ret = &
-            (self%head%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
-            .and. check_bound(self%head%<%= name %>, ENUMERATED_VALUES, 1)
+            (self%meta%<%= name %> /= ENUMERATED_VALUE_UNDEFINED) &
+            .and. check_bound(self%meta%<%= name %>, ENUMERATED_VALUES, 1)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -815,7 +815,7 @@ contains
 
          do ALL_OF(internalValue, ENUMERATED_VALUES, 1)
             if(value == ENUMERATED_VALUES(internalValue))then
-               self%head%<%= name %> = internalValue
+               self%meta%<%= name %> = internalValue
                return
             end if
          end do
@@ -840,7 +840,7 @@ contains
 
          Integer:: internalValue
 
-         internalValue = self%head%<%= name %>
+         internalValue = self%meta%<%= name %>
          value = (internalValue == 1)
       end function get_<%= name %>_v
 
@@ -848,7 +848,7 @@ contains
          type(Sac), intent(in):: self
          Logical:: ret
 
-         ret = ((self%head%<%= name %> == 1) .or. (self%head%<%= name %> == 0))
+         ret = ((self%meta%<%= name %> == 1) .or. (self%meta%<%= name %> == 0))
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -856,9 +856,9 @@ contains
          Logical, intent(in):: value
 
          if(value)then
-            self%head%<%= name %> = 1
+            self%meta%<%= name %> = 1
          else
-            self%head%<%= name %> = 0
+            self%meta%<%= name %> = 0
          end if
       end subroutine set_<%= name %>
    <%- } -%>
@@ -886,14 +886,14 @@ contains
          type(Sac), intent(in):: self
          Character(len=LEN_<%= length %>_STRING):: value
 
-         value = self%head%<%= name %>
+         value = self%meta%<%= name %>
       end function get_<%= name %>_v
 
       function is_<%= name %>_defined(self) result(ret)
          type(Sac), intent(in):: self
          Logical:: ret
 
-         ret = (self%head%<%= name %> /= STRING_UNDEFINED)
+         ret = (self%meta%<%= name %> /= STRING_UNDEFINED)
       end function is_<%= name %>_defined
 
       subroutine set_<%= name %>(self, value)
@@ -901,7 +901,7 @@ contains
          Character(len=*), intent(in):: value
 
          ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
-         self%head%<%= name %> = value
+         self%meta%<%= name %> = value
       end subroutine set_<%= name %>
    <%- } -%>
 end module sac_lib
