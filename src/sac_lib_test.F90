@@ -57,8 +57,8 @@ program sac_lib_test
    ! = body
    ! == itime
    call set_delta(wBody, 0.5)
-   call set_body_itime(wBody, real([1, 2, 3, 4, 5, 6], kind = SAC_REAL_KIND))
-   ! set_body, set_body_itime, get_body, get_body_itime
+   call set_data_itime(wBody, real([1, 2, 3, 4, 5, 6], kind = SAC_REAL_KIND))
+   ! set_data, set_data_itime, get_data, get_data_itime
    ! == ixy
    ! == iamph
    ! == irlim
@@ -68,10 +68,10 @@ program sac_lib_test
    call set_iftype(wIo, 'itime')  ! required
    call set_delta(wIo, 0.05)  ! required
 
-   call set_body(wIo, real([1, 2, 3, 4, 5, 6, 7])) ! npts should be larger than 5 (SAC's limitation).
+   call set_data(wIo, real([1, 2, 3, 4, 5, 6, 7])) ! npts should be larger than 5 (SAC's limitation).
    call dump(wIo, 'tmp.sac')
    call load(wIo, 'tmp.sac')
-   call get_body(wIo, body)
+   call get_data(wIo, body)
    print*, body
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
