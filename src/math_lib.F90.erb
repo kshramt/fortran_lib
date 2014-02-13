@@ -1,0 +1,101 @@
+<%-
+  require 'fort'
+  REALS_DIM0 = ::Fort::Type::Real.multi_provide(dim: 0)
+  REALS_DIM1 = ::Fort::Type::Real.multi_provide(dim: 1)
+  INTEGERS_DIM1 = ::Fort::Type::Integer.multi_provide(dim: 1)
+  COMPLEXS_DIM1 = ::Fort::Type::Complex.multi_provide(dim: 1)
+-%>
+# include "utils.h"
+module math_lib
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   USE_UTILS_H
+
+   implicit none
+
+   private
+   public:: linear_transform
+   public:: convolution ! time domain
+
+   interface linear_transform
+      <%- REALS_DIM0.each{|t| -%>
+         module procedure linear_transform<%= t %>
+      <%- } -%>
+   end interface linear_transform
+
+   <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
+      interface convolution
+         module procedure convolution<%= t %>
+      end interface convolution
+   <%- } -%>
+
+contains
+
+   <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
+      ! zs = xs*ys (* is a convolution operator)
+      ! ASSUMPTIONS:
+      ! - dX = dY = dZ
+      ! CAUTIONS:
+      ! - dX (dY) is not multipled.
+      subroutine convolution<%= t %>(xs, ys, zs)
+         <%= t.declare %>, intent(in):: xs, ys
+         <%= t.declare %>, intent(out):: zs
+
+         if(size(xs, 1) >= size(ys, 1))then
+            call convolution_short_with_long<%= t %>(ys, xs, zs)
+         else
+            call convolution_short_with_long<%= t %>(xs, ys, zs)
+         end if
+      end subroutine convolution<%= t %>
+
+      subroutine convolution_short_with_long<%= t %>(xs, ys, zs)
+         <%= t.declare %>, intent(in):: xs, ys
+         <%= t.declare %>, intent(out):: zs
+         Integer:: nXs, nYs, nZs
+         Integer:: i
+         Integer:: iMax
+         Logical:: isReachedEndOfZs
+
+         nXs = size(xs, 1)
+         nYs = size(ys, 1)
+         nZs = size(zs, 1)
+         ASSERT(nXs <= nYs)
+
+         if(nZs <= 0) return
+         zs = 0
+         if(nXs <= 0) return ! this condition includes nYs <= 0 since nXs <= nYs
+         if(nXs == 1)then
+            zs = xs(1)*ys(1:nZs)
+            return
+         end if
+
+         iMax = min(nXs - 1, nZs)
+         isReachedEndOfZs = (iMax == nZs)
+         do concurrent (i = 1:iMax)
+            zs(i) = dot_product(ys(1:i), xs(i:1:-1))
+         end do
+         if(isReachedEndOfZs) return
+
+         iMax = min(nYs, nZs)
+         isReachedEndOfZs = (iMax == nZs)
+         do concurrent(i = nXs:iMax)
+            zs(i) = dot_product(ys(i-nXs+1:i), xs(nXs:1:-1))
+         end do
+         if(isReachedEndOfZs) return
+
+         iMax = min(nXs + nYs, nZs)
+         do concurrent(i = nYs + 1:iMax)
+            zs(i) = dot_product(ys(i-nXs+1:nYs), xs(nXs:i-nYs+1:-1))
+         end do
+      end subroutine convolution_short_with_long<%= t %>
+   <%- } -%>
+
+   <%- REALS_DIM0.each{|t| -%>
+      elemental function linear_transform<%= t %>(x, x0, x1, y0, y1) result(y)
+         <%= t.declare %>, intent(in):: x
+         Real(kind = kind(x)), intent(in):: x0, x1, y0, y1
+         Real(kind = kind(x)):: y
+
+         y = (x - x0)/(x1 - x0)*(y1 - y0) + y0
+      end function linear_transform<%= t %>
+   <%- } -%>
+end module math_lib

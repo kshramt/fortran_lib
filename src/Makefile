@@ -98,6 +98,9 @@ path_lib_test.exe: path_lib.o path_lib_test.o
 geodetic_lib_test.exe: constant_lib.o comparable_lib.o geodetic_lib.o geodetic_lib_test.o
 	$(FORTRAN) -o $@ $^
 	./$@
+math_lib_test.exe: comparable_lib.o math_lib.o math_lib_test.o
+	$(FORTRAN) -o $@ $^
+	./$@
 
 # Rules
 %.F90: %.F90.erb
