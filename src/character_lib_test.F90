@@ -25,8 +25,11 @@ program character_lib_test
    TEST(s(' a b ') == 'a b')
 
    ! str
+   TEST(len(str(0)) == 1)
    TEST(str('a') == 'a')
+   TEST(len(str(0)) == 1)
    TEST(str(0) == '0')
+   TEST(len(str(-1)) == 2)
    TEST(str(-1) == '-1')
    sBuffer = str(0.0)
    TEST(sBuffer == '0.000000')
