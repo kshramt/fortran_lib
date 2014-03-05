@@ -99,7 +99,7 @@ contains
       answer = trim(adjustl(str))
    end function s
 
-   elemental function add(str1, str2) result(answer)
+   function add(str1, str2) result(answer)
       character(len=*), intent(in):: str1, str2
       character(len=len(str1) + len(str2)):: answer
 
