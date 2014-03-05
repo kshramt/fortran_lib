@@ -9,7 +9,10 @@
   + ::Fort::Type::Character.multi_provide\
   + INT_TYPES
 %>
+
+#include "utils.h"
 module character_lib
+   USE_UTILS_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
    implicit none
@@ -106,17 +109,23 @@ contains
    <%- TYPES.each{|t| -%>
       pure function str<%= t %>(x) result(ret)
          <%= t.declare %>, intent(in):: x
-         character(len=len_trim(adjustl(str_fixed<%= t %>(x)))):: ret
+         character(len=:), allocatable:: buf
+         character(len=:), allocatable:: ret
+         Integer(kind=INT64):: lenBuf
+         Integer:: ios
 
-         ret = s(str_fixed<%= t %>(x))
+         lenBuf = 32 ! enough length to dump `REAL64` value
+         do
+            ENSURE_DEALLOCATED(buf)
+            allocate(Character(lenBuf):: buf)
+            write(buf, *, iostat=ios) x
+            if(is_iostat_ok(ios))then
+               exit
+            else
+               lenBuf = 2*lenBuf
+            end if
+         end do
+         ret = s(buf)
       end function str<%= t %>
-
-      pure function str_fixed<%= t %>(x) result(ret)
-         character(len=MAX_STR_LEN):: ret
-         <%= t.declare %>, intent(in):: x
-
-         write(ret, *) x
-         ret = s(ret)
-      end function str_fixed<%= t %>
    <%- } -%>
 end module character_lib

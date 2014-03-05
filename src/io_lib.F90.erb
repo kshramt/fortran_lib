@@ -45,7 +45,6 @@ module io_lib
 
    integer, parameter:: VERSION = 2 ! Array file format's compatibility.
    Integer, parameter:: LEN_DATA_TYPE_STR_MAX = <%= LEN_TYPE_STR_MAX %>
-   Integer, parameter, public:: LEN_FORMAT_STRING_MAX = 2**10
    character(len = *), parameter:: ARRAY_DATA_FILE = 'data.bin'
    character(len=*), parameter:: ARRAY_META_FILE_V_1 = 'meta.nml'
    character(len=*), parameter:: ARRAY_META_FILE_V_2 = 'meta.kv'
@@ -98,7 +97,7 @@ contains
       function get_column_format_string<%= t %>(x, n) result(ret)
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
-         Character(len=LEN_FORMAT_STRING_MAX):: ret
+         Character(len=:), allocatable:: ret
 
          ASSERT(n >= 1)
          ret = '(' + str(n) + '(1x, l1))'
@@ -110,7 +109,7 @@ contains
       function get_column_format_string<%= t %>(x, n) result(ret)
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
-         Character(len=LEN_FORMAT_STRING_MAX):: ret
+         Character(len=:), allocatable:: ret
 
          ASSERT(n >= 1)
          ret = '(' + str(n) + '(1x, i' + str(len(str(huge(x))) + 1) + '))'
@@ -126,7 +125,7 @@ contains
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
 
-         Character(len=LEN_FORMAT_STRING_MAX):: ret
+         Character(len=:), allocatable:: ret
 
          Integer:: prec
 
@@ -146,7 +145,7 @@ contains
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
 
-         Character(len=LEN_FORMAT_STRING_MAX):: ret
+         Character(len=:), allocatable:: ret
 
          Integer:: prec
 
