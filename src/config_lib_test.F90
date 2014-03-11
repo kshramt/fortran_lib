@@ -3,7 +3,7 @@ program main
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: REAL128
-   use:: config_lib
+   use, non_intrinsic:: config_lib
 
    implicit none
 
