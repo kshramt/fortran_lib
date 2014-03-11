@@ -106,10 +106,8 @@ math_lib_test.exe: comparable_lib.o math_lib.o math_lib_test.o
 %.F90: %.F90.erb
 	$(ERB) $^ > $(TMP_DIR)/$@
 	mv -f $(TMP_DIR)/$@ $@
-%.o: %.F90 utils.h
-	$(FORTRAN) -c $(filter-out %.h, $^)
-%.mod: %.F90 utils.h
-	$(FORTRAN) -c $(filter-out %.h, $^)
-	touch $@
+%.mod %.o: %.F90 | utils.h
+	$(FORTRAN) -c $<
+	touch $*.mod
 %.tested: %.exe
 	./$<
