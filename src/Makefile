@@ -1,6 +1,4 @@
 # Constants
-TMP_DIR := $(shell mktemp --directory --suffix=.fortran_lib)
-
 MY_ERB ?= erb -T - -P
 MY_GFORTRAN_DEBUG ?= gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
 MY_IFORT_DEBUG ?= ifort -fpp -warn -assume realloc_lhs -no-ftz -check -trace -O0 -p -g -DDEBUG
@@ -104,8 +102,7 @@ math_lib_test.exe: comparable_lib.o math_lib.o math_lib_test.o
 
 # Rules
 %.F90: %.F90.erb
-	$(ERB) $^ > $(TMP_DIR)/$@
-	mv -f $(TMP_DIR)/$@ $@
+	$(ERB) $^ >| $@
 %.mod %.o: %.F90 | utils.h
 	$(FORTRAN) -c $<
 	touch $*.mod
