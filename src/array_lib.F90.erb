@@ -1,0 +1,104 @@
+<%-
+  require 'fort'
+
+  INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
+-%>
+
+# include "utils.h"
+module array_lib
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+
+   implicit none
+
+   private
+   public:: iota
+
+   <%- INTEGERS.each{|t1| -%>
+      interface iota
+         module procedure iota_1<%= t1.id %>
+      end interface iota
+
+      interface get_iota_size
+         module procedure get_iota_size_1<%= t1.id %>
+      end interface get_iota_size
+
+      <%- INTEGERS.each{|t2| -%>
+         interface iota
+            module procedure iota_2<%= t1.id %><%= t2.id %>
+         end interface iota
+
+         interface get_iota_size
+            module procedure get_iota_size_2<%= t1.id %><%= t2.id %>
+         end interface get_iota_size
+
+         <%- INTEGERS.each{|t3| -%>
+            interface iota
+               module procedure iota_3<%= t1.id %><%= t2.id %><%= t3.id %>
+            end interface iota
+
+            interface get_iota_size
+               module procedure get_iota_size_3<%= t1.id %><%= t2.id %><%= t3.id %>
+            end interface get_iota_size
+         <%- } -%>
+      <%- } -%>
+   <%- } -%>
+
+contains
+
+   <%- INTEGERS.each{|t1| -%>
+      pure function iota_1<%= t1.id %>(end) result(ret)
+         <%= t1.declare %>, intent(in):: end
+         Integer(kind=kind(end)):: ret(get_iota_size(end))
+
+         ret = iota(int(1, kind=INT8), end)
+      end function iota_1<%= t1.id %>
+
+      pure function get_iota_size_1<%= t1.id %>(end) result(ret)
+         <%= t1.declare %>, intent(in):: end
+         Integer(kind=kind(end)):: ret
+
+         ret = get_iota_size(int(1, kind=INT8), end)
+      end function get_iota_size_1<%= t1.id %>
+
+      <%- INTEGERS.each{|t2| -%>
+         pure function iota_2<%= t1.id %><%= t2.id %>(first, end) result(ret)
+            <%= t1.declare %>, intent(in):: first
+            <%= t2.declare %>, intent(in):: end
+            Integer(kind=max(kind(first), kind(end))):: ret(get_iota_size(first, end))
+
+            ret = iota(first, end, int(1, kind=INT8))
+         end function iota_2<%= t1.id %><%= t2.id %>
+
+         pure function get_iota_size_2<%= t1.id %><%= t2.id %>(first, end) result(ret)
+            <%= t1.declare %>, intent(in):: first
+            <%= t2.declare %>, intent(in):: end
+            Integer(kind=max(kind(first), kind(end))):: ret
+
+            ret = get_iota_size(first, end, int(int(1, kind=INT8), kind=INT8))
+         end function get_iota_size_2<%= t1.id %><%= t2.id %>
+
+         <%- INTEGERS.each{|t3| -%>
+            pure function iota_3<%= t1.id %><%= t2.id %><%= t3.id %>(first, end, step) result(ret)
+               <%= t1.declare %>, intent(in):: first
+               <%= t2.declare %>, intent(in):: end
+               <%= t3.declare %>, intent(in):: step
+               Integer(kind=max(kind(first), kind(end), kind(step))):: ret(get_iota_size(first, end, step))
+               Integer(kind=kind(ret)):: i
+
+               ret = [(i, i = first, end, step)]
+            end function iota_3<%= t1.id %><%= t2.id %><%= t3.id %>
+
+            pure function get_iota_size_3<%= t1.id %><%= t2.id %><%= t3.id %>(first, end, step) result(ret)
+               <%= t1.declare %>, intent(in):: first
+               <%= t2.declare %>, intent(in):: end
+               <%= t3.declare %>, intent(in):: step
+               Integer(kind=max(kind(first), kind(end), kind(step))):: ret
+
+               ret = max((end - first + step)/step, int(0, kind=kind(ret)))
+            end function get_iota_size_3<%= t1.id %><%= t2.id %><%= t3.id %>
+         <%- } -%>
+      <%- } -%>
+   <%- } -%>
+end module array_lib

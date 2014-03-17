@@ -52,6 +52,9 @@ test: $(TESTS) $(ERRORTESTS)
 ../bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
 	$(FC) -o $@ $^
 # Tests
+array_lib_test.exe: array_lib.o array_lib_test.o
+	$(FC) -o $@ $^
+	./$@
 comparable_lib_test.exe: constant_lib.o comparable_lib.o comparable_lib_test.o
 	$(FC) -o $@ $^
 	./$@
