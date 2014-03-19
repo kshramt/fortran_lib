@@ -7,7 +7,8 @@ before_install:
   - sudo apt-get -qq install gcc-snapshot
   - gem install fort
 script:
+  - $MY_FORTRAN --version
   - cd src
   - make test
 env:
-  - MY_ERB="erb -T - -P" MY_FORTRAN_DEBUG="/usr/lib/gcc-snapshot/bin/gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG" MY_RUBY="ruby"
+  - MY_ERB="erb -T - -P" MY_FORTRAN="/usr/lib/gcc-snapshot/bin/gfortran" MY_FORTRAN_DEBUG="${MY_FORTRAN} -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG" MY_RUBY="ruby"
