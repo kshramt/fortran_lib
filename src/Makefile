@@ -68,7 +68,7 @@ character_lib_test.exe: character_lib.o character_lib_test.o
 constant_lib_test.exe: comparable_lib.o constant_lib.o constant_lib_test.o
 	$(FC) -o $@ $^
 	./$@
-sort_lib_test.exe: constant_lib.o stack_lib.o comparable_lib.o sort_lib.o sort_lib_test.o
+sort_lib_test.exe: constant_lib.o stack_lib.o comparable_lib.o random_lib.o sort_lib.o sort_lib_test.o
 	$(FC) -o $@ $^
 	./$@
 list_lib_test.exe: comparable_lib.o list_lib.o list_lib_test.o

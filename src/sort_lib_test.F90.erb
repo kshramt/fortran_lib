@@ -25,17 +25,18 @@ program sort_lib_test
    use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: comparable_lib, only: almost_equal
+   use, non_intrinsic:: random_lib, only: random_seed_by_time
    use, non_intrinsic:: sort_lib
 
    implicit none
 
    Integer:: i
    Integer, allocatable:: seeds(:)
-   Integer:: nSeeds, iSeeds
-   Integer:: t(1:8)
-   Integer, parameter:: YEAR = 1, MONTH = 2, DATE = 3, HOUR = 5
    Integer, parameter:: nDArray = 10000
    Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
+
+   call random_seed_by_time(seeds)
+   PRINT_VARIABLE(seeds)
 
    ! size 0
    TEST(size(quick_sort([(i, i = 1, 0)])) == 0)
@@ -66,23 +67,6 @@ program sort_lib_test
       <%- } -%>
    <%- } -%>
 
-   call date_and_time(values = t)
-   call random_seed(size = nSeeds)
-   allocate(seeds(1:nSeeds))
-   do iSeeds = 1, nSeeds
-      select case(iSeeds)
-      case(1)
-         seeds(iSeeds) = t(YEAR)
-      case(2)
-         seeds(iSeeds) = t(MONTH)
-      case(3)
-         seeds(iSeeds) = t(DATE)
-      case(4)
-         seeds(iSeeds) = t(HOUR)
-      case(5:)
-         seeds(iSeeds) = iSeeds
-      end select
-   end do
    allocate(dArray(1:nDArray))
    call random_number(dArray)
    dArray = dArray*0.01 - 0.005
