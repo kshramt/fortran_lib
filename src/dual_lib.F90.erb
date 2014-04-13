@@ -3,6 +3,17 @@
   reals = ::Fort::Type::Real.multi_provide(dim: 0)
   integers = ::Fort::Type::Integer.multi_provide(dim: 0)
   ops = {:+ => :plus, :- => :minus, :* => :multiply, :/ => :divide}
+  diff_table = {
+    exp: "x",
+    sqrt: "1/(2*x)",
+    tan: "1/(cos(x)**2)",
+    sin: "cos(x)",
+    cos: "(-1)*sin(x)",
+    log: "1/x",
+    log10: "1/x/log(10.0)",
+    atan: "1/(1 + x**2)",
+  }
+
 
   def kind(t)
      t.kind.to_s.sub(/\AREAL/, '').to_i
@@ -25,7 +36,9 @@ module dual_lib
 
    public:: operator(+), operator(-)
    public:: operator(*), operator(/)
-   public:: sin, cos
+   <%- diff_table.each{|op, _| -%>
+      public:: <%= op %>
+   <% } %>
    public:: real, diff, dual
    public:: write
 
@@ -40,13 +53,11 @@ module dual_lib
          <%- } -%>
       <%- } -%>
 
-      interface sin
-         module procedure sin<%= dual(t) %>
-      end interface sin
-
-      interface cos
-         module procedure cos<%= dual(t) %>
-      end interface cos
+      <%- diff_table.each{|op, _| -%>
+         interface <%= op %>
+            module procedure <%= op %><%= dual(t) %>
+         end interface <%= op %>
+      <%- } -%>
 
       interface real
          module procedure real<%= dual(t) %>
@@ -151,21 +162,17 @@ contains
          <%- } -%>
       <%- } -%>
 
-      elemental function sin<%= dual(t) %>(f) result(ret)
-         type(Dual<%= kind(t) %>), intent(in):: f
-         type(Dual<%= kind(t) %>):: ret
+      <%- diff_table.each{|op, dx| -%>
+         elemental function <%= op %><%= dual(t) %>(f) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(t) %>):: ret
+            <%= t.declare %>:: x
 
-         ret%x = sin(real(f))
-         ret%dx = diff(f)*cos(real(f))
-      end function sin<%= dual(t) %>
-
-      elemental function cos<%= dual(t) %>(f) result(ret)
-         type(Dual<%= kind(t) %>), intent(in):: f
-         type(Dual<%= kind(t) %>):: ret
-
-         ret%x = cos(real(f))
-         ret%dx = -diff(f)*sin(real(f))
-      end function cos<%= dual(t) %>
+            x = real(f)
+            ret%x = <%= op %>(x)
+            ret%dx = diff(f)*<%= dx %>
+         end function <%= op %><%= dual(t) %>
+      <%- } -%>
 
       elemental function real<%= dual(t) %>(f) result(ret)
          type(Dual<%= kind(t) %>), intent(in):: f

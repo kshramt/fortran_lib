@@ -16,6 +16,8 @@ program main
       ! +
       TEST(almost_equal(real(sin(dual(r, real(1))) + cos(dual(r, real(2)))), sin(r) + cos(r)))
       TEST(almost_equal(diff(sin(dual(r, real(1))) + cos(dual(r, real(2)))), cos(r) - 2*sin(r)))
+      TEST(almost_equal(real(sin(dual(r, real(1))) + cos(r)), sin(r) + cos(r)))
+      TEST(almost_equal(diff(sin(dual(r, real(1))) + cos(r)), cos(r)))
 
       ! -
       TEST(almost_equal(real(sin(dual(r, real(1))) - cos(dual(r, real(2)))), sin(r) - cos(r)))
