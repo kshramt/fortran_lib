@@ -107,6 +107,9 @@ geodetic_lib_test.exe: constant_lib.o comparable_lib.o geodetic_lib.o geodetic_l
 math_lib_test.exe: comparable_lib.o math_lib.o math_lib_test.o
 	$(FC) -o $@ $^
 	./$@
+dual_lib_test.exe: comparable_lib.o dual_lib.o dual_lib_test.o
+	$(FC) -o $@ $^
+	./$@
 
 # Rules
 %.F90: %.F90.erb
