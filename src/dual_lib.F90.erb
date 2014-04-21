@@ -1,0 +1,237 @@
+<%-
+  require 'fort'
+  reals = ::Fort::Type::Real.multi_provide(dim: 0)
+  integers = ::Fort::Type::Integer.multi_provide(dim: 0)
+  ops = {:+ => :plus, :- => :minus, :* => :multiply, :/ => :divide}
+  diff_table = {
+    exp: "x",
+    sqrt: "1/(2*x)",
+    tan: "1/(cos(x)**2)",
+    sin: "cos(x)",
+    cos: "(-1)*sin(x)",
+    log: "1/x",
+    log10: "1/x/log(10.0)",
+    atan: "1/(1 + x**2)",
+  }
+
+
+  def kind(t)
+     t.kind.to_s.sub(/\AREAL/, '').to_i
+  end
+
+  def dual(t)
+     "Dual#{kind(t)}"
+  end
+-%>
+
+# include "utils.h"
+module dual_lib
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   USE_UTILS_H
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+
+   implicit none
+
+   private
+
+   public:: operator(+), operator(-)
+   public:: operator(*), operator(/)
+   <%- diff_table.each{|op, _| -%>
+      public:: <%= op %>
+   <% } %>
+   public:: real, diff, dual
+   public:: write
+
+   <%- reals.each{|t| -%>
+      <%- reals.each{|s| -%>
+         <%- ops.each{|op, op_name| -%>
+            interface operator(<%= op %>)
+               module procedure <%= op_name %><%= dual(t) %><%= dual(s) %>
+               module procedure <%= op_name %><%= t %><%= dual(s) %>
+               module procedure <%= op_name %><%= dual(t) %><%= s %>
+            end interface operator(<%= op %>)
+         <%- } -%>
+      <%- } -%>
+
+      <%- diff_table.each{|op, _| -%>
+         interface <%= op %>
+            module procedure <%= op %><%= dual(t) %>
+         end interface <%= op %>
+      <%- } -%>
+
+      interface real
+         module procedure real<%= dual(t) %>
+      end interface real
+
+      interface diff
+         module procedure diff<%= dual(t) %>
+      end interface diff
+
+      interface dual
+         module procedure dual_from_dual<%= dual(t) %>
+      end interface dual
+
+      <%- reals.each{|s| -%>
+         interface dual
+            module procedure dual_from_real<%= t %><%= s %>
+         end interface dual
+      <%- } -%>
+
+      interface dual
+         module procedure dual_from_real_const<%= t %>
+      end interface dual
+
+      <%- integers.each{|i1| -%>
+         <%- integers.each{|i2| -%>
+            interface write
+               module procedure write_ios<%= dual(t) %><%= i1.id %><%= i2.id %>
+            end interface write
+         <%- } -%>
+         interface write
+            module procedure write<%= dual(t) %><%= i1 %>
+         end interface write
+      <%- } -%>
+   <%- } -%>
+
+   type, public:: DualNumber
+   end type DualNumber
+
+   <%- reals.each{|t| -%>
+      type, extends(DualNumber), public:: Dual<%= kind(t) %>
+         <%= t.declare %>:: x
+         <%= t.declare %>:: dx = 1
+      end type Dual<%= kind(t) %>
+   <%- } -%>
+
+contains
+
+   <%- reals.each{|t| -%>
+      <%- reals.each{|s| -%>
+         elemental function plus<%= dual(t) %><%= dual(s) %>(f, g) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(s) %>), intent(in):: g
+            type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+            ret%x = real(f) + real(g)
+            ret%dx = diff(f) + diff(g)
+         end function plus<%= dual(t) %><%= dual(s) %>
+
+         elemental function minus<%= dual(t) %><%= dual(s) %>(f, g) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(s) %>), intent(in):: g
+            type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+            ret%x = real(f) - real(g)
+            ret%dx = diff(f) - diff(g)
+         end function minus<%= dual(t) %><%= dual(s) %>
+
+         elemental function multiply<%= dual(t) %><%= dual(s) %>(f, g) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(s) %>), intent(in):: g
+            type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+            ret%x = real(f)*real(g)
+            ret%dx = diff(f)*real(g) + diff(g)*real(f)
+         end function multiply<%= dual(t) %><%= dual(s) %>
+
+         elemental function divide<%= dual(t) %><%= dual(s) %>(f, g) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(s) %>), intent(in):: g
+            type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+            ret%x = real(f)/real(g)
+            ret%dx = (diff(f)*real(g) - diff(g)*real(f))/(real(g)**2)
+         end function divide<%= dual(t) %><%= dual(s) %>
+
+         <%- ops.each{|op, op_name| -%>
+            elemental function <%= op_name %><%= t %><%= dual(s) %>(x, g) result(ret)
+               <%= t.declare %>, intent(in):: x
+               type(Dual<%= kind(s) %>), intent(in):: g
+               type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+               ret = dual(x) <%= op %> g
+            end function <%= op_name %><%= t %><%= dual(s) %>
+
+            elemental function <%= op_name %><%= dual(t) %><%= s %>(f, x) result(ret)
+               type(Dual<%= kind(t) %>), intent(in):: f
+               <%= s.declare %>, intent(in):: x
+               type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+               ret = f  <%= op %>  dual(x)
+            end function <%= op_name %><%= dual(t) %><%= s %>
+         <%- } -%>
+      <%- } -%>
+
+      <%- diff_table.each{|op, dx| -%>
+         elemental function <%= op %><%= dual(t) %>(f) result(ret)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            type(Dual<%= kind(t) %>):: ret
+            <%= t.declare %>:: x
+
+            x = real(f)
+            ret%x = <%= op %>(x)
+            ret%dx = diff(f)*<%= dx %>
+         end function <%= op %><%= dual(t) %>
+      <%- } -%>
+
+      elemental function real<%= dual(t) %>(f) result(ret)
+         type(Dual<%= kind(t) %>), intent(in):: f
+         <%= t.declare %>:: ret
+
+         ret = f%x
+      end function real<%= dual(t) %>
+
+      elemental function diff<%= dual(t) %>(f) result(ret)
+         type(Dual<%= kind(t) %>), intent(in):: f
+         <%= t.declare %>:: ret
+
+         ret = f%dx
+      end function diff<%= dual(t) %>
+
+      elemental function dual_from_dual<%= dual(t) %>(f) result(ret)
+         type(Dual<%= kind(t) %>), intent(in):: f
+         type(Dual<%= kind(t) %>):: ret
+
+         ret%x = real(f)
+         ret%dx = diff(f)
+      end function dual_from_dual<%= dual(t) %>
+
+      <%- reals.each{|s| -%>
+         elemental function dual_from_real<%= t %><%= s %>(f, dx) result(ret)
+            <%= t.declare %>, intent(in):: f
+            <%= s.declare %>, intent(in):: dx
+            type(Dual<%= [kind(t), kind(s)].max %>):: ret
+
+            ret%x = f
+            ret%dx = dx
+         end function dual_from_real<%= t %><%= s %>
+      <%- } -%>
+
+      elemental function dual_from_real_const<%= t %>(f) result(ret)
+         <%= t.declare %>, intent(in):: f
+         type(Dual<%= kind(t) %>):: ret
+
+         ret%x = f
+         ret%dx = real(0, kind=kind(f))
+      end function dual_from_real_const<%= t %>
+
+      <%- integers.each{|i1| -%>
+         <%- integers.each{|i2| -%>
+            subroutine write_ios<%= dual(t) %><%= i1.id %><%= i2.id %>(f, unit, iostat)
+               type(Dual<%= kind(t) %>), intent(in):: f
+               <%= i1.declare %>, intent(in):: unit
+               <%= i2.declare %>, intent(out):: iostat
+
+               write(unit, *, iostat=iostat) 'Dual<%= kind(t) %>(', real(f), ', ', diff(f), ')'
+            end subroutine write_ios<%= dual(t) %><%= i1.id %><%= i2.id %>
+         <%- } -%>
+
+         subroutine write<%= dual(t) %><%= i1 %>(f, unit)
+            type(Dual<%= kind(t) %>), intent(in):: f
+            <%= i1.declare %>, intent(in):: unit
+
+            write(unit, *) 'Dual<%= kind(t) %>(', real(f), ', ', diff(f), ')'
+         end subroutine write<%= dual(t) %><%= i1 %>
+      <%- } -%>
+   <%- } -%>
+end module dual_lib
