@@ -3,11 +3,14 @@ program main
    USE_UTILS_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: INT64
-   use, non_intrinsic:: array_lib, only: iota
+   use, non_intrinsic:: comparable_lib, only: almost_equal
+   use, non_intrinsic:: array_lib, only: iota, l2_norm
    
    implicit none
 
    Integer:: i
+
+   TEST(almost_equal(l2_norm([1.0, 2.0]), 5.0))
 
    TEST(all(iota(0) == [(i, i = 1, 0)]))
    TEST(all(iota(1) == [1]))

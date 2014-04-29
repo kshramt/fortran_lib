@@ -2,6 +2,7 @@
   require 'fort'
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
+  reals = ::Fort::Type::Real.multi_provide(dim: 1)
 -%>
 
 # include "utils.h"
@@ -13,7 +14,14 @@ module array_lib
    implicit none
 
    private
+   public:: l2_norm
    public:: iota
+
+   <%- reals.each{|t| -%>
+      interface l2_norm
+         module procedure l2_norm<%= t %>
+      end interface l2_norm
+   <%- } -%>
 
    <%- INTEGERS.each{|t1| -%>
       interface iota
@@ -46,6 +54,15 @@ module array_lib
    <%- } -%>
 
 contains
+
+   <%- reals.each{|t| -%>
+      pure function l2_norm<%= t %>(xs) result(ret)
+         <%= t.declare %>, intent(in):: xs
+         Real(kind=kind(xs)):: ret
+
+         ret = dot_product(xs, xs)
+      end function l2_norm<%= t %>
+   <%- } -%>
 
    <%- INTEGERS.each{|t1| -%>
       pure function iota_1<%= t1.id %>(end) result(ret)

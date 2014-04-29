@@ -56,7 +56,7 @@ test: $(TESTS) $(ERRORTESTS)
 	mkdir -p $(@D)
 	$(FC) -o $@ $^
 # Tests
-array_lib_test.exe: array_lib.o array_lib_test.o
+array_lib_test.exe: comparable_lib.o array_lib.o array_lib_test.o
 	$(FC) -o $@ $^
 	./$@
 comparable_lib_test.exe: constant_lib.o comparable_lib.o comparable_lib_test.o
