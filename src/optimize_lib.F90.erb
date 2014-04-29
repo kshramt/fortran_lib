@@ -1,0 +1,75 @@
+<%-
+   require 'fort'
+   reals = ::Fort::Type::Real.multi_provide(dim: 0)
+-%>
+#include "utils.h"
+module optimize_lib
+   USE_UTILS_H
+   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+   use, non_intrinsic:: constant_lib, only: get_infinity
+   use, non_intrinsic:: array_lib, only: l2_norm
+
+   implicit none
+
+   private
+   public:: nnls
+
+   <%- reals.each{|t| -%>
+      interface nnls
+         module procedure nnls<%= t %>
+      end interface nnls
+   <%- } -%>
+
+contains
+
+   <%- reals.each{|t| -%>
+      pure function nnls<%= t %>(A, b) result(ret)
+         <%= t.declare %>, intent(in):: A(:, :), b(:)
+         Real(kind=kind(A)), allocatable:: tAA(:, :), tAb(:), x(:), x_pre(:), g(:), ret(:)
+         Real(kind=kind(A)):: d, d_pre, alpha, alpha_
+         Integer(kind=INT64):: i, n
+
+         n = size(A, 2, kind=kind(n))
+         tAA = matmul(transpose(A), A)
+         tAb = matmul(transpose(A), b)
+         allocate(x_pre(n))
+         allocate(g(n))
+         x_pre(:) = 0
+         x = x_pre
+         d_pre = get_infinity()
+         do
+            d = l2_norm(b - matmul(A, x))
+            ! use `.not.` not to leak `NaN`.
+            ! `=` here is essential in some cases.
+            if(.not.(d <= d_pre))then
+               ! numerical error causes `x(i) < 0` for some `i`
+               ret = max(x_pre, real(0, kind=kind(x_pre)))
+               return
+            end if
+            d_pre = d
+            g(:) = tAb - matmul(tAA, x)
+            alpha = get_infinity()
+            do ALL_OF(i, g, 1)
+               if(g(i) < 0)then
+                  if(x(i) <= 0)then
+                     g(i) = 0
+                  else
+                     alpha_ = x(i)/(-g(i))
+                     if(alpha_ < alpha)then
+                        if(alpha_ <= 0)then
+                           g(i) = 0
+                        else
+                           alpha = alpha_
+                        end if
+                     end if
+                  end if
+               end if
+            end do
+
+            x_pre(:) = x
+            x(:) = x + min(l2_norm(g)/l2_norm(matmul(A, g)), alpha)*g
+         end do
+      end function nnls<%= t %>
+   <%- } -%>
+end module optimize_lib

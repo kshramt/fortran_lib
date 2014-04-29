@@ -110,6 +110,9 @@ math_lib_test.exe: comparable_lib.o math_lib.o math_lib_test.o
 dual_lib_test.exe: comparable_lib.o dual_lib.o dual_lib_test.o
 	$(FC) -o $@ $^
 	./$@
+optimize_lib_test.exe: comparable_lib.o constant_lib.o array_lib.o optimize_lib.o optimize_lib_test.o
+	$(FC) -o $@ $^
+	./$@
 
 # Rules
 %.F90: %.F90.erb
