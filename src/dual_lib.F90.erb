@@ -157,7 +157,7 @@ contains
                <%= s.declare %>, intent(in):: x
                type(Dual<%= [kind(t), kind(s)].max %>):: ret
 
-               ret = f  <%= op %>  dual(x)
+               ret = f <%= op %> dual(x)
             end function <%= op_name %><%= dual(t) %><%= s %>
          <%- } -%>
       <%- } -%>
