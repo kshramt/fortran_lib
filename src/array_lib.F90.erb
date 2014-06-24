@@ -60,7 +60,7 @@ contains
          <%= t.declare %>, intent(in):: xs
          Real(kind=kind(xs)):: ret
 
-         ret = dot_product(xs, xs)
+         ret = norm2(xs)**2
       end function l2_norm<%= t %>
    <%- } -%>
 
