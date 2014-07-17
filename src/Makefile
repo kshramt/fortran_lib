@@ -1,12 +1,14 @@
 # Constants
-MY_ERB ?= erb -T - -P
+MY_ERB ?= erb
+ERB := ${MY_ERB}
+ERB_FLAGS := -T '-' -P
+
 MY_GFORTRAN_DEBUG ?= gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
 MY_IFORT_DEBUG ?= ifort -fpp -warn -assume realloc_lhs -no-ftz -check -trace -O0 -p -g -DDEBUG
 MY_FORTRAN_DEBUG ?= $(MY_GFORTRAN_DEBUG)
 # MY_FORTRAN_DEBUG ?= $(MY_IFORT_DEBUG)
 MY_RUBY ?= ruby
 
-ERB := ${MY_ERB} -T '-' -P
 FC := ${MY_FORTRAN_DEBUG}
 RUBY := ${MY_RUBY}
 
@@ -116,7 +118,7 @@ optimize_lib_test.exe: comparable_lib.o constant_lib.o array_lib.o optimize_lib.
 
 # Rules
 %.F90: %.F90.erb
-	$(ERB) $^ >| $@
+	$(ERB) $(ERB_FLAGS) >| $@
 %.mod %.o: %.F90 | utils.h
 	$(FC) -c $<
 	touch $*.mod
