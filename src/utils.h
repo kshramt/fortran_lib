@@ -1,5 +1,5 @@
-#ifndef UTILS_HAVE_ALREADY_LOADED
-#  define UTILS_HAVE_ALREADY_LOADED
+#ifndef _FORTRAN_LIB_H_
+#  define _FORTRAN_LIB_H_
 #  define USE_UTILS_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, OUTPUT_UNIT
 #  define WHERE_AM_I __FILE__, " ", __LINE__
 #  ifdef __GFORTRAN__
