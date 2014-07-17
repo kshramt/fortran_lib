@@ -1,6 +1,6 @@
-# include "utils.h"
+# include "fortran_lib.h"
 program sac_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, non_intrinsic:: sac_lib
 

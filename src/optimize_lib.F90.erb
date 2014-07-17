@@ -2,9 +2,9 @@
    require 'fort'
    reals = ::Fort::Type::Real.multi_provide(dim: 0)
 -%>
-#include "utils.h"
+#include "fortran_lib.h"
 module optimize_lib
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, non_intrinsic:: constant_lib, only: get_infinity
@@ -27,7 +27,7 @@ contains
       pure function nnls<%= t %>(A, b) result(ret)
          <%= t.declare %>, intent(in):: A(:, :), b(:)
          Real(kind=kind(A)), allocatable:: tAA(:, :), tAb(:), x(:), x_pre(:), g(:), ret(:)
-         Real(kind=kind(A)):: d, d_pre, alpha, alpha_
+         Real(kind=kind(A)):: d, d_pre, alpha, alpha_, l2_Ag
          Integer(kind=INT64):: i, n
 
          n = size(A, 2, kind=kind(n))
@@ -68,7 +68,12 @@ contains
             end do
 
             x_pre(:) = x
-            x(:) = x + min(l2_norm(g)/l2_norm(matmul(A, g)), alpha)*g
+            l2_Ag = l2_norm(matmul(A, g))
+            if(l2_Ag <= 0)then
+               ret = max(x_pre, real(0, kind=kind(x_pre)))
+               return
+            end if
+            x(:) = x + min(l2_norm(g)/l2_Ag, alpha)*g
          end do
       end function nnls<%= t %>
    <%- } -%>

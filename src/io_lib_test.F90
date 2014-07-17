@@ -1,8 +1,9 @@
-#include "utils.h"
+#include "fortran_lib.h"
 program io_lib_test
    use, intrinsic:: iso_fortran_env, only: &
       INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
       REAL64, INT8
+   USE_FORTRAN_LIB_H
    use, non_intrinsic:: io_lib, IO_LIB_VERSION => VERSION
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: character_lib, only: operator(+)

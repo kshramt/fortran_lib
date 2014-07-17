@@ -21,7 +21,7 @@
   LEN_TYPE_STR_MAX = TYPES.map(&:to_s).map(&:size).max
 %>
 
-#include "utils.h"
+#include "fortran_lib.h"
 module io_lib
    use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, INPUT_UNIT, OUTPUT_UNIT
    use, intrinsic:: iso_fortran_env, only: INT64

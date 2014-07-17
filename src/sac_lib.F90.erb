@@ -153,7 +153,7 @@
   BODIES = %w[itime ixy iamph irlim ixyz]
 -%>
 
-# include "utils.h"
+# include "fortran_lib.h"
 ! LICENSE: GPL Ver. 3
 ! REFERENCE: http://www.iris.edu/software/sac/manual/file_format.html
 ! COMPILE: gfortran -ffree-line-length-none -fmax-identifier-length=63 -C -c sac_lib.F90
@@ -166,7 +166,7 @@
 ! This module provides few consistency check for header variables.
 ! You should be careful if you change number of data points, time interval, data type, origin time and so on.
 module sac_lib
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: &
       INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
       REAL32, INT32, INT64

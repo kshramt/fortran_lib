@@ -5,10 +5,10 @@
   INTEGERS_DIM1 = ::Fort::Type::Integer.multi_provide(dim: 1)
   COMPLEXS_DIM1 = ::Fort::Type::Complex.multi_provide(dim: 1)
 -%>
-# include "utils.h"
+# include "fortran_lib.h"
 module math_lib
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
 
    implicit none
 

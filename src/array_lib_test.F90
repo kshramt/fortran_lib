@@ -1,6 +1,6 @@
-#include "utils.h"
+#include "fortran_lib.h"
 program main
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: INT64
    use, non_intrinsic:: comparable_lib, only: almost_equal
