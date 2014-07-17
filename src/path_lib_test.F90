@@ -1,6 +1,6 @@
-# include "utils.h"
+# include "fortran_lib.h"
 program path_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, non_intrinsic:: path_lib, only: dirname
    implicit none
 

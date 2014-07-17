@@ -4,9 +4,9 @@
   REALS = ::Fort::Type::Real.multi_provide(dim: 0)
 -%>
 
-# include "utils.h"
+# include "fortran_lib.h"
 module geodetic_lib
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 
    use, non_intrinsic:: constant_lib, only: deg_from_rad, rad_from_deg

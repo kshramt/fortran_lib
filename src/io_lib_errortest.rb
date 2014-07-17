@@ -4,9 +4,9 @@ $dependencies << 'config_lib.o'
 $compiler = ENV.fetch('MY_FORTRAN_DEBUG', 'gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG')
 
 setup <<-EOS
-# include "../utils.h"
+# include "../fortran_lib.h"
 program runner
-  USE_UTILS_H
+  USE_FORTRAN_LIB_H
   use, non_intrinsic:: io_lib
 
   implicit none

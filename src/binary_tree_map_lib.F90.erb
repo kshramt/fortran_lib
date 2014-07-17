@@ -15,9 +15,9 @@
   CHARACTERS_DIM0_BY_TYPES = ::Fort::Type::Character.multi_provide(dim: 0, len: [1, 2, 2**7]).product(TYPES)
 -%>
 
-# include "utils.h"
+# include "fortran_lib.h"
 module binary_tree_map_lib
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    implicit none
 

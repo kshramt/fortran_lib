@@ -1,6 +1,6 @@
-#include "utils.h"
+#include "fortran_lib.h"
 program queue_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only:OUTPUT_UNIT
    use, non_intrinsic:: queue_lib, only: IntegerDim0KindINT32Queue, IntegerDim1KindINT32Queue, IntegerDim2KindINT32Queue
    use, non_intrinsic:: queue_lib, only: push, shift

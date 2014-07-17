@@ -1,6 +1,6 @@
-#include "utils.h"
+#include "fortran_lib.h"
 program character_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: REAL64
    use, non_intrinsic:: character_lib
 

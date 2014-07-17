@@ -1,6 +1,6 @@
-#include "utils.h"
+#include "fortran_lib.h"
 program constant_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64, REAL128
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: constant_lib

@@ -6,10 +6,10 @@
   TYPES = INTEGERS + REALS
 -%>
 
-#include "utils.h"
+#include "fortran_lib.h"
 module sort_lib
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    use, non_intrinsic:: comparable_lib, only: is_nan, is_infinity
 
    use, non_intrinsic:: stack_lib, only: push, pop

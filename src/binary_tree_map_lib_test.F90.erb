@@ -2,9 +2,9 @@
   require 'fort'
   pairs = ('a'..'z').map{|c| [c, c.ord]}
 -%>
-# include "utils.h"
+# include "fortran_lib.h"
 program binary_tree_map_lib_test
-   USE_UTILS_H
+   USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, non_intrinsic:: binary_tree_map_lib
    implicit none
