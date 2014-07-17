@@ -22,7 +22,7 @@ export SHELL := /bin/bash
 export SHELLOPTS := pipefail:errexit:nounset:noclobber
 
 # Commands
-.PHONY: all test
+.PHONY: all test erb
 
 EXECS := ../bin/get_wgs84_from_ecef.exe ../bin/get_ecef_from_wgs84.exe ../bin/text_dump_array.exe ../bin/sac_to_json.exe
 
@@ -30,6 +30,7 @@ LIB_F90_SRCS := $(shell git ls-files *_lib.F90)
 LIB_F90_ERB_SRCS := $(shell git ls-files *_lib.F90.erb)
 LIBS := $(LIB_F90_SRCS:%.F90=%.o) $(LIB_F90_ERB_SRCS:%.F90.erb=%.o)
 all: $(LIBS) $(EXECS)
+erb: $(LIB_F90_ERB_SRCS:%.erb=%)
 
 TEST_F90_SRCS := $(shell git ls-files *_test.F90)
 TEST_F90_ERB_SRCS := $(shell git ls-files *_test.F90.erb)
