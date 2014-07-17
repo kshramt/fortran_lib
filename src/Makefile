@@ -118,7 +118,7 @@ optimize_lib_test.exe: comparable_lib.o constant_lib.o array_lib.o optimize_lib.
 
 # Rules
 %.F90: %.F90.erb
-%.mod %.o: %.F90 | utils.h
+	$(ERB) $(ERB_FLAGS) $< >| $@
 %.mod %.o: %.F90 | fortran_lib.h
 	$(FC) -c $<
 	touch $*.mod
