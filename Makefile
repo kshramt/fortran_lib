@@ -29,7 +29,7 @@ EXECS := bin/get_wgs84_from_ecef.exe bin/get_ecef_from_wgs84.exe bin/text_dump_a
 LIB_F90_SRCS := $(shell git ls-files *_lib.F90)
 LIB_F90_ERB_SRCS := $(shell git ls-files *_lib.F90.erb)
 LIBS := $(LIB_F90_SRCS:%.F90=%.o) $(LIB_F90_ERB_SRCS:%.F90.erb=%.o)
-all: $(LIBS) $(EXECS)
+all: $(EXECS)
 erb: $(LIB_F90_ERB_SRCS:%.erb=%)
 
 TEST_F90_SRCS := $(shell git ls-files *_test.F90)
@@ -42,7 +42,7 @@ ERRORTESTS := $(ERRORTEST_RB_SRCS:%.rb=%.make)
 
 .PRECIOUS: $(LIB_F90_ERB_SRCS:%.erb=%) $(TEST_F90_ERB_SRCS:%.erb=%)
 
-test: $(TESTS) $(ERRORTESTS)
+test: $(TESTS) $(ERRORTESTS) $(LIBS)
 
 # Tasks
 # Executables
