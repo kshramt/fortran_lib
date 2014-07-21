@@ -24,7 +24,7 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 # Commands
 .PHONY: all test erb
 
-EXECS := ../bin/get_wgs84_from_ecef.exe ../bin/get_ecef_from_wgs84.exe ../bin/text_dump_array.exe ../bin/sac_to_json.exe
+EXECS := bin/get_wgs84_from_ecef.exe bin/get_ecef_from_wgs84.exe bin/text_dump_array.exe bin/sac_to_json.exe
 
 LIB_F90_SRCS := $(shell git ls-files *_lib.F90)
 LIB_F90_ERB_SRCS := $(shell git ls-files *_lib.F90.erb)
@@ -46,16 +46,16 @@ test: $(TESTS) $(ERRORTESTS)
 
 # Tasks
 # Executables
-../bin/sac_to_json.exe: character_lib.o sac_lib.o sac_to_json.o
+bin/sac_to_json.exe: character_lib.o sac_lib.o sac_to_json.o
 	mkdir -p $(@D)
 	$(FC) -o $@ $^
-../bin/text_dump_array.exe: constant_lib.o character_lib.o config_lib.o io_lib.o text_dump_array.o
+bin/text_dump_array.exe: constant_lib.o character_lib.o config_lib.o io_lib.o text_dump_array.o
 	mkdir -p $(@D)
 	$(FC) -o $@ $^
-../bin/get_wgs84_from_ecef.exe: character_lib.o constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
+bin/get_wgs84_from_ecef.exe: character_lib.o constant_lib.o geodetic_lib.o get_wgs84_from_ecef.o
 	mkdir -p $(@D)
 	$(FC) -o $@ $^
-../bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
+bin/get_ecef_from_wgs84.exe: character_lib.o constant_lib.o geodetic_lib.o get_ecef_from_wgs84.o
 	mkdir -p $(@D)
 	$(FC) -o $@ $^
 # Tests
