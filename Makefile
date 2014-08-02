@@ -87,8 +87,8 @@ sac_lib_errortest.make: errortest_generate.rb sac_lib_errortest.rb $(call o_mod,
 %.F90: %.F90.erb
 	$(ERB) $(ERB_FLAGS) $< >| $@
 %_lib.mod %_lib.o: %_lib.F90 fortran_lib.h
-	$(FC) -c $<
+	$(FC) -c -o $(@:%.mod=%.o) $<
 %.o: %.F90 fortran_lib.h
-	$(FC) -c $<
+	$(FC) -c -o $(@:%.mod=%.o) $<
 %.tested: %.exe
 	./$<
