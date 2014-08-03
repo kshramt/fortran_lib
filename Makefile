@@ -1,4 +1,6 @@
 # Constants
+DEPS := fort
+
 MY_ERB ?= erb
 ERB := ${MY_ERB}
 ERB_FLAGS := -T '-' -P
@@ -24,14 +26,15 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 o_mod = $(1:%=%.o) $(patsubst %,%.mod,$(filter %_lib,$(1)))
 
 # Commands
-.PHONY: all test erb
+.PHONY: all deps test erb
 
 EXECS := bin/get_wgs84_from_ecef.exe bin/get_ecef_from_wgs84.exe bin/text_dump_array.exe bin/sac_to_json.exe
 
 LIB_F90_SRCS := $(shell git ls-files *_lib.F90)
 LIB_F90_ERB_SRCS := $(shell git ls-files *_lib.F90.erb)
 LIBS := $(LIB_F90_SRCS:%.F90=%.o) $(LIB_F90_ERB_SRCS:%.F90.erb=%.o)
-all: erb $(EXECS)
+all: deps erb $(EXECS)
+deps: $(DEPS:%=dep/%.updated)
 erb: $(LIB_F90_ERB_SRCS:%.erb=%)
 
 TEST_F90_SRCS := $(shell git ls-files *_test.F90)
@@ -84,7 +87,8 @@ sac_lib_errortest.make: errortest_generate.rb sac_lib_errortest.rb $(call o_mod,
 	${RUBY} $< $*_errortest.rb
 
 # Rules
-%.F90: %.F90.erb
+%.F90: %.F90.erb dep/fort/lib/fort/type.rb
+	export RUBYLIB=dep/fort/lib:"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 %_lib.mod %_lib.o: %_lib.F90 fortran_lib.h
 	$(FC) -c -o $(@:%.mod=%.o) $<
@@ -94,3 +98,30 @@ sac_lib_errortest.make: errortest_generate.rb sac_lib_errortest.rb $(call o_mod,
 	touch ${@:%.o=%.mod}
 %.tested: %.exe
 	./$<
+
+define DEPS_RULE_TEMPLATE =
+dep/$(1)/%: | dep/$(1).updated ;
+endef
+$(foreach f,$(DEPS),$(eval $(call DEPS_RULE_TEMPLATE,$(f))))
+
+dep/%.updated: config/dep/%.ref dep/%.synced
+	cd $(@D)/$*
+	git fetch origin
+	git merge "$$(cat ../../$<)"
+	cd -
+	if [[ -r dep/$*/Makefile ]]; then
+	   $(MAKE) -C dep/$*
+	fi
+	touch $@
+
+dep/%.synced: config/dep/%.uri | dep/%
+	cd $(@D)/$*
+	git remote rm origin
+	git remote add origin "$$(cat ../../$<)"
+	cd -
+	touch $@
+
+$(DEPS:%=dep/%): dep/%:
+	git init $@
+	cd $@
+	git remote add origin "$$(cat ../../config/dep/$*.uri)"
