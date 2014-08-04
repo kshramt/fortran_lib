@@ -19,11 +19,15 @@ module sort_lib
 
    private
 
-   public:: insertion_sorting
+   public:: insertion_sort, insertion_sorting
    public:: quick_sort, quick_sorting
    public:: merge_sort, merge_sorting
 
    <%- TYPES.each{|t| -%>
+      interface insertion_sort
+         module procedure insertion_sort<%= t %>
+      end interface insertion_sort
+
       interface insertion_sorting
          module procedure insertion_sorting<%= t %>
       end interface insertion_sorting
@@ -68,6 +72,14 @@ module sort_lib
 contains
 
    <%- TYPES.each{|t| -%>
+      function insertion_sort<%= t %>(xs) result(ret)
+         <%= t.declare %>, intent(in):: xs(:)
+         <%= t.declare %>:: ret(size(xs, kind=INT64))
+
+         ret(:) = xs
+         call insertion_sorting(ret)
+      end function insertion_sort<%= t %>
+
       subroutine insertion_sorting<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
 

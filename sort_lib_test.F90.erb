@@ -17,6 +17,8 @@ SML_SETS = [
   SML.product(SML, SML, SML),
   SML.product(SML, SML, SML, SML),
 ]
+
+SORTS = [:quick, :merge, :insertion]
 -%>
 
 #include "fortran_lib.h"
@@ -34,54 +36,56 @@ program sort_lib_test
    Integer, allocatable:: seeds(:)
    Integer, parameter:: nDArray = 10000
    Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
+   Integer:: ns(2), ms(2)
 
    call random_seed_by_time(seeds)
    PRINT_VARIABLE(seeds)
 
    ! size 0
-   TEST(size(quick_sort([(i, i = 1, 0)])) == 0)
-   TEST(size(quick_sort([(dble(i), i = 1, 0)])) == 0)
-   TEST(size(merge_sort([(i, i = 1, 0)])) == 0)
-   TEST(size(merge_sort([(dble(i), i = 1, 0)])) == 0)
+   <%- SORTS.each{|name| -%>
+      TEST(size(<%= name %>_sort([(i, i = 1, 0)])) == 0)
+      TEST(size(<%= name %>_sort([(dble(i), i = 1, 0)])) == 0)
+   <%- } -%>
 
    ! size 1
-   TEST(all(quick_sort([0]) == [0]))
-   TEST(all(almost_equal(quick_sort([0.0]), [0.0])))
-   TEST(all(merge_sort([0]) == [0]))
-   TEST(all(almost_equal(merge_sort([0.0]), [0.0])))
+   <%- SORTS.each{|name| -%>
+      TEST(all(<%= name %>_sort([0]) == [0]))
+      TEST(all(almost_equal(<%= name %>_sort([0.0]), [0.0])))
+   <%- } -%>
 
-   <%- [SML_SETS.last].each{|sml_set| -%>
-      <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
-         TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-         TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-      <%- } -%>
+   <%- SORTS.each{|name| -%>
+      <%- [SML_SETS.last].each{|sml_set| -%>
+         <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
+            TEST(all(<%= name %>_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+         <%- } -%>
 
-      <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
-         TEST(all(quick_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-         TEST(all(merge_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-      <%- } -%>
+         <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
+            TEST(all(<%= name %>_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
+         <%- } -%>
 
-      <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
-         TEST(all(almost_equal(quick_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
-         TEST(all(almost_equal(merge_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+         <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
+            TEST(all(almost_equal(<%= name %>_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
+         <%- } -%>
       <%- } -%>
    <%- } -%>
 
    allocate(dArray(1:nDArray))
    call random_number(dArray)
    dArray = dArray*0.01 - 0.005
-   sortedDArray = quick_sort(dArray)
-   TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
-   sortedDArray = merge_sort(dArray)
-   TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
+   <%- SORTS.each{|name| -%>
+      sortedDArray = <%= name %>_sort(dArray)
+      TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
+   <%- } -%>
 
    ! Infinity
-   TEST(all(almost_equal(quick_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
-   TEST(all(almost_equal(merge_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   <%- SORTS.each{|name| -%>
+      TEST(all(almost_equal(<%= name %>_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
+   <%- } -%>
 
    ! Bug check
-   TEST(all(almost_equal(quick_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
-   TEST(all(almost_equal(merge_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   <%- SORTS.each{|name| -%>
+      TEST(all(almost_equal(<%= name %>_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
+   <%- } -%>
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
    stop
