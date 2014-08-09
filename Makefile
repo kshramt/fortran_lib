@@ -21,8 +21,8 @@ CPP := $(MY_CPP)
 CPP_FLAGS := -P -C
 
 FILES := $(shell git ls-files)
-F90_NAMES := $(patsubst %.F90,%,$(filter %.F90,$(FILES)))
-F90_NAMES += $(patsubst %.F90.erb,%,$(filter %.F90.erb,$(FILES)))
+F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
+F90_NAMES += $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
 LIB_NAMES := $(filter %_lib,$(F90_NAMES))
 TEST_NAMES := $(filter %_test,$(F90_NAMES))
 ERRORTEST_TEMPLATE_NAMES := $(filter %_errortest,$(F90_NAMES))
@@ -51,7 +51,7 @@ o_mod = $(1:%=%.o) $(addsuffix .mod,$(filter %_lib,$(1)))
 
 .PHONY: all src test preprocess deps
 all: preprocess src $(EXE_NAMES:%/bin/%.exe)
-src: preprocess $(patsubst %,src/%.F90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES),$(F90_NAMES))) $(patsubst %,src/%.F90,$(ERRORTEST_NAMES))
+src: preprocess $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES))
 test: preprocess $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
 preprocess: deps
 deps: $(DEPS:%=dep/%.updated)
@@ -95,7 +95,7 @@ test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,charac
 
 # Rules
 define ERRORTEST_F90_TEMPLATE =
-src/$(1)_$(2)_errortest.F90: $(1)_errortest.F90 $(1)_errortest/$(2).F90
+src/$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
 	mkdir -p $$(@D)
 	{
 	   cat $$^
@@ -123,17 +123,17 @@ bin/%.exe: $(call o_mod,%)
 	$(FC) -o $@ $(filter-out %.mod,$^)
 
 
-%_lib.mod %_lib.o: src/%_lib.F90
+%_lib.mod %_lib.o: src/%_lib.f90
 	$(FC) -c -o $*_lib.o $<
 	touch $*_lib.mod
-%.o: src/%.F90
+%.o: src/%.f90
 	$(FC) -c -o $*.o $<
 
 
-src/%.F90: %.F90.erb fortran_lib.h
+src/%.f90: %.f90.erb fortran_lib.h
 	mkdir -p $(@D)
 	$(ERB) $(ERB_FLAGS) $< | $(CPP) $(CPP_FLAGS) >| $@
-src/%.F90: %.F90 fortran_lib.h
+src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< >| $@
 
