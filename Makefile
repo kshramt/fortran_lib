@@ -105,7 +105,7 @@ src/$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
 	   cat $$^
 	   echo '   stop'
 	   echo 'end program main'
-	} | $(CPP) $(CPP_FLAGS) >| $$@
+	} | $(CPP) $(CPP_FLAGS) -D __FILE__='"$$@"' -o $$@
 endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
@@ -134,12 +134,11 @@ bin/%.exe: $(call o_mod,%)
 	$(FC) $(FFLAGS) -c -o $*.o $<
 
 
-src/%.f90: %.f90.erb fortran_lib.h
-	mkdir -p $(@D)
-	$(ERB) $(ERB_FLAGS) $< | $(CPP) $(CPP_FLAGS) >| $@
 src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $(@D)
-	$(CPP) $(CPP_FLAGS) $< >| $@
+	$(CPP) $(CPP_FLAGS) $< $@
+%.f90: %.f90.erb fortran_lib.h
+	$(ERB) $(ERB_FLAGS) $< >| $@
 
 
 define DEPS_RULE_TEMPLATE =
