@@ -96,13 +96,13 @@ test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,charac
 
 # Rules
 define ERRORTEST_F90_TEMPLATE =
-src/$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
+$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
 	mkdir -p $$(@D)
 	{
 	   cat $$^
 	   echo '   stop'
 	   echo 'end program main'
-	} | $(CPP) $(CPP_FLAGS) -D __FILE__='"$$@"' -o $$@
+	} >| $$@
 endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
