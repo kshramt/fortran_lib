@@ -7,18 +7,22 @@ MY_ERB ?= erb
 ERB := ${MY_ERB}
 ERB_FLAGS := -T '-' -P
 
-MY_GFORTRAN_DEBUG ?= gfortran -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
-MY_IFORT_DEBUG ?= ifort -fpp -warn -assume realloc_lhs -no-ftz -check -trace -O0 -p -g -DDEBUG
-MY_FORTRAN_DEBUG ?= $(MY_GFORTRAN_DEBUG)
 # MY_FORTRAN_DEBUG ?= $(MY_IFORT_DEBUG)
 MY_RUBY ?= ruby
-
-FC := ${MY_FORTRAN_DEBUG}
 RUBY := ${MY_RUBY}
+
+MY_FC ?= gfortran
+FC := $(MY_FC)
+MY_FFLAG_COMMON ?= -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
+MY_FFLAG_DEBUG ?= -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
+FFLAGS := $(MY_FFLAG_COMMON) $(MY_FFLAG_DEBUG)
 
 MY_CPP ?= cpp
 CPP := $(MY_CPP)
 CPP_FLAGS := -P -C
+ifeq ($(FC),ifort)
+   CPP_FLAGS += -D __INTEL_COMPILER
+endif
 
 FILES := $(shell git ls-files)
 F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
@@ -115,19 +119,19 @@ test/%_test.exe.tested: test/%_test.exe
 	touch $(@F)
 test/%.exe: $(call o_mod,%)
 	mkdir -p $(@D)
-	$(FC) -o $@ $(filter-out %.mod,$^)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
 bin/%.exe: $(call o_mod,%)
 	mkdir -p $(@D)
-	$(FC) -o $@ $(filter-out %.mod,$^)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
 %_lib.mod %_lib.o: src/%_lib.f90
-	$(FC) -c -o $*_lib.o $<
+	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
 %.o: src/%.f90
-	$(FC) -c -o $*.o $<
+	$(FC) $(FFLAGS) -c -o $*.o $<
 
 
 src/%.f90: %.f90.erb fortran_lib.h
