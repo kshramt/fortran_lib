@@ -63,38 +63,38 @@ deps: $(DEPS:%=dep/%.updated)
 
 # Tasks
 ## Executables
-bin/sac_to_json.exe: $(call o_mod,character_lib sac_lib)
-bin/text_dump_array.exe: $(call o_mod,constant_lib character_lib config_lib io_lib)
-bin/get_wgs84_from_ecef.exe: $(call o_mod,character_lib constant_lib geodetic_lib)
-bin/get_ecef_from_wgs84.exe: $(call o_mod,character_lib constant_lib geodetic_lib)
+bin/sac_to_json.exe: $(call o_mod,character_lib sac_lib sac_to_json)
+bin/text_dump_array.exe: $(call o_mod,constant_lib character_lib config_lib io_lib text_dump_array)
+bin/get_wgs84_from_ecef.exe: $(call o_mod,character_lib constant_lib geodetic_lib get_wgs84_from_ecef)
+bin/get_ecef_from_wgs84.exe: $(call o_mod,character_lib constant_lib geodetic_lib get_ecef_from_wgs84)
 
 
 ## Tests
-test/array_lib_test.exe: $(call o_mod,comparable_lib array_lib)
-test/comparable_lib_test.exe: $(call o_mod,constant_lib comparable_lib)
-test/character_lib_test.exe: $(call o_mod,character_lib)
-test/constant_lib_test.exe: $(call o_mod,comparable_lib constant_lib)
-test/sort_lib_test.exe: $(call o_mod,constant_lib stack_lib comparable_lib random_lib sort_lib)
-test/list_lib_test.exe: $(call o_mod,comparable_lib list_lib)
-test/stack_lib_test.exe: $(call o_mod,stack_lib)
-test/queue_lib_test.exe: $(call o_mod,queue_lib)
-test/io_lib_test.exe: $(call o_mod,config_lib constant_lib character_lib comparable_lib io_lib)
-test/config_lib_test.exe: $(call o_mod,config_lib)
-test/binary_tree_map_lib_test.exe: $(call o_mod,binary_tree_map_lib)
-test/sac_lib_test.exe: $(call o_mod,character_lib sac_lib)
-test/path_lib_test.exe: $(call o_mod,path_lib)
-test/geodetic_lib_test.exe: $(call o_mod,constant_lib comparable_lib geodetic_lib)
-test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib)
-test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib)
-test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib optimize_lib)
+test/array_lib_test.exe: $(call o_mod,comparable_lib array_lib array_lib_test)
+test/comparable_lib_test.exe: $(call o_mod,constant_lib comparable_lib comparable_lib_test)
+test/character_lib_test.exe: $(call o_mod,character_lib character_lib_test)
+test/constant_lib_test.exe: $(call o_mod,comparable_lib constant_lib constant_lib_test)
+test/sort_lib_test.exe: $(call o_mod,constant_lib stack_lib comparable_lib random_lib sort_lib sort_lib_test)
+test/list_lib_test.exe: $(call o_mod,comparable_lib list_lib list_lib_test)
+test/stack_lib_test.exe: $(call o_mod,stack_lib stack_lib_test)
+test/queue_lib_test.exe: $(call o_mod,queue_lib queue_lib_test)
+test/io_lib_test.exe: $(call o_mod,config_lib constant_lib character_lib comparable_lib io_lib io_lib_test)
+test/config_lib_test.exe: $(call o_mod,config_lib config_lib_test)
+test/binary_tree_map_lib_test.exe: $(call o_mod,binary_tree_map_lib binary_tree_map_lib_test)
+test/sac_lib_test.exe: $(call o_mod,character_lib sac_lib sac_lib_test)
+test/path_lib_test.exe: $(call o_mod,path_lib path_lib_test)
+test/geodetic_lib_test.exe: $(call o_mod,constant_lib comparable_lib geodetic_lib geodetic_lib_test)
+test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib math_lib_test)
+test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
+test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib optimize_lib optimize_lib_test)
 
-test/io_lib_illegal_form_argument_errortest.exe: $(call o_mod,config_lib character_lib io_lib)
-test/binary_tree_map_lib_add_too_long_key_errortest.exe: $(call o_mod,binary_tree_map_lib)
-test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib)
-test/sac_lib_get_imagsrc_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib)
-test/sac_lib_set_iftype_with_invalid_argument_errortest.exe: $(call o_mod,character_lib sac_lib)
-test/sac_lib_set_kevnm_with_too_long_argument_errortest.exe: $(call o_mod,character_lib sac_lib)
-test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,character_lib sac_lib)
+test/io_lib_illegal_form_argument_errortest.exe: $(call o_mod,config_lib character_lib io_lib io_lib_illegal_form_argument_errortest)
+test/binary_tree_map_lib_add_too_long_key_errortest.exe: $(call o_mod,binary_tree_map_lib binary_tree_map_lib_add_too_long_key_errortest)
+test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_get_iftype_for_undefined_value_errortest)
+test/sac_lib_get_imagsrc_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_get_imagsrc_for_undefined_value_errortest)
+test/sac_lib_set_iftype_with_invalid_argument_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_set_iftype_with_invalid_argument_errortest)
+test/sac_lib_set_kevnm_with_too_long_argument_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_set_kevnm_with_too_long_argument_errortest)
+test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_set_kstnm_with_too_long_argument_errortest)
 
 
 # Rules
@@ -117,12 +117,12 @@ test/%_test.exe.tested: test/%_test.exe
 	cd $(@D)
 	./$(<F)
 	touch $(@F)
-test/%.exe: $(call o_mod,%)
+test/%.exe:
 	mkdir -p $(@D)
 	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
-bin/%.exe: $(call o_mod,%)
+bin/%.exe:
 	mkdir -p $(@D)
 	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
