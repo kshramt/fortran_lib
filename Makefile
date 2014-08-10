@@ -135,6 +135,7 @@ src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< $@
 %.f90: %.f90.erb fortran_lib.h
+	export RUBYLIB=dep/fort/lib:$(DIR):"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 
 
