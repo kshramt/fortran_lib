@@ -14,8 +14,16 @@ module array_lib
    implicit none
 
    private
+   public:: eye
    public:: l2_norm
    public:: iota
+
+   <%- INTEGERS.each{|t| -%>
+      interface eye
+         module procedure eye_mn<%= t %>
+         module procedure eye_n<%= t %>
+      end interface eye
+   <%- } -%>
 
    <%- reals.each{|t| -%>
       interface l2_norm
@@ -54,6 +62,26 @@ module array_lib
    <%- } -%>
 
 contains
+
+   <%- INTEGERS.each{|t| -%>
+      function eye_n<%= t %>(n) result(ret)
+         <%= t.declare %>, intent(in):: n
+         Integer(kind=INT16):: ret(n, n)
+
+         ret = eye(n, n)
+      end function eye_n<%= t %>
+
+      function eye_mn<%= t %>(m, n) result(ret)
+         <%= t.declare %>, intent(in):: m, n
+         Integer(kind=INT16):: ret(m, n)
+         Integer(kind=kind(m)):: i
+
+         ret = 0
+         do i = 1, min(m, n)
+            ret(i, i) = 1
+         end do
+      end function eye_mn<%= t %>
+   <%- } -%>
 
    <%- reals.each{|t| -%>
       pure function l2_norm<%= t %>(xs) result(ret)
