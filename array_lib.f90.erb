@@ -66,14 +66,14 @@ contains
    <%- INTEGERS.each{|t| -%>
       function eye_n<%= t %>(n) result(ret)
          <%= t.declare %>, intent(in):: n
-         Integer(kind=INT16):: ret(n, n)
+         Integer(kind=INT8):: ret(n, n)
 
          ret = eye(n, n)
       end function eye_n<%= t %>
 
       function eye_mn<%= t %>(m, n) result(ret)
          <%= t.declare %>, intent(in):: m, n
-         Integer(kind=INT16):: ret(m, n)
+         Integer(kind=INT8):: ret(m, n)
          Integer(kind=kind(m)):: i
 
          ret = 0
