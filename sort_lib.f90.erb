@@ -199,25 +199,48 @@ contains
 
       subroutine merge_sorting<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
+         <%= t.declare %>:: buf(size(xs, dim=1, kind=INT64))
+         Logical(kind=INT8):: isRetInBuf
 
          ASSERT(.not.any(is_nan(xs)))
-         call merge_sorting_impl<%= t %>(xs)
+         call merge_sorting_impl<%= t %>(xs, buf, isRetInBuf)
+         if(isRetInBuf)then
+            xs = buf
+         end if
       end subroutine merge_sorting<%= t %>
 
-      recursive subroutine merge_sorting_impl<%= t %>(xs)
+      recursive subroutine merge_sorting_impl<%= t %>(xs, buf, isRetInBuf)
          <%= t.declare %>, intent(inout):: xs(:)
-         <%= t.declare %>:: xsL(size(xs, kind=INT64)/2), xsR(size(xs, kind=INT64) - size(xs, kind=INT64)/2)
-         Integer(kind = INT64):: nXs
+         <%= t.declare %>, intent(out):: buf(:)
+         Logical(kind=INT8), intent(out):: isRetInBuf
+         Logical(kind=kind(isRetInBuf)):: isLeftRetInBuf, isRightRetInBuf
+         Integer(kind = INT64):: nXs, iL, iR
 
          nXs = size(xs, dim = 1, kind = kind(nXs))
-         if(nXs <= 3)then
-            call insertion_sorting_impl(xs)
+         iL = nXs/2
+         iR = iL + 1
+         if(nXs > 7)then
+            call merge_sorting_impl(xs(:iL), buf(:iL), isLeftRetInBuf)
+            call merge_sorting_impl(xs(iR:), buf(iR:), isRightRetInBuf)
+            if(isLeftRetInBuf)then
+               if(.not.isRightRetInBuf)then
+                  buf(iR:) = xs(iR:)
+               end if
+               call merge_sorted_lists(buf(:iL), buf(iR:), xs)
+               isRetInBuf = .false.
+            else
+               if(isRightRetInBuf)then
+                  buf(:iL) = xs(:iL)
+                  call merge_sorted_lists(buf(:iL), buf(iR:), xs)
+                  isRetInBuf = .false.
+               else
+                  call merge_sorted_lists(xs(:iL), xs(iR:), buf)
+                  isRetInBuf = .true.
+               end if
+            end if
          else
-            xsL = xs(1:nXs/2)
-            xsR = xs((nXs/2 + 1):nXs)
-            call merge_sorting_impl(xsL)
-            call merge_sorting_impl(xsR)
-            call merge_sorted_lists(xsL, xsR, xs)
+            call insertion_sorting_impl(xs)
+            isRetInBuf = .false.
          end if
       end subroutine merge_sorting_impl<%= t %>
 
