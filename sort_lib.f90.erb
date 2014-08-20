@@ -131,10 +131,7 @@ contains
 
             iLOriginal = iL      ! Left most index of the current segment.
             do while(iLOriginal < iR) ! While current segment remains
-               if(iR - iL <= 2)then
-                  call insertion_sorting_impl(xs)
-                  return
-               else
+               if(iR - iL > 7)then
                   pivot = get_pivot(xs(iL:iR), isUniform)
                   if(isUniform) exit
 
@@ -156,6 +153,9 @@ contains
 
                      call swapping(xs(iL), xs(iR))
                   end do loop_to_swap
+               else
+                  call insertion_sorting_impl(xs)
+                  return
                end if
             end do
          end do
