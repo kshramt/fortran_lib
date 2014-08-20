@@ -56,9 +56,9 @@ module sort_lib
          module procedure merge_sorting<%= t %>
       end interface merge_sorting
 
-      interface merge_sorting_substance
-         module procedure merge_sorting_substance<%= t %>
-      end interface merge_sorting_substance
+      interface merge_sorting_impl
+         module procedure merge_sorting_impl<%= t %>
+      end interface merge_sorting_impl
 
       interface merge_sorted_lists
          module procedure merge_sorted_lists<%= t %>
@@ -201,10 +201,10 @@ contains
          <%= t.declare %>, intent(inout):: xs(:)
 
          ASSERT(.not.any(is_nan(xs)))
-         call merge_sorting_substance<%= t %>(xs)
+         call merge_sorting_impl<%= t %>(xs)
       end subroutine merge_sorting<%= t %>
 
-      recursive subroutine merge_sorting_substance<%= t %>(xs)
+      recursive subroutine merge_sorting_impl<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>, allocatable:: xsL(:), xsR(:)
          Integer(kind = INT64):: nXs
@@ -215,11 +215,11 @@ contains
          else
             xsL = xs(1:nXs/2)
             xsR = xs((nXs/2 + 1):nXs)
-            call merge_sorting_substance(xsL)
-            call merge_sorting_substance(xsR)
+            call merge_sorting_impl(xsL)
+            call merge_sorting_impl(xsR)
             call merge_sorted_lists(xsL, xsR, xs)
          end if
-      end subroutine merge_sorting_substance<%= t %>
+      end subroutine merge_sorting_impl<%= t %>
 
       ! Merge sorted 1-D array xs and ys into zs.
       subroutine merge_sorted_lists<%= t %>(xs, ys, zs)
