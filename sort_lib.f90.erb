@@ -76,7 +76,7 @@ contains
          <%= t.declare %>, intent(in):: xs(:)
          <%= t.declare %>:: ret(size(xs, kind=INT64))
 
-         ret(:) = xs
+         ret = xs
          call insertion_sorting(ret)
       end function insertion_sort<%= t %>
 
@@ -107,8 +107,8 @@ contains
       end subroutine insertion_sorting_impl<%= t %>
 
       function quick_sort<%= t %>(xs) result(xsSorted)
-         <%= t.declare %>, allocatable:: xsSorted(:)
          <%= t.declare %>, intent(in):: xs(:)
+         <%= t.declare %>:: xsSorted(size(xs, kind=INT64))
 
          xsSorted = xs
          call quick_sorting(xsSorted)
@@ -191,7 +191,7 @@ contains
 
       function merge_sort<%= t %>(xs) result(xsSorted)
          <%= t.declare %>, intent(in):: xs(:)
-         <%= t.declare %>, allocatable:: xsSorted(:)
+         <%= t.declare %>:: xsSorted(size(xs, kind=INT64))
 
          xsSorted = xs
          call merge_sorting<%= t %>(xsSorted)
@@ -206,7 +206,7 @@ contains
 
       recursive subroutine merge_sorting_impl<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
-         <%= t.declare %>, allocatable:: xsL(:), xsR(:)
+         <%= t.declare %>:: xsL(size(xs, kind=INT64)/2), xsR(size(xs, kind=INT64) - size(xs, kind=INT64)/2)
          Integer(kind = INT64):: nXs
 
          nXs = size(xs, dim = 1, kind = kind(nXs))
