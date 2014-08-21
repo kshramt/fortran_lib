@@ -161,11 +161,10 @@ contains
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>, intent(in):: pivot
          Integer(kind=INT64), intent(out):: iPivot
-         Integer(kind=kind(iPivot)):: nXs, iL, iR
+         Integer(kind=kind(iPivot)):: iL, iR
 
-         nXs = size(xs, dim=1, kind=kind(nXs))
          iL = 1
-         iR = nXs
+         iR = size(xs, dim=1, kind=kind(iR))
          if(iL < iR)then
             do
                do while(xs(iL) < pivot)
