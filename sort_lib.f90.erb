@@ -64,6 +64,10 @@ module sort_lib
          module procedure merge_sorted_lists<%= t %>
       end interface merge_sorted_lists
 
+      interface merge_sorted_lists_impl
+         module procedure merge_sorted_lists_impl<%= t %>
+      end interface merge_sorted_lists_impl
+
       interface swapping
          module procedure swapping<%= t %>
       end interface swapping
@@ -226,15 +230,15 @@ contains
                if(.not.isRightRetInBuf)then
                   buf(iR:) = xs(iR:)
                end if
-               call merge_sorted_lists(buf(:iL), buf(iR:), xs)
+               call merge_sorted_lists_impl(buf(:iL), buf(iR:), xs)
                isRetInBuf = .false.
             else
                if(isRightRetInBuf)then
                   buf(:iL) = xs(:iL)
-                  call merge_sorted_lists(buf(:iL), buf(iR:), xs)
+                  call merge_sorted_lists_impl(buf(:iL), buf(iR:), xs)
                   isRetInBuf = .false.
                else
-                  call merge_sorted_lists(xs(:iL), xs(iR:), buf)
+                  call merge_sorted_lists_impl(xs(:iL), xs(iR:), buf)
                   isRetInBuf = .true.
                end if
             end if
@@ -248,21 +252,19 @@ contains
       subroutine merge_sorted_lists<%= t %>(xs, ys, zs)
          <%= t.declare %>, intent(in):: xs(:), ys(:)
          <%= t.declare %>, intent(out):: zs(:)
+
+         ASSERT(size(xs, dim=1, kind=INT64) + size(ys, dim=1, kind=INT64) == size(zs, dim=1, kind=INT64))
+         call merge_sorted_lists_impl(xs, ys, zs)
+      end subroutine merge_sorted_lists<%= t %>
+
+      subroutine merge_sorted_lists_impl<%= t %>(xs, ys, zs)
+         <%= t.declare %>, intent(in):: xs(:), ys(:)
+         <%= t.declare %>, intent(out):: zs(:)
          Integer(kind = INT64):: iXs, nXs, iYs, nYs, iZs, nZs
 
          nXs = size(xs, dim = 1, kind = kind(nXs))
          nYs = size(ys, dim = 1, kind = kind(nYs))
          nZs = size(zs, dim = 1, kind = kind(nZs))
-
-         ASSERT(nXs + nYs == nZs)
-         if(nXs < 1)then
-             zs = ys
-             return
-         end if
-         if(nYs < 1)then
-             zs = xs
-             return
-         end if
 
          iXs = 1
          iYs = 1
@@ -283,7 +285,7 @@ contains
          else
             zs(iZs:nZs) = ys(iYs:nYs)
          end if
-      end subroutine merge_sorted_lists<%= t %>
+      end subroutine merge_sorted_lists_impl<%= t %>
 
       elemental subroutine swapping<%= t %>(a, b)
          <%= t.declare %>, intent(inout):: a, b
