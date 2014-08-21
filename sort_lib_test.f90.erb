@@ -24,7 +24,7 @@ SORTS = [:quick, :merge, :insertion]
 #include "fortran_lib.h"
 program sort_lib_test
    USE_FORTRAN_LIB_H
-   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64
+   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, REAL64, INT64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: random_lib, only: random_seed_by_time
@@ -36,10 +36,25 @@ program sort_lib_test
    Integer, allocatable:: seeds(:)
    Integer:: nDArray
    Real(kind = REAL64), allocatable:: dArray(:), sortedDArray(:)
-   Integer:: ns(2), ms(2)
+   Integer:: ns(2), ms(2), nsForPartitioning(5) = [3, 4, 2, 1, 1]
+   Integer(kind=INT64):: iPivot
 
    call random_seed_by_time(seeds)
    PRINT_VARIABLE(seeds)
+
+   call partitioning(nsForPartitioning, 2, iPivot)
+   TEST(iPivot == 3)
+   nsForPartitioning = [1, 1, 1, 1, 1]
+   call partitioning(nsForPartitioning, 1, iPivot)
+   nsForPartitioning = [1, 1, 1, 1, 1]
+   call partitioning(nsForPartitioning(1:1), 1, iPivot)
+   TEST(iPivot == 1)
+   nsForPartitioning = [1, 2, 2, 2, 2]
+   call partitioning(nsForPartitioning, 1, iPivot)
+   TEST(iPivot == 1)
+   nsForPartitioning = [1, 2, 2, 2, 2]
+   call partitioning(nsForPartitioning, 2, iPivot)
+   TEST(iPivot == 5)
 
    ! size 0
    <%- SORTS.each{|name| -%>

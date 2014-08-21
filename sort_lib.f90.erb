@@ -22,8 +22,17 @@ module sort_lib
    public:: insertion_sort, insertion_sorting
    public:: quick_sort, quick_sorting
    public:: merge_sort, merge_sorting
+   public:: partitioning
 
    <%- TYPES.each{|t| -%>
+      interface partitioning
+         module procedure partitioning<%= t %>
+      end interface partitioning
+
+      interface partitioning_impl
+         module procedure partitioning_impl<%= t %>
+      end interface partitioning_impl
+
       interface insertion_sort
          module procedure insertion_sort<%= t %>
       end interface insertion_sort
@@ -72,6 +81,42 @@ module sort_lib
 contains
 
    <%- TYPES.each{|t| -%>
+      subroutine partitioning<%= t %>(xs, pivot, iPivot)
+         <%= t.declare %>, intent(inout):: xs(:)
+         <%= t.declare %>, intent(in):: pivot
+         Integer(kind=INT64), intent(out):: iPivot
+
+         ASSERT(minval(xs) <= pivot .and. pivot <= maxval(xs))
+         call partitioning_impl(xs, pivot, iPivot)
+      end subroutine partitioning<%= t %>
+
+      ! Assume `min(xs) <= pivot <= max(xs)`
+      subroutine partitioning_impl<%= t %>(xs, pivot, iPivot)
+         <%= t.declare %>, intent(inout):: xs(:)
+         <%= t.declare %>, intent(in):: pivot
+         Integer(kind=INT64), intent(out):: iPivot
+         Integer(kind=kind(iPivot)):: nXs, iL, iR
+
+         nXs = size(xs, dim=1, kind=kind(nXs))
+         iL = 1
+         iR = nXs
+         if(iL < iR)then
+            loop_to_swap: do
+               do while(pivot < xs(iR))
+                  iR = iR - 1
+               end do
+               do while(xs(iL) <= pivot)
+                  if(iL >= iR)then
+                     exit loop_to_swap
+                  end if
+                  iL = iL + 1
+               end do
+               call swapping(xs(iL), xs(iR))
+            end do loop_to_swap
+         end if
+         iPivot = iL
+      end subroutine partitioning_impl<%= t %>
+
       function insertion_sort<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(in):: xs(:)
          <%= t.declare %>:: ret(size(xs, kind=INT64))
@@ -118,7 +163,7 @@ contains
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>:: pivot
          type(IntegerDim0KindINT64Stack):: iLs, iRs
-         Integer(kind = INT64):: iL, iR, iLOriginal, iROriginal
+         Integer(kind = INT64):: iL, iR, iPivot
          Logical:: isUniform
 
          ASSERT(.not.any(is_nan(xs)))
@@ -126,33 +171,18 @@ contains
          call push(iLs, 1_INT64)
          call push(iRs, size(xs, dim = 1, kind = kind(iR)))
 
-         do while(pop(iRs, iR))    ! Loop for all segments on the stacks.
-            ASSERT(pop(iLs, iL))
+         do while(pop(iRs, iR)) ! Loop for all segments on the stacks.
+            ASSERT(pop(iLs, iL)) ! Left most index of the current segment.
 
-            iLOriginal = iL      ! Left most index of the current segment.
-            do while(iLOriginal < iR) ! While current segment remains
+            do while(iL < iR) ! While current segment remains
                if(iR - iL > 7)then
                   pivot = get_pivot(xs(iL:iR), isUniform)
                   if(isUniform) exit
 
-                  iROriginal = iR  ! Right most index of the current segment
-                  loop_to_swap: do ! Within the segment
-                     do while(xs(iR) > pivot)
-                        iR = iR - 1
-                     end do
-                     do while(xs(iL) <= pivot)
-                        if(iL >= iR)then
-                           call push(iLs, iR + 1)
-                           call push(iRs, iROriginal)
-                           iL = iLOriginal
-                           exit loop_to_swap
-                        end if
-
-                        iL = iL + 1
-                     end do
-
-                     call swapping(xs(iL), xs(iR))
-                  end do loop_to_swap
+                  call partitioning(xs(iL:iR), pivot, iPivot)
+                  call push(iRs, iR)
+                  iR = iPivot + iL - 1 ! Right most index of the current segment
+                  call push(iLs, iR + 1)
                else
                   call insertion_sorting_impl(xs)
                   return
