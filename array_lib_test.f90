@@ -4,7 +4,7 @@ program main
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: INT64
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   use, non_intrinsic:: array_lib, only: iota, l2_norm, eye
+   use, non_intrinsic:: array_lib, only: iota, l2_norm, eye, get
    
    implicit none
 
@@ -45,6 +45,12 @@ program main
    TEST(nss(3, 2) == 0)
    TEST(nss(3, 3) == 1)
    TEST(nss(3, 4) == 0)
+
+   TEST(get(iota(5), 1) == 1)
+   TEST(get(iota(5), 2_INT64) == 2)
+   TEST(get(iota(5), 3) == 3)
+   TEST(get(iota(5), 4) == 4)
+   TEST(get(iota(5), 5) == 5)
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
    

@@ -3,6 +3,11 @@
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
   reals = ::Fort::Type::Real.multi_provide(dim: 1)
+  ARRAYS =
+  ::Fort::Type::Complex.multi_provide(dim: 1) +
+  ::Fort::Type::Logical.multi_provide(dim: 1) +
+  ::Fort::Type::Integer.multi_provide(dim: 1) +
+  ::Fort::Type::Real.multi_provide(dim: 1)
 -%>
 
 # include "fortran_lib.h"
@@ -14,9 +19,16 @@ module array_lib
    implicit none
 
    private
+   public:: get
    public:: eye
    public:: l2_norm
    public:: iota
+
+   <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
+      interface get
+         module procedure get<%= t %><%= ti %>
+      end interface get
+   <%- } -%>
 
    <%- INTEGERS.each{|t| -%>
       interface eye
@@ -62,6 +74,16 @@ module array_lib
    <%- } -%>
 
 contains
+
+   <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
+      function get<%= t %><%= ti %>(xs, i) result(ret)
+         <%= t.declare %>, intent(in):: xs
+         <%= ti.declare %>, intent(in):: i
+         <%= t.type %>(kind=<%= t.kind %>):: ret
+
+         ret = xs(i)
+      end function get<%= t %><%= ti %>
+   <%- } -%>
 
    <%- INTEGERS.each{|t| -%>
       function eye_n<%= t %>(n) result(ret)
