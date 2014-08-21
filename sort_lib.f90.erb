@@ -134,12 +134,12 @@ contains
 
             nXs = size(xs, dim=1, kind=kind(nXs))
             if(nXs > 14)then
-               pivot = select([(selecting(xs((1 + 5*i):(1 + 5*(i + 1))), 3), i = 0, nXs/5)], nXs/10 + 1)
+               pivot = select([(selecting(xs((5*(i - 1) + 1):(5*i)), 3), i = 1, nXs/5)], nXs/10 + 1)
                call partitioning_impl(xs, pivot, iPivot)
-               if(iPivot > k)then
+               if(k <= iPivot)then
                   ret = selecting(xs(:iPivot), k)
                else
-                  ret = selecting(xs(iPivot:), k - iPivot + 1)
+                  ret = selecting(xs((iPivot + 1):), k - iPivot)
                end if
             else
                ret = get(merge_sort(xs), k)
@@ -167,20 +167,20 @@ contains
          iL = 1
          iR = nXs
          if(iL < iR)then
-            loop_to_swap: do
+            do
+               do while(xs(iL) < pivot)
+                  iL = iL + 1
+               end do
                do while(pivot < xs(iR))
                   iR = iR - 1
                end do
-               do while(xs(iL) <= pivot)
-                  if(iL >= iR)then
-                     exit loop_to_swap
-                  end if
-                  iL = iL + 1
-               end do
+               if(iR <= iL) exit
                call swapping(xs(iL), xs(iR))
-            end do loop_to_swap
+               iL = iL + 1
+               iR = iR - 1
+            end do
          end if
-         iPivot = iL
+         iPivot = iR
       end subroutine partitioning_impl<%= t %>
 
       function insertion_sort<%= t %>(xs) result(ret)
