@@ -14,6 +14,7 @@ module sort_lib
 
    use, non_intrinsic:: stack_lib, only: push, pop
    use, non_intrinsic:: stack_lib, only: IntegerDim0KindINT64Stack
+   use, non_intrinsic:: array_lib, only: get
 
    implicit none
 
@@ -22,9 +23,20 @@ module sort_lib
    public:: insertion_sort, insertion_sorting
    public:: quick_sort, quick_sorting
    public:: merge_sort, merge_sorting
+   public:: select
    public:: partitioning
 
    <%- TYPES.each{|t| -%>
+      <%- INTEGERS.each{|ti| -%>
+         interface select
+            module procedure select<%= t %><%= ti %>
+         end interface select
+
+         interface selecting
+            module procedure selecting<%= t %><%= ti %>
+         end interface selecting
+      <%- } -%>
+
       interface partitioning
          module procedure partitioning<%= t %>
       end interface partitioning
@@ -81,6 +93,41 @@ module sort_lib
 contains
 
    <%- TYPES.each{|t| -%>
+      <%- INTEGERS.each{|ti| -%>
+         recursive function select<%= t %><%= ti %>(xs, k) result(ret)
+            <%= t.declare %>, intent(in):: xs(:)
+            <%= ti.declare %>, intent(in):: k
+            <%= t.declare %>:: ret
+            <%= t.declare %>:: xsCopy(size(xs, dim=1, kind=INT64))
+
+            xsCopy = xs
+            ret = selecting(xsCopy, k)
+         end function select<%= t %><%= ti %>
+
+         recursive function selecting<%= t %><%= ti %>(xs, k) result(ret)
+            <%= t.declare %>, intent(inout):: xs(:)
+            <%= ti.declare %>, intent(in):: k
+            <%= t.declare %>:: ret
+            <%= t.declare %>:: pivot
+            Integer(kind=INT64):: nXs
+            Integer(kind=kind(nXs)):: i
+            Integer(kind=INT64):: iPivot
+
+            nXs = size(xs, dim=1, kind=kind(nXs))
+            if(nXs > 14)then
+               pivot = select([(selecting(xs((1 + 5*i):(1 + 5*(i + 1))), 3), i = 0, nXs/5)], nXs/10 + 1)
+               call partitioning_impl(xs, pivot, iPivot)
+               if(iPivot > k)then
+                  ret = selecting(xs(:iPivot), k)
+               else
+                  ret = selecting(xs(iPivot:), k - iPivot + 1)
+               end if
+            else
+               ret = get(merge_sort(xs), k)
+            end if
+         end function selecting<%= t %><%= ti %>
+      <%- } -%>
+
       subroutine partitioning<%= t %>(xs, pivot, iPivot)
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>, intent(in):: pivot

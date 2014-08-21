@@ -42,6 +42,12 @@ program sort_lib_test
    call random_seed_by_time(seeds)
    PRINT_VARIABLE(seeds)
 
+   TEST(select([5, 2, 1, 3, 4], 1) == 1)
+   TEST(select([5, 2, 1, 3, 4], 2) == 2)
+   TEST(select([5, 2, 1, 3, 4], 3) == 3)
+   TEST(select([5, 2, 1, 3, 4], 4) == 4)
+   TEST(select([5, 2, 1, 3, 4], 5) == 5)
+
    call partitioning(nsForPartitioning, 2, iPivot)
    TEST(iPivot == 3)
    nsForPartitioning = [1, 1, 1, 1, 1]
