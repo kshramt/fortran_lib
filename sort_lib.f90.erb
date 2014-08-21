@@ -108,7 +108,7 @@ contains
          if(mod(nXs, 2) == 1)then
             ret = select(xs, nXs/2 + 1)
          else
-            ret = real(select(xs, nXs/2), kind=kind(ret))/2 + real(select(xs, nXs/2 + 1), kind=kind(ret))/2
+            ret = (real(select(xs, nXs/2), kind=kind(ret))/2) + (real(select(xs, nXs/2 + 1), kind=kind(ret))/2)
          end if
       end function median<%= t %>
 
