@@ -244,7 +244,7 @@ contains
                   pivot = get_pivot(xs(iL:iR), isUniform)
                   if(isUniform) exit
 
-                  call partitioning(xs(iL:iR), pivot, iPivot)
+                  call partitioning_impl(xs(iL:iR), pivot, iPivot)
                   call push(iRs, iR)
                   iR = iPivot + iL - 1 ! Right most index of the current segment
                   call push(iLs, iR + 1)
