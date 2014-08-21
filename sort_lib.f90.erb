@@ -23,10 +23,15 @@ module sort_lib
    public:: insertion_sort, insertion_sorting
    public:: quick_sort, quick_sorting
    public:: merge_sort, merge_sorting
+   public:: median
    public:: select
    public:: partitioning
 
    <%- TYPES.each{|t| -%>
+      interface median
+         module procedure median<%= t %>
+      end interface median
+
       <%- INTEGERS.each{|ti| -%>
          interface select
             module procedure select<%= t %><%= ti %>
@@ -93,6 +98,20 @@ module sort_lib
 contains
 
    <%- TYPES.each{|t| -%>
+      function median<%= t %>(xs) result(ret)
+         <%= t.declare %>, intent(in):: xs(:)
+         Real(kind=<%= t.type == :Real ? t.kind : :REAL32  %>):: ret
+         Integer(kind=INT64):: nXs
+
+         nXS = size(xs, dim=1, kind=kind(nXs))
+         ASSERT(nXs > 0)
+         if(mod(nXs, 2) == 1)then
+            ret = select(xs, nXs/2 + 1)
+         else
+            ret = real((select(xs, nXs/2) + select(xs, nXs/2 + 1)), kind=kind(ret))/2
+         end if
+      end function median<%= t %>
+
       <%- INTEGERS.each{|ti| -%>
          recursive function select<%= t %><%= ti %>(xs, k) result(ret)
             <%= t.declare %>, intent(in):: xs(:)
