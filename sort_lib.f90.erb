@@ -32,6 +32,14 @@ module sort_lib
          module procedure median<%= t %>
       end interface median
 
+      interface medianing
+         module procedure medianing<%= t %>
+      end interface medianing
+
+      interface median_of_medianing
+         module procedure median_of_medianing<%= t %>
+      end interface median_of_medianing
+
       <%- INTEGERS.each{|ti| -%>
          interface select
             module procedure select<%= t %><%= ti %>
@@ -100,17 +108,36 @@ contains
    <%- TYPES.each{|t| -%>
       function median<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(in):: xs(:)
+         <%= t.declare %>:: xsCopy(size(xs, dim=1, kind=INT64))
+         Real(kind=<%= t.type == :Real ? t.kind : :REAL32  %>):: ret
+
+         xsCopy = xs
+         ret = medianing(xsCopy)
+      end function median<%= t %>
+
+      function medianing<%= t %>(xs) result(ret)
+         <%= t.declare %>, intent(inout):: xs(:)
          Real(kind=<%= t.type == :Real ? t.kind : :REAL32  %>):: ret
          Integer(kind=INT64):: nXs
 
          nXS = size(xs, dim=1, kind=kind(nXs))
          ASSERT(nXs > 0)
          if(mod(nXs, 2) == 1)then
-            ret = select(xs, nXs/2 + 1)
+            ret = selecting(xs, nXs/2 + 1)
          else
-            ret = (real(select(xs, nXs/2), kind=kind(ret))/2) + (real(select(xs, nXs/2 + 1), kind=kind(ret))/2)
+            ret = (real(selecting(xs, nXs/2), kind=kind(ret))/2) + (real(selecting(xs, nXs/2 + 1), kind=kind(ret))/2)
          end if
-      end function median<%= t %>
+      end function medianing<%= t %>
+
+      function median_of_medianing<%= t %>(xs) result(ret)
+         <%= t.declare %>, intent(inout):: xs(:)
+         <%= t.declare %>:: ret
+         Integer(kind=INT64):: nXs
+         Integer(kind=kind(nXs)):: i
+
+         nXS = size(xs, dim=1, kind=kind(nXs))
+         ret = select([(selecting(xs((5*(i - 1) + 1):(5*i)), 3), i = 1, nXs/5)], nXs/10 + 1)
+      end function median_of_medianing<%= t %>
 
       <%- INTEGERS.each{|ti| -%>
          recursive function select<%= t %><%= ti %>(xs, k) result(ret)
@@ -128,13 +155,10 @@ contains
             <%= ti.declare %>, intent(in):: k
             <%= t.declare %>:: ret
             <%= t.declare %>:: pivot
-            Integer(kind=INT64):: nXs
-            Integer(kind=kind(nXs)):: i
             Integer(kind=INT64):: iPivot
 
-            nXs = size(xs, dim=1, kind=kind(nXs))
-            if(nXs > 14)then
-               pivot = select([(selecting(xs((5*(i - 1) + 1):(5*i)), 3), i = 1, nXs/5)], nXs/10 + 1)
+            if(size(xs, dim=1, kind=INT64) > 14)then
+               pivot = median_of_medianing(xs)
                call partitioning_impl(xs, pivot, iPivot)
                if(k <= iPivot)then
                   ret = selecting(xs(:iPivot), k)
