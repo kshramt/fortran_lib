@@ -221,11 +221,31 @@ contains
       type(IntIntRBTree), intent(inout):: tree
       type(IntIntRBNode), pointer, intent(inout):: me
       Logical(kind=INT8), intent(in):: isMeLeft
-      type(IntIntRBNode), pointer:: brother, parent, grandparent, great_grandparent
+      type(IntIntRBNode), pointer:: brother, parent, uncle, grandparent, great_grandparent
 
       parent => me%parent
       grandparent => parent%parent
+      X_FROM_Y_LR(uncle, grandparent, .not.isMeLeft)
       great_grandparent => grandparent%parent
+      do while(uncle%isRed) ! delegate red for an upper node since no valid rotation is available for now
+         parent%isRed = .false.
+         uncle%isRed = .false.
+         if(associated(great_grandparent))then
+            grandparent%isRed = .true.
+            if(great_grandparent%isRed)then
+               me => grandparent
+               parent => great_grandparent
+               grandparent => parent%parent
+               X_FROM_Y_LR(uncle, grandparent, .not.isMeLeft)
+               great_grandparent => grandparent%parent
+            else
+               return
+            end if
+         else
+            return
+         end if
+      end do
+      ! actual rotation
       if(associated(great_grandparent))then
          X_LR_FROM_Y(great_grandparent, parent, me%key < great_grandparent%key)
       else
@@ -251,6 +271,7 @@ program main
 
    type(IntIntRBTree):: t
    Logical:: found
+   ! Integer:: i
 
    call insert(t, 0, 0)
    call insert(t, -1, 1)
@@ -261,6 +282,9 @@ program main
    call insert(t, -3, 3)
    call insert(t, 4, 4)
    call insert(t, -4, 4)
+   ! do i = 1, 30
+   !    call insert(t, i, i)
+   ! end do
    print*, '//', get(t, 0, found)
    print*, '//', found
    print*, '//', get(t, -1, found)
