@@ -143,7 +143,7 @@ contains
          write(unit, *) 'n', str(id_orig), ' -> ', 'n', str(id + 1)
          call show_impl(unit, node%right, id)
       else
-         write(unit, *) '"#000000", label="*"]'
+         write(unit, *) '"#000000", label=""]'
       end if
    end subroutine show_impl
 
