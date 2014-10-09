@@ -180,8 +180,6 @@ contains
                      call rotate_double(tree, parent, isParentLeft)
                   end if
                end if
-            else ! increase black node
-               parent%isRed = .false.
             end if
          else
             if(associated(grandparent))then
