@@ -40,6 +40,12 @@ module red_black_tree_lib
    end type IntIntRBNode
 
 
+   interface rotate
+      module procedure rotate
+      module procedure rotate_impl
+   end interface rotate
+
+
 contains
 
 
@@ -204,15 +210,14 @@ contains
       type(IntIntRBTree), intent(inout):: tree
       type(IntIntRBNode), pointer, intent(inout):: me
       Logical(kind=INT8), intent(in):: isMeLeft
-      type(IntIntRBNode), pointer:: grandparent, parent, parent_s_new_child
+      type(IntIntRBNode), pointer:: parent
 
       parent => me%parent
-      grandparent => me%parent
-      X_LR_FROM_Y(grandparent, me, .not.isMeLeft)
-      X_FROM_Y_LR(parent_s_new_child, me, .not.isMeLeft)
-      X_LR_FROM_Y(parent, parent_s_new_child, isMeLeft)
-      parent%parent => me
-      X_LR_FROM_Y(me, parent, .not.isMeLeft)
+      if(isMeLeft)then
+         call rotate(parent%parent%right, parent, .not.isMeLeft)
+      else
+         call rotate(parent%parent%left, parent, isMeLeft)
+      end if
       call rotate_single(tree, parent, .not.isMeLeft)
    end subroutine rotate_double
 
@@ -221,7 +226,7 @@ contains
       type(IntIntRBTree), intent(inout):: tree
       type(IntIntRBNode), pointer, intent(inout):: me
       Logical(kind=INT8), intent(in):: isMeLeft
-      type(IntIntRBNode), pointer:: brother, parent, uncle, grandparent, great_grandparent
+      type(IntIntRBNode), pointer:: parent, uncle, grandparent, great_grandparent
 
       parent => me%parent
       grandparent => parent%parent
@@ -246,19 +251,48 @@ contains
          end if
       end do
       ! actual rotation
-      if(associated(great_grandparent))then
-         X_LR_FROM_Y(great_grandparent, parent, me%key < great_grandparent%key)
-      else
-         tree%root => parent
-      end if
       parent%isRed = .false.
       grandparent%isRed = .true.
-      parent%parent => great_grandparent
-      grandparent%parent => parent
-      X_FROM_Y_LR(brother, parent, .not.isMeLeft)
-      X_LR_FROM_Y(grandparent, brother, isMeLeft)
-      X_LR_FROM_Y(parent, grandparent, .not.isMeLeft)
+      if(associated(great_grandparent))then
+         call rotate(grandparent, .not.isMeLeft)
+      else
+         call rotate(tree%root, grandparent, .not.isMeLeft)
+      end if
    end subroutine rotate_single
+
+
+   subroutine rotate(me, isLeft)
+      type(IntIntRBNode), pointer, intent(inout):: me
+      Logical(kind=INT8), intent(in):: isLeft
+      type(IntIntRBNode), pointer:: parent
+
+      parent => me%parent
+      if(me%key < parent%key)then
+         call rotate(parent%left, me, isLeft)
+      else
+         call rotate(parent%right, me, isLeft)
+      end if
+   end subroutine rotate
+
+
+   subroutine rotate_impl(parent_to_me, me, isLeft)
+      type(IntIntRBNode), pointer, intent(inout):: parent_to_me, me
+      Logical(kind=INT8), intent(in):: isLeft
+      type(IntIntRBNode), pointer:: child_to_up
+
+      if(isLeft)then
+         child_to_up => me%right
+         me%right => child_to_up%left
+         child_to_up%left => me
+      else
+         child_to_up => me%left
+         me%left => child_to_up%right
+         child_to_up%right => me
+      end if
+      parent_to_me => child_to_up
+      child_to_up%parent => me%parent
+      me%parent => child_to_up
+   end subroutine rotate
 end module red_black_tree_lib
 
 
