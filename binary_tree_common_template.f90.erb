@@ -1,0 +1,64 @@
+<%
+# defines
+# - `next`
+# - `previous`
+# - `first`
+# - `last`
+# - `get`
+#
+# - `KEY` macro should be defined.
+%>
+
+
+<% [['next', 'right', 'first'], ['previous', 'left', 'last']].each{|name, direction, descend| %>
+   ! `x` should be associated.
+   function <%= name %><%= @node_type_id %>(x) result(me)
+      <%= node_type %>, pointer, intent(in):: x
+      <%= node_type %>, pointer:: me, parent
+
+      me => x
+      if(associated(me%<%= direction %>))then
+         me => first(me%<%= direction %>)
+         return
+      end if
+      parent => me%parent
+      do while(associated(parent))
+         if(KEY(parent%<%= direction %>) /= KEY(me)) return
+         me => parent
+         parent => me%parent
+      end do
+   end function <%= name %><%= @node_type_id %>
+<% } %>
+
+
+<% [['first', 'left'], ['last', 'right']].each{|name, direction| %>
+   function <%= name %><%= @node_type_id %>(x) result(me)
+      <%= node_type %>, pointer, intent(in):: x
+      <%= node_type %>, pointer:: me
+
+      me => x
+      if(associated(me))then
+         do while(associated(me%<%= direction %>))
+            me => me%<%= direction %>
+         end do
+      end if
+   end function <%= name %><%= @node_type_id %>
+<% } %>
+
+
+function get<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
+   <%= @node_type %>, pointer, intent(in):: x
+   <%= @key_type %>, intent(in):: key
+   <%= @node_type %>, pointer:: me
+
+   me => x
+   do while(associated(me))
+      if(key < KEY(me))then
+         me => me%left
+      elseif(KEY(me) < key)then
+         me => me%right
+      else
+         return
+      end if
+   end do
+end function get<%= @node_type_id %><%= @key_type_id %>
