@@ -59,10 +59,16 @@ EOS
 #include "fortran_lib.h"
 program comparable_lib_test
    USE_FORTRAN_LIB_H
-   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT32, INT64
+   use, intrinsic:: iso_fortran_env, only: OUTPUT_UNIT, INPUT_UNIT, REAL32, REAL64, INT8, INT32, INT64
    use, non_intrinsic:: constant_lib, only: get_nan, get_infinity
    use, non_intrinsic:: comparable_lib
    implicit none
+
+   TEST(.true. == .true.)
+   TEST(.false. == .false.)
+   TEST(.not.(.false. == .true.))
+   TEST(.not.(.true. == .false.))
+   TEST(.true. == logical(.true., kind=INT8))
 
    TEST(.not.is_nan(0.0))
    TEST(.not.is_nan(0.0_REAL64))

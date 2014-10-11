@@ -24,6 +24,7 @@ module comparable_lib
 
    private
    public:: almost_equal
+   public:: operator(==)
    public:: is_nan
    public:: is_infinity
 
@@ -42,6 +43,12 @@ module comparable_lib
          module procedure almost_equal<%= t1 %><%= t2 %>
       <%- } -%>
    end interface almost_equal
+
+   interface operator(==)
+      <%- LOGICAL_PAIRS.each{|t1, t2| -%>
+         module procedure almost_equal<%= t1 %><%= t2 %>
+      <%- } -%>
+   end interface operator(==)
 
 contains
 
