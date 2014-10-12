@@ -10,6 +10,27 @@
 %>
 
 
+! `me` should be associated.
+subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+   <%= @tree_type %>, intent(inout):: tree
+   <%= @node_type %>, pointer, intent(inout):: me
+   <%= @node_type %>, pointer, intent(inout):: new_me
+
+   new_me%parent => me%parent
+   new_me%left => me%left
+   new_me%right => me%right
+   if(associated(me%parent))then
+      if(KEY(me) < KEY(me%parent))then
+         me%parent%left => new_me
+      else
+         me%parent%right => new_me
+      end if
+   else
+      tree%root => new_me
+   end if
+end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
+
+
 <% [['next', 'right', 'first'], ['previous', 'left', 'last']].each{|name, direction, descend| %>
    ! `x` should be associated.
    function <%= name %><%= @node_type_id %>(x) result(me)
