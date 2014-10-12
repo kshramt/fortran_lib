@@ -33,7 +33,7 @@ end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
 
 <% [['next', 'right', 'first'], ['previous', 'left', 'last']].each{|name, direction, descend| %>
    ! `x` should be associated.
-   function <%= name %><%= @node_type_id %>(x) result(me)
+   function <%= name %>_impl<%= @node_type_id %>(x) result(me)
       <%= node_type %>, pointer, intent(in):: x
       <%= node_type %>, pointer:: me, parent
 
@@ -48,12 +48,12 @@ end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
          me => parent
          parent => me%parent
       end do
-   end function <%= name %><%= @node_type_id %>
+   end function <%= name %>_impl<%= @node_type_id %>
 <% } %>
 
 
 <% [['first', 'left'], ['last', 'right']].each{|name, direction| %>
-   function <%= name %><%= @node_type_id %>(x) result(me)
+   function <%= name %>_impl<%= @node_type_id %>(x) result(me)
       <%= node_type %>, pointer, intent(in):: x
       <%= node_type %>, pointer:: me
 
@@ -63,11 +63,11 @@ end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
             me => me%<%= direction %>
          end do
       end if
-   end function <%= name %><%= @node_type_id %>
+   end function <%= name %>_impl<%= @node_type_id %>
 <% } %>
 
 
-function get<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
+function get_impl<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
    <%= @node_type %>, pointer, intent(in):: x
    <%= @key_type %>, intent(in):: key
    <%= @node_type %>, pointer:: me
@@ -82,4 +82,4 @@ function get<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
          return
       end if
    end do
-end function get<%= @node_type_id %><%= @key_type_id %>
+end function get_impl<%= @node_type_id %><%= @key_type_id %>
