@@ -1,7 +1,31 @@
 <%
-# - `destroy(node)` should be defined.
+# - `delete(node)` should be defined.
 # - `KEY(node)` macro should be defined.
 %>
+
+
+subroutine delete<%= @tree_type_id %><%= @node_type_id %>(tree, me)
+   <%= @tree_type %>, intent(inout):: tree
+   <%= @node_type %>, pointer, intent(inout):: me
+   <%= @node_type %>, pointer:: new_me
+
+   if(.not.associated(me%left))then
+      call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, me%right)
+   elseif(.not.associated(me%right))then
+      call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, me%left)
+   else
+      new_me => first_impl<%= @node_type_id %>(me%right)
+      if(KEY(new_me%parent) /= KEY(me))then
+         call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, new_me, new_me%right)
+         new_me%right => me%right
+         new_me%right%parent => new_me
+      end if
+      call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+      new_me%left => me%left
+      new_me%left%parent => new_me
+      call delete(me)
+   end if
+end subroutine delete<%= @node_type_id %><%= @key_type_id %>
 
 
 subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
@@ -14,7 +38,7 @@ subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
    do while(associated(me))
       if(KEY(new_node) == KEY(me))then
          call replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_node)
-         call destroy(me)
+         call delete(me)
       else
          parent => me
          if(KEY(new_node) < KEY(me))then
