@@ -1,24 +1,26 @@
 <%
-# defines
-# - `next`
-# - `previous`
-# - `first`
-# - `last`
-# - `get`
-#
-# - `KEY` macro should be defined.
+# - `KEY(node)` macro should be defined.
 %>
 
 
-! `me` should be associated.
 subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    <%= @tree_type %>, intent(inout):: tree
    <%= @node_type %>, pointer, intent(inout):: me
    <%= @node_type %>, pointer, intent(inout):: new_me
 
-   new_me%parent => me%parent
-   new_me%left => me%left
-   new_me%right => me%right
+   call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+   if(associated(new_me))then
+      new_me%left => me%left
+      new_me%right => me%right
+   end if
+end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
+
+
+subroutine transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+   <%= tree_type %>, intent(inout):: tree
+   <%= node_type %>, intent(inout):: me
+   <%= node_type %>, intent(inout):: new_me
+
    if(associated(me%parent))then
       if(KEY(me) < KEY(me%parent))then
          me%parent%left => new_me
@@ -28,7 +30,10 @@ subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    else
       tree%root => new_me
    end if
-end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
+   if(associated(new_me))then
+      new_me%parent => me%parent
+   end if
+end subroutine transplant<<%= @tree_type_id %><%= @node_type_id %>
 
 
 <% [['next', 'right', 'first'], ['previous', 'left', 'last']].each{|name, direction, descend| %>
