@@ -1,0 +1,40 @@
+<%
+# - `destroy(node)` should be defined.
+# - `KEY(node)` macro should be defined.
+%>
+
+
+subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
+   <%= tree_type %>, intent(inout):: tree
+   <%= node_type %>, pointer, intent(inout):: new_node
+   <%= node_type %>, pointer:: parent, me
+
+   parent => null()
+   me => tree%root
+   do while(associated(me))
+      if(KEY(new_node) == KEY(me))then
+         call replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_node)
+         call destroy(me)
+      else
+         parent => me
+         if(KEY(new_node) < KEY(me))then
+            me => me%left
+         elseif(KEY(me) < KEY(new_node))then
+            me => me%right
+         end if
+      end if
+   end do
+   new_node%parent => parent
+   if(.associated(parent))then
+      if(KEY(new_node) < KEY(parent))then
+         parent%left => new_node
+      else
+         parent%right => new_node
+      end if
+   else
+      tree%root => new_node
+   end if
+end subroutine put<%= @tree_type_id %><%= @node_type_id %>
+
+
+<%= render memoized_read('binary_tree_common_template.f90.erb') %>
