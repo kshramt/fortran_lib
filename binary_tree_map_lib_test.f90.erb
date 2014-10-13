@@ -3,47 +3,38 @@
   pairs = ('a'..'z').map{|c| [c, c.ord]}
 -%>
 # include "fortran_lib.h"
-program binary_tree_map_lib_test
+program main
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, non_intrinsic:: binary_tree_map_lib
    implicit none
 
-   type(CharacterDim0Len1IntegerDim0KindINT32BinaryTreeMap):: treeMap1
-   type(CharacterDim0Len2IntegerDim0KindINT32BinaryTreeMap):: treeMap2
-   Integer:: n, n1, n2
-   Logical:: lTmp
+   type(CharacterDim0LenColonIntegerDim0KindINT32BinaryTreeMap):: t
+   Integer:: n
+   Logical:: found
 
-   <%- pairs.shuffle.each{|c, i| -%>
-      call append(treeMap1, '<%= c %>', <%= i %>)
-   <%- } -%>
-   <%- pairs.shuffle.each{|c, i| -%>
-      TEST(has_key(treeMap1, '<%= c %>'))
-      TEST(get_value(treeMap1, '<%= c %>', n))
-      TEST(n == <%= i %>)
-   <%- } -%>
+   <% [1, 2].each{|_| %>
+      <%- pairs.shuffle.each{|c, i| -%>
+         call put(t, '<%= c %>', <%= i %>)
+      <%- } -%>
+      <%- pairs.shuffle.each{|c, i| -%>
+         TEST(get(t, '<%= c %>') == <%= i %>)
+      <%- } -%>
 
-   TEST(.not.has_key(treeMap1, '/'))
-   TEST(.not.get_value(treeMap1, '/', n))
+      n = get(t, 'not in t', found)
+      TEST(.not.found)
 
-   ! key is trimed
-   call append(treeMap1, '| ', -1)
-   TEST(has_key(treeMap1, '| '))
-   TEST(get_value(treeMap1, '| ', n))
-   TEST(n == -1)
+      <%- pairs.shuffle.each{|c, i| -%>
+         call delete(t, '<%= c %>')
+      <%- } -%>
 
-   ! has_key or get_value with too long key returns .false.
-   TEST(.not.has_key(treeMap1, '||'))
-   TEST(.not.get_value(treeMap1, '||', n))
-
-   ! key is not ladjusted
-   call append(treeMap2, ' |', 0)
-   call append(treeMap2, '|', 1)
-   lTmp = get_value(treeMap2, ' |', n1)
-   lTmp = get_value(treeMap2, '|', n2)
-   ASSERT(n1 /= n2)
+      <%- pairs.shuffle.each{|c, i| -%>
+         n = get(t, '<%= c %>', found)
+         TEST(.not.found)
+      <%- } -%>
+   <% } %>
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
 
    stop
-end program binary_tree_map_lib_test
+end program main
