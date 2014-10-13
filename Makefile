@@ -19,7 +19,7 @@ FFLAGS := $(MY_FFLAG_COMMON) $(MY_FFLAG_DEBUG)
 
 MY_CPP ?= cpp
 CPP := $(MY_CPP)
-CPP_FLAGS := -P -C
+CPP_FLAGS := -P -C -nostdinc
 ifeq ($(FC),ifort)
    CPP_FLAGS += -D __INTEL_COMPILER
 endif
