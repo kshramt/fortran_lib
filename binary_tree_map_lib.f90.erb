@@ -150,7 +150,7 @@ contains
 
    
    <% PARAMSS.each{|params| %>
-      <% 
+      <%
       value_type = params[:value_type]
       tree_type_id = params[:tree_type_id]
       key_in_type_id = params[:key_in_type_id]
@@ -167,6 +167,8 @@ contains
       is_key_allocatable = allocatable?(key_type)
       is_value_allocatable = allocatable?(value_type)
       %>
+
+
       subroutine put<%= tree_type_id %><%= key_in_type_id %><%= value_in_type_id %>(tree, key, value_)
          <%= tree_type_declare %>, intent(inout):: tree
          <%= key_in_type_declare %>, intent(in):: key
@@ -189,7 +191,7 @@ contains
             <%= value_type_declare %>:: value_
          <% end %>
          Logical(kind=INT8):: found
-         
+
          value_ = get(tree, key, found)
          ASSERT(found)
       end function get<%= tree_type_id %><%= key_in_type_id %>
@@ -220,7 +222,7 @@ contains
          <%= tree_type_declare %>, intent(inout):: tree
          <%= key_in_type_declare %>, intent(in):: key
          <%= node_type_declare %>, pointer:: node
-         
+
          node => get_impl<%= node_type_id %><%= key_in_type_id %>(tree%root, key)
          if(associated(node))then
             call delete<%= tree_type_id %><%= node_type_id %>(tree, node)
@@ -230,7 +232,7 @@ contains
 
       subroutine delete<%= node_type_id %>(node)
          <%= node_type_declare %>, pointer, intent(inout):: node
-         
+
          if(associated(node))then
             <% if is_key_allocatable %>
                if(allocated(KEY(node))) deallocate(KEY(node))
