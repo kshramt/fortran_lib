@@ -23,8 +23,8 @@ subroutine delete<%= @tree_type_id %><%= @node_type_id %>(tree, me)
       call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
       new_me%left => me%left
       new_me%left%parent => new_me
-      call delete(me)
    end if
+   call delete(me)
 end subroutine delete<%= @tree_type_id %><%= @node_type_id %>
 
 
