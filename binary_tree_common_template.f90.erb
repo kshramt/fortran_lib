@@ -4,9 +4,9 @@
 
 
 subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
-   <%= @tree_type %>, intent(inout):: tree
-   <%= @node_type %>, pointer, intent(inout):: me
-   <%= @node_type %>, pointer, intent(inout):: new_me
+   <%= @tree_type_declare %>, intent(inout):: tree
+   <%= @node_type_declare %>, pointer, intent(inout):: me
+   <%= @node_type_declare %>, pointer, intent(inout):: new_me
 
    call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    if(associated(new_me))then
@@ -17,9 +17,9 @@ end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
 
 
 subroutine transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
-   <%= tree_type %>, intent(inout):: tree
-   <%= node_type %>, intent(inout):: me
-   <%= node_type %>, intent(inout):: new_me
+   <%= @tree_type_declare %>, intent(inout):: tree
+   <%= @node_type_declare %>, pointer, intent(inout):: me
+   <%= @node_type_declare %>, pointer, intent(inout):: new_me
 
    if(associated(me%parent))then
       if(KEY(me) < KEY(me%parent))then
@@ -33,22 +33,22 @@ subroutine transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    if(associated(new_me))then
       new_me%parent => me%parent
    end if
-end subroutine transplant<<%= @tree_type_id %><%= @node_type_id %>
+end subroutine transplant<%= @tree_type_id %><%= @node_type_id %>
 
 
 <% [['next', 'right', 'first'], ['previous', 'left', 'last']].each{|name, direction, descend| %>
    ! `x` should be associated.
    function <%= name %>_impl<%= @node_type_id %>(x) result(me)
-      <%= node_type %>, pointer, intent(in):: x
-      <%= node_type %>, pointer:: me, parent
+      <%= @node_type_declare %>, pointer, intent(in):: x
+      <%= @node_type_declare %>, pointer:: me, parent
 
       me => x
       if(associated(me%<%= direction %>))then
-         me => first(me%<%= direction %>)
+        me => first_impl<%= @node_type_id %>(me%<%= direction %>)
          return
       end if
       parent => me%parent
-      do while(associated(parent))
+     do while(associated(parent))
          if(KEY(parent%<%= direction %>) /= KEY(me)) return
          me => parent
          parent => me%parent
@@ -59,8 +59,8 @@ end subroutine transplant<<%= @tree_type_id %><%= @node_type_id %>
 
 <% [['first', 'left'], ['last', 'right']].each{|name, direction| %>
    function <%= name %>_impl<%= @node_type_id %>(x) result(me)
-      <%= node_type %>, pointer, intent(in):: x
-      <%= node_type %>, pointer:: me
+      <%= @node_type_declare %>, pointer, intent(in):: x
+      <%= @node_type_declare %>, pointer:: me
 
       me => x
       if(associated(me))then
@@ -72,10 +72,10 @@ end subroutine transplant<<%= @tree_type_id %><%= @node_type_id %>
 <% } %>
 
 
-function get_impl<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
-   <%= @node_type %>, pointer, intent(in):: x
-   <%= @key_type %>, intent(in):: key
-   <%= @node_type %>, pointer:: me
+function get_impl<%= @node_type_id %><%= @key_in_type_id %>(x, key) result(me)
+   <%= @node_type_declare %>, pointer, intent(in):: x
+   <%= @key_in_type_declare %>, intent(in):: key
+   <%= @node_type_declare %>, pointer:: me
 
    me => x
    do while(associated(me))
@@ -87,4 +87,4 @@ function get_impl<%= @node_type_id %><%= @key_type_id %>(x, key) result(me)
          return
       end if
    end do
-end function get_impl<%= @node_type_id %><%= @key_type_id %>
+end function get_impl<%= @node_type_id %><%= @key_in_type_id %>

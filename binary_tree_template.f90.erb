@@ -5,9 +5,9 @@
 
 
 subroutine delete<%= @tree_type_id %><%= @node_type_id %>(tree, me)
-   <%= @tree_type %>, intent(inout):: tree
-   <%= @node_type %>, pointer, intent(inout):: me
-   <%= @node_type %>, pointer:: new_me
+   <%= @tree_type_declare %>, intent(inout):: tree
+   <%= @node_type_declare %>, pointer, intent(inout):: me
+   <%= @node_type_declare %>, pointer:: new_me
 
    if(.not.associated(me%left))then
       call transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, me%right)
@@ -25,13 +25,13 @@ subroutine delete<%= @tree_type_id %><%= @node_type_id %>(tree, me)
       new_me%left%parent => new_me
       call delete(me)
    end if
-end subroutine delete<%= @node_type_id %><%= @key_type_id %>
+end subroutine delete<%= @tree_type_id %><%= @node_type_id %>
 
 
 subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
-   <%= tree_type %>, intent(inout):: tree
-   <%= node_type %>, pointer, intent(inout):: new_node
-   <%= node_type %>, pointer:: parent, me
+   <%= @tree_type_declare %>, intent(inout):: tree
+   <%= @node_type_declare %>, pointer, intent(inout):: new_node
+   <%= @node_type_declare %>, pointer:: parent, me
 
    parent => null()
    me => tree%root
@@ -49,7 +49,7 @@ subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
       end if
    end do
    new_node%parent => parent
-   if(.associated(parent))then
+   if(associated(parent))then
       if(KEY(new_node) < KEY(parent))then
          parent%left => new_node
       else
