@@ -3,7 +3,7 @@
 %>
 
 
-subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+pure subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    <%= @tree_type_declare %>, intent(inout):: tree
    <%= @node_type_declare %>, pointer, intent(inout):: me
    <%= @node_type_declare %>, pointer, intent(inout):: new_me
@@ -16,7 +16,7 @@ subroutine replace<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
 end subroutine replace<%= @tree_type_id %><%= @node_type_id %>
 
 
-subroutine transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
+pure subroutine transplant<%= @tree_type_id %><%= @node_type_id %>(tree, me, new_me)
    <%= @tree_type_declare %>, intent(inout):: tree
    <%= @node_type_declare %>, pointer, intent(inout):: me
    <%= @node_type_declare %>, pointer, intent(inout):: new_me

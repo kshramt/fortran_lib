@@ -169,7 +169,7 @@ contains
       %>
 
 
-      subroutine put<%= tree_type_id %><%= key_in_type_id %><%= value_in_type_id %>(tree, key, value_)
+      pure subroutine put<%= tree_type_id %><%= key_in_type_id %><%= value_in_type_id %>(tree, key, value_)
          <%= tree_type_declare %>, intent(inout):: tree
          <%= key_in_type_declare %>, intent(in):: key
          <%= value_in_type_declare %>, intent(in):: value_
@@ -230,7 +230,7 @@ contains
       end subroutine delete<%= tree_type_id %><%= key_in_type_id %>
 
 
-      subroutine delete<%= node_type_id %>(node)
+      pure subroutine delete<%= node_type_id %>(node)
          <%= node_type_declare %>, pointer, intent(inout):: node
 
          if(associated(node))then

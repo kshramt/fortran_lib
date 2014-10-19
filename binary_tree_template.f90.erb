@@ -28,7 +28,7 @@ subroutine delete<%= @tree_type_id %><%= @node_type_id %>(tree, me)
 end subroutine delete<%= @tree_type_id %><%= @node_type_id %>
 
 
-subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
+pure subroutine put<%= @tree_type_id %><%= @node_type_id %>(tree, new_node)
    <%= @tree_type_declare %>, intent(inout):: tree
    <%= @node_type_declare %>, pointer, intent(inout):: new_node
    <%= @node_type_declare %>, pointer:: parent, me
