@@ -18,16 +18,16 @@ program io_lib_test
    Logical:: isNamed, isEqual
    type(ArrayMeta):: meta
 
-   TEST(get_column_format_string(.true., 2) == '(2(1x, l1))')
-   TEST(get_column_format_string(.false., 10) == '(10(1x, l1))')
-   TEST(get_column_format_string(1, 2) == '(2(1x, i11))')
-   TEST(get_column_format_string(1, 10) == '(10(1x, i11))')
-   TEST(get_column_format_string(1.0, 1) == '(1(1x, es13.7))')
-   TEST(get_column_format_string(1.0, 2) == '(2(1x, es13.7))')
-   TEST(get_column_format_string(1.0, 10) == '(10(1x, es13.7))')
-   isEqual = get_column_format_string((1.2, 2.3), 2) == '(2(1x, "(", es13.7, ",", es13.7, ")"))'
+   TEST(get_column_format_string(.true., 2) == '(2(1x, g0))')
+   TEST(get_column_format_string(.false., 10) == '(10(1x, g0))')
+   TEST(get_column_format_string(1, 2) == '(2(1x, g0))')
+   TEST(get_column_format_string(1, 10) == '(10(1x, g0))')
+   TEST(get_column_format_string(1.0, 1) == '(1(1x, g0))')
+   TEST(get_column_format_string(1.0, 2) == '(2(1x, g0))')
+   TEST(get_column_format_string(1.0, 10) == '(10(1x, g0))')
+   isEqual = get_column_format_string((1.2, 2.3), 2) == '(2(1x, "(", g0, ", ", g0, ")"))'
    TEST(isEqual)
-   isEqual = get_column_format_string((1.2, 2.3), 10) == '(10(1x, "(", es13.7, ",", es13.7, ")"))'
+   isEqual = get_column_format_string((1.2, 2.3), 10) == '(10(1x, "(", g0, ", ", g0, ")"))'
    TEST(isEqual)
 
    call mktemp(io)

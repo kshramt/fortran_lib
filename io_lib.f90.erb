@@ -92,67 +92,25 @@ module io_lib
 
 contains
 
-   <%- LOGICAL_DIM_0S.each{|t| -%>
-      ! '(256(1x, l1))'
+   <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| -%>
       function get_column_format_string<%= t %>(x, n) result(ret)
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
          Character(len=:), allocatable:: ret
 
-         ASSERT(n >= 1)
-         ret = '(' + str(n) + '(1x, l1))'
+         ret = '(' + str(n) + '(1x, g0))'
       end function get_column_format_string<%= t %>
    <%- } -%>
 
-   <%- INTEGER_DIM_0S.each{|t| -%>
-      ! '(256(1x, i11))'
-      function get_column_format_string<%= t %>(x, n) result(ret)
-         <%= t.declare %>, intent(in):: x
-         Integer, intent(in):: n
-         Character(len=:), allocatable:: ret
-
-         ASSERT(n >= 1)
-         ret = '(' + str(n) + '(1x, i' + str(len(str(huge(x))) + 1) + '))'
-      end function get_column_format_string<%= t %>
-   <%- } -%>
-
-   <%- REAL_DIM_0S.each{|t| -%>
-      ! '(256(1x, es13.7))'
-      function get_column_format_string<%= t %>(x, n) result(ret)
-         Integer, parameter:: PADDING_FOR_ES = 6
-         Integer, parameter:: MORE_PREC = 1
-
-         <%= t.declare %>, intent(in):: x
-         Integer, intent(in):: n
-
-         Character(len=:), allocatable:: ret
-
-         Integer:: prec
-
-         ASSERT(n >= 1)
-
-         prec = precision(x) + MORE_PREC
-         ret = '(' + str(n) + '(1x, es' + str(prec + PADDING_FOR_ES) + '.' + str(prec) + '))'
-      end function get_column_format_string<%= t %>
-   <%- } -%>
-
+   ! `get_column_format_string` is used to produce re-readable complex output.
+   ! number of columns should explicitly be given since unlimited format gives an extra parenthesis ` (` at the end.
    <%- COMPLEX_DIM_0S.each{|t| -%>
-      ! '(256(1x, "(", es13.7, ",", es13.7, ")"))'
       function get_column_format_string<%= t %>(x, n) result(ret)
-         Integer, parameter:: PADDING_FOR_ES = 6
-         Integer, parameter:: MORE_PREC = 1
-
          <%= t.declare %>, intent(in):: x
          Integer, intent(in):: n
-
          Character(len=:), allocatable:: ret
 
-         Integer:: prec
-
-         ASSERT(n >= 1)
-
-         prec = precision(x) + MORE_PREC
-         ret = '(' + str(n) + '(1x, "(", es' + str(prec + PADDING_FOR_ES) + '.' + str(prec) + ', ",", es' + str(prec + PADDING_FOR_ES) + '.' + str(prec) + ', ")"))'
+         ret = '(' + str(n) + '(1x, "(", g0, ", ", g0, ")"))'
       end function get_column_format_string<%= t %>
    <%- } -%>
 
