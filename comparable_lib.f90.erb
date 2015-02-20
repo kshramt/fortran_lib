@@ -121,17 +121,17 @@ contains
          if(present(relative))then
             deltaRelative = max(abs(a)*relative, abs(b)*relative)
          else
-            deltaRelative = 2*max(epsilon(a)*abs(a), epsilon(b)*abs(b))
+            deltaRelative = max(epsilon(a)*abs(a), epsilon(b)*abs(b))
          end if
 
          if(present(absolute))then
             deltaAbsolute = absolute
          else
-            deltaAbsolute = 2*epsilon(lowerPrecision)*tiny(lowerPrecision)
+            deltaAbsolute = epsilon(lowerPrecision)*tiny(lowerPrecision)
          end if
 
          delta = max(deltaRelative, deltaAbsolute)
-         answer = (abs(a - b) < delta)
+         answer = (abs(a - b) <= delta)
       end function almost_equal<%= t1 %><%= t2 %>
    <%- } -%>
 

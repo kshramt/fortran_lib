@@ -102,8 +102,11 @@ program comparable_lib_test
    TEST(almost_equal(1.0, 0.9*(1 + epsilon(0.0)), relative = 0.1))
 
    ! absolute
-   TEST(.not.almost_equal(0.0, 0.1, absolute = 0.1))
-   TEST(almost_equal(0.0, 0.1*(1 - epsilon(0.0)), absolute = 0.1))
+   TEST(.not.almost_equal(0.0, 0.1*(1 + epsilon(0.0)), absolute=0.1))
+   TEST(almost_equal(0.0, 0.1, absolute=0.1))
+
+   ! relative = 0, absolute = 0
+   TEST(almost_equal(1.0, 1.0, relative=0.0, absolute=0.0))
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__
    stop
