@@ -129,7 +129,7 @@ contains
          end if
       end function medianing<%= t %>
 
-      function median_of_medianing<%= t %>(xs) result(ret)
+      recursive function median_of_medianing<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>:: ret
          Integer(kind=INT64):: nXs
