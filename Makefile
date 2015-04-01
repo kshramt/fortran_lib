@@ -87,7 +87,6 @@ test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
 test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib optimize_lib optimize_lib_test)
 
 test/io_lib_illegal_form_argument_errortest.exe: $(call o_mod,config_lib character_lib io_lib io_lib_illegal_form_argument_errortest)
-test/binary_tree_map_lib_add_too_long_key_errortest.exe: $(call o_mod,binary_tree_map_lib binary_tree_map_lib_add_too_long_key_errortest)
 test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_get_iftype_for_undefined_value_errortest)
 test/sac_lib_get_imagsrc_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_get_imagsrc_for_undefined_value_errortest)
 test/sac_lib_set_iftype_with_invalid_argument_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_set_iftype_with_invalid_argument_errortest)
