@@ -54,7 +54,7 @@ o_mod = $(1:%=%.o) $(addsuffix .mod,$(filter %_lib,$(1)))
 .PHONY: all src test preprocess deps
 all: preprocess src $(EXE_NAMES:%=bin/%.exe)
 src: preprocess $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES))
-test: preprocess $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
+check: preprocess $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
 preprocess: deps
 deps: $(DEPS:%=dep/%.updated)
 
