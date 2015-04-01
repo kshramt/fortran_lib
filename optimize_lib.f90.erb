@@ -7,6 +7,7 @@ module optimize_lib
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+   use, intrinsic:: iso_fortran_env, only: int8, real64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: array_lib, only: l2_norm
 
@@ -14,8 +15,36 @@ module optimize_lib
 
    private
    public:: nnls
+   public:: update, init
 
    <%- reals.each{|t| -%>
+      type, public:: LineSearchState<%= t %>
+         <%= t.declare %>:: x0
+         <%= t.declare %>:: x
+         <%= t.declare %>:: xl = 0
+         <%= t.declare %>:: xr = 1
+         <%= t.declare %>:: fl
+         <%= t.declare %>:: fr
+      end type LineSearchState<%= t %>
+   <%- } -%>
+
+   <%- reals.each{|t| -%>
+      interface update
+         module procedure updateLineSearchState<%= t %>
+      end interface update
+
+      interface update_
+         module procedure update_LineSearchState<%= t %>
+      end interface update_
+
+      interface init
+         module procedure initLineSearchState<%= t %>
+      end interface init
+
+      interface line_search_quadratic
+         module procedure line_search_quadratic<%= t %>
+      end interface line_search_quadratic
+
       interface nnls
          module procedure nnls<%= t %>
       end interface nnls
@@ -24,6 +53,140 @@ module optimize_lib
 contains
 
    <%- reals.each{|t| -%>
+      subroutine updateLineSearchState<%= t %>(s, f)
+         ! do
+         !    f = f(x0 + s%x*dx)
+         !    call update(s, f)
+         ! end do
+         type(LineSearchState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: f
+         <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3
+         <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/real(4, kind=kind(enlarge))
+         Logical(kind=int8):: is_quadratic
+
+         if(s%x == s%xl .or. s%x == s%xr)then
+            if(s%fl < s%fr)then
+               s%x = s%xl - (s%xr - s%xl)
+            else
+               s%x = s%xr + (s%xr - s%xl)
+            end if
+            return
+         else if(s%x < s%xl)then
+            x1 = s%x
+            x2 = s%xl
+            x3 = s%xr
+            f1 = f
+            f2 = s%fl
+            f3 = s%fr
+         else if(s%xr < s%x)then
+            x1 = s%xl
+            x2 = s%xr
+            x3 = s%x
+            f1 = s%fl
+            f2 = s%fr
+            f3 = f
+         else ! xl < x < xr
+            x1 = s%xl
+            x2 = s%x
+            x3 = s%xr
+            f1 = s%fl
+            f2 = f
+            f3 = s%fr
+         end if
+
+         call line_search_quadratic(x1, x2, x3, f1, f2, f3, x_new, is_quadratic)
+         if(is_quadratic)then
+            if(x_new == x2)then
+               if(f1 < f3)then
+                  call update_(s, x1, x2, f1, f2)
+                  s%x = (x2/2) + (x3/2)
+               else
+                  s%x = (x1/2) + (x2/2)
+                  call update_(s, x2, x3, f2, f3)
+               end if
+            else if(x_new < x2)then
+               if(x_new == x1)then
+                  s%x = x_new - (x2 - x1)
+               else
+                  s%x = x_new
+               end if
+               call update_(s, x1, x2, f1, f2)
+            else
+               call update_(s, x2, x3, f2, f3)
+               if(x_new == x3)then
+                  s%x = x3 + (x3 - x2)
+               else
+                  s%x = x_new
+               end if
+            end if
+         else
+            if(x_new < x2)then
+               s%x = x1 - enlarge*(x2 - x1)
+               call update_(s, x1, x2 ,f1, f2)
+            else
+               call update_(s, x2, x3 ,f2, f3)
+               s%x = x3 + enlarge*(x3 - x2)
+            end if
+         end if
+      end subroutine updateLineSearchState<%= t %>
+
+
+      subroutine update_LineSearchState<%= t %>(s, xl, xr, fl, fr)
+         type(LineSearchState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: xl, xr, fl, fr
+
+         s%xl = xl
+         s%xr = xr
+         s%fl = fl
+         s%fr = fr
+      end subroutine update_LineSearchState<%= t %>
+
+
+      subroutine initLineSearchState<%= t %>(s, f0, fdx)
+         type(LineSearchState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: f0, fdx
+
+         s%fl = f0
+         s%fr = fdx
+         if(s%fl < s%fr)then
+            s%x = -1
+         else
+            s%x = 2
+         end if
+      end subroutine initLineSearchState<%= t %>
+
+
+      subroutine line_search_quadratic<%= t %>(x1, x2, x3, f1, f2, f3, x_opt, is_quadratic)
+         <%= t.declare %>, intent(in):: x1, x2, x3, f1, f2, f3
+         <%= t.declare %>, intent(out):: x_opt
+         Logical(kind=int8), intent(out):: is_quadratic
+         <%= t.declare %>:: x12, x13, x23, f1x1213, f2x1223, f3x1323, a, b_neg
+
+         x12 = x1 - x2
+         x13 = x1 - x3
+         x23 = x2 - x3
+         f1x1213 = f1/(x12*x13)
+         f2x1223 = f2/(x12*x23)
+         f3x1323 = f3/(x13*x23)
+         a = f1x1213 - f2x1223 + f3x1323
+         is_quadratic = a > 0
+         if(is_quadratic)then
+            b_neg = f1x1213*(x2 + x3) - f2x1223*(x1 + x3) + f3x1323*(x1 + x2)
+            x_opt = b_neg/(2*a)
+         else if(f1 < f2)then
+            if(f1 < f3)then
+               x_opt = x1
+            else
+               x_opt = x3
+            end if
+         else if(f2 < f3)then
+            x_opt = x2
+         else
+            x_opt = x3
+         end if
+      end subroutine line_search_quadratic<%= t %>
+
+
       pure function nnls<%= t %>(A, b) result(ret)
          <%= t.declare %>, intent(in):: A(:, :), b(:)
          Real(kind=kind(A)), allocatable:: tAA(:, :), tAb(:), x(:), x_pre(:), g(:), ret(:)
