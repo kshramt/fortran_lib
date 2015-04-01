@@ -109,8 +109,7 @@ $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortes
 
 test/%_errortest.exe.tested: test/%_errortest.exe
 	cd $(@D)
-	! ./$(<F)
-	touch $(@F)
+	! ./$(<F) && touch $(@F)
 test/%_test.exe.tested: test/%_test.exe
 	cd $(@D)
 	./$(<F)
