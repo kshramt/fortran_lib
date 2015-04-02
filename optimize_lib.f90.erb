@@ -104,10 +104,10 @@ contains
                call update_(s, x1, x2, f1, f2)
             else if(x3 == x_new)then
                s%x = x3 + (x3 - x1)/enlarge
-               call update_(s, x1, x2, f1, f2)
+               call update_(s, x2, x3, f2, f3)
             else if(x3 < x_new)then
                s%x = min(x_new, x3 + (x3 - x1)/enlarge)
-               call update_(s, x1, x2, f1, f2)
+               call update_(s, x2, x3, f2, f3)
             else
                if(f1 < f3)then
                   call update_(s, x1, x2, f1, f2)
