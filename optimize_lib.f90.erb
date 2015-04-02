@@ -106,9 +106,9 @@ contains
                end if
             else if(x_new < x2)then
                if(x_new == x1)then
-                  s%x = x_new - enlarge*(x2 - x1)
+                  s%x = x_new - (x3 - x1)/enlarge
                else if(x_new <= x1)then
-                  s%x = max(x_new, x1 - enlarge*(x2 - x1))
+                  s%x = max(x_new, x1 - (x3 - x1)/enlarge)
                else
                   s%x = x_new
                end if
@@ -116,20 +116,20 @@ contains
             else
                call update_(s, x2, x3, f2, f3)
                if(x_new == x3)then
-                  s%x = x3 + enlarge*(x3 - x2)
+                  s%x = x3 + (x3 - x1)/enlarge
                else if(x_new > x3)then
-                  s%x = min(x_new, x3 + enlarge*(x3 - x2))
+                  s%x = min(x_new, x3 + (x3 - x1)/enlarge)
                else
                   s%x = x_new
                end if
             end if
          else
             if(x_new < x2)then
-               s%x = x1 - enlarge*(x2 - x1)
+               s%x = x1 - enlarge*(x3 - x1)
                call update_(s, x1, x2 ,f1, f2)
             else
                call update_(s, x2, x3 ,f2, f3)
-               s%x = x3 + enlarge*(x3 - x2)
+               s%x = x3 + enlarge*(x3 - x1)
             end if
          end if
       end subroutine updateLineSearchState<%= t %>
