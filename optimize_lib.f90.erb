@@ -96,32 +96,25 @@ contains
 
          call line_search_quadratic(x1, x2, x3, f1, f2, f3, x_new, is_quadratic)
          if(is_quadratic)then
-            if(x_new == x2)then
-               if(f1 < f3)then
-                  call update_(s, x1, x2, f1, f2)
-                  s%x = (x2/2) + (x3/2)
-               else
-                  s%x = (x1/2) + (x2/2)
-                  call update_(s, x2, x3, f2, f3)
-               end if
-            else if(x_new < x2)then
-               if(x_new == x1)then
-                  s%x = x_new - (x3 - x1)/enlarge
-               else if(x_new <= x1)then
-                  s%x = max(x_new, x1 - (x3 - x1)/enlarge)
-               else
-                  s%x = x_new
-               end if
+            if(x_new < x1)then
+               s%x = max(x_new, x1 - (x3 - x1)/enlarge)
+               call update_(s, x1, x2, f1, f2)
+            else if(x_new == x1)then
+               s%x = x1 - (x3 - x1)/enlarge
+               call update_(s, x1, x2, f1, f2)
+            else if(x3 == x_new)then
+               s%x = x3 + (x3 - x1)/enlarge
+               call update_(s, x1, x2, f1, f2)
+            else if(x3 < x_new)then
+               s%x = min(x_new, x3 + (x3 - x1)/enlarge)
                call update_(s, x1, x2, f1, f2)
             else
-               call update_(s, x2, x3, f2, f3)
-               if(x_new == x3)then
-                  s%x = x3 + (x3 - x1)/enlarge
-               else if(x_new > x3)then
-                  s%x = min(x_new, x3 + (x3 - x1)/enlarge)
+               if(f1 < f3)then
+                  call update_(s, x1, x2, f1, f2)
                else
-                  s%x = x_new
+                  call update_(s, x2, x3, f2, f3)
                end if
+               s%x = x_new
             end if
          else
             if(x_new < x2)then
