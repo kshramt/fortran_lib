@@ -2,18 +2,18 @@
 program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
-   use, intrinsic:: iso_fortran_env, only: REAL64
+   use, intrinsic:: iso_fortran_env, only: REAL64, real32
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: nnls
-   use, non_intrinsic:: optimize_lib, only: init, update, LineSearchStateRealDim0KindREAL32
+   use, non_intrinsic:: optimize_lib, only: init, update, LineSearchStateRealDim0KindREAL32, LineSearchStateRealDim0KindREAL64
 
    implicit none
 
    TEST(all(almost_equal(nnls(real(reshape([73, 87, 72, 80, 71, 74, 2, 89, 52, 46, 7, 71], shape=[4, 3]), kind=REAL64), real([49, 67, 68, 20], kind=REAL64)), [0.6495384364022547_REAL64, 0.0_REAL64, 0.0_REAL64])))
    TEST(all(almost_equal(nnls(real(reshape([1, 1, 0, 1], shape=[2, 2]), kind=REAL64), real([1, 0], kind=REAL64)), [1.0/2, 0.0])))
 
-   TEST(test_line_search(-3.0, 2.5, 10.0))
-   TEST(test_line_search(50.0, 0.15, 10.0))
+   TEST(test_line_search(-3d0, 2d0, 1d1))
+   TEST(test_line_search(5d1, 15d-2, 1d1))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
@@ -23,32 +23,25 @@ contains
 
    function test_line_search(x0, dx, x_theoretical) result(ret)
       Logical:: ret
-      Real, intent(in):: x0, dx, x_theoretical
-      Real:: f, f0, fdx, x, xl, xr, x_best, f_best, xtol
+      Real(kind=real64), intent(in):: x0, dx, x_theoretical
+      Real(kind=kind(x0)):: f, x, xl, xr, x_best, f_best, xtol
       Logical:: converge_x
-      type(LineSearchStateRealDim0KindREAL32):: s
-      Integer:: iter
+      type(LineSearchStateRealDim0KindREAL64):: s
+      !      type(LineSearchStateRealDim0KindREAL32):: s
 
-      ret = .false.
+      ret = .true.
       xtol = 1e-2*dx
-      f0 = test_line_search_f(x0, x_theoretical)
-      fdx = test_line_search_f(x0 + dx, x_theoretical)
-      if(fdx < f0)then
-         x_best = 0
-         f_best = f0
-      else
-         x_best = dx
-         f_best = fdx
-      end if
-      call init(s, f0, fdx)
-      iter = 0
+      f_best = huge(f_best)
+      x_best = huge(x_best)
+      call init(s)
       do
-         iter = iter + 1
          x = x0 + s%x*dx
-         xl = x0 + s%xl*dx
-         xr = x0 + s%xr*dx
-         f = test_line_search_f(x, x_theoretical)
-         write(output_unit, *) xl, xr, x, test_line_search_f(xl, x_theoretical), test_line_search_f(xr, x_theoretical), f
+         f = f1(x, x_theoretical)
+         if(s%iter > 2)then
+            xl = x0 + s%xl*dx
+            xr = x0 + s%xr*dx
+            write(output_unit, *) xl, xr, x, f1(xl, x_theoretical), f1(xr, x_theoretical), f
+         end if
          call update(s, f)
          converge_x = almost_equal(x, x_best, absolute=xtol)
          if(f < f_best)then
@@ -57,16 +50,49 @@ contains
          end if
          if(converge_x) exit
       end do
-      PRINT_VARIABLE(iter)
+      PRINT_VARIABLE(s%iter)
       PRINT_VARIABLE(x_best)
-      ret = almost_equal(x, x_best, xtol)
+      ret = ret .and. almost_equal(x, x_best, xtol)
+
+      f_best = huge(f_best)
+      x_best = huge(x_best)
+      call init(s)
+      do
+         x = x0 + s%x*dx
+         f = f2(x, x_theoretical)
+         if(s%iter > 2)then
+            xl = x0 + s%xl*dx
+            xr = x0 + s%xr*dx
+            write(output_unit, *) xl, xr, x, f2(xl, x_theoretical), f2(xr, x_theoretical), f
+         end if
+         call update(s, f)
+         converge_x = almost_equal(x, x_best, absolute=xtol)
+         if(f < f_best)then
+            x_best = x
+            f_best = f
+         end if
+         if(converge_x) exit
+      end do
+      PRINT_VARIABLE(s%iter)
+      PRINT_VARIABLE(x_best)
+      ret = ret .and. almost_equal(x, x_best, xtol)
    end function test_line_search
 
+   function f1(x, x_theoretical) result(y)
+      Real(kind=real64), intent(in):: x, x_theoretical
+      Real(kind=kind(x)):: y
+      Real(kind=kind(x)):: x_
 
-   function test_line_search_f(x, x_theoretical) result(ret)
-      Real, intent(in):: x, x_theoretical
-      Real(kind=kind(x)):: ret
+      x_ = x - x_theoretical
+      y = -1/(1 + x_**2)
+   end function f1
 
-      ret = -1/(1 + (x - x_theoretical)**2)
-   end function test_line_search_f
-end program
+   function f2(x, x_theoretical) result(y)
+      Real(kind=real64), intent(in):: x, x_theoretical
+      Real(kind=kind(x)):: y
+      Real(kind=kind(x)):: x_
+
+      x_ = x - x_theoretical
+      y = x_**2 - cos(x_)
+   end function f2
+end program main

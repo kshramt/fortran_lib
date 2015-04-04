@@ -7,7 +7,7 @@ module optimize_lib
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
-   use, intrinsic:: iso_fortran_env, only: int8, real64
+   use, intrinsic:: iso_fortran_env, only: int8, int64, real64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: array_lib, only: l2_norm
 
@@ -19,10 +19,10 @@ module optimize_lib
 
    <%- reals.each{|t| -%>
       type, public:: LineSearchState<%= t %>
-         <%= t.declare %>:: x0
+         Integer(kind=int64):: iter = -1
          <%= t.declare %>:: x
-         <%= t.declare %>:: xl = 0
-         <%= t.declare %>:: xr = 1
+         <%= t.declare %>:: xl
+         <%= t.declare %>:: xr
          <%= t.declare %>:: fl
          <%= t.declare %>:: fr
       end type LineSearchState<%= t %>
@@ -54,6 +54,7 @@ contains
 
    <%- reals.each{|t| -%>
       subroutine updateLineSearchState<%= t %>(s, f)
+         ! call init(s)
          ! do
          !    f = f(x0 + s%x*dx)
          !    call update(s, f)
@@ -64,7 +65,24 @@ contains
          <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
          Logical(kind=int8):: is_quadratic
 
-         if(s%x == s%xl .or. s%x == s%xr)then
+         s%iter = s%iter + 1
+         ASSERT(s%iter > 0)
+         if(s%iter == 1)then
+            s%xl = s%x
+            s%fl = f
+            s%x = s%xl + 1
+            return
+         else if(s%iter == 2)then
+            ASSERT(s%x > s%xl)
+            s%xr = s%x
+            s%fr = f
+            if(s%fr < s%fl)then
+               s%x = s%xr + (s%xr - s%xl)
+            else
+               s%x = s%xl - (s%xr - s%xl)
+            end if
+            return
+         else if(s%x == s%xl .or. s%x == s%xr)then
             if(s%fl < s%fr)then
                s%x = s%xl - (s%xr - s%xl)
             else
@@ -97,16 +115,16 @@ contains
          call line_search_quadratic(x1, x2, x3, f1, f2, f3, x_new, is_quadratic)
          if(is_quadratic)then
             if(x_new < x1)then
-               s%x = max(x_new, x1 - (x3 - x1)/enlarge)
+               s%x = max(x_new, x1 - enlarge*(x3 - x1))
                call update_(s, x1, x2, f1, f2)
             else if(x_new == x1)then
-               s%x = x1 - (x3 - x1)/enlarge
+               s%x = x1 - enlarge*(x3 - x1)
                call update_(s, x1, x2, f1, f2)
             else if(x3 == x_new)then
-               s%x = x3 + (x3 - x1)/enlarge
+               s%x = x3 + enlarge*(x3 - x1)
                call update_(s, x2, x3, f2, f3)
             else if(x3 < x_new)then
-               s%x = min(x_new, x3 + (x3 - x1)/enlarge)
+               s%x = min(x_new, x3 + enlarge*(x3 - x1))
                call update_(s, x2, x3, f2, f3)
             else
                if(f1 < f3)then
@@ -139,17 +157,11 @@ contains
       end subroutine update_LineSearchState<%= t %>
 
 
-      subroutine initLineSearchState<%= t %>(s, f0, fdx)
+      subroutine initLineSearchState<%= t %>(s)
          type(LineSearchState<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: f0, fdx
 
-         s%fl = f0
-         s%fr = fdx
-         if(s%fl < s%fr)then
-            s%x = -1
-         else
-            s%x = 2
-         end if
+         s%iter = 0
+         s%x = 0
       end subroutine initLineSearchState<%= t %>
 
 
