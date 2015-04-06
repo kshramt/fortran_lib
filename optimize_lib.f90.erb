@@ -77,9 +77,9 @@ contains
             s%xr = s%x
             s%fr = f
             if(s%fr < s%fl)then
-               s%x = s%xr + (s%xr - s%xl)
+               s%x = s%xr + enlarge*(s%xr - s%xl)
             else
-               s%x = s%xl - (s%xr - s%xl)
+               s%x = s%xl - enlarge*(s%xr - s%xl)
             end if
             return
          else if(s%x == s%xl .or. s%x == s%xr)then
