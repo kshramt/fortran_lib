@@ -179,8 +179,6 @@ contains
          Logical(kind=int8), intent(out):: is_quadratic
          <%= t.declare %>:: x12, x13, x23, f1x1213, f2x1223, f3x1323, a, b_neg
 
-         ASSERT(x1 <= x2)
-         ASSERT(x2 <= x3)
          x12 = x1 - x2
          x13 = x1 - x3
          x23 = x2 - x3
@@ -192,9 +190,14 @@ contains
          if(is_quadratic)then
             b_neg = f1x1213*(x2 + x3) - f2x1223*(x1 + x3) + f3x1323*(x1 + x2)
             x_opt = b_neg/(2*a)
-         else if(f1 < f3)then
-            ! todo: f1 == f3
-            x_opt = x1
+         else if(f1 < f2)then
+            if(f1 < f3)then
+               x_opt = x1
+            else
+               x_opt = x3
+            end if
+         else if(f2 < f3)then
+            x_opt = x2
          else
             x_opt = x3
          end if
