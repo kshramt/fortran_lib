@@ -169,7 +169,9 @@ contains
          type(LineSearchState<%= t %>), intent(inout):: s
 
          s%iter = 0
-         s%x = 0
+         s%xl = 0
+         s%xr = 1
+         s%x = s%xl
       end subroutine initLineSearchState<%= t %>
 
 
