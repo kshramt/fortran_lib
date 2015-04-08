@@ -65,8 +65,10 @@ contains
          <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
          Logical(kind=int8):: is_quadratic
 
+         if(s%iter < 0)then
+            RAISE('`LineSearchstate<%= t %>` should be `init`ialized before `update`d')
+         end if
          s%iter = s%iter + 1
-         ASSERT(s%iter > 0)
          if(s%iter == 1)then
             s%xl = s%x
             s%fl = f
