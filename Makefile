@@ -1,6 +1,4 @@
 # Constants
-DIR := $(abspath .)
-
 DEPS := fort
 
 MY_ERB ?= erb
@@ -134,7 +132,7 @@ src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< $@
 %.f90: %.f90.erb
-	export RUBYLIB=dep/fort/lib:$(DIR):"$${RUBYLIB}"
+	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 
 
