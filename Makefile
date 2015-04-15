@@ -191,4 +191,4 @@ $(DEPS:%=dep/%): dep/%:
 
 
 %.sha256: %.sha256.new
-	cmp -s $< $@ || cat $< >| $@
+	cmp -s $< $@ || cp -f $< $@
