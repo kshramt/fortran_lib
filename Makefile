@@ -52,25 +52,25 @@ o_mod = $(call sha256,$(1:%=%.o)) $(call sha256,$(addsuffix .mod,$(filter %_lib,
 
 
 # Commands
-.PHONY: download-deps arrange-deps all all-impl check check-impl
+.PHONY: deps-download deps-arrange all all-impl check check-impl
 
 
 define INTERFACE_TARGET_TEMPLATE =
 $(1):
-	$$(MAKE) download-deps
+	$$(MAKE) deps-download
 	$$(MAKE) $(1)-impl
 endef
 $(foreach f,all check,$(eval $(call INTERFACE_TARGET_TEMPLATE,$(f))))
 
 
-all-impl: arrange-deps $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe)
+all-impl: deps-arrange $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe)
 
 
-check-impl: arrange-deps $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
+check-impl: deps-arrange $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
 
 
-arrange-deps:
-download-deps: $(DEPS:%=dep/%.updated)
+deps-arrange:
+deps-download: $(DEPS:%=dep/%.updated)
 
 
 # Tasks
