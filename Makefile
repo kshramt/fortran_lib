@@ -6,13 +6,16 @@ ERB := ${MY_ERB}
 ERB_FLAGS := -T '-' -P
 
 # MY_FORTRAN_DEBUG ?= $(MY_IFORT_DEBUG)
-MY_RUBY ?= ruby
-RUBY := ${MY_RUBY}
 
 MY_FC ?= gfortran
 FC := $(MY_FC)
-MY_FFLAG_COMMON ?= -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
-MY_FFLAG_DEBUG ?= -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
+ifeq ($(FC),ifort)
+   MY_FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz
+   MY_FFLAG_DEBUG := -check nouninit -trace -O0 -p -g -DDEBUG -debug all
+else
+   MY_FFLAG_COMMON := -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
+   MY_FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
+endif
 FFLAGS := $(MY_FFLAG_COMMON) $(MY_FFLAG_DEBUG)
 
 MY_CPP ?= cpp
