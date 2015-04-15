@@ -55,7 +55,7 @@ o_mod = $(call sha256,$(1:%=%.o)) $(call sha256,$(addsuffix .mod,$(filter %_lib,
 
 
 # Commands
-.PHONY: deps-download deps-arrange all all-impl check check-impl
+.PHONY: deps-download deps-arrange all all-impl check check-impl clean
 
 
 define INTERFACE_TARGET_TEMPLATE =
@@ -70,6 +70,11 @@ all-impl: deps-arrange $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_
 
 
 check-impl: deps-arrange $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
+
+
+clean:
+	rm -f *.o
+	rm -f *.mod
 
 
 deps-arrange:
