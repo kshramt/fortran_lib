@@ -24,7 +24,8 @@ endif
 
 FILES := $(shell git ls-files)
 F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
-F90_NAMES += $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
+ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
+F90_NAMES += $(ERB_F90_NAMES)
 LIB_NAMES := $(filter %_lib,$(F90_NAMES))
 TEMPLATE_NAMES := $(filter %_template,$(F90_NAMES))
 TEST_NAMES := $(filter %_test,$(F90_NAMES))
@@ -136,17 +137,20 @@ bin/%.exe:
 	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$(call unsha256,$^))
 
 
-%_lib.mod %_lib.o: src/%_lib.f90.sha256
+$(LIB_NAMES:%=%.mod): %_lib.mod: src/%_lib.f90.sha256
 	$(FC) $(FFLAGS) -c -o $*_lib.o $(call unsha256,$<)
 	touch $*_lib.mod
-%.o: src/%.f90.sha256
+$(LIB_NAMES:%=%.o): %_lib.o: src/%_lib.f90.sha256
+	$(FC) $(FFLAGS) -c -o $*_lib.o $(call unsha256,$<)
+	touch $*_lib.mod
+$(EXE_NAMES:%=%.o) $(TEST_NAMES:%=%.o) $(ERRORTEST_NAMES:%=%.o): %.o: src/%.f90.sha256
 	$(FC) $(FFLAGS) -c -o $*.o $(call unsha256,$<)
 
 
-src/%.f90: %.f90.sha256 fortran_lib.h.sha256
+$(F90_NAMES:%=src/%.f90) $(ERRORTEST_NAMES:%=src/%.f90): src/%.f90: %.f90.sha256 fortran_lib.h.sha256
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $(call unsha256,$<) $@
-%.f90: %.f90.erb.sha256
+$(ERB_F90_NAMES:%=%.f90): %.f90: %.f90.erb.sha256
 	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $(call unsha256,$<) >| $@
 
