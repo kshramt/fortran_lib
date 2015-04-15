@@ -5,7 +5,7 @@ This Fortran library provides basic data structures, algorithms and some handy u
 
 ```bash
 gmake
-gmake test
+gmake check
 ```
 
 ## Dependencies
