@@ -21,7 +21,7 @@
 program main
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
+   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, int64
    use, non_intrinsic:: character_lib, only: operator(+)
    use, non_intrinsic:: io_lib, only: ArrayMeta
    use, non_intrinsic:: io_lib, only: load, load_meta, get_column_format_string
@@ -48,14 +48,15 @@ program main
    <%- TYPES_1.each{|t| -%>
      case('<%= t %>')
         call load(array<%= t %>, trim(arrayDir))
+        form = get_column_format_string(array<%= t %>(1), 1)
         do ALL_OF(i, array<%= t %>, 1)
-           write(OUTPUT_UNIT, *) array<%= t %>(i)
+           write(OUTPUT_UNIT, form) array<%= t %>(i)
         end do
    <%- } -%>
    <%- TYPES_2.each{|t| -%>
      case('<%= t %>')
         call load(array<%= t %>, trim(arrayDir))
-        form = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2))
+        form = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2, kind=int64))
         do ALL_OF(i, array<%= t %>, 1)
            write(OUTPUT_UNIT, form) array<%= t %>(i, :)
         end do

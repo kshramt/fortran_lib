@@ -58,9 +58,9 @@ module io_lib
       Integer, allocatable:: sizes(:)
    end type ArrayMeta
 
-   <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S + COMPLEX_DIM_0S).each{|t| -%>
+   <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S + COMPLEX_DIM_0S).product(INTEGER_DIM_0S).each{|t, tn| -%>
       interface get_column_format_string
-         module procedure get_column_format_string<%= t %>
+         module procedure get_column_format_string<%= t.id %><%= tn.id %>
       end interface get_column_format_string
    <%- } -%>
 
@@ -92,10 +92,11 @@ module io_lib
 
 contains
 
+   <%- INTEGER_DIM_0S.each{|tn| -%>
    <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| -%>
-      function get_column_format_string<%= t %>(x, n) result(ret)
+      function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
          <%= t.declare %>, intent(in):: x
-         Integer, intent(in):: n
+         <%= tn.declare %>, intent(in):: n
          Character(len=:), allocatable:: ret
 
          select case(n)
@@ -106,15 +107,15 @@ contains
          case(2:)
             ret = '(g0, *("	", g0))'
          end select
-      end function get_column_format_string<%= t %>
+      end function get_column_format_string<%= t.id %><%= tn.id %>
    <%- } -%>
 
    ! `get_column_format_string` is used to produce re-readable complex output.
    ! number of columns should explicitly be given since unlimited format gives an extra parenthesis ` (` at the end.
    <%- COMPLEX_DIM_0S.each{|t| -%>
-      function get_column_format_string<%= t %>(x, n) result(ret)
+      function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
          <%= t.declare %>, intent(in):: x
-         Integer, intent(in):: n
+         <%= tn.declare %>, intent(in):: n
          Character(len=:), allocatable:: ret
 
          select case(n)
@@ -125,7 +126,8 @@ contains
          case(2:)
             ret = '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
          end select
-      end function get_column_format_string<%= t %>
+      end function get_column_format_string<%= t.id %><%= tn.id %>
+   <%- } -%>
    <%- } -%>
 
    function sh(cmd) result(isSuccess)
