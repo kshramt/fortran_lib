@@ -7,9 +7,9 @@ program io_lib_test
    use, non_intrinsic:: io_lib, IO_LIB_VERSION => VERSION
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: character_lib, only: operator(+)
-   
+
    implicit none
-   
+
    Real(kind = REAL64), allocatable:: xs(:), xsOriginal(:)
    Integer(kind = INT8), allocatable:: ns(:, :), nsOriginal(:, :)
    Integer:: io
@@ -18,16 +18,21 @@ program io_lib_test
    Logical:: isNamed, isEqual
    type(ArrayMeta):: meta
 
-   TEST(get_column_format_string(.true., 2) == '(2(1x, g0))')
-   TEST(get_column_format_string(.false., 10) == '(10(1x, g0))')
-   TEST(get_column_format_string(1, 2) == '(2(1x, g0))')
-   TEST(get_column_format_string(1, 10) == '(10(1x, g0))')
-   TEST(get_column_format_string(1.0, 1) == '(1(1x, g0))')
-   TEST(get_column_format_string(1.0, 2) == '(2(1x, g0))')
-   TEST(get_column_format_string(1.0, 10) == '(10(1x, g0))')
-   isEqual = get_column_format_string((1.2, 2.3), 2) == '(2(1x, "(", g0, ", ", g0, ")"))'
+   isEqual = get_column_format_string(.true., 0) == '()'
    TEST(isEqual)
-   isEqual = get_column_format_string((1.2, 2.3), 10) == '(10(1x, "(", g0, ", ", g0, ")"))'
+   isEqual = get_column_format_string(.false., 1) == '(g0)'
+   TEST(isEqual)
+   isEqual = get_column_format_string(1, 2) == '(g0, *("	", g0))'
+   TEST(isEqual)
+   isEqual = get_column_format_string(1, 3) == '(g0, *("	", g0))'
+   TEST(isEqual)
+   isEqual = get_column_format_string((1.2, 2.3), 0) == '()'
+   TEST(isEqual)
+   isEqual = get_column_format_string((1.2, 2.3), 1) == '("(", g0, ", ", g0, ")")'
+   TEST(isEqual)
+   isEqual = get_column_format_string((1.2, 2.3), 2) == '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
+   TEST(isEqual)
+   isEqual = get_column_format_string((1.2, 2.3), 3) == '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
    TEST(isEqual)
 
    call mktemp(io)

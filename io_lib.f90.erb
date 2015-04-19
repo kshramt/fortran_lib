@@ -98,7 +98,14 @@ contains
          Integer, intent(in):: n
          Character(len=:), allocatable:: ret
 
-         ret = '(' + str(n) + '(1x, g0))'
+         select case(n)
+         case(:0)
+            ret = '()'
+         case(1)
+            ret = '(g0)'
+         case(2:)
+            ret = '(g0, *("	", g0))'
+         end select
       end function get_column_format_string<%= t %>
    <%- } -%>
 
@@ -110,7 +117,14 @@ contains
          Integer, intent(in):: n
          Character(len=:), allocatable:: ret
 
-         ret = '(' + str(n) + '(1x, "(", g0, ", ", g0, ")"))'
+         select case(n)
+         case(:0)
+            ret = '()'
+         case(1)
+            ret = '("(", g0, ", ", g0, ")")'
+         case(2:)
+            ret = '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
+         end select
       end function get_column_format_string<%= t %>
    <%- } -%>
 
