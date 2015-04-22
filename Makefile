@@ -55,12 +55,11 @@ o_mod = $(call sha256,$(1:%=%.o)) $(call sha256,$(addsuffix .mod,$(filter %_lib,
 
 
 # Commands
-.PHONY: deps-download deps-arrange all all-impl check check-impl clean
+.PHONY: deps-download deps-download-impl deps-arrange all all-impl check check-impl clean
 
 
 define INTERFACE_TARGET_TEMPLATE =
-$(1):
-	$$(MAKE) deps-download
+$(1): deps-download
 	$$(MAKE) $(1)-impl
 endef
 $(foreach f,all check,$(eval $(call INTERFACE_TARGET_TEMPLATE,$(f))))
@@ -78,7 +77,9 @@ clean:
 
 
 deps-arrange:
-deps-download: $(DEPS:%=dep/%.updated)
+deps-download:
+	$(MAKE) deps-download-impl
+deps-download-impl: $(DEPS:%=dep/%.updated)
 
 
 # Tasks
