@@ -1,5 +1,5 @@
 # Constants
-DEPS := fort
+DEPS := fort bin
 
 MY_ERB ?= erb
 ERB := ${MY_ERB}
@@ -82,6 +82,8 @@ deps-download: $(DEPS:%=dep/%.updated)
 
 
 # Tasks
+-include $(LIB_NAMES:%=src/%.f90.make) $(EXE_NAMES:%=src/%.f90.make) $(TEST_NAMES:%=src/%.f90.make) $(ERRORTEST_NAMES:%=src/%.f90.make)
+
 ## Executables
 bin/sac_to_json.exe: $(call o_mod,character_lib sac_lib sac_to_json)
 bin/text_dump_array.exe: $(call o_mod,constant_lib character_lib config_lib io_lib text_dump_array)
@@ -117,6 +119,22 @@ test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,charac
 
 
 # Rules
+src/%_lib.f90.make: src/%_lib.f90.sha256 dep/bin/fort_deps.sh.sha256
+	{
+	   echo -n '$*_lib.o $*_lib.mod: $$(call o_mod,'
+	   dep/bin/fort_deps.sh < $(call unsha256,$<) | tr '\n' ' ' | sed -e 's/ $$//'
+	   echo ')'
+	} >| $@
+
+
+src/%.f90.make: src/%.f90.sha256 dep/bin/fort_deps.sh.sha256
+	{
+	   echo -n '$*.o: $$(call o_mod,'
+	   dep/bin/fort_deps.sh < $(call unsha256,$<) | tr '\n' ' ' | sed -e 's/ $$//'
+	   echo ')'
+	} >| $@
+
+
 define ERRORTEST_F90_TEMPLATE =
 $(1)_$(2)_errortest.f90: $$(call sha256,$(1)_errortest.f90 $(1)_errortest/$(2).f90)
 	mkdir -p $$(@D)
