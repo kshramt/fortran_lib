@@ -5,13 +5,17 @@
   INTEGERS = ::Fort::Type::Integer.multi_provide
   LOGICALS = ::Fort::Type::Logical.multi_provide
   COMPLEXES = ::Fort::Type::Complex.multi_provide
-  CHARACTERS = ::Fort::Type::Character.multi_provide(len: (0..LOG_2_CHAR_LEN_MAX).map{|n| 2**n})
+  CHARACTERS = ::Fort::Type::Character.multi_provide(len: :':', len: [0]) # todo: `len: [0]` is only to avoid ICE
   TYPES\
   = REALS\
   + INTEGERS\
   + LOGICALS\
   + COMPLEXES\
   + CHARACTERS
+
+def alloc?(t)
+   t.dim > 0 || t.type == :Character
+end
 -%>
 
 # include "fortran_lib.h"
@@ -47,11 +51,11 @@ module stack_lib
 
    <%- TYPES.each{|t| -%>
       type, extends(Stack), public:: <%= t %>Stack
-         type(<%= t %>StackNode), pointer:: entry => null()
+         type(<%= t %>StackNode), pointer:: head => null()
       end type <%= t %>Stack
 
       type, extends(StackNode):: <%= t %>StackNode
-         <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>:: value
+         <%= t.declare %><%= alloc?(t) ? ', allocatable' : '' %>:: val
          type(<%= t %>StackNode), pointer:: prev => null()
       end type <%= t %>StackNode
    <%- } -%>
@@ -59,20 +63,24 @@ module stack_lib
 contains
 
    <%- TYPES.each{|t| -%>
-      subroutine push<%= t %>Stack(self, value)
+      subroutine push<%= t %>Stack(self, val)
          type(<%= t %>Stack), intent(inout):: self
-         <%= t.declare %>, intent(in):: value
+         <%- if t.type == :Character -%>
+            Character(len=*), intent(in):: val
+         <%- else -%>
+            <%= t.declare %>, intent(in):: val
+         <%- end -%>
          type(<%= t %>StackNode), pointer:: newNode
 
          allocate(newNode)
-         newNode%value = value
-         newNode%prev => self%entry
-         self%entry => newNode
+         newNode%val = val
+         newNode%prev => self%head
+         self%head => newNode
       end subroutine push<%= t %>Stack
 
-      function pop<%= t %>Stack(self, value) result(isSuccess)
+      function pop<%= t %>Stack(self, val) result(isSuccess)
          type(<%= t %>Stack), intent(inout):: self
-         <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>, intent(inout):: value
+         <%= t.declare %><%= alloc?(t) ? ', allocatable' : '' %>, intent(inout):: val
          Logical:: isSuccess
          type(<%= t %>StackNode), pointer:: removedNode => null()
 
@@ -81,9 +89,9 @@ contains
             return
          end if
 
-         value = self%entry%value
-         removedNode => self%entry
-         self%entry => self%entry%prev
+         val = self%head%val
+         removedNode => self%head
+         self%head => self%head%prev
          deallocate(removedNode)
          isSuccess = .true.
       end function pop<%= t %>Stack
@@ -92,7 +100,7 @@ contains
          type(<%= t %>Stack), intent(in):: self
          Logical:: answer
 
-         answer = .not.associated(self%entry)
+         answer = .not.associated(self%head)
       end function is_empty<%= t %>Stack
    <%- } -%>
 end module stack_lib
