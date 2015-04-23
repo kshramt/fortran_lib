@@ -51,7 +51,8 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 # Functions
 sha256 = $(1:%=%.sha256)
 unsha256 = $(1:%.sha256=%)
-o_mod = $(call sha256,$(1:%=%.o)) $(call sha256,$(addsuffix .mod,$(filter %_lib,$(1))))
+mod = $(call sha256,$(addsuffix .mod,$(filter %_lib,$(1))))
+o_mod = $(call sha256,$(1:%=%.o)) $(call mod,$(1))
 
 
 # Commands
@@ -120,20 +121,8 @@ test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,charac
 
 
 # Rules
-src/%_lib.f90.make: src/%_lib.f90.sha256 dep/bin/fort_deps.sh.sha256
-	{
-	   echo -n '$*_lib.o $*_lib.mod: $$(call o_mod,'
-	   dep/bin/fort_deps.sh < $(call unsha256,$<) | tr '\n' ' ' | sed -e 's/ $$//'
-	   echo ')'
-	} >| $@
-
-
-src/%.f90.make: src/%.f90.sha256 dep/bin/fort_deps.sh.sha256
-	{
-	   echo -n '$*.o: $$(call o_mod,'
-	   dep/bin/fort_deps.sh < $(call unsha256,$<) | tr '\n' ' ' | sed -e 's/ $$//'
-	   echo ')'
-	} >| $@
+src/%.f90.make: script/make_include_make.sh.sha256 src/%.f90.sha256 dep/bin/fort_deps.sh.sha256
+	$(call unsha256,$^) >| $@
 
 
 define ERRORTEST_F90_TEMPLATE =
