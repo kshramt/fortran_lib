@@ -1,5 +1,5 @@
 # Constants
-DEPS := fort bin
+DEPS := fort
 
 MY_ERB ?= erb
 ERB := ${MY_ERB}
@@ -43,16 +43,13 @@ EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_TEMPLATE_NAMES)
 .SUFFIXES:
 .DELETE_ON_ERROR:
 .ONESHELL:
-.PRECIOUS: %.sha256 %.sha256.new
 export SHELL := /bin/bash
 export SHELLOPTS := pipefail:errexit:nounset:noclobber
 
 
 # Functions
-sha256 = $(1:%=%.sha256)
-unsha256 = $(1:%.sha256=%)
-mod = $(call sha256,$(addsuffix .mod,$(filter %_lib,$(1))))
-o_mod = $(call sha256,$(1:%=%.o)) $(call mod,$(1))
+mod = $(addsuffix .mod,$(filter %_lib,$(1)))
+o_mod = $(1:%=%.o) $(call mod,$(1))
 
 
 # Commands
@@ -121,70 +118,74 @@ test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $(call o_mod,charac
 
 
 # Rules
-src/%.f90.make: script/make_include_make.sh.sha256 src/%.f90.sha256 dep/bin/fort_deps.sh.sha256
-	$(call unsha256,$^) >| $@
+src/%.f90.make: script/make_include_make.sh src/%.f90 script/fort_deps.sh
+	$< src/$*.f90 >| $@
 
 
 define ERRORTEST_F90_TEMPLATE =
-$(1)_$(2)_errortest.f90: $$(call sha256,$(1)_errortest.f90 $(1)_errortest/$(2).f90)
+$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
 	mkdir -p $$(@D)
 	{
-	   cat $$(call unsha256,$$^)
+	   cat $$^
 	   echo '   stop'
 	   echo 'end program main'
 	} >| $$@
 endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
-test/%_errortest.exe.tested: test/%_errortest.exe.sha256
+test/%_errortest.exe.tested: test/%_errortest.exe
 	cd $(@D)
-	! $(call unsha256,./$(<F)) && touch $(call unsha256,$(@F))
-test/%_test.exe.tested: test/%_test.exe.sha256
+	! ./$(<F) && touch $(@F)
+test/%_test.exe.tested: test/%_test.exe
 	cd $(@D)
-	$(call unsha256,./$(<F))
-	touch $(call unsha256,$(@F))
+	./$(<F)
+	touch $(@F)
 test/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$(call unsha256,$^))
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$<)
 
 
 bin/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$(call unsha256,$^))
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$<)
 
 
-$(LIB_NAMES:%=%.mod): %_lib.mod: src/%_lib.f90.sha256
-	$(FC) $(FFLAGS) -c -o $*_lib.o $(call unsha256,$<)
+$(LIB_NAMES:%=%.mod): %_lib.mod: src/%_lib.f90
+	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
-$(LIB_NAMES:%=%.o): %_lib.o: src/%_lib.f90.sha256
-	$(FC) $(FFLAGS) -c -o $*_lib.o $(call unsha256,$<)
+$(LIB_NAMES:%=%.o): %_lib.o: src/%_lib.f90
+	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
-$(EXE_NAMES:%=%.o) $(TEST_NAMES:%=%.o) $(ERRORTEST_NAMES:%=%.o): %.o: src/%.f90.sha256
-	$(FC) $(FFLAGS) -c -o $*.o $(call unsha256,$<)
+$(EXE_NAMES:%=%.o) $(TEST_NAMES:%=%.o) $(ERRORTEST_NAMES:%=%.o): %.o: src/%.f90
+	$(FC) $(FFLAGS) -c -o $*.o $<
 
 
-$(F90_NAMES:%=src/%.f90) $(ERRORTEST_NAMES:%=src/%.f90): src/%.f90: %.f90.sha256 fortran_lib.h.sha256
+$(F90_NAMES:%=src/%.f90) $(ERRORTEST_NAMES:%=src/%.f90): src/%.f90: %.f90 fortran_lib.h
+	script/need_make.sh $@._new_ $^ || exit 0
 	mkdir -p $(@D)
-	$(CPP) $(CPP_FLAGS) $(call unsha256,$<) $@
-$(ERB_F90_NAMES:%=%.f90): %.f90: %.f90.erb.sha256
+	$(CPP) $(CPP_FLAGS) $< $@._new_
+	script/update_if_changed.sh $@._new_ $@
+$(ERB_F90_NAMES:%=%.f90): %.f90: %.f90.erb
+	script/need_make.sh $@._new_ $^ || exit 0
 	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
-	$(ERB) $(ERB_FLAGS) $(call unsha256,$<) >| $@
+	$(ERB) $(ERB_FLAGS) $< >| $@._new_
+	script/update_if_changed.sh $@._new_ $@
 
 
-dep/%.updated: config/dep/%.ref.sha256 dep/%.synced
+dep/%.updated: config/dep/%.ref dep/%.synced
 	cd $(@D)/$*
 	git fetch origin
-	git checkout "$$(cat ../../$(call unsha256,$<))"
+	git checkout "$$(cat ../../$<)"
 	cd -
 	if [[ -r dep/$*/Makefile ]]; then
 	   $(MAKE) -C dep/$*
 	fi
 	touch $@
 
-dep/%.synced: config/dep/%.uri.sha256 | dep/%
+dep/%.synced: config/dep/%.uri | dep/%
 	cd $(@D)/$*
 	git remote rm origin
-	git remote add origin "$$(cat ../../$(call unsha256,$<))"
+	git remote add origin "$$(cat ../../$<)"
 	cd -
 	touch $@
 
@@ -192,11 +193,3 @@ $(DEPS:%=dep/%): dep/%:
 	git init $@
 	cd $@
 	git remote add origin "$$(cat ../../config/dep/$*.uri)"
-
-
-%.sha256.new: %
-	sha256sum $< >| $@
-
-
-%.sha256: %.sha256.new
-	cmp -s $< $@ || cp -f $< $@
