@@ -142,12 +142,12 @@ test/%_test.exe.tested: test/%_test.exe
 	touch $(@F)
 test/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$<)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
 bin/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$<)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
 $(LIB_NAMES:%=%.mod): %_lib.mod: src/%_lib.f90
