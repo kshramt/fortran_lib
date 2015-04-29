@@ -108,6 +108,14 @@ test/geodetic_lib_test.exe: $(call o_mod,constant_lib comparable_lib geodetic_li
 test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib math_lib_test)
 test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
 test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib optimize_lib optimize_lib_test)
+test/etas_lib_test.exe: $(call o_mod,etas_lib etas_lib_test)
+
+test/etas_lib_test.exe.tested: test/etas_lib_test.exe test/etas_lib_test.exe.in
+	{
+	   wc -l test/etas_lib_test.exe.in
+	   cat test/etas_lib_test.exe.in
+	} | $<
+	touch $@
 
 test/io_lib_illegal_form_argument_errortest.exe: $(call o_mod,config_lib character_lib io_lib io_lib_illegal_form_argument_errortest)
 test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $(call o_mod,character_lib sac_lib sac_lib_get_iftype_for_undefined_value_errortest)
