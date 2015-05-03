@@ -8,6 +8,12 @@ module etas_lib
    private
    public:: log_likelihood_etas
 
+   interface omori
+      module procedure omori_t_c_p
+      module procedure omori_t_0_p
+   end interface omori
+
+
    interface lambda
       module procedure lambda_i
       module procedure lambda_i_t
@@ -52,7 +58,7 @@ contains
       Integer(kind=int64), intent(in):: i
       Real(kind=kind(ret)), intent(in):: t, c, p, mu, ts(:), ks(:), normalize_interval
 
-      ret = mu/normalize_interval + dot_product(ks(1:i), omori(t - ts(1:i), c, p))
+      ret = mu/normalize_interval + dot_product(ks(1:i), omori((t + c) - ts(1:i), p))
    end function lambda_i_t
 
 
@@ -80,12 +86,20 @@ contains
    end function kernel_coeff
 
 
-   elemental function omori(t, c, p) result(ret)
+   elemental function omori_t_0_p(t, p) result(ret)
+      Real(kind=real64):: ret
+      Real(kind=kind(ret)), intent(in):: t, p
+
+      ret = 1/t**p
+   end function omori_t_0_p
+
+
+   elemental function omori_t_c_p(t, c, p) result(ret)
       Real(kind=real64):: ret
       Real(kind=kind(ret)), intent(in):: t, c, p
 
       ret = 1/(t + c)**p
-   end function omori
+   end function omori_t_c_p
 
 
    elemental function omori_integrate(t, c, p) result(ret)
