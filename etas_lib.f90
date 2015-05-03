@@ -25,23 +25,25 @@ contains
       Real(kind=real64):: ret
       Real(kind=kind(ret)), intent(in):: t_end, normalize_interval, c, p, alpha, k1, mu, ts(:), ms(:)
       Real(kind=kind(ret)), allocatable:: ks(:)
+      Real(kind=kind(ret)):: mu_normalized
       Integer(kind=int64):: n, i
 
       n = size(ts, kind=kind(n))
       ASSERT(size(ms, kind=kind(n)) == n)
       ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
-      ret = -lambda_integrate(t_end, normalize_interval, c, p, mu, ts, ks)
+      mu_normalized = mu/normalize_interval
+      ret = -lambda_integrate(t_end, c, p, mu_normalized, ts, ks)
       !$omp parallel do reduction(+:ret) schedule(dynamic)
       do i = 1, n
-         ret = ret + log(lambda(i, c, p, mu, ts, ks, normalize_interval))
+         ret = ret + log(lambda(i, c, p, mu_normalized, ts, ks))
       end do
    end function log_likelihood_etas
 
 
-   pure function lambda_i(i, c, p, mu, ts, ks, normalize_interval) result(ret)
+   pure function lambda_i(i, c, p, mu_normalized, ts, ks) result(ret)
       Real(kind=real64):: ret
       Integer(kind=int64), intent(in):: i
-      Real(kind=kind(ret)), intent(in):: c, p, mu, ts(:), ks(:), normalize_interval
+      Real(kind=kind(ret)), intent(in):: c, p, mu_normalized, ts(:), ks(:)
       Real(kind=kind(ts)):: ti
       Integer(kind=kind(i)):: j
 
@@ -50,24 +52,24 @@ contains
          if(j <= 0) exit
          if(ts(j) < ti) exit
       end do
-      ret = lambda(j, ti, c, p, mu, ts, ks, normalize_interval)
+      ret = lambda(j, ti, c, p, mu_normalized, ts, ks)
    end function lambda_i
 
 
-   pure function lambda_i_t(i, t, c, p, mu, ts, ks, normalize_interval) result(ret)
+   pure function lambda_i_t(i, t, c, p, mu_normalized, ts, ks) result(ret)
       Real(kind=real64):: ret
       Integer(kind=int64), intent(in):: i
-      Real(kind=kind(ret)), intent(in):: t, c, p, mu, ts(:), ks(:), normalize_interval
+      Real(kind=kind(ret)), intent(in):: t, c, p, mu_normalized, ts(:), ks(:)
 
-      ret = mu/normalize_interval + dot_product(ks(1:i), omori((t + c) - ts(1:i), p))
+      ret = mu_normalized + dot_product(ks(1:i), omori((t + c) - ts(1:i), p))
    end function lambda_i_t
 
 
-   pure function lambda_integrate(t_end, normalize_interval, c, p, mu, ts, ks) result(ret)
+   pure function lambda_integrate(t_end, c, p, mu_normalized, ts, ks) result(ret)
       Real(kind=real64):: ret
-      Real(kind=kind(ret)), intent(in):: t_end, normalize_interval, c, p, mu, ts(:), ks(:)
+      Real(kind=kind(ret)), intent(in):: t_end, c, p, mu_normalized, ts(:), ks(:)
 
-      ret = t_end*mu/normalize_interval + sum(kernel_integrate(t_end - ts, ks, c, p))
+      ret = t_end*mu_normalized + sum(kernel_integrate(t_end - ts, ks, c, p))
    end function lambda_integrate
 
 
