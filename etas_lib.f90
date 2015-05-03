@@ -27,8 +27,8 @@ contains
       Real(kind=kind(ret)), allocatable:: ks(:)
       Integer(kind=int64):: n, i
 
-      n = size(ts)
-      ASSERT(size(ms) == n)
+      n = size(ts, kind=kind(n))
+      ASSERT(size(ms, kind=kind(n)) == n)
       ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
       ret = -lambda_integrate(t_end, normalize_interval, c, p, mu, ts, ks)
       !$omp parallel do reduction(+:ret) schedule(dynamic)
