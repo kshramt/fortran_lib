@@ -31,7 +31,8 @@ contains
       ASSERT(size(ms) == n)
       ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
       ret = -lambda_integrate(t_end, normalize_interval, c, p, mu, ts, ks)
-      do concurrent(i = 1:n)
+      !$omp parallel do reduction(+:ret) schedule(dynamic)
+      do i = 1, n
          ret = ret + log(lambda(i, c, p, mu, ts, ks, normalize_interval))
       end do
    end function log_likelihood_etas
