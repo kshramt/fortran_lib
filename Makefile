@@ -158,23 +158,23 @@ bin/%.exe:
 	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
-$(LIB_NAMES:%=%.mod): %_lib.mod: src/%_lib.f90
+%_lib.mod: src/%_lib.f90
 	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
-$(LIB_NAMES:%=%.o): %_lib.o: src/%_lib.f90
+%_lib.o: src/%_lib.f90
 	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
-$(EXE_NAMES:%=%.o) $(TEST_NAMES:%=%.o) $(ERRORTEST_NAMES:%=%.o): %.o: src/%.f90
+%.o: src/%.f90
 	$(FC) $(FFLAGS) -c -o $*.o $<
 
 
-$(F90_NAMES:%=src/%.f90) $(ERRORTEST_NAMES:%=src/%.f90): src/%.f90: %.f90 fortran_lib.h
-	script/need_make.sh $@._new_ $^ || exit 0
+src/%.f90: %.f90 fortran_lib.h
+	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< $@._new_
 	script/update_if_changed.sh $@._new_ $@
-$(ERB_F90_NAMES:%=%.f90): %.f90: %.f90.erb
-	script/need_make.sh $@._new_ $^ || exit 0
+%.f90: %.f90.erb
+	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
 	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $< >| $@._new_
 	script/update_if_changed.sh $@._new_ $@

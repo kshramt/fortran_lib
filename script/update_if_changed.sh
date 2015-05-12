@@ -25,5 +25,5 @@ fi
 
 if ! cmp -s "$1" "$2"; then
    mkdir -p "$(dirname "$2")"
-   cat "$1" >| "$2"
+   cp -f "$1" "$2"
 fi
