@@ -1,6 +1,7 @@
 <%-
    require 'fort'
    reals = ::Fort::Type::Real.multi_provide(dim: 0)
+   orders = [0, 1]
 -%>
 #include "fortran_lib.h"
 module optimize_lib
@@ -18,32 +19,43 @@ module optimize_lib
    public:: update, init
 
    <%- reals.each{|t| -%>
-      type, public:: Linesearchstate0<%= t %>
+      type, public:: LineSearchState0<%= t %>
          Integer(kind=int64):: iter = -1
          <%= t.declare %>:: x
          <%= t.declare %>:: xl
          <%= t.declare %>:: xr
          <%= t.declare %>:: fl
          <%= t.declare %>:: fr
-      end type Linesearchstate0<%= t %>
+      end type LineSearchState0<%= t %>
+
+      type, public:: LineSearchState1<%= t %>
+         Logical(kind=int8):: is_convex
+         Integer(kind=int64):: iter = -1
+         <%= t.declare %>:: x
+         <%= t.declare %>:: x_best
+         <%= t.declare %>:: f_best
+         <%= t.declare %>:: g_best
+      end type LineSearchState1<%= t %>
    <%- } -%>
 
    <%- reals.each{|t| -%>
-      interface update
-         module procedure updateLinesearchstate0<%= t %>
-      end interface update
+      <%- orders.each{|order| -%>
+         interface update
+            module procedure updateLineSearchState<%= order %><%= t %>
+         end interface update
 
-      interface update_
-         module procedure update_Linesearchstate0<%= t %>
-      end interface update_
+         interface update_
+            module procedure update_LineSearchState<%= order %><%= t %>
+         end interface update_
 
-      interface init
-         module procedure initLinesearchstate0<%= t %>
-      end interface init
+         interface init
+            module procedure initLineSearchState<%= order %><%= t %>
+         end interface init
 
-      interface line_search_interpolate
-         module procedure line_search_interpolate<%= t %>
-      end interface line_search_interpolate
+         interface line_search_interpolate
+            module procedure line_search_interpolate<%= order %><%= t %>
+         end interface line_search_interpolate
+      <%- } -%>
 
       interface nnls
          module procedure nnls<%= t %>
@@ -53,20 +65,22 @@ module optimize_lib
 contains
 
    <%- reals.each{|t| -%>
-      subroutine updateLinesearchstate0<%= t %>(s, f)
+      ! derivative free
+
+      subroutine updateLineSearchState0<%= t %>(s, f)
          ! call init(s)
          ! do
          !    f = f(x0 + s%x*dx)
          !    call update(s, f)
          ! end do
-         type(Linesearchstate0<%= t %>), intent(inout):: s
+         type(LineSearchState0<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: f
          <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3
          <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
          Logical(kind=int8):: is_convex
 
          if(s%iter < 0)then
-            RAISE('`Linesearchstate0<%= t %>` should be `init`ialized before `update`d')
+            RAISE('`LineSearchState0<%= t %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 1)then
@@ -139,31 +153,31 @@ contains
                s%x = x3 + enlarge*(x3 - x1)
             end if
          end if
-      end subroutine updateLinesearchstate0<%= t %>
+      end subroutine updateLineSearchState0<%= t %>
 
 
-      subroutine update_Linesearchstate0<%= t %>(s, xl, xr, fl, fr)
-         type(Linesearchstate0<%= t %>), intent(inout):: s
+      subroutine update_LineSearchState0<%= t %>(s, xl, xr, fl, fr)
+         type(LineSearchState0<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: xl, xr, fl, fr
 
          s%xl = xl
          s%xr = xr
          s%fl = fl
          s%fr = fr
-      end subroutine update_Linesearchstate0<%= t %>
+      end subroutine update_LineSearchState0<%= t %>
 
 
-      subroutine initLinesearchstate0<%= t %>(s)
-         type(Linesearchstate0<%= t %>), intent(inout):: s
+      subroutine initLineSearchState0<%= t %>(s)
+         type(LineSearchState0<%= t %>), intent(inout):: s
 
          s%iter = 0
          s%xl = 0
          s%xr = 1
          s%x = s%xl
-      end subroutine initLinesearchstate0<%= t %>
+      end subroutine initLineSearchState0<%= t %>
 
 
-      subroutine line_search_interpolate<%= t %>(x1, x2, x3, f1, f2, f3, x_opt, is_convex)
+      subroutine line_search_interpolate0<%= t %>(x1, x2, x3, f1, f2, f3, x_opt, is_convex)
          <%= t.declare %>, intent(in):: x1, x2, x3, f1, f2, f3
          <%= t.declare %>, intent(out):: x_opt
          Logical(kind=int8), intent(out):: is_convex
@@ -191,7 +205,122 @@ contains
          else
             x_opt = x3
          end if
-      end subroutine line_search_interpolate<%= t %>
+      end subroutine line_search_interpolate0<%= t %>
+
+
+      ! use gradient information
+
+      subroutine updateLineSearchState1<%= t %>(s, f, g, scale)
+         ! call init(s)
+         ! do
+         !    f = f(x0 + s%x*dx)
+         !    g = grad(x0 + s%x*dx)
+         !    call update(s, f, g, dx)
+         ! end do
+         type(LineSearchState1<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: f, g, scale
+         <%= t.declare %>:: x1, f1, g1, x2, f2, g2, step_max, xl, xr, x_new
+         <%= t.declare %>, parameter:: enlarge = 2
+         Logical(kind=int8):: is_convex
+
+         if(s%iter < 0)then
+            RAISE('`LineSearchState1<%= t %>` should be `init`ialized before `update`d')
+         end if
+         s%iter = s%iter + 1
+         if(s%iter == 1)then
+            s%x_best = s%x
+            s%f_best = f
+            s%g_best = g
+            if(g > 0)then
+               s%x = s%x_best - 1
+            else
+               s%x = s%x_best + 1
+            end if
+            return
+         end if
+
+         if(f < s%f_best)then
+            x1 = s%x
+            f1 = f
+            g1 = g
+            x2 = s%x_best
+            f2 = s%f_best
+            g2 = s%g_best
+         else
+            x1 = s%x_best
+            f1 = s%f_best
+            g1 = s%g_best
+            x2 = s%x
+            f2 = f
+            g2 = g
+         end if
+         xl = min(x1, x2)
+         xr = max(x1, x2)
+         step_max = enlarge*(xr - xl)
+
+         call line_search_interpolate(x1, f1, abs(scale)*g1, x2, f2, x_new, is_convex)
+         call update_(s, x1, f1, g1, is_convex)
+         if(is_convex)then
+            if(x_new < xl)then
+               s%x = max(x_new, xl - step_max)
+            else if(xr < x_new)then
+               s%x = min(x_new, xr + step_max)
+            else
+               s%x = x_new
+            end if
+         else
+            if(g1 < 0)then
+               s%x = x1 + step_max
+            else if(g1 > 0)then
+               s%x = x1 - step_max
+            else
+               s%x = x1
+            end if
+         end if
+      end subroutine updateLineSearchState1<%= t %>
+
+
+      subroutine update_LineSearchState1<%= t %>(s, x_best, f_best, g_best, is_convex)
+         type(LineSearchState1<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: x_best, f_best, g_best
+         Logical(kind=int8), intent(in):: is_convex
+
+         s%x_best = x_best
+         s%f_best = f_best
+         s%g_best = g_best
+         s%is_convex = is_convex
+      end subroutine update_LineSearchState1<%= t %>
+
+
+      subroutine initLineSearchState1<%= t %>(s)
+         type(LineSearchState1<%= t %>), intent(inout):: s
+
+         s%is_convex = .false.
+         s%iter = 0
+         s%x = 0
+         s%x_best = s%x
+         s%f_best = get_infinity()
+         s%g_best = get_infinity()
+      end subroutine initLineSearchState1<%= t %>
+
+
+      subroutine line_search_interpolate1<%= t %>(x1, f1, g1, x2, f2, x_best, is_convex)
+         <%= t.declare %>, intent(in):: x1, f1, g1, x2, f2
+         <%= t.declare %>, intent(out):: x_best
+         Logical(kind=int8), intent(out):: is_convex
+         <%= t.declare %>:: x12, a
+
+         x12 = x2 - x1
+         a = ((f2 - f1) - g1*x12)/x12**2
+         is_convex = a > 0
+         if(is_convex)then
+            x_best = x1 - g1/(2*a)
+         else if(f1 < f2)then
+            x_best = x1
+         else
+            x_best = x2
+         end if
+      end subroutine line_search_interpolate1<%= t %>
 
 
       pure function nnls<%= t %>(A, b) result(ret)
