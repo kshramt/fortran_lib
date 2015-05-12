@@ -5,7 +5,7 @@ program main
    use, intrinsic:: iso_fortran_env, only: REAL64, real32
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: nnls
-   use, non_intrinsic:: optimize_lib, only: init, update, LineSearchStateRealDim0KindREAL32, LineSearchStateRealDim0KindREAL64
+   use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate0RealDim0KindREAL32, Linesearchstate0RealDim0KindREAL64
 
    implicit none
 
@@ -26,8 +26,8 @@ contains
       Real(kind=real64), intent(in):: x0, dx, x_theoretical
       Real(kind=kind(x0)):: f, x, xl, xr, x_best, f_best, xtol
       Logical:: converge_x
-      type(LineSearchStateRealDim0KindREAL64):: s
-      !      type(LineSearchStateRealDim0KindREAL32):: s
+      type(Linesearchstate0RealDim0KindREAL64):: s
+      !      type(Linesearchstate0RealDim0KindREAL32):: s
 
       ret = .true.
       xtol = 1e-2*dx

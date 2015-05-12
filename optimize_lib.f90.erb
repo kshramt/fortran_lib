@@ -18,27 +18,27 @@ module optimize_lib
    public:: update, init
 
    <%- reals.each{|t| -%>
-      type, public:: LineSearchState<%= t %>
+      type, public:: Linesearchstate0<%= t %>
          Integer(kind=int64):: iter = -1
          <%= t.declare %>:: x
          <%= t.declare %>:: xl
          <%= t.declare %>:: xr
          <%= t.declare %>:: fl
          <%= t.declare %>:: fr
-      end type LineSearchState<%= t %>
+      end type Linesearchstate0<%= t %>
    <%- } -%>
 
    <%- reals.each{|t| -%>
       interface update
-         module procedure updateLineSearchState<%= t %>
+         module procedure updateLinesearchstate0<%= t %>
       end interface update
 
       interface update_
-         module procedure update_LineSearchState<%= t %>
+         module procedure update_Linesearchstate0<%= t %>
       end interface update_
 
       interface init
-         module procedure initLineSearchState<%= t %>
+         module procedure initLinesearchstate0<%= t %>
       end interface init
 
       interface line_search_quadratic
@@ -53,20 +53,20 @@ module optimize_lib
 contains
 
    <%- reals.each{|t| -%>
-      subroutine updateLineSearchState<%= t %>(s, f)
+      subroutine updateLinesearchstate0<%= t %>(s, f)
          ! call init(s)
          ! do
          !    f = f(x0 + s%x*dx)
          !    call update(s, f)
          ! end do
-         type(LineSearchState<%= t %>), intent(inout):: s
+         type(Linesearchstate0<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: f
          <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3
          <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
          Logical(kind=int8):: is_quadratic
 
          if(s%iter < 0)then
-            RAISE('`LineSearchstate<%= t %>` should be `init`ialized before `update`d')
+            RAISE('`Linesearchstate0<%= t %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 1)then
@@ -153,28 +153,28 @@ contains
                s%x = x3 + enlarge*(x3 - x1)
             end if
          end if
-      end subroutine updateLineSearchState<%= t %>
+      end subroutine updateLinesearchstate0<%= t %>
 
 
-      subroutine update_LineSearchState<%= t %>(s, xl, xr, fl, fr)
-         type(LineSearchState<%= t %>), intent(inout):: s
+      subroutine update_Linesearchstate0<%= t %>(s, xl, xr, fl, fr)
+         type(Linesearchstate0<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: xl, xr, fl, fr
 
          s%xl = xl
          s%xr = xr
          s%fl = fl
          s%fr = fr
-      end subroutine update_LineSearchState<%= t %>
+      end subroutine update_Linesearchstate0<%= t %>
 
 
-      subroutine initLineSearchState<%= t %>(s)
-         type(LineSearchState<%= t %>), intent(inout):: s
+      subroutine initLinesearchstate0<%= t %>(s)
+         type(Linesearchstate0<%= t %>), intent(inout):: s
 
          s%iter = 0
          s%xl = 0
          s%xr = 1
          s%x = s%xl
-      end subroutine initLineSearchState<%= t %>
+      end subroutine initLinesearchstate0<%= t %>
 
 
       subroutine line_search_quadratic<%= t %>(x1, x2, x3, f1, f2, f3, x_opt, is_quadratic)
