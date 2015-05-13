@@ -13,9 +13,24 @@ program main
    TEST(all(almost_equal(nnls(real(reshape([1, 1, 0, 1], shape=[2, 2]), kind=REAL64), real([1, 0], kind=REAL64)), [1.0/2, 0.0])))
 
   TEST(test_line_search0(-3d0, 2d0, 1d1))
+  TEST(test_line_search0(-3d0, -2d0, 1d1))
+  TEST(test_line_search0(23d0, 2d0, 1d1))
+  TEST(test_line_search0(23d0, -2d0, 1d1))
+
   TEST(test_line_search0(5d1, 15d-2, 1d1))
+  TEST(test_line_search0(5d1, -15d-2, 1d1))
+  TEST(test_line_search0(-3d1, 15d-2, 1d1))
+  TEST(test_line_search0(-3d1, -15d-2, 1d1))
+
   TEST(test_line_search1(-3d0, 2d0, 1d1))
+  TEST(test_line_search1(-3d0, -2d0, 1d1))
+  TEST(test_line_search1(23d0, 2d0, 1d1))
+  TEST(test_line_search1(23d0, -2d0, 1d1))
+
   TEST(test_line_search1(5d1, 15d-2, 1d1))
+  TEST(test_line_search1(5d1, -15d-2, 1d1))
+  TEST(test_line_search1(-3d1, 15d-2, 1d1))
+  TEST(test_line_search1(-3d1, -15d-2, 1d1))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
@@ -31,52 +46,50 @@ contains
       type(LineSearchState0RealDim0KindREAL64):: s
 
       ret = .true.
-      xtol = 1e-2*dx
+      xtol = 1e-2
       f_best = huge(f_best)
       x_best = huge(x_best)
-      call init(s)
+      call init(s, dx)
       do
-         x = x0 + s%x*dx
+         x = x0 + s%x
          f = f1(x, x_theoretical)
          if(s%iter > 2)then
-            xl = x0 + s%xl*dx
-            xr = x0 + s%xr*dx
+            xl = x0 + s%xl
+            xr = x0 + s%xr
             ! write(output_unit, *) xl, xr, x, f1(xl, x_theoretical), f1(xr, x_theoretical), f
-         end if
+         END if
          call update(s, f)
-         converge_x = almost_equal(x, x_best, absolute=xtol)
+         converge_x = almost_equal(x, x_best, absolute=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
          end if
          if(converge_x) exit
       end do
-      PRINT_VARIABLE(s%iter)
-      PRINT_VARIABLE(x_best)
-      ret = ret .and. almost_equal(x_theoretical, x_best, 10*xtol)
+      write(output_unit, *) s%iter, x_best
+      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
 
       f_best = huge(f_best)
       x_best = huge(x_best)
-      call init(s)
+      call init(s, dx)
       do
-         x = x0 + s%x*dx
+         x = x0 + s%x
          f = f2(x, x_theoretical)
          if(s%iter > 2)then
-            xl = x0 + s%xl*dx
-            xr = x0 + s%xr*dx
+            xl = x0 + s%xl
+            xr = x0 + s%xr
             ! write(output_unit, *) xl, xr, x, f2(xl, x_theoretical), f2(xr, x_theoretical), f
          end if
          call update(s, f)
-         converge_x = almost_equal(x, x_best, absolute=xtol)
+         converge_x = almost_equal(x, x_best, absolute=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
          end if
          if(converge_x) exit
       end do
-      PRINT_VARIABLE(s%iter)
-      PRINT_VARIABLE(x_best)
-      ret = ret .and. almost_equal(x_theoretical, x_best, 10*xtol)
+      write(output_unit, *) s%iter, x_best
+      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
    end function test_line_search0
 
    function test_line_search1(x0, dx, x_theoretical) result(ret)
@@ -87,19 +100,17 @@ contains
       type(LineSearchState1RealDim0KindREAL64):: s
 
       ret = .true.
-      xtol = 1e-2*dx
+      xtol = 1e-2
       f_best = huge(f_best)
       x_best = huge(x_best)
-      call init(s)
+      call init(s, dx)
       do
-         x = x0 + s%x*dx
+         x = x0 + s%x
          f = f1(x, x_theoretical)
          g = g1(x, x_theoretical)
-         ! if(s%iter > 1)then
-         !    write(output_unit, *) x_best, f_best, g_best, x, f, g, s%is_convex
-         ! end if
-         call update(s, f, g, dx)
-         converge = abs(g) < 1e-6 .or. almost_equal(x, x_best, absolute=xtol)
+         ! write(output_unit, *) x, s%x_best, s%x, s%f_best, f, s%g_best, g, s%is_convex, s%is_within
+         call update(s, f, g)
+         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, absolute=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -108,22 +119,19 @@ contains
          if(s%iter > 50) stop
          if(converge) exit
       end do
-      PRINT_VARIABLE(s%iter)
-      PRINT_VARIABLE(x_best)
-      ret = ret .and. almost_equal(x_theoretical, x_best, 10*xtol)
+      write(output_unit, *) s%iter, x_best
+      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
 
       f_best = huge(f_best)
       x_best = huge(x_best)
-      call init(s)
+      call init(s, dx)
       do
-         x = x0 + s%x*dx
+         x = x0 + s%x
          f = f2(x, x_theoretical)
          g = g2(x, x_theoretical)
-         ! if(s%iter > 1)then
-         !    write(output_unit, *) x_best, f_best, g_best, x, f, g, s%is_convex
-         ! end if
-         call update(s, f, g, dx)
-         converge = abs(g) < 1e-6 .or. almost_equal(x, x_best, absolute=xtol)
+         ! write(output_unit, *) x, s%x_best, s%x, s%f_best, f, s%g_best, g, s%is_convex, s%is_within
+         call update(s, f, g)
+         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, absolute=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -131,9 +139,8 @@ contains
          end if
          if(converge) exit
       end do
-      PRINT_VARIABLE(s%iter)
-      PRINT_VARIABLE(x_best)
-      ret = ret .and. almost_equal(x_theoretical, x_best, 10*xtol)
+      write(output_unit, *) s%iter, x_best
+      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
    end function test_line_search1
 
    function f1(x, x_theoretical) result(y)
@@ -151,7 +158,7 @@ contains
       Real(kind=kind(x)):: x_
 
       x_ = x - x_theoretical
-      y = x_**2 - cos(x_)
+      y = x_**2 - 7*cos(x_)
    end function f2
 
    function g1(x, x_theoretical) result(y)
@@ -169,6 +176,6 @@ contains
       Real(kind=kind(x)):: x_
 
       x_ = x - x_theoretical
-      y = 2*x_ + sin(x_)
+      y = 2*x_ + 7*sin(x_)
    end function g2
 end program main

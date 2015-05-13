@@ -245,18 +245,15 @@ contains
 
       ! use gradient information
 
-      subroutine updateLineSearchState1<%= t %>(s, f, g, scale)
-         ! call init(s)
+      subroutine updateLineSearchState1<%= t %>(s, f, g)
+         ! call init(s, dx)
          ! do
-         !    f = f(x0 + s%x*dx)
-         !    g = grad(x0 + s%x*dx)
-         !    call update(s, f, g, dx)
+         !    call update(s, f(x0 + s%x), grad(x0 + s%x))
          ! end do
          type(LineSearchState1<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: f, g, scale
-         <%= t.declare %>:: x1, f1, g1, x2, f2, g2, step_max, xl, xr, x_new
+         <%= t.declare %>, intent(in):: f, g
+         <%= t.declare %>:: x1, f1, g1, x2, f2, g2, step, xl, xr, x_new, xlim
          <%= t.declare %>, parameter:: enlarge = 2
-         Logical(kind=int8):: is_convex
 
          if(s%iter < 0)then
             RAISE('`LineSearchState1<%= t %>` should be `init`ialized before `update`d')
@@ -266,10 +263,10 @@ contains
             s%x_best = s%x
             s%f_best = f
             s%g_best = g
-            if(g > 0)then
-               s%x = s%x_best - 1
+            if(g*s%dx > 0)then
+               s%x = s%x_best - s%dx
             else
-               s%x = s%x_best + 1
+               s%x = s%x_best + s%dx
             end if
             return
          end if
@@ -289,51 +286,68 @@ contains
             f2 = f
             g2 = g
          end if
+
+         if(g1 == 0)then
+            call update_(s, x1, f1, g1)
+            s%is_convex = .true.
+            s%is_within = .true.
+            s%x = x1
+            return
+         end if
+
          xl = min(x1, x2)
          xr = max(x1, x2)
-         step_max = enlarge*(xr - xl)
+         step = enlarge*(xr - xl)
 
-         call line_search_interpolate(x1, f1, abs(scale)*g1, x2, f2, x_new, is_convex)
-         call update_(s, x1, f1, g1, is_convex)
-         if(is_convex)then
+         call line_search_interpolate(x1, f1, g1, x2, f2, x_new, s%is_convex)
+         call update_(s, x1, f1, g1)
+         if(s%is_convex)then
             if(x_new < xl)then
-               s%x = max(x_new, xl - step_max)
+               xlim = xl - step
+               s%is_within = xlim <= x_new
             else if(xr < x_new)then
-               s%x = min(x_new, xr + step_max)
+               xlim = xr + step
+               s%is_within = x_new <= xlim
             else
+               s%is_within = .true.
+            end if
+            if(s%is_within)then
                s%x = x_new
+            else
+               s%x = xlim
             end if
          else
+            s%is_within = .false.
             if(g1 < 0)then
-               s%x = x1 + step_max
+               s%x = x1 + step
             else if(g1 > 0)then
-               s%x = x1 - step_max
-            else
-               s%x = x1
+               s%x = x1 - step
             end if
          end if
       end subroutine updateLineSearchState1<%= t %>
 
 
-      subroutine update_LineSearchState1<%= t %>(s, x_best, f_best, g_best, is_convex)
+      subroutine update_LineSearchState1<%= t %>(s, x_best, f_best, g_best)
          type(LineSearchState1<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: x_best, f_best, g_best
-         Logical(kind=int8), intent(in):: is_convex
 
          s%x_best = x_best
          s%f_best = f_best
          s%g_best = g_best
-         s%is_convex = is_convex
       end subroutine update_LineSearchState1<%= t %>
 
 
-      subroutine initLineSearchState1<%= t %>(s)
+      subroutine initLineSearchState1<%= t %>(s, dx)
          type(LineSearchState1<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: dx
 
+         ASSERT(abs(dx) > 0)
          s%is_convex = .false.
+         s%is_within = .false.
          s%iter = 0
+         s%dx = dx
          s%x = 0
-         s%x_best = s%x
+         s%x_best = get_infinity()
          s%f_best = get_infinity()
          s%g_best = get_infinity()
       end subroutine initLineSearchState1<%= t %>
