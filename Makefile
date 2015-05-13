@@ -53,20 +53,13 @@ o_mod = $(1:%=%.o) $(call mod,$(1))
 
 
 # Commands
-.PHONY: deps-download deps-download-impl deps-arrange all all-impl check check-impl clean
+.PHONY: deps all check clean
 
 
-define INTERFACE_TARGET_TEMPLATE =
-$(1): deps-download
-	$$(MAKE) $(1)-impl
-endef
-$(foreach f,all check,$(eval $(call INTERFACE_TARGET_TEMPLATE,$(f))))
+all: deps $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe)
 
 
-all-impl: deps-arrange $(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe)
-
-
-check-impl: deps-arrange $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
+check: deps $(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested)
 
 
 clean:
@@ -74,10 +67,7 @@ clean:
 	rm -f *.mod
 
 
-deps-arrange:
-deps-download:
-	$(MAKE) deps-download-impl
-deps-download-impl: $(DEPS:%=dep/%.updated)
+deps: $(DEPS:%=dep/%.updated)
 
 
 # Tasks
@@ -178,6 +168,12 @@ src/%.f90: %.f90 fortran_lib.h
 	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
 	$(ERB) $(ERB_FLAGS) $< >| $@._new_
 	script/update_if_changed.sh $@._new_ $@
+
+
+define DEPS_RULE_TEMPLATE =
+dep/$(1)/%: | dep/$(1).updated ;
+endef
+$(foreach f,$(DEPS),$(eval $(call DEPS_RULE_TEMPLATE,$(f))))
 
 
 dep/%.updated: config/dep/%.ref dep/%.synced
