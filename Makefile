@@ -161,9 +161,9 @@ src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< $@._new_
 	script/update_if_changed.sh $@._new_ $@
-%.f90: %.f90.erb
+%.f90: %.f90.erb dep/fort/lib/fort.rb
 	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
-	export RUBYLIB=dep/fort/lib:$(CURDIR):"$${RUBYLIB}"
+	export RUBYLIB=$(CURDIR):dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@._new_
 	script/update_if_changed.sh $@._new_ $@
 
@@ -174,7 +174,7 @@ endef
 $(foreach f,$(DEPS),$(eval $(call DEPS_RULE_TEMPLATE,$(f))))
 
 
-dep/%.updated: config/dep/%.ref dep/%.synced
+$(DEPS:%=dep/%.updated): dep/%.updated: config/dep/%.ref dep/%.synced
 	cd $(@D)/$*
 	git fetch origin
 	git checkout "$$(cat ../../$<)"
@@ -184,7 +184,7 @@ dep/%.updated: config/dep/%.ref dep/%.synced
 	fi
 	touch $@
 
-dep/%.synced: config/dep/%.uri | dep/%
+$(DEPS:%=dep/%.synced): dep/%.synced: config/dep/%.uri | dep/%
 	cd $(@D)/$*
 	git remote rm origin
 	git remote add origin "$$(cat ../../$<)"

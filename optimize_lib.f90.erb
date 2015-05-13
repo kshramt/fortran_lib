@@ -34,7 +34,9 @@ module optimize_lib
 
       type, public:: LineSearchState1<%= t %>
          Logical(kind=int8):: is_convex
+         Logical(kind=int8):: is_within
          Integer(kind=int64):: iter = -1
+         <%= t.declare %>:: dx
          <%= t.declare %>:: x
          <%= t.declare %>:: x_best
          <%= t.declare %>:: f_best

@@ -1,12 +1,33 @@
 language: Fortran
 rvm:
+  - 1.9.3
   - 2.1.0
 before_install:
-  - sudo apt-get update
-  - sudo apt-get -qq install gcc-snapshot git
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get -qq update
+  - sudo apt-get -qq install gfortran-$MY_FC_V
+  - sudo apt-get -qq build-dep make
 script:
-  - $MY_FORTRAN --version
-  - make
-  - make check
+  - export MY_ERB=erb
+  - export MY_FC=/usr/bin/gfortran-$MY_FC_V
+  - readonly ext_dir=_tmp_
+  - mkdir -p $ext_dir
+  - pushd $ext_dir
+  - wget http://ftp.gnu.org/gnu/make/$MAKE_V.tar.gz
+  - tar xf $MAKE_V.tar.gz
+  - pushd $MAKE_V
+  - ./configure
+  - make -j$(nproc)
+  - popd
+  - popd
+  - $MY_FC --version
+  - readonly make=$ext_dir/$MAKE_V/make
+  - nproc
+  - $make --version
+  - $make all
+  - $make check
 env:
-  - MY_ERB=erb MY_FC="/usr/lib/gcc-snapshot/bin/gfortran"
+  - MY_FC_V=4.9 MAKE_V=make-3.82
+  - MY_FC_V=4.9 MAKE_V=make-4.1
+  - MY_FC_V=5 MAKE_V=make-3.82
+  - MY_FC_V=5 MAKE_V=make-4.1
