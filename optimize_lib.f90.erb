@@ -304,9 +304,9 @@ contains
       end subroutine initLineSearchState1<%= t %>
 
 
-      subroutine line_search_interpolate1<%= t %>(x1, f1, g1, x2, f2, x_best, is_convex)
+      subroutine line_search_interpolate1<%= t %>(x1, f1, g1, x2, f2, x_new, is_convex)
          <%= t.declare %>, intent(in):: x1, f1, g1, x2, f2
-         <%= t.declare %>, intent(out):: x_best
+         <%= t.declare %>, intent(out):: x_new
          Logical(kind=int8), intent(out):: is_convex
          <%= t.declare %>:: x12, a
 
@@ -314,11 +314,11 @@ contains
          a = ((f2 - f1) - g1*x12)/x12**2
          is_convex = a > 0
          if(is_convex)then
-            x_best = x1 - g1/(2*a)
+            x_new = x1 - g1/(2*a)
          else if(f1 < f2)then
-            x_best = x1
+            x_new = x1
          else
-            x_best = x2
+            x_new = x2
          end if
       end subroutine line_search_interpolate1<%= t %>
 
