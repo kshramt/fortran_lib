@@ -18,9 +18,13 @@ module optimize_lib
    public:: nnls
    public:: update, init
 
+
    <%- reals.each{|t| -%>
       type, public:: LineSearchState0<%= t %>
+         Logical(kind=int8):: is_convex
+         Logical(kind=int8):: is_within
          Integer(kind=int64):: iter = -1
+         <%= t.declare %>:: dx
          <%= t.declare %>:: x
          <%= t.declare %>:: xl
          <%= t.declare %>:: xr
@@ -68,89 +72,109 @@ contains
       ! derivative free
 
       subroutine updateLineSearchState0<%= t %>(s, f)
-         ! call init(s)
+         ! call init(s, dx)
          ! do
-         !    f = f(x0 + s%x*dx)
-         !    call update(s, f)
+         !    call update(s, f(x0 + s%x))
          ! end do
          type(LineSearchState0<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: f
-         <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3
+         <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3, step, xlim
          <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
-         Logical(kind=int8):: is_convex
 
          if(s%iter < 0)then
             RAISE('`LineSearchState0<%= t %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 1)then
-            s%xl = s%x
-            s%fl = f
-            s%x = s%xl + 1
+            s%x = s%dx
+            if(s%dx > 0)then
+               s%fl = f
+            else
+               s%fr = f
+            end if
             return
          else if(s%iter == 2)then
-            ASSERT(s%x > s%xl)
-            s%xr = s%x
-            s%fr = f
+            if(s%dx > 0)then
+               ASSERT(s%x > s%xl)
+               s%xr = s%x
+               s%fr = f
+            else
+               ASSERT(s%x < s%xr)
+               s%xl = s%x
+               s%fl = f
+            end if
+            step = enlarge*(s%xr - s%xl)
             if(s%fr < s%fl)then
-               s%x = s%xr + enlarge*(s%xr - s%xl)
+               s%x = s%xr + step
             else
-               s%x = s%xl - enlarge*(s%xr - s%xl)
+               s%x = s%xl - step
             end if
             return
-         else if(s%x == s%xl .or. s%x == s%xr)then
-            if(s%fl < s%fr)then
-               s%x = s%xl - (s%xr - s%xl)
-            else
-               s%x = s%xr + (s%xr - s%xl)
+         else
+            ! converged case should be treated by caller
+            ASSERT(s%x /= s%xl .and. s%x /= s%xr)
+            if(s%x < s%xl)then
+               x1 = s%x
+               x2 = s%xl
+               x3 = s%xr
+               f1 = f
+               f2 = s%fl
+               f3 = s%fr
+            else if(s%xr < s%x)then
+               x1 = s%xl
+               x2 = s%xr
+               x3 = s%x
+               f1 = s%fl
+               f2 = s%fr
+               f3 = f
+            else ! xl < x < xr
+               x1 = s%xl
+               x2 = s%x
+               x3 = s%xr
+               f1 = s%fl
+               f2 = f
+               f3 = s%fr
             end if
-            return
-         else if(s%x < s%xl)then
-            x1 = s%x
-            x2 = s%xl
-            x3 = s%xr
-            f1 = f
-            f2 = s%fl
-            f3 = s%fr
-         else if(s%xr < s%x)then
-            x1 = s%xl
-            x2 = s%xr
-            x3 = s%x
-            f1 = s%fl
-            f2 = s%fr
-            f3 = f
-         else ! xl < x < xr
-            x1 = s%xl
-            x2 = s%x
-            x3 = s%xr
-            f1 = s%fl
-            f2 = f
-            f3 = s%fr
          end if
 
-         call line_search_interpolate(x1, x2, x3, f1, f2, f3, x_new, is_convex)
-         if(is_convex)then
+         call line_search_interpolate(x1, x2, x3, f1, f2, f3, x_new, s%is_convex)
+         step = enlarge*(x3 - x1)
+         if(s%is_convex)then
             if(x_new < x1)then
-               s%x = max(x_new, x1 - enlarge*(x3 - x1))
+               xlim = x1 - step
+               s%is_within = xlim <= x_new
+               if(s%is_within)then
+                  s%x = x_new
+               else
+                  s%x = xlim
+               end if
                call update_(s, x1, x2, f1, f2)
             else if(x3 < x_new)then
-               s%x = min(x_new, x3 + enlarge*(x3 - x1))
+               xlim = x3 + step
+               s%is_within = x_new <= xlim
+               if(s%is_within)then
+                  s%x = x_new
+               else
+                  s%x = xlim
+               end if
                call update_(s, x2, x3, f2, f3)
             else
+               s%is_within = .true.
+               s%x = x_new
                if(f1 < f3)then
                   call update_(s, x1, x2, f1, f2)
                else
                   call update_(s, x2, x3, f2, f3)
                end if
-               s%x = x_new
             end if
          else
+            s%is_within = .false.
             if(x_new < x2)then
-               s%x = x1 - enlarge*(x3 - x1)
+               s%x = x1 - step
                call update_(s, x1, x2 ,f1, f2)
             else
+               s%x = x3 + step
                call update_(s, x2, x3 ,f2, f3)
-               s%x = x3 + enlarge*(x3 - x1)
             end if
          end if
       end subroutine updateLineSearchState0<%= t %>
@@ -167,13 +191,24 @@ contains
       end subroutine update_LineSearchState0<%= t %>
 
 
-      subroutine initLineSearchState0<%= t %>(s)
+      subroutine initLineSearchState0<%= t %>(s, dx)
          type(LineSearchState0<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: dx
 
+         ASSERT(abs(dx) > 0)
+         s%is_convex = .false.
+         s%is_within = .false.
          s%iter = 0
-         s%xl = 0
-         s%xr = 1
-         s%x = s%xl
+         s%dx = dx
+         if(s%dx > 0)then
+            s%xl = 0
+            s%xr = dx
+            s%x = s%xl
+         else
+            s%xr = 0
+            s%xl = dx
+            s%x = s%xr
+         end if
       end subroutine initLineSearchState0<%= t %>
 
 
