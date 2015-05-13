@@ -5,8 +5,6 @@ MY_ERB ?= erb
 ERB := ${MY_ERB}
 ERB_FLAGS := -T '-' -P
 
-# MY_FORTRAN_DEBUG ?= $(MY_IFORT_DEBUG)
-
 MY_FC ?= gfortran
 FC := $(MY_FC)
 ifeq ($(FC),ifort)

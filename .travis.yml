@@ -1,14 +1,12 @@
 language: Fortran
 rvm:
-  - 1.9.3
-  - 2.0.0
+  - 2.1.0
 before_install:
   - sudo apt-get update
-  - sudo apt-get -qq install gcc-snapshot
-  - gem install fort
+  - sudo apt-get -qq install gcc-snapshot git
 script:
   - $MY_FORTRAN --version
-  - cd src
-  - make test
+  - make
+  - make check
 env:
-  - MY_ERB="erb -T - -P" MY_FORTRAN="/usr/lib/gcc-snapshot/bin/gfortran" MY_FORTRAN_DEBUG="${MY_FORTRAN} -ffree-line-length-none -fmax-identifier-length=63 -pipe -cpp -C -Wall -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG" MY_RUBY="ruby"
+  - MY_ERB=erb MY_FC="/usr/lib/gcc-snapshot/bin/gfortran"
