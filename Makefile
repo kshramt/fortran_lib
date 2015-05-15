@@ -146,10 +146,7 @@ bin/%.exe:
 	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
 
 
-%_lib.mod: src/%_lib.f90
-	$(FC) $(FFLAGS) -c -o $*_lib.o $<
-	touch $*_lib.mod
-%_lib.o: src/%_lib.f90
+%_lib.o %_lib.mod: src/%_lib.f90
 	$(FC) $(FFLAGS) -c -o $*_lib.o $<
 	touch $*_lib.mod
 %.o: src/%.f90
