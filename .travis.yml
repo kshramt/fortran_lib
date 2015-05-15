@@ -24,8 +24,8 @@ script:
   - readonly make=$ext_dir/$MAKE_V/make
   - nproc
   - $make --version
-  - $make all
-  - $make check
+  - nproc
+  - $make -j$(nproc) all check
 env:
   - MY_FC_V=4.9 MAKE_V=make-3.82
   - MY_FC_V=4.9 MAKE_V=make-4.1
