@@ -14,13 +14,23 @@ module math_lib
 
    private
    public:: linear_transform
+   public:: rosenbrock
+   public:: rosenbrock_fgh
    public:: convolution ! time domain
 
-   interface linear_transform
-      <%- REALS_DIM0.each{|t| -%>
+   <%- REALS_DIM0.each{|t| -%>
+      interface linear_transform
          module procedure linear_transform<%= t %>
-      <%- } -%>
-   end interface linear_transform
+      end interface linear_transform
+
+      interface rosenbrock
+         module procedure rosenbrock<%= t %>
+      end interface rosenbrock
+
+      interface rosenbrock_fgh
+         module procedure rosenbrock_fgh<%= t %>
+      end interface rosenbrock_fgh
+   <%- } -%>
 
    <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
       interface convolution
@@ -90,6 +100,29 @@ contains
    <%- } -%>
 
    <%- REALS_DIM0.each{|t| -%>
+      elemental function rosenbrock<%= t %>(x, y) result(ret)
+         <%= t.declare %>, intent(in):: x, y
+         <%= t.declare %>:: ret
+
+         ret = (1 - x)**2 + 100*(y - x**2)**2
+      end function rosenbrock<%= t %>
+
+      pure subroutine rosenbrock_fgh<%= t %>(xy, f, g, h)
+         <%= t.declare %>, intent(in):: xy(2)
+         <%= t.declare %>, intent(out):: f, g(2), h(2, 2)
+         <%= t.declare %>:: x, y
+
+         x = xy(1)
+         y = xy(2)
+         f = rosenbrock(x, y)
+         g(1) = -2*(1 - x) - 400*x*(y - x**2)
+         g(2) = 200*(y - x**2)
+         h(1, 1) = 2 - 400*(y - x**2) + 800*x**2
+         h(1, 2) = -400*x
+         h(2, 1) = h(1, 2)
+         h(2, 2) = 200
+      end subroutine rosenbrock_fgh<%= t %>
+
       elemental function linear_transform<%= t %>(x, x0, x1, y0, y1) result(y)
          <%= t.declare %>, intent(in):: x
          Real(kind = kind(x)), intent(in):: x0, x1, y0, y1
