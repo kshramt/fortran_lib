@@ -10,9 +10,11 @@ FC := $(MY_FC)
 ifeq ($(FC),ifort)
    MY_FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz
    MY_FFLAG_DEBUG := -check nouninit -trace -O0 -p -g -DDEBUG -debug all
+   LAPACK := -mkl
 else
    MY_FFLAG_COMMON := -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
    MY_FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
+   LAPACK := -llapack -lblas
 endif
 FFLAGS := $(MY_FFLAG_COMMON) $(MY_FFLAG_DEBUG)
 
@@ -95,7 +97,7 @@ test/path_lib_test.exe: $(call o_mod,path_lib path_lib_test)
 test/geodetic_lib_test.exe: $(call o_mod,constant_lib comparable_lib geodetic_lib geodetic_lib_test)
 test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib math_lib_test)
 test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
-test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib optimize_lib optimize_lib_test)
+test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib math_lib optimize_lib optimize_lib_test)
 test/etas_lib_test.exe: $(call o_mod,etas_lib etas_lib_test)
 
 test/etas_lib_test.exe.tested: test/etas_lib_test.exe test/etas_lib_test.exe.in
@@ -138,19 +140,19 @@ test/%_test.exe.tested: test/%_test.exe
 	touch $(@F)
 test/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^) $(LAPACK)
 
 
 bin/%.exe:
 	mkdir -p $(@D)
-	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^)
+	$(FC) $(FFLAGS) -o $@ $(filter-out %.mod,$^) $(LAPACK)
 
 
 %_lib.o %_lib.mod: src/%_lib.f90
-	$(FC) $(FFLAGS) -c -o $*_lib.o $<
+	$(FC) $(FFLAGS) -c -o $*_lib.o $< $(LAPACK)
 	touch $*_lib.mod
 %.o: src/%.f90
-	$(FC) $(FFLAGS) -c -o $*.o $<
+	$(FC) $(FFLAGS) -c -o $*.o $< $(LAPACK)
 
 
 src/%.f90: %.f90 fortran_lib.h
