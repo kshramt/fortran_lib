@@ -1,6 +1,5 @@
 language: Fortran
 rvm:
-  - 1.9.3
   - 2.1.0
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
