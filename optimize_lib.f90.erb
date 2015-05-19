@@ -1,7 +1,17 @@
 <%-
    require 'fort'
-   reals = ::Fort::Type::Real.multi_provide(dim: 0)
+   reals = ::Fort::Type::Real.multi_provide(dim: 0, kind: %i[REAL32 REAL64])
    orders = [0, 1]
+
+   def s_or_d(t)
+      if t.kind == :REAL64
+         'd'
+      elsif t.kind == :REAL32
+         's'
+      else
+         raise "Unsupported kind: #{t.kind}::#{t.kind.class} for #{t}"
+      end
+   end
 -%>
 #include "fortran_lib.h"
 module optimize_lib
@@ -20,6 +30,17 @@ module optimize_lib
 
 
    <%- reals.each{|t| -%>
+      type, public:: NewtonState<%= t %>
+         Logical(kind=int8):: is_convex
+         Logical(kind=int8):: is_within
+         Integer(kind=int64):: dim
+         Integer(kind=int64):: iter = -1
+         <%= t.declare %>, allocatable:: x(:)
+         <%= t.declare %>, allocatable:: x_prev(:)
+         <%= t.declare %>:: f_prev
+         <%= t.declare %>, allocatable:: g_prev(:)
+      end type NewtonState<%= t %>
+
       type, public:: LineSearchState0<%= t %>
          Logical(kind=int8):: is_convex
          Logical(kind=int8):: is_within
@@ -45,6 +66,26 @@ module optimize_lib
    <%- } -%>
 
    <%- reals.each{|t| -%>
+      interface update
+         module procedure updateNewtonState<%= t %>
+      end interface update
+
+      interface update_
+         module procedure update_NewtonState<%= t %>
+      end interface update_
+
+      interface restrict_step_size
+         module procedure restrict_step_size<%= t %>
+      end interface restrict_step_size
+
+      interface init
+         module procedure initNewtonState<%= t %>
+      end interface init
+
+      interface newton
+         module procedure newton<%= t %>
+      end interface newton
+
       <%- orders.each{|order| -%>
          interface update
             module procedure updateLineSearchState<%= order %><%= t %>
@@ -71,6 +112,140 @@ module optimize_lib
 contains
 
    <%- reals.each{|t| -%>
+      <%- sd = s_or_d(t) -%>
+
+      ! Newton
+
+      subroutine updateNewtonState<%= t %>(s, f, g, H, uplo)
+         ! call init(s, x0, l)
+         ! do
+         !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
+         ! end do
+         <%= t.declare %>, parameter:: zero = 0
+         <%= t.declare %>, parameter:: max_scale = 2
+         type(NewtonState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: f, g(s%dim), H(s%dim, s%dim)
+         Character(len=1), intent(in):: uplo
+         <%= t.declare %>:: l, l_new, lg, H_(s%dim, s%dim), dx(s%dim), dx_new(s%dim)
+
+
+         if(s%iter < 0)then
+            RAISE('`NewtonState<%= t %>` should be `init`ialized before `update`d')
+         end if
+         s%iter = s%iter + 1
+
+         dx(:) = s%x - s%x_prev
+         if(f >= s%f_prev)then
+            l = norm2(dx)
+            call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
+            ASSERT(s%is_convex)
+            ASSERT(0 < l_new)
+            ASSERT(l_new < l)
+            s%is_within = .true.
+            s%x(:) = s%x_prev + l_new/l*dx
+            return
+         end if
+
+         H_(:, :) = H
+         call newton(uplo, g, H_, dx_new, s%is_convex)
+         if(s%is_convex)then
+            call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+            call update_(s, dx_new, f, g)
+            return
+         end if
+
+
+         lg = norm2(g)
+         if(lg <= 0)then
+            call update_(s, dx/2, f, g)
+            return
+         end if
+
+         dx_new(:) = -2*norm2(dx)/lg*g
+         call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+         s%is_within = .false.
+         call update_(s, dx_new, f, g)
+      end subroutine updateNewtonState<%= t %>
+
+
+      subroutine update_NewtonState<%= t %>(s, dx_new, f, g)
+         type(NewtonState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: dx_new(s%dim), f, g(s%dim)
+
+         s%x_prev(:) = s%x
+         s%x(:) = s%x_prev + dx_new
+         s%f_prev = f
+         s%g_prev(:) = g
+      end subroutine update_NewtonState<%= t %>
+
+      subroutine restrict_step_size<%= t %>(dx, dx_prev, max_scale, is_within)
+         <%= t.declare %>, intent(inout):: dx(:)
+         <%= t.declare %>, intent(in):: dx_prev(size(dx))
+         <%= t.declare %>, intent(in):: max_scale
+         Logical(kind=int8), intent(out):: is_within
+         <%= t.declare %>:: l, l_prev, c
+
+         l_prev = norm2(dx_prev)
+         l = norm2(dx)
+         if(l > max_scale*l_prev)then
+            dx(:) = max_scale*l_prev/l*dx
+            is_within = .false.
+         end if
+         c = dot_product(dx_prev, dx)/l_prev
+         if(c < -l_prev/2)then
+            dx(:) = -l_prev/(2*c)*dx
+            is_within = .false.
+         end if
+      end subroutine restrict_step_size<%= t %>
+
+
+      subroutine initNewtonState<%= t %>(s, x0, l)
+         type(NewtonState<%= t %>), intent(inout):: s
+         <%= t.declare %>, intent(in):: x0(:) ! initial solution
+         <%= t.declare %>, intent(in):: l ! initial step length
+
+         ASSERT(l > 0)
+         s%is_convex = .false.
+         s%is_within = .false.
+         s%iter = 0
+         ENSURE_DEALLOCATED(s%x)
+         ENSURE_DEALLOCATED(s%x_prev)
+         ENSURE_DEALLOCATED(s%g_prev)
+         s%dim = size(x0)
+         allocate(s%x(s%dim))
+         allocate(s%x_prev(s%dim))
+         allocate(s%g_prev(s%dim))
+         s%x(:) = x0
+         s%x_prev(:) = s%x - sqrt(l/s%dim)
+         s%f_prev = get_infinity()
+      end subroutine initNewtonState<%= t %>
+
+
+      subroutine newton<%= t %>(uplo, g, H, dx, is_convex)
+         Integer(kind=int32), parameter:: nrhs = 1
+         Character(len=1), intent(in):: uplo
+         <%= t.declare %>, intent(in):: g(:), H(size(g), size(g))
+         <%= t.declare %>, intent(out):: dx(size(g))
+         Logical(kind=int8), intent(out):: is_convex
+         <%= t.declare %>, allocatable:: A(:, :)
+         Integer(kind=kind(nrhs)):: n, info
+
+         n = size(dx, kind=kind(n))
+         ASSERT(n > 0)
+
+         A = H
+         call <%= sd %>potrf(uplo, n, A, n, info)
+         ASSERT(info >= 0)
+         is_convex = info == 0
+         if(.not.is_convex) return
+
+         dx(:) = -g
+         call <%= sd %>potrs(uplo, n, nrhs, A, n, dx, n, info)
+         ASSERT(info >= 0)
+         is_convex = info == 0
+      end subroutine newton<%= t %>
+
+
       ! derivative free
 
       subroutine updateLineSearchState0<%= t %>(s, f)
