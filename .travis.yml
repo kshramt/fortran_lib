@@ -1,14 +1,13 @@
 language: Fortran
 rvm:
   - 2.1.0
-before_install:
+script:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
-  - sudo apt-get -qq install gfortran-$MY_FC_V
   - sudo apt-get -qq build-dep make
-script:
+  - sudo apt-get -qq install gfortran-$MY_FC_V liblapack-dev &
   - export MY_ERB=erb
-  - export MY_FC=/usr/bin/gfortran-$MY_FC_V
+  - export MY_FC=gfortran-$MY_FC_V
   - readonly ext_dir=_tmp_
   - mkdir -p $ext_dir
   - pushd $ext_dir
@@ -19,6 +18,7 @@ script:
   - make -j$(nproc)
   - popd
   - popd
+  - wait
   - $MY_FC --version
   - readonly make=$ext_dir/$MAKE_V/make
   - nproc
