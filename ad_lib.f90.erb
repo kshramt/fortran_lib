@@ -236,7 +236,7 @@ contains
       ! todo: optimize for integers
       <%- OPS.each{|fn2, op| -%>
          <%- %i[r i].each{|t| -%>
-            <%- (kri2s = t == :r ? RKINDS : IKINDS).each{|kri| -%>
+            <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
                  typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
                  # this promotion rule emulates Fortran
@@ -275,7 +275,7 @@ contains
          <%- } -%>
 
          <%- %i[r i].each{|t| -%>
-            <%- (kri2s = t == :r ? RKINDS : IKINDS).each{|kri| -%>
+            <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
                  typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
                  # this promotion rule emulates Fortran
