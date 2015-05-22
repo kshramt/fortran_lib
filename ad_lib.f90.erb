@@ -68,7 +68,7 @@ module ad_lib
 
    private
    ! accessors
-   public:: real, jaco, hess
+   public:: kind, real, jaco, hess
    ! functions
    <%- FN1S.each{|fn| -%>
       public:: <%= fn %>
@@ -93,6 +93,10 @@ module ad_lib
 
    ! Interface
    <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+      interface kind
+         module procedure kind_<%= kd %>_<%= o %>_<%= n %>
+      end interface kind
+
       interface real
          module procedure real_<%= kd %>_<%= o %>_<%= n %>
       end interface real
@@ -135,6 +139,13 @@ module ad_lib
 contains
 
    <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+      elemental function kind_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+         Integer:: ret
+
+         ret = <%= kd %>
+      end function kind_<%= kd %>_<%= o %>_<%= n %>
+
       elemental function real_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
          Real(kind=real<%= kd %>):: ret
