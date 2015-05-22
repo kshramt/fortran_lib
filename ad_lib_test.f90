@@ -8,7 +8,7 @@ program main
    implicit none
 
    type(Dual64_2_2):: x, y, z
-   Real(kind=real64), parameter:: a = 6, b = 2, zero = 0
+   Real(kind=real64), parameter:: a = 6, b = 2, zero = 0, one = 1
    Real(kind=real64):: h(2, 2), j(2)
 
    x%f = a
@@ -131,6 +131,27 @@ program main
    TEST(h(1, 2) == 0)
    TEST(h(2, 1) == 0)
    TEST(almost_equal(h(2, 2), -1/b**2))
+
+   z = exp(log(x + y))
+   TEST(almost_equal(real(z), a + b))
+   TEST(all(almost_equal(jaco(z), one)))
+   TEST(all(hess(z) == 0))
+
+   z = log(exp(x + y))
+   TEST(almost_equal(real(z), a + b))
+   TEST(all(almost_equal(jaco(z), one)))
+   TEST(all(hess(z) == 0))
+
+   z = log(x*x/y + exp(y))
+   TEST(almost_equal(real(z), log(a*a/b + exp(b))))
+   j = jaco(z)
+   TEST(almost_equal(j(1), 2*a/(b*(a**2/b + exp(b)))))
+   TEST(almost_equal(j(2), (-a**2/b**2 + exp(b))/(a**2/b + exp(b))))
+   h = hess(z)
+   TEST(almost_equal(h(1, 1), (-2*a**2 + 2*b*exp(b))/(a**2 + b*exp(b))**2))
+   TEST(almost_equal(h(1, 2), -(2*a*(b + 1)*exp(b))/(a**2 + b*exp(b))**2))
+   TEST(almost_equal(h(2, 1), -(2*a*(b + 1)*exp(b))/(a**2 + b*exp(b))**2))
+   TEST(almost_equal(h(2, 2), (2*a**2*(a**2 + b*exp(b)) + b**3*(a**2 + b*exp(b))*exp(b) - (a**2 - b**2*exp(b))**2)/(b**2*(a**2 + b*exp(b))**2)))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 

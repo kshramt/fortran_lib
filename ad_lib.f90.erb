@@ -48,7 +48,7 @@
 #define div_h_ij(i, j) (((x%h(i, j)*y%f - y%h(i, j)*x%f - y%g(i)*x%g(j))*y%f - y%g(j)*(x%g(i)*y%f - 2*y%g(i)*x%f))/y%f**3)
 #define pow_g() ((y%g*log(x%f) + x%g*y%f/x%f)*x%f**y%f)
 #define pow_h_ij(i, j) ((y%h(i, j)*log(x%f) + y%g(i)*x%g(j)/x%f + (x%h(i, j)*x%f - x%g(i)*x%g(j))*y%f/x%f**2 + x%g(i)*y%g(j)/x%f + (y%g(i)*log(x%f) + x%g(i)*y%f/x%f)*(y%g(j)*log(x%f) + x%g(j)*y%f/x%f))*x%f**y%f)
-#define f_h_i_j(f1, f2, i, j) (f2(x%f)*x%g(i)*x%g(j) + f1(x%f)*x%h(i, j))
+#define f_h_ij(f1, f2, i, j) ((f2(x%f))*x%g(i)*x%g(j) + (f1(x%f))*x%h(i, j))
 #define exp_p1(x) (exp(x))
 #define exp_p2(x) (exp(x))
 #define log_p1(x) (1/(x))
@@ -181,9 +181,9 @@ contains
             y%g = <%= fn1 %>_p1(x%f)*x%g
             <%- if o > 1 -%>
                do j = 1, <%= n %>
-                  y%h(j, j) = f_h_i_j(<%= fn1 %>_p2, <%= fn1 %>_p2, j, j)
+                  y%h(j, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, j, j)
                   do i = j + 1, <%= n %>
-                     y%h(i, j) = f_h_i_j(<%= fn1 %>_p2, <%= fn1 %>_p2, i, j)
+                     y%h(i, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, i, j)
                      y%h(j, i) = y%h(i, j)
                   end do
                end do
