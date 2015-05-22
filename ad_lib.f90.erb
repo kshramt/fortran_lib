@@ -1,0 +1,293 @@
+<%-
+  RKINDS = [
+    32,
+    64,
+    128,
+  ]
+  IKINDS = [
+    8,
+    16,
+    32,
+    64,
+  ]
+  ORDERS = [
+    1,
+    2,
+  ]
+  NS = [
+    1,
+    2,
+    5,
+  ]
+  RKINDS_ORDERS_NS = RKINDS.product(ORDERS, NS)
+  FN1S = %i[
+    exp
+    log
+  ]
+  OPS = {
+    add: :+,
+    sub: :-,
+    mul: :*,
+    div: :/,
+    pow: :**,
+  }
+  COMPS = {
+    lt: :<,
+    le: :<=,
+    eq: :==,
+    ge: :>=,
+    gt: :>,
+  }
+-%>
+#include "fortran_lib.h"
+
+! todo: optimize
+#define mul_g() (x%g*y%f + x%f*y%g)
+#define mul_h_ij(i, j) (x%h(i, j)*y%f + x%g(i)*y%g(j) + x%g(j)*y%g(i) + x%f*y%h(i, j))
+#define div_g() ((x%g*y%f - x%f*y%g)/y%f**2)
+#define div_h_ij(i, j) (((x%h(i, j)*y%f - y%h(i, j)*x%f - y%g(i)*x%g(j))*y%f - y%g(j)*(x%g(i)*y%f - 2*y%g(i)*x%f))/y%f**3)
+#define pow_g() ((y%g*log(x%f) + x%g*y%f/x%f)*x%f**y%f)
+#define pow_h_ij(i, j) ((y%h(i, j)*log(x%f) + y%g(i)*x%g(j)/x%f + (x%h(i, j)*x%f - x%g(i)*x%g(j))*y%f/x%f**2 + x%g(i)*y%g(j)/x%f + (y%g(i)*log(x%f) + x%g(i)*y%f/x%f)**2)*x%f**y%f)
+#define f_h_i_j(f1, f2, i, j) (f2(x%f)*x%g(i)*x%g(j) + f1(x%f)*x%h(i, j))
+#define exp_p1(x) (exp(x))
+#define exp_p2(x) (exp(x))
+#define log_p1(x) (1/(x))
+#define log_p2(x) (-1/(x)**2)
+
+module ad_lib
+   <%- RKINDS.each{|k|-%>
+      use, intrinsic:: iso_fortran_env, only: real<%= k %>
+   <%- } -%>
+   <%- IKINDS.each{|k|-%>
+      use, intrinsic:: iso_fortran_env, only: int<%= k %>
+   <%- } -%>
+   USE_FORTRAN_LIB_H
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+
+   implicit none
+
+   private
+   ! accessors
+   public:: real, jaco, hess
+   ! functions
+   <%- FN1S.each{|fn| -%>
+      public:: <%= fn %>
+   <%- } -%>
+   ! operators
+   <%- (OPS.merge(COMPS)).each{|_, op| -%>
+      public:: operator(<%= op %>)
+   <%- } -%>
+
+   type, public:: DualNumber
+   end type DualNumber
+
+   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+      type, extends(DualNumber), public:: Dual<%= kd %>_<%= o %>_<%= n %>
+         Real(kind=real<%= kd %>):: f
+         Real(kind=real<%= kd %>):: g(<%= n %>) = 0
+         <%- if o > 1 -%>
+            Real(kind=real<%= kd %>):: h(<%= n %>, <%= n %>) = 0
+         <%- end -%>
+      end type Dual<%= kd %>_<%= o %>_<%= n %>
+   <%- } -%>
+
+   ! Interface
+   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+      interface real
+         module procedure real_<%= kd %>_<%= o %>_<%= n %>
+      end interface real
+
+      interface jaco
+         module procedure jaco_<%= kd %>_<%= o %>_<%= n %>
+      end interface jaco
+
+      <%- if o > 1 -%>
+         interface hess
+            module procedure hess_<%= kd %>_<%= o %>_<%= n %>
+         end interface hess
+      <%- end -%>
+
+      <%- FN1S.each{|fn1| -%>
+         interface <%= fn1 %>
+            module procedure <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
+         end interface <%= fn1 %>
+      <%- } -%>
+
+      <%- (OPS.merge(COMPS)).each{|fn2, op| -%>
+         <%- RKINDS.each{|kdr| -%>
+            interface operator(<%= op %>)
+               module procedure <%= fn2 %>_dd_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
+
+               module procedure <%= fn2 %>_dr_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
+               module procedure <%= fn2 %>_rd_<%= kdr %>_<%= kd %>_<%= o %>_<%= n %>
+            end interface operator(<%= op %>)
+         <%- } -%>
+
+         <%- IKINDS.each{|ki| -%>
+            interface operator(<%= op %>)
+               module procedure <%= fn2 %>_di_<%= kd %>_<%= ki %>_<%= o %>_<%= n %>
+               module procedure <%= fn2 %>_id_<%= ki %>_<%= kd %>_<%= o %>_<%= n %>
+            end interface operator(<%= op %>)
+         <%- } -%>
+      <%- } -%>
+   <%- } -%>
+
+contains
+
+   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+      elemental function real_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+         Real(kind=real<%= kd %>):: ret
+
+         ret = x%f
+      end function real_<%= kd %>_<%= o %>_<%= n %>
+
+      pure function jaco_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+         Real(kind=real<%= kd %>):: ret(<%= n %>)
+
+         ret = x%g
+      end function jaco_<%= kd %>_<%= o %>_<%= n %>
+
+      <%- if o > 1 -%>
+         pure function hess_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+            Real(kind=real<%= kd %>):: ret(<%= n %>, <%= n %>)
+
+            ret = x%h
+         end function hess_<%= kd %>_<%= o %>_<%= n %>
+      <%- end -%>
+
+      <%- FN1S.each{|fn1| -%>
+         elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(y)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+            type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+            <%- if o > 1 -%>
+               Integer:: i, j
+            <%- end -%>
+
+            y%f = <%= fn1 %>(x%f)
+            y%g = <%= fn1 %>_p1(x%f)*x%g
+            <%- if o > 1 -%>
+               do j = 1, <%= n %>
+                  y%h(j, j) = f_h_i_j(<%= fn1 %>_p2, <%= fn1 %>_p2, j, j)
+                  do i = j + 1, <%= n %>
+                     y%h(i, j) = f_h_i_j(<%= fn1 %>_p2, <%= fn1 %>_p2, i, j)
+                     y%h(j, i) = y%h(i, j)
+                  end do
+               end do
+            <%- end -%>
+         end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
+      <%- } -%>
+
+      <%- RKINDS.each{|kd2| -%>
+         <%- suffix = "_dd_#{kd}_#{kd2}_#{o}_#{n}"-%>
+         <%- %i[add sub].each{|fn2| -%>
+            <%- op = OPS[fn2] -%>
+            elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
+
+               z%f = x%f <%= op %> y%f
+               z%g = x%g <%= op %> y%g
+               <%- if o > 1 -%>
+                  z%h = x%h <%= op %> y%h
+               <%- end -%>
+            end function <%= fn2 %><%= suffix %>
+         <%- } -%>
+
+         <%- %i[mul div pow].each{|fn2| -%>
+            <%- op = OPS[fn2] -%>
+            elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
+               <%- if o > 1 -%>
+                  Integer:: i, j
+               <%- end -%>
+
+               z%f = x%f <%= op %> y%f
+               z%g = <%= fn2 %>_g()
+               <%- if o > 1 -%>
+                  do j = 1, <%= n %>
+                     z%h(j, j) = <%= fn2 %>_h_ij(j, j)
+                     do i = j + 1, <%= n %>
+                        z%h(i, j) = <%= fn2 %>_h_ij(i, j)
+                        z%h(j, i) = z%h(i, j)
+                     end do
+                  end do
+               <%- end -%>
+            end function <%= fn2 %><%= suffix %>
+         <%- } -%>
+      <%- } -%>
+
+      ! todo: optimize for integers
+      <%- OPS.each{|fn2, op| -%>
+         <%- %i[r i].each{|t| -%>
+            <%- (kri2s = t == :r ? RKINDS : IKINDS).each{|kri| -%>
+               <%-
+                 typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+                 # this promotion rule emulates Fortran
+                 k_ret = t == :r ? [kd, kri].max : kd
+                 d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
+                 ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
+               -%>
+               elemental function <%= d_ri %>(x, y) result(z)
+                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+                  <%= typ %>, intent(in):: y
+                  type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+                  z = x <%= op %> Dual<%= k_ret %>_<%= o %>_<%= n %>(y)
+               end function <%= d_ri %>
+
+               elemental function <%= ri_d %>(x, y) result(z)
+                  <%= typ %>, intent(in):: x
+                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+                  type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+                  z = Dual<%= k_ret %>_<%= o %>_<%= n %>(x) <%= op %> y
+               end function <%= ri_d %>
+            <%- } -%>
+         <%- } -%>
+      <%- } -%>
+
+      <%- COMPS.each{|fn2, op| -%>
+         <%- RKINDS.each{|kd2| -%>
+            elemental function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(ret)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
+               Logical:: ret
+
+               ret = x%f <%= op %> y%f
+            end function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
+         <%- } -%>
+
+         <%- %i[r i].each{|t| -%>
+            <%- (kri2s = t == :r ? RKINDS : IKINDS).each{|kri| -%>
+               <%-
+                 typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+                 # this promotion rule emulates Fortran
+                 d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
+                 ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
+               -%>
+               elemental function <%= d_ri %>(x, y) result(ret)
+                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+                  <%= typ %>, intent(in):: y
+                  Logical:: ret
+
+                  ret = x%f <%= op %> y
+               end function <%= d_ri %>
+
+               elemental function <%= ri_d %>(x, y) result(ret)
+                  <%= typ %>, intent(in):: x
+                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+                  Logical:: ret
+
+                  ret = x <%= op %> y%f
+               end function <%= ri_d %>
+            <%- } -%>
+         <%- } -%>
+      <%- } -%>
+   <%- } -%>
+end module ad_lib

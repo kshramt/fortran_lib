@@ -99,6 +99,7 @@ test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib math_lib_test)
 test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
 test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib math_lib optimize_lib optimize_lib_test)
 test/etas_lib_test.exe: $(call o_mod,etas_lib etas_lib_test)
+test/ad_lib_test.exe: $(call o_mod,comparable_lib ad_lib ad_lib_test)
 
 test/etas_lib_test.exe.tested: test/etas_lib_test.exe test/etas_lib_test.exe.in
 	{
