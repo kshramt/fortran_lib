@@ -99,6 +99,7 @@ test/math_lib_test.exe: $(call o_mod,comparable_lib math_lib math_lib_test)
 test/dual_lib_test.exe: $(call o_mod,comparable_lib dual_lib dual_lib_test)
 test/optimize_lib_test.exe: $(call o_mod,comparable_lib constant_lib array_lib math_lib optimize_lib optimize_lib_test)
 test/etas_lib_test.exe: $(call o_mod,etas_lib etas_lib_test)
+test/ad_lib_test.exe: $(call o_mod,comparable_lib ad_lib ad_lib_test)
 
 test/etas_lib_test.exe.tested: test/etas_lib_test.exe test/etas_lib_test.exe.in
 	{
@@ -155,12 +156,12 @@ bin/%.exe:
 	$(FC) $(FFLAGS) -c -o $*.o $< $(LAPACK)
 
 
-src/%.f90: %.f90 fortran_lib.h
+src/%.f90._new_ src/%.f90: %.f90 fortran_lib.h
 	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
 	mkdir -p $(@D)
 	$(CPP) $(CPP_FLAGS) $< $@._new_
 	script/update_if_changed.sh $@._new_ $@
-%.f90: %.f90.erb dep/fort/lib/fort.rb
+%.f90._new_ %.f90: %.f90.erb dep/fort/lib/fort.rb
 	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
 	export RUBYLIB=$(CURDIR):dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@._new_
