@@ -47,7 +47,7 @@
 #define div_g() ((x%g*y%f - x%f*y%g)/y%f**2)
 #define div_h_ij(i, j) (((x%h(i, j)*y%f - y%h(i, j)*x%f - y%g(i)*x%g(j))*y%f - y%g(j)*(x%g(i)*y%f - 2*y%g(i)*x%f))/y%f**3)
 #define pow_g() ((y%g*log(x%f) + x%g*y%f/x%f)*x%f**y%f)
-#define pow_h_ij(i, j) ((y%h(i, j)*log(x%f) + y%g(i)*x%g(j)/x%f + (x%h(i, j)*x%f - x%g(i)*x%g(j))*y%f/x%f**2 + x%g(i)*y%g(j)/x%f + (y%g(i)*log(x%f) + x%g(i)*y%f/x%f)**2)*x%f**y%f)
+#define pow_h_ij(i, j) ((y%h(i, j)*log(x%f) + y%g(i)*x%g(j)/x%f + (x%h(i, j)*x%f - x%g(i)*x%g(j))*y%f/x%f**2 + x%g(i)*y%g(j)/x%f + (y%g(i)*log(x%f) + x%g(i)*y%f/x%f)*(y%g(j)*log(x%f) + x%g(j)*y%f/x%f))*x%f**y%f)
 #define f_h_i_j(f1, f2, i, j) (f2(x%f)*x%g(i)*x%g(j) + f1(x%f)*x%h(i, j))
 #define exp_p1(x) (exp(x))
 #define exp_p2(x) (exp(x))
