@@ -165,6 +165,143 @@ program main
    TEST(a >= a)
    TEST(a == a)
 
+   ! scalar to dual operations
+
+   ! +
+   z = x + 3
+   TEST(real(z) == a + 3)
+   TEST(all(jaco(z) == [1, 0]))
+   TEST(all(hess(z) == 0))
+   z = y + 3
+   TEST(real(z) == b + 3)
+   TEST(all(jaco(z) == [0, 1]))
+   TEST(all(hess(z) == 0))
+
+   z = 3 + x
+   TEST(real(z) == a + 3)
+   TEST(all(jaco(z) == [1, 0]))
+   TEST(all(hess(z) == 0))
+   z = 3 + y
+   TEST(real(z) == b + 3)
+   TEST(all(jaco(z) == [0, 1]))
+   TEST(all(hess(z) == 0))
+
+   ! +
+   z = x - 3
+   TEST(real(z) == a - 3)
+   TEST(all(jaco(z) == [1, 0]))
+   TEST(all(hess(z) == 0))
+   z = y - 3
+   TEST(real(z) == b - 3)
+   TEST(all(jaco(z) == [0, 1]))
+   TEST(all(hess(z) == 0))
+
+   z = 3 - x
+   TEST(real(z) == 3 - a)
+   TEST(all(jaco(z) == [-1, 0]))
+   TEST(all(hess(z) == 0))
+   z = 3 - y
+   TEST(real(z) == 3 - b)
+   TEST(all(jaco(z) == [0, -1]))
+   TEST(all(hess(z) == 0))
+
+   ! *
+   z = x*3
+   TEST(real(z) == a*3)
+   TEST(all(jaco(z) == [3, 0]))
+   TEST(all(hess(z) == 0))
+   z = y*3
+   TEST(real(z) == b*3)
+   TEST(all(jaco(z) == [0, 3]))
+   TEST(all(hess(z) == 0))
+
+   z = 3*x
+   TEST(real(z) == a*3)
+   TEST(all(jaco(z) == [3, 0]))
+   TEST(all(hess(z) == 0))
+   z = 3*y
+   TEST(real(z) == b*3)
+   TEST(all(jaco(z) == [0, 3]))
+   TEST(all(hess(z) == 0))
+
+   ! /
+   z = x/3
+   TEST(real(z) == a/3)
+   j = jaco(z)
+   TEST(almost_equal(j(1), one/3))
+   TEST(j(2) == 0)
+   TEST(all(hess(z) == 0))
+   z = y/3
+   TEST(real(z) == b/3)
+   j = jaco(z)
+   TEST(j(1) == 0)
+   TEST(almost_equal(j(2), one/3))
+   TEST(all(hess(z) == 0))
+
+   z = 3/x
+   TEST(real(z) == 3/a)
+   j = jaco(z)
+   TEST(almost_equal(j(1), -3/a**2))
+   TEST(j(2) == 0)
+   h = hess(z)
+   TEST(almost_equal(h(1, 1), 6/a**3))
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(h(2, 2) == 0)
+   z = 3/y
+   TEST(real(z) == 3/b)
+   j = jaco(z)
+   TEST(j(1) == 0)
+   TEST(almost_equal(j(2), -3/b**2))
+   h = hess(z)
+   TEST(h(1, 1) == 0)
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(almost_equal(h(2, 2), 6/b**3))
+
+   ! **
+   z = x**3
+   TEST(real(z) == a**3)
+   j = jaco(z)
+   TEST(j(1) == 3*a**2)
+   TEST(j(2) == 0)
+   h = hess(z)
+   TEST(almost_equal(h(1, 1), 6*a))
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(h(2, 2) == 0)
+   z = y**3
+   TEST(real(z) == b**3)
+   j = jaco(z)
+   TEST(j(1) == 0)
+   TEST(j(2) == 3*b**2)
+   h = hess(z)
+   TEST(h(1, 1) == 0)
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(almost_equal(h(2, 2), 6*b))
+
+   z = 3**x
+   TEST(real(z) == 3**a)
+   j = jaco(z)
+   TEST(almost_equal(j(1), log(3*one)*3**a))
+   TEST(j(2) == 0)
+   h = hess(z)
+   TEST(almost_equal(h(1, 1), log(3*one)**2*3**a))
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(h(2, 2) == 0)
+   z = 3**y
+   TEST(real(z) == 3**b)
+   j = jaco(z)
+   TEST(j(1) == 0)
+   TEST(almost_equal(j(2), log(3*one)*3**b))
+   h = hess(z)
+   TEST(h(1, 1) == 0)
+   TEST(h(1, 2) == 0)
+   TEST(h(2, 1) == 0)
+   TEST(almost_equal(h(2, 2), log(3*one)**2*3**b))
+
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
    stop
