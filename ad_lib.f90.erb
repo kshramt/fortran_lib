@@ -190,8 +190,15 @@ contains
          pure function hess_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             Real(kind=real<%= kd %>):: ret(<%= n %>, <%= n %>)
+            Integer:: i, j
 
-            ret = x%h
+            do j = 1, <%= n %>
+               ret(j, j) = x%h(j, j)
+               do i = j + 1, <%= n %>
+                  ret(i, j) = x%h(i, j)
+                  ret(j, i) = x%h(i, j)
+               end do
+            end do
          end function hess_<%= kd %>_<%= o %>_<%= n %>
       <%- end -%>
 
@@ -253,7 +260,6 @@ contains
                   y%h(j, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, j, j)
                   do i = j + 1, <%= n %>
                      y%h(i, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, i, j)
-                     y%h(j, i) = y%h(i, j)
                   end do
                end do
             <%- end -%>
@@ -294,7 +300,6 @@ contains
                      z%h(j, j) = <%= fn2 %>_h_ij(j, j)
                      do i = j + 1, <%= n %>
                         z%h(i, j) = <%= fn2 %>_h_ij(i, j)
-                        z%h(j, i) = z%h(i, j)
                      end do
                   end do
                <%- end -%>
