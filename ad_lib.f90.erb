@@ -69,7 +69,10 @@ module ad_lib
    private
    ! accessors
    public:: kind, real, jaco, hess
+   public:: epsilon, tiny, huge
    ! functions
+   public:: dot_product
+   public:: sum
    <%- FN1S.each{|fn| -%>
       public:: <%= fn %>
    <%- } -%>
@@ -83,7 +86,7 @@ module ad_lib
 
    <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
       type, extends(DualNumber), public:: Dual<%= kd %>_<%= o %>_<%= n %>
-         Real(kind=real<%= kd %>):: f
+         Real(kind=real<%= kd %>):: f = 0
          Real(kind=real<%= kd %>):: g(<%= n %>) = 0
          <%- if o > 1 -%>
             Real(kind=real<%= kd %>):: h(<%= n %>, <%= n %>) = 0
@@ -105,11 +108,25 @@ module ad_lib
          module procedure jaco_<%= kd %>_<%= o %>_<%= n %>
       end interface jaco
 
+      <%- %i[epsilon tiny huge ].each{|fn1| -%>
+         interface <%= fn1 %>
+            module procedure <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
+         end interface <%= fn1 %>
+      <%- } -%>
+
       <%- if o > 1 -%>
          interface hess
             module procedure hess_<%= kd %>_<%= o %>_<%= n %>
          end interface hess
       <%- end -%>
+
+      interface dot_product
+         module procedure dot_product_<%= kd %>_<%= o %>_<%= n %>
+      end interface dot_product
+
+      interface sum
+         module procedure sum_<%= kd %>_<%= o %>_<%= n %>_1
+      end interface sum
 
       <%- FN1S.each{|fn1| -%>
          interface <%= fn1 %>
@@ -146,6 +163,15 @@ contains
          ret = <%= kd %>
       end function kind_<%= kd %>_<%= o %>_<%= n %>
 
+      <%- %i[epsilon tiny huge ].each{|fn1| -%>
+         elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+            Real(kind=real<%= kd %>):: ret
+
+            ret = <%= fn1 %>(ret)
+         end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
+      <%- } -%>
+
       elemental function real_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
          Real(kind=real<%= kd %>):: ret
@@ -168,6 +194,49 @@ contains
             ret = x%h
          end function hess_<%= kd %>_<%= o %>_<%= n %>
       <%- end -%>
+
+      pure function dot_product_<%= kd %>_<%= o %>_<%= n %>(x, y) result(z)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:), y(size(x))
+         type(Dual<%= kd %>_<%= o %>_<%= n %>):: z
+
+         z = sum(x*y)
+      end function dot_product_<%= kd %>_<%= o %>_<%= n %>
+
+      pure function sum_<%= kd %>_<%= o %>_<%= n %>_1(x) result(y)
+         Integer(kind=int64), parameter:: one = 1
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+
+         y = sum_pairwise_<%= kd %>_<%= o %>_<%= n %>_1(x, one, size(x, kind=kind(one)))
+      end function sum_<%= kd %>_<%= o %>_<%= n %>_1
+
+      pure recursive function sum_pairwise_<%= kd %>_<%= o %>_<%= n %>_1(x, i1, i2) result(y)
+         Integer(kind=int32), parameter:: blocksize = 2**5
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
+         Integer(kind=int64), intent(in):: i1, i2
+         type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+         Integer(kind=kind(i1)):: i_mid
+
+         if(i1 + blocksize > i2)then
+            y = sum_seq_<%= kd %>_<%= o %>_<%= n %>_1(x, i1, i2)
+         else
+            i_mid = (i1 + i2)/2
+            y &
+               = sum_pairwise_<%= kd %>_<%= o %>_<%= n %>_1(x, i1, i_mid) &
+               + sum_pairwise_<%= kd %>_<%= o %>_<%= n %>_1(x, i_mid + 1, i2)
+         end if
+      end function sum_pairwise_<%= kd %>_<%= o %>_<%= n %>_1
+
+      pure function sum_seq_<%= kd %>_<%= o %>_<%= n %>_1(x, i1, i2) result(y)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
+         Integer(kind=int64), intent(in):: i1, i2
+         type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+         Integer(kind=kind(i1)):: i
+
+         do i = i1, i2
+            y = y + x(i)
+         end do
+      end function sum_seq_<%= kd %>_<%= o %>_<%= n %>_1
 
       <%- FN1S.each{|fn1| -%>
          elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(y)

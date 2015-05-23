@@ -7,14 +7,37 @@ program main
 
    implicit none
 
-   type(Dual64_2_2):: x, y, z
+   type(Dual64_2_2):: x, y, z, xs(3213)
    Real(kind=real64), parameter:: a = 6, b = 2, zero = 0, one = 1
    Real(kind=real64):: h(2, 2), j(2)
+   Integer:: i, nxs
 
    x%f = a
    x%g(1) = 1
    y%f = b
    y%g(2) = 1
+
+   TEST(almost_equal(epsilon(x), epsilon(a)))
+   TEST(almost_equal(tiny(x), tiny(a)))
+   TEST(almost_equal(huge(x), huge(a)))
+
+   z = dot_product([x, y, y], [x, x, y])
+   TEST(real(z) == a*a + b*a + b*b)
+   TEST(all(jaco(z) == jaco(x*x + y*x + y*y)))
+   TEST(all(hess(z) == hess(x*x + y*x + y*y)))
+
+   z = sum([x, y])
+   TEST(real(z) == a + b)
+   TEST(all(jaco(z) == [1, 1]))
+   TEST(all(hess(z) == 0))
+   nxs = size(xs)
+   do i = 1, nxs
+      xs(i) = exp(x*y + log(y))
+   end do
+   z = sum(xs)
+   TEST(almost_equal(real(z), nxs*real(xs(1)), relative=4*epsilon(z)))
+   TEST(all(almost_equal(jaco(z), nxs*jaco(xs(1)), relative=4*epsilon(z))))
+   TEST(all(almost_equal(hess(z), nxs*hess(xs(1)), relative=4*epsilon(z))))
 
    z = x + y
    TEST(real(z) == a + b)
