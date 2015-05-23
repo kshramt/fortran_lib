@@ -13,7 +13,7 @@ ifeq ($(FC),ifort)
    LAPACK := -mkl
 else
    MY_FFLAG_COMMON := -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
-   MY_FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ggdb -pg -DDEBUG
+   MY_FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ggdb -pg --coverage -DDEBUG
    LAPACK := -llapack -lblas
 endif
 FFLAGS := $(MY_FFLAG_COMMON) $(MY_FFLAG_DEBUG)
