@@ -1,4 +1,6 @@
+#include "fortran_lib.h"
 program main
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: NewtonStateRealDim0KindREAL64, init, update
