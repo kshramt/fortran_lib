@@ -14,7 +14,7 @@ program main
    Real:: lX
    Complex(kind=REAL128):: c
 
-   open(newunit=io, file='config_lib_test.in', status='old', action='read')
+   open(newunit=io, file='config_lib_test.exe.in', status='old', action='read')
    TEST(.not.get_config_value(io, 'no such key', l))
    TEST(get_config_value(io, 'logical1', l))
    TEST(l)
