@@ -46,8 +46,7 @@
 #define mul_h_ij(i, j) (x%h(i, j)*y%f + x%g(i)*y%g(j) + x%g(j)*y%g(i) + x%f*y%h(i, j))
 #define div_g() ((x%g*y%f - x%f*y%g)/y%f**2)
 #define div_h_ij(i, j) (((x%h(i, j)*y%f - y%h(i, j)*x%f - y%g(i)*x%g(j))*y%f - y%g(j)*(x%g(i)*y%f - 2*y%g(i)*x%f))/y%f**3)
-#define pow_g() ((y%g*log(x%f) + x%g*y%f/x%f)*x%f**y%f)
-#define pow_h_ij(i, j) ((y%h(i, j)*log(x%f) + y%g(i)*x%g(j)/x%f + (x%h(i, j)*x%f - x%g(i)*x%g(j))*y%f/x%f**2 + x%g(i)*y%g(j)/x%f + (y%g(i)*log(x%f) + x%g(i)*y%f/x%f)*(y%g(j)*log(x%f) + x%g(j)*y%f/x%f))*x%f**y%f)
+#define pow_h_ij(i, j) ((y%h(i, j)*log_xf + y%g(i)*x%g(j)*par_xf + (x%h(i, j)*xf - x%g(i)*x%g(j))*yf_par_xf*par_xf + x%g(i)*y%g(j)*par_xf + (y%g(i)*log_xf + x%g(i)*yf_par_xf) *(y%g(j)*log_xf + x%g(j)*yf_par_xf))*xf_pow_yf)
 #define f_h_ij(f1, f2, i, j) ((f2(x%f))*x%g(i)*x%g(j) + (f1(x%f))*x%h(i, j))
 #define exp_p1(x) (exp(x))
 #define exp_p2(x) (exp(x))
@@ -315,7 +314,7 @@ contains
             end function <%= fn2 %><%= suffix %>
          <%- } -%>
 
-         <%- [:mul, :div, :pow].each{|fn2| -%>
+         <%- [:mul, :div].each{|fn2| -%>
             <%- op = OPS[fn2] -%>
             elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -337,6 +336,35 @@ contains
                <%- end -%>
             end function <%= fn2 %><%= suffix %>
          <%- } -%>
+
+         elemental function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+            type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
+            type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
+            Real(kind=real<%= [kd, kd2].max %>):: xf, yf, xf_pow_yf, log_xf, yf_par_xf, par_xf
+            <%- if o > 1 -%>
+               Integer:: i, j
+            <%- end -%>
+
+
+            xf = x%f
+            yf = y%f
+            xf_pow_yf = xf**yf
+            log_xf = log(xf)
+            par_xf = 1/xf
+            yf_par_xf = yf*par_xf
+
+            z%f = xf_pow_yf
+            z%g = (y%g*log_xf + x%g*yf_par_xf)*xf_pow_yf
+            <%- if o > 1 -%>
+               do j = 1, <%= n %>
+                  z%h(j, j) = pow_h_ij(j, j)
+                  do i = j + 1, <%= n %>
+                     z%h(i, j) = pow_h_ij(i, j)
+                  end do
+               end do
+            <%- end -%>
+         end function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
       <%- } -%>
 
       ! todo: optimize for integers
