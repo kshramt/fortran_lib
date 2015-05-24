@@ -31,7 +31,7 @@ program main
    ms(:) = ms - ms(1)
    ts(:) = ts - ts(1)
 
-   do i = 1, 10
+   do i = 1, 3
       k1 = 10*i
       call system_clock(it1, cr, cm)
       write(output_unit, *) k1, log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms)
@@ -39,10 +39,10 @@ program main
       write(output_unit, *) 'T:	', real(it2 - it1, kind=real64)/cr
    end do
 
-   do i = 1, 10
+   do i = 1, 3
       d_k1 = Dual64_2_5(10*i, [0, 0, 0, 1, 0])
       call system_clock(it1, cr, cm)
-      write(output_unit, *) k1, real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_k1, d_mu, ts, ms))
+      write(output_unit, *) real(d_k1), real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_k1, d_mu, ts, ms))
       call system_clock(it2, cr, cm)
       write(output_unit, *) 'T:	', real(it2 - it1, kind=real64)/cr
    end do
