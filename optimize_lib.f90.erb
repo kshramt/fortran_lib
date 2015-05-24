@@ -169,7 +169,7 @@ contains
          end if
 
          DEBUG_PRINT('BEGIN Steepest Descent')
-         dx_new(:) = -2*norm2(dx)/lg*g
+         dx_new(:) = -max_scale*norm2(dx)/lg*g
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
          s%is_within = .false.
          call update_(s, dx_new, f, g)
