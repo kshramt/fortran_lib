@@ -49,7 +49,11 @@ contains
 
          ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
          mu_normalized = mu/normalize_interval
+         !$omp parallel
+         !$omp single
          ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, ks) - lambda_integrate(t_end, c, p, mu_normalized, ts, ks)
+         !$omp end single
+         !$omp end parallel
       end function log_likelihood_etas<%= t %>
 
 
@@ -68,15 +72,11 @@ contains
             end do
          else
             i_mid = (i1 + i2)/2
-            !$omp parallel
-            !$omp single
             !$omp task shared(ret_) untied
             ret_ = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, ks)
             !$omp end task
             ret = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, ks)
             !$omp taskwait
-            !$omp end single
-            !$omp end parallel
             ret = ret + ret_
          end if
       end function sum_log_lambda<%= t %>
