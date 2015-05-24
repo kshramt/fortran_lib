@@ -20,9 +20,9 @@
     5,
   ]
   RKINDS_ORDERS_NS = RKINDS.product(ORDERS, NS)
-  FN1S = %i[
-    exp
-    log
+  FN1S = [
+    :exp,
+    :log,
   ]
   OPS = {
     add: :+,
@@ -108,7 +108,7 @@ module ad_lib
          module procedure jaco_<%= kd %>_<%= o %>_<%= n %>
       end interface jaco
 
-      <%- %i[epsilon tiny huge ].each{|fn1| -%>
+      <%- [:epsilon, :tiny, :huge].each{|fn1| -%>
          interface <%= fn1 %>
             module procedure <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
          end interface <%= fn1 %>
@@ -163,7 +163,7 @@ contains
          ret = <%= kd %>
       end function kind_<%= kd %>_<%= o %>_<%= n %>
 
-      <%- %i[epsilon tiny huge ].each{|fn1| -%>
+      <%- [:epsilon, :tiny, :huge].each{|fn1| -%>
          elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             Real(kind=real<%= kd %>):: ret
@@ -268,7 +268,7 @@ contains
 
       <%- RKINDS.each{|kd2| -%>
          <%- suffix = "_dd_#{kd}_#{kd2}_#{o}_#{n}"-%>
-         <%- %i[add sub].each{|fn2| -%>
+         <%- [:add, :sub].each{|fn2| -%>
             <%- op = OPS[fn2] -%>
             elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -283,7 +283,7 @@ contains
             end function <%= fn2 %><%= suffix %>
          <%- } -%>
 
-         <%- %i[mul div pow].each{|fn2| -%>
+         <%- [:mul, :div, :pow].each{|fn2| -%>
             <%- op = OPS[fn2] -%>
             elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -309,7 +309,7 @@ contains
 
       ! todo: optimize for integers
       <%- OPS.each{|fn2, op| -%>
-         <%- %i[r i].each{|t| -%>
+         <%- [:r, :i].each{|t| -%>
             <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
                  typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
@@ -348,7 +348,7 @@ contains
             end function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
          <%- } -%>
 
-         <%- %i[r i].each{|t| -%>
+         <%- [:r, :i].each{|t| -%>
             <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
                  typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"

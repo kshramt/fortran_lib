@@ -1,6 +1,6 @@
 <%-
    require 'fort'
-   reals = ::Fort::Type::Real.multi_provide(dim: 0, kind: %i[REAL32 REAL64])
+   reals = ::Fort::Type::Real.multi_provide(dim: 0, kind: [:REAL32, :REAL64])
    orders = [0, 1]
 
    def s_or_d(t)
