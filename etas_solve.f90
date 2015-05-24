@@ -1,27 +1,24 @@
 program main
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real
+   use, non_intrinsic:: comparable_lib, only: almost_equal
+   use, non_intrinsic:: optimize_lib, only: NewtonStateRealDim0KindREAL64, init, update
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-)
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas
 
    implicit none
 
    Real(kind=real64), allocatable:: ts(:), ms(:)
-   Real(kind=real64):: t_end, normalize_interval, c, p, alpha, k1, mu
-   type(Dual64_2_5):: d_c, d_p, d_alpha, d_k1, d_mu
-   Integer(kind=int64):: n, i, it1, it2, cr, cm
+   type(NewtonStateRealDim0KindREAL64):: s
+   Real(kind=real64):: c_p_alpha_k1_mu_best(5)
+   Real(kind=real64):: t_end, normalize_interval
+   Real(kind=real64):: f, g(5), H(5, 5), f_best
+   type(Dual64_2_5):: c, p, alpha, k1, mu, fgh
+   Integer(kind=int64):: n, i
+   Logical:: converge
 
-   t_end = 7
-   normalize_interval = 1
-   c = 1d-1
-   p = 1
-   alpha = 1
-   mu = 10
-
-   d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
-   d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
-   d_alpha = Dual64_2_5(alpha, [0, 0, 1, 0, 0])
-   d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
-
+   read(input_unit, *) normalize_interval
+   read(input_unit, *) t_end
+   read(input_unit, *) c_p_alpha_k1_mu_best
    read(input_unit, *) n
    allocate(ts(n))
    allocate(ms(n))
@@ -31,21 +28,30 @@ program main
    ms(:) = ms - ms(1)
    ts(:) = ts - ts(1)
 
-   do i = 1, 3
-      k1 = 10*i
-      call system_clock(it1, cr, cm)
-      write(output_unit, *) k1, log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms)
-      call system_clock(it2, cr, cm)
-      write(output_unit, *) 'T:	', real(it2 - it1, kind=real64)/cr
-   end do
+   call init(s, c_p_alpha_k1_mu_best, max(minval(abs(c_p_alpha_k1_mu_best))/10, 1d-3))
 
-   do i = 1, 3
-      d_k1 = Dual64_2_5(10*i, [0, 0, 0, 1, 0])
-      call system_clock(it1, cr, cm)
-      write(output_unit, *) real(d_k1), real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_k1, d_mu, ts, ms))
-      call system_clock(it2, cr, cm)
-      write(output_unit, *) 'T:	', real(it2 - it1, kind=real64)/cr
+   f_best = huge(f_best)
+   do
+      c = Dual64_2_5(c_p_alpha_k1_mu_best(1), [1, 0, 0, 0, 0])
+      p = Dual64_2_5(c_p_alpha_k1_mu_best(2), [0, 1, 0, 0, 0])
+      alpha = Dual64_2_5(c_p_alpha_k1_mu_best(3), [0, 0, 1, 0, 0])
+      k1 = Dual64_2_5(c_p_alpha_k1_mu_best(4), [0, 0, 0, 1, 0])
+      mu = Dual64_2_5(c_p_alpha_k1_mu_best(5), [0, 0, 0, 0, 1])
+      ! todo: implement negation
+      fgh = 0 - log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms)
+      f = real(fgh)
+      g = jaco(fgh)
+      H = hess(fgh)
+      write(output_unit, *) s%is_convex, s%is_within, f, s%x, g
+      call update(s, f, g, H, 'u')
+      converge = all(almost_equal(c_p_alpha_k1_mu_best, s%x, relative=1d-6, absolute=1d-6)) .or. norm2(g) < 1d-6
+      if(f < f_best)then
+         c_p_alpha_k1_mu_best = s%x
+         f_best = f
+      end if
+      if(converge) exit
    end do
+   write(output_unit, *) s%iter, c_p_alpha_k1_mu_best
 
    stop
 end program main
