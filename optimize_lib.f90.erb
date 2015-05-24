@@ -126,7 +126,7 @@ contains
          type(NewtonState<%= t %>), intent(inout):: s
          <%= t.declare %>, intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
-         <%= t.declare %>:: l, l_new, lg, H_(s%dim, s%dim), dx(s%dim), dx_new(s%dim)
+         <%= t.declare %>:: l, l_new, lg, dx(s%dim), dx_new(s%dim)
 
 
          if(s%iter < 0)then
@@ -146,8 +146,7 @@ contains
             return
          end if
 
-         H_(:, :) = H
-         call newton(uplo, g, H_, dx_new, s%is_convex)
+         call newton(uplo, g, H, dx_new, s%is_convex)
          if(s%is_convex)then
             call restrict_step_size(dx_new, dx, max_scale, s%is_within)
             call update_(s, dx_new, f, g)
@@ -185,6 +184,7 @@ contains
          Logical(kind=int8), intent(out):: is_within
          <%= t.declare %>:: l, l_prev, c
 
+         is_within = .true.
          l_prev = norm2(dx_prev)
          l = norm2(dx)
          if(l > max_scale*l_prev)then
@@ -218,6 +218,7 @@ contains
          s%x(:) = x0
          s%x_prev(:) = s%x - sqrt(l/s%dim)
          s%f_prev = get_infinity()
+         s%g_prev(:) = 0
       end subroutine initNewtonState<%= t %>
 
 
@@ -227,7 +228,7 @@ contains
          <%= t.declare %>, intent(in):: g(:), H(size(g), size(g))
          <%= t.declare %>, intent(out):: dx(size(g))
          Logical(kind=int8), intent(out):: is_convex
-         <%= t.declare %>, allocatable:: A(:, :)
+         <%= t.declare %>:: A(size(g), size(g))
          Integer(kind=kind(nrhs)):: n, info
 
          n = size(dx, kind=kind(n))
