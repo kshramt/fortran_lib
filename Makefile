@@ -111,21 +111,11 @@ $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib 
 $(1)/test/math_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib math_lib_test)
 $(1)/test/dual_lib_test.exe: $$(call o_mod_$(1),comparable_lib dual_lib dual_lib_test)
 $(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib optimize_lib optimize_lib_test)
-$(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),etas_lib etas_lib_test)
+$(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib etas_lib etas_lib_test)
 $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib ad_lib_test)
+$(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe.in
+@@$(1)/test/etas_lib_test.exe.tested: data/test/etas_lib_test.exe.in
 
-$(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe $(1)/test/config_lib_test.exe.in
-	cd $$(@D)
-	./$$(<F)
-	touch $$(@F)
-
-
-$(1)/test/etas_lib_test.exe.tested: $(1)/test/etas_lib_test.exe data/test/etas_lib_test.exe.in
-	{
-	   wc -l data/test/etas_lib_test.exe.in
-	   cat data/test/etas_lib_test.exe.in
-	} | $$<
-	touch $$@
 
 $(1)/test/io_lib_illegal_form_argument_errortest.exe: $$(call o_mod_$(1),config_lib character_lib io_lib io_lib_illegal_form_argument_errortest)
 $(1)/test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_get_iftype_for_undefined_value_errortest)
