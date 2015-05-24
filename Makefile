@@ -193,7 +193,7 @@ $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortes
 
 %.f90._new_ %.f90: %.f90.erb dep/fort/lib/fort.rb
 	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
-	export RUBYLIB=$(CURDIR):dep/fort/lib:"$${RUBYLIB:-}"
+	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@._new_
 	script/update_if_changed.sh $@._new_ $@
 
