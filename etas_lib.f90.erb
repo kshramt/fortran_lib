@@ -1,0 +1,178 @@
+<%-
+  T_DECLS = [
+    [:d, 'Real(kind=real64)'],
+    [:r, 'type(Dual64_2_5)'],
+  ]
+-%>
+
+#include "fortran_lib.h"
+module etas_lib
+   USE_FORTRAN_LIB_H
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5
+   use, non_intrinsic:: ad_lib, only: operator(+), operator(*), operator(-), operator(/), operator(**), operator(==)
+   use, non_intrinsic:: ad_lib, only: exp, log, sum, dot_product
+
+   implicit none
+
+   private
+   public:: log_likelihood_etas
+
+   <%- T_DECLS.each{|t, _| -%>
+      <%- [:log_likelihood_etas, :sum_log_lambda, :lambda_integrate, :kernel_coeff, :kernel_integrate, :omori_integrate, :utsu_seki].each{|fn| -%>
+         interface <%= fn %>
+            module procedure <%= fn %><%= t %>
+         end interface <%= fn %>
+      <%- } -%>
+
+      interface omori
+         module procedure omori_t_c_p<%= t %>
+         module procedure omori_t_0_p<%= t %>
+      end interface omori
+
+      interface lambda
+         module procedure lambda_i<%= t %>
+         module procedure lambda_i_t<%= t %>
+      end interface lambda
+   <%- } -%>
+
+contains
+
+   <%- T_DECLS.each{|t, decl| -%>
+      function log_likelihood_etas<%= t %>(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms) result(ret)
+         Integer(kind=int64):: one = 1
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t_end, normalize_interval, ts(:), ms(size(ts))
+         <%= decl %>, intent(in):: c, p, alpha, k1, mu
+         <%= decl %>:: ks(size(ms))
+         <%= decl %>:: mu_normalized
+
+         ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
+         mu_normalized = mu/normalize_interval
+         ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, ks) - lambda_integrate(t_end, c, p, mu_normalized, ts, ks)
+      end function log_likelihood_etas<%= t %>
+
+
+      recursive function sum_log_lambda<%= t %>(i1, i2, c, p, mu_normalized, ts, ks) result(ret)
+         Integer(kind=int64), parameter:: blocksize = 2**2
+         <%= decl %>:: ret, ret_
+         Integer(kind=kind(blocksize)), intent(in):: i1, i2
+         Real(kind=real64), intent(in):: ts(:)
+         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         Integer(kind=int64):: i, i_mid
+
+         if(i1 + blocksize > i2)then
+            ret = log(lambda(i1, c, p, mu_normalized, ts, ks))
+            do i = i1 + 1, i2
+               ret = ret + log(lambda(i, c, p, mu_normalized, ts, ks))
+            end do
+         else
+            i_mid = (i1 + i2)/2
+            !$omp parallel
+            !$omp single
+            !$omp task shared(ret_) untied
+            ret_ = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, ks)
+            !$omp end task
+            ret = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, ks)
+            !$omp taskwait
+            !$omp end single
+            !$omp end parallel
+            ret = ret + ret_
+         end if
+      end function sum_log_lambda<%= t %>
+
+
+      pure function lambda_i<%= t %>(i, c, p, mu_normalized, ts, ks) result(ret)
+         <%= decl %>:: ret
+         Integer(kind=int64), intent(in):: i
+         Real(kind=real64), intent(in):: ts(:)
+         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         Real(kind=kind(ts)):: ti
+         Integer(kind=kind(i)):: j
+
+         ti = ts(i)
+         do j = i - 1, 0, -1
+            if(j <= 0) exit
+            if(ts(j) < ti) exit
+         end do
+         ret = lambda(j, ti, c, p, mu_normalized, ts, ks)
+      end function lambda_i<%= t %>
+
+
+      pure function lambda_i_t<%= t %>(i, t, c, p, mu_normalized, ts, ks) result(ret)
+         <%= decl %>:: ret
+         Integer(kind=int64), intent(in):: i
+         Real(kind=real64), intent(in):: t, ts(:)
+         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+
+         ret = mu_normalized + dot_product(ks(1:i), omori((t + c) - ts(1:i), p))
+      end function lambda_i_t<%= t %>
+
+
+      pure function lambda_integrate<%= t %>(t_end, c, p, mu_normalized, ts, ks) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t_end, ts(:)
+         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+
+         ! todo: sum(kernel_integrate(t_end - ts, ks, c, p))
+         ret = t_end*mu_normalized + sum(kernel_integrate(t_end - ts, ks, c, p))
+      end function lambda_integrate<%= t %>
+
+
+      elemental function kernel_integrate<%= t %>(t, k, c, p) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t
+         <%= decl %>, intent(in)::  k, c, p
+
+         ret = k*omori_integrate(t, c, p)
+      end function kernel_integrate<%= t %>
+
+
+      elemental function kernel_coeff<%= t %>(dm, c, p, alpha, k1, normalize_interval) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: dm, normalize_interval
+         <%= decl %>, intent(in):: c, p, alpha, k1
+
+         ret = k1*utsu_seki(dm, alpha)/omori_integrate(normalize_interval, c, p)
+      end function kernel_coeff<%= t %>
+
+
+      elemental function omori_t_0_p<%= t %>(t, p) result(ret)
+         <%= decl %>:: ret
+         <%= decl %>, intent(in):: t, p
+
+         ret = 1/t**p
+      end function omori_t_0_p<%= t %>
+
+
+      elemental function omori_t_c_p<%= t %>(t, c, p) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t
+         <%= decl %>, intent(in):: c, p
+
+         ret = 1/(t + c)**p
+      end function omori_t_c_p<%= t %>
+
+
+      elemental function omori_integrate<%= t %>(t, c, p) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t
+         <%= decl %>, intent(in):: c, p
+
+         if(p == 1)then
+            ret = log((t + c)/c)
+         else
+            ret = ((t + c)**(1 - p) - c**(1 - p))/(1 - p)
+         end if
+      end function omori_integrate<%= t %>
+
+
+      elemental function utsu_seki<%= t %>(dm, alpha) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: dm
+         <%= decl %>, intent(in):: alpha
+
+         ret = exp(alpha*dm)
+      end function utsu_seki<%= t %>
+   <%- } -%>
+end module etas_lib

@@ -26,6 +26,16 @@ program main
    TEST(all(almost_equal(jaco(z), jaco(x*x + y*x + y*y))))
    TEST(all(almost_equal(hess(z), hess(x*x + y*x + y*y))))
 
+   z = dot_product([x, y, y], [a, a, b])
+   TEST(almost_equal(real(z), a*a + b*a + b*b))
+   TEST(all(almost_equal(jaco(z), jaco(x*a + y*a + y*b))))
+   TEST(all(almost_equal(hess(z), hess(x*a + y*a + y*b))))
+
+   z = dot_product([a, b, b], [x, x, y])
+   TEST(almost_equal(real(z), a*a + b*a + b*b))
+   TEST(all(almost_equal(jaco(z), jaco(a*x + b*x + b*y))))
+   TEST(all(almost_equal(hess(z), hess(a*x + b*x + b*y))))
+
    z = sum([x, y])
    TEST(almost_equal(real(z), a + b))
    TEST(all(almost_equal(jaco(z), [one, one])))

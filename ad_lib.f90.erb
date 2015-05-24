@@ -120,9 +120,13 @@ module ad_lib
          end interface hess
       <%- end -%>
 
-      interface dot_product
-         module procedure dot_product_<%= kd %>_<%= o %>_<%= n %>
-      end interface dot_product
+      <% RKINDS.each{|kd2| %>
+         interface dot_product
+            module procedure dot_product_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
+            module procedure dot_product_dr_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
+            module procedure dot_product_rd_<%= kd2 %>_<%= kd %>_<%= o %>_<%= n %>
+         end interface dot_product
+      <% } %>
 
       interface sum
          module procedure sum_<%= kd %>_<%= o %>_<%= n %>_1
@@ -202,12 +206,40 @@ contains
          end function hess_<%= kd %>_<%= o %>_<%= n %>
       <%- end -%>
 
-      pure function dot_product_<%= kd %>_<%= o %>_<%= n %>(x, y) result(z)
-         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:), y(size(x))
-         type(Dual<%= kd %>_<%= o %>_<%= n %>):: z
+      <%- RKINDS.each{|kd2| -%>
+         pure function dot_product_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
+            type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y(size(x))
+            type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
 
-         z = sum(x*y)
-      end function dot_product_<%= kd %>_<%= o %>_<%= n %>
+            z = sum(x*y)
+         end function dot_product_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
+      <%- } -%>
+
+      <%- RKINDS.each{|kr| -%>
+         <%-
+            t = :r
+            t_decl = "Real(kind=real#{kr})"
+            k_ret = [kd, kr].max
+            d_r = "dot_product_d#{t}_#{kd}_#{kr}_#{o}_#{n}"
+            r_d = "dot_product_#{t}d_#{kr}_#{kd}_#{o}_#{n}"
+         -%>
+         pure function <%= d_r %>(x, y) result(z)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
+            <%= t_decl %>, intent(in):: y(size(x))
+            type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+            z = sum(x*y)
+         end function <%= d_r %>
+
+         pure function <%= r_d %>(x, y) result(z)
+            <%= t_decl %>, intent(in):: x(:)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y(size(x))
+            type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+            z = sum(x*y)
+         end function <%= r_d %>
+      <%- } -%>
 
       pure function sum_<%= kd %>_<%= o %>_<%= n %>_1(x) result(y)
          Integer(kind=int64), parameter:: one = 1
@@ -312,7 +344,7 @@ contains
          <%- [:r, :i].each{|t| -%>
             <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
-                 typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+                 t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
                  # this promotion rule emulates Fortran
                  k_ret = t == :r ? [kd, kri].max : kd
                  d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
@@ -320,14 +352,14 @@ contains
                -%>
                elemental function <%= d_ri %>(x, y) result(z)
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
-                  <%= typ %>, intent(in):: y
+                  <%= t_decl %>, intent(in):: y
                   type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
 
                   z = x <%= op %> Dual<%= k_ret %>_<%= o %>_<%= n %>(y)
                end function <%= d_ri %>
 
                elemental function <%= ri_d %>(x, y) result(z)
-                  <%= typ %>, intent(in):: x
+                  <%= t_decl %>, intent(in):: x
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
                   type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
 
@@ -351,21 +383,21 @@ contains
          <%- [:r, :i].each{|t| -%>
             <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
                <%-
-                 typ = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+                 t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
                  # this promotion rule emulates Fortran
                  d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
                  ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
                -%>
                elemental function <%= d_ri %>(x, y) result(ret)
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
-                  <%= typ %>, intent(in):: y
+                  <%= t_decl %>, intent(in):: y
                   Logical:: ret
 
                   ret = x%f <%= op %> y
                end function <%= d_ri %>
 
                elemental function <%= ri_d %>(x, y) result(ret)
-                  <%= typ %>, intent(in):: x
+                  <%= t_decl %>, intent(in):: x
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
                   Logical:: ret
 
