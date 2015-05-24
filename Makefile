@@ -91,7 +91,7 @@ $(1)/bin/sac_to_json.exe: $$(call o_mod_$(1),character_lib sac_lib sac_to_json)
 $(1)/bin/text_dump_array.exe: $$(call o_mod_$(1),constant_lib character_lib config_lib io_lib text_dump_array)
 $(1)/bin/get_wgs84_from_ecef.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_wgs84_from_ecef)
 $(1)/bin/get_ecef_from_wgs84.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_ecef_from_wgs84)
-
+$(1)/bin/etas_solve.exe: $$(call o_mod_$(1),ad_lib etas_lib etas_solve)
 
 ## Tests
 $(1)/test/array_lib_test.exe: $$(call o_mod_$(1),comparable_lib array_lib array_lib_test)
