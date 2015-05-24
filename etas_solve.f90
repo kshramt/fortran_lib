@@ -33,11 +33,14 @@ program main
 
    f_best = huge(f_best)
    do
-      ! if(s%x(1) <= c_min)then
-      !    bound = (c_min - s%x_prev(1))/(s%x(1) - s%x_prev(1))
-      !    s%x = bound*(s%x - s%x_prev) + s%x_prev
-      !    print*, bound
-      ! end if
+      do i = 1, 5
+         if(s%x(i) <= c_min)then
+            bound = (c_min - s%x_prev(i))/(s%x(i) - s%x_prev(i))
+            s%x = bound*(s%x - s%x_prev) + s%x_prev
+            DEBUG_PRINT_VARIABLE(i)
+            DEBUG_PRINT_VARIABLE(bound)
+         end if
+      end do
       c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
       p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
       alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
