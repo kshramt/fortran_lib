@@ -16,6 +16,7 @@ script:
   - pushd $MAKE_V
   - ./configure
   - make -j$(nproc)
+  - ulimit -a
   - popd
   - popd
   - wait
@@ -24,7 +25,7 @@ script:
   - nproc
   - $make --version
   - nproc
-  - $make -j$(nproc) all check
+  - $make -j16 all check
 env:
   - MY_FC_V=4.9 MAKE_V=make-3.82
   - MY_FC_V=4.9 MAKE_V=make-4.1
