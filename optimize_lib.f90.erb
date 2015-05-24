@@ -135,35 +135,45 @@ contains
          s%iter = s%iter + 1
 
          dx(:) = s%x - s%x_prev
+         DEBUG_ASSERT(dot_product(dx, s%g_prev) <= 0)
          if(f >= s%f_prev)then
+            DEBUG_PRINT('BEGIN Line Search')
             l = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
+
             ASSERT(s%is_convex)
             ASSERT(0 < l_new)
             ASSERT(l_new < l)
             s%is_within = .true.
             s%x(:) = s%x_prev + l_new/l*dx
+            DEBUG_PRINT('END Line Search')
             return
          end if
 
          call newton(uplo, g, H, dx_new, s%is_convex)
          if(s%is_convex)then
+            DEBUG_PRINT('BEGIN Newton')
             call restrict_step_size(dx_new, dx, max_scale, s%is_within)
             call update_(s, dx_new, f, g)
+            DEBUG_PRINT('END Newton')
             return
          end if
 
 
          lg = norm2(g)
          if(lg <= 0)then
+            DEBUG_PRINT('BEGIN Saddle or Peak')
             call update_(s, dx/2, f, g)
+            DEBUG_PRINT('END Saddle or Peak')
             return
          end if
 
+         DEBUG_PRINT('BEGIN Steepest Descent')
          dx_new(:) = -2*norm2(dx)/lg*g
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
          s%is_within = .false.
          call update_(s, dx_new, f, g)
+         DEBUG_PRINT('END Steepest Descent')
       end subroutine updateNewtonState<%= t %>
 
 
