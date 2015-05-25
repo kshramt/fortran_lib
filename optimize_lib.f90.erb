@@ -245,13 +245,8 @@ contains
          ASSERT(n > 0)
 
          A = H
-         call <%= sd %>potrf(uplo, n, A, n, info)
-         ASSERT(info >= 0)
-         is_convex = info == 0
-         if(.not.is_convex) return
-
-         dx(:) = -g
-         call <%= sd %>potrs(uplo, n, nrhs, A, n, dx, n, info)
+         dx = -g
+         call <%= sd %>posv(uplo, n, nrhs, A, n, dx, n, info)
          ASSERT(info >= 0)
          is_convex = info == 0
       end subroutine newton<%= t %>
