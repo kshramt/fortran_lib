@@ -56,6 +56,10 @@ program main
       H = hess(fgh)
       write(output_unit, *) s%is_convex, s%is_within, f, s%x, g
       call update(s, f, g, H, 'u')
+      if(s%is_saddle_or_peak)then
+         call random_number(s%x)
+         s%x = (2*s%x - 1)*norm2(dx)
+      end if
       converge = s%is_convex .and. s%is_within .and. (all(almost_equal(c_p_alpha_k1_mu_best, s%x, relative=1d-6, absolute=1d-6)) .or. norm2(g) < 1d-6)
       if(f < f_best)then
          c_p_alpha_k1_mu_best = s%x
