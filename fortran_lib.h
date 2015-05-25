@@ -40,10 +40,12 @@
      (lbound(array, dim_) <= index .and. index <= ubound(array, dim_))
 
 #  ifdef DEBUG
+#    define DEBUG_WARN(message) WARN(message)
 #    define DEBUG_RAISE_IF(isBad) RAISE_IF(isBad)
 #    define DEBUG_PRINT(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, (x)
 #    define DEBUG_PRINT_VARIABLE(x) write(ERROR_UNIT, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
 #  else
+#    define DEBUG_WARN(message)
 #    define DEBUG_RAISE_IF(isBad)
 #    define DEBUG_PRINT(x)
 #    define DEBUG_PRINT_VARIABLE(x)

@@ -31,6 +31,7 @@ module optimize_lib
       type, public:: NewtonState<%= k %>
          Logical(kind=int8):: is_convex
          Logical(kind=int8):: is_within
+         Logical(kind=int8):: is_saddle_or_peak
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
@@ -66,6 +67,7 @@ module optimize_lib
    <%- RKINDS.each{|k| -%>
       interface update
          module procedure updateNewtonState<%= k %>
+         module procedure updateNewtonState_<%= k %>
       end interface update
 
       interface update_
@@ -80,9 +82,17 @@ module optimize_lib
          module procedure initNewtonState<%= k %>
       end interface init
 
+      interface adaptive_steepest_descent
+         module procedure adaptive_steepest_descent<%= k %>
+      end interface adaptive_steepest_descent
+
       interface newton
          module procedure newton<%= k %>
       end interface newton
+
+      interface syevd
+         module procedure syevd<%= k %>
+      end interface syevd
 
       <%- ORDERS.each{|order| -%>
          interface update
@@ -119,12 +129,26 @@ contains
          ! do
          !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
          ! end do
-         Real(kind=real<%= k %>), parameter:: zero = 0
          Real(kind=real<%= k %>), parameter:: max_scale = 2
          type(NewtonState<%= k %>), intent(inout):: s
          Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
-         Real(kind=real<%= k %>):: l, l_new, lg, dx(s%dim), dx_new(s%dim)
+
+
+         call update(s, f, g, H, uplo, max_scale)
+      end subroutine updateNewtonState<%= k %>
+
+      subroutine updateNewtonState_<%= k %>(s, f, g, H, uplo, max_scale)
+         ! call init(s, x0, l)
+         ! do
+         !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
+         ! end do
+         Real(kind=real<%= k %>), parameter:: zero = 0
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
+         Character(len=1), intent(in):: uplo
+         Real(kind=real<%= k %>), intent(in):: max_scale
+         Real(kind=real<%= k %>):: l, l_new, dx(s%dim), dx_new(s%dim)
 
 
          if(s%iter < 0)then
@@ -140,38 +164,49 @@ contains
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
 
             ASSERT(s%is_convex)
+            DEBUG_PRINT_VARIABLE(l)
+            DEBUG_PRINT_VARIABLE(l_new)
             s%is_within = .true.
             s%x(:) = s%x_prev + l_new/l*dx
             DEBUG_PRINT('END Line Search')
             return
          end if
 
-         call newton(uplo, g, H, dx_new, s%is_convex)
-         if(s%is_convex)then
-            DEBUG_PRINT('BEGIN Newton')
-            call restrict_step_size(dx_new, dx, max_scale, s%is_within)
-            call update_(s, dx_new, f, g)
-            DEBUG_PRINT('END Newton')
-            return
-         end if
-
-
-         lg = norm2(g)
-         if(lg <= 0)then
-            DEBUG_PRINT('BEGIN Saddle or Peak')
-            call update_(s, dx/2, f, g)
-            DEBUG_PRINT('END Saddle or Peak')
-            return
-         end if
-
-         DEBUG_PRINT('BEGIN Steepest Descent')
-         dx_new(:) = -max_scale*norm2(dx)/lg*g
+         call updateNewtonState_adaptive_steepest_descent<%= k %>(s, g, H, uplo, dx_new)
+         ! call updateNewtonState_newton<%= k %>(s, g, H, uplo, dx_new)
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
-         s%is_within = .false.
          call update_(s, dx_new, f, g)
-         DEBUG_PRINT('END Steepest Descent')
-      end subroutine updateNewtonState<%= k %>
+      end subroutine updateNewtonState_<%= k %>
 
+      subroutine updateNewtonState_adaptive_steepest_descent<%= k %>(s, g, H, uplo, dx)
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: g(s%dim), H(s%dim, s%dim)
+         Character(len=1), intent(in):: uplo
+         Real(kind=real<%= k %>), intent(out):: dx(s%dim)
+
+         call adaptive_steepest_descent(uplo, g, H, dx, s%is_convex, s%is_saddle_or_peak)
+         s%is_within = s%is_convex
+      end subroutine updateNewtonState_adaptive_steepest_descent<%= k %>
+
+      subroutine updateNewtonState_newton<%= k %>(s, g, H, uplo, dx)
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: g(s%dim), H(s%dim, s%dim)
+         Character(len=1), intent(in):: uplo
+         Real(kind=real<%= k %>), intent(out):: dx(s%dim)
+
+         call newton(uplo, g, H, dx, s%is_convex)
+         s%is_within = .true.
+         if(s%is_convex) return
+
+         s%is_saddle_or_peak = norm2(g) <= 0
+         if(s%is_saddle_or_peak)then
+            DEBUG_WARN('Saddle or peak')
+            dx = 0
+         end if
+
+         dx(:) = -g/2
+         s%is_within = .false.
+      end subroutine updateNewtonState_newton<%= k %>
 
       subroutine update_NewtonState<%= k %>(s, dx_new, f, g)
          type(NewtonState<%= k %>), intent(inout):: s
@@ -190,7 +225,6 @@ contains
          Logical(kind=int8), intent(out):: is_within
          Real(kind=real<%= k %>):: l, l_prev, c
 
-         is_within = .true.
          l_prev = norm2(dx_prev)
          l = norm2(dx)
          if(l > max_scale*l_prev)then
@@ -213,6 +247,7 @@ contains
          ASSERT(l > 0)
          s%is_convex = .false.
          s%is_within = .false.
+         s%is_saddle_or_peak = .false.
          s%iter = 0
          ENSURE_DEALLOCATED(s%x)
          ENSURE_DEALLOCATED(s%x_prev)
@@ -226,6 +261,62 @@ contains
          s%f_prev = get_infinity()
          s%g_prev(:) = 0
       end subroutine initNewtonState<%= k %>
+
+
+      subroutine adaptive_steepest_descent<%= k %>(uplo, g, H, dx, is_convex, is_saddle_or_peak)
+         Integer(kind=int32), parameter:: nrhs = 1
+         Character(len=1), intent(in):: uplo
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
+         Real(kind=kind(g)), intent(out):: dx(size(g))
+         Logical(kind=int8), intent(out):: is_convex, is_saddle_or_peak
+         Real(kind=kind(g)):: V(size(g), size(g)), e(size(g)), dx_0(size(g)), dx_scale(size(g)), Vi(size(g)), Vig
+         Integer(kind=kind(nrhs)):: n, i, info
+
+         n = size(dx, kind=kind(n))
+         ASSERT(n > 0)
+
+         V = H
+         call syevd(uplo, V, e, info)
+         if(info /= 0)then
+            write(output_unit, *) 'H: ', H
+            write(error_unit, *) 'info: ', info
+            ASSERT(info == 0)
+         end if
+         ASSERT(info == 0)
+         is_convex = e(1) > 0 ! `e` is sorted
+         is_saddle_or_peak = (.not. is_convex) .and. norm2(g) <= 0
+         if(is_saddle_or_peak)then
+            DEBUG_WARN('Saddle or peak')
+            if(e(1) < 0)then
+               DEBUG_WARN('Set dx = V(:, 1) (optimum direction to escape)')
+               dx = V(:, 1)
+            else
+               dx = 0
+            end if
+            return
+         end if
+
+         dx_0 = 0
+         dx_scale = 0
+         do i = 1, n
+            Vi = V(:, i)
+            Vig = dot_product(Vi, g)
+            if(e(i) == 0)then
+               is_convex = .false.
+               dx_0 = dx_0 - Vig*Vi
+            else
+               if(e(i) > 0)then
+                  dx_scale = dx_scale - Vig/e(i)*Vi
+               else
+                  dx_scale = dx_scale + Vig/(2*e(i))*Vi ! 2 is a heuristics
+               end if
+            end if
+         end do
+         dx = dx_scale
+         if(norm2(dx_0) > 0)then ! this branch won't happen in practice
+            dx = dx + norm2(dx_scale)/(2*norm2(dx_0))*dx_0 ! 2 is a heuristics
+         end if
+      end subroutine adaptive_steepest_descent<%= k %>
 
 
       subroutine newton<%= k %>(uplo, g, H, dx, is_convex)
@@ -246,6 +337,32 @@ contains
          ASSERT(info >= 0)
          is_convex = info == 0
       end subroutine newton<%= k %>
+
+
+      subroutine syevd<%= k %>(uplo, H, e, info)
+         Character(len=1), intent(in):: uplo
+         Real(kind=real<%= k %>), intent(inout):: H(:, :)
+         Real(kind=real<%= k %>), intent(out):: e(:)
+         Integer(kind=kind(0)), intent(out):: info
+         Real(kind=real<%= k %>), allocatable:: work(:)
+         Integer(kind=kind(info)), allocatable:: iwork(:)
+         Integer(kind=kind(info)):: n, lwork, liwork
+
+          n = size(H, 1, kind=kind(n))
+         ASSERT(size(H, 2, kind=kind(n)) == n)
+         ASSERT(size(e, kind=kind(n)) == n)
+         allocate(work(1))
+         allocate(iwork(1))
+         lwork = -1
+         liwork = -1
+         call <%= sd %>syevd('v', uplo, n, H, n, e, work, lwork, iwork, liwork, info)
+         lwork = nint(work(1), kind=kind(lwork))
+         liwork = iwork(1)
+         deallocate(work, iwork)
+         allocate(work(lwork))
+         allocate(iwork(liwork))
+         call <%= sd %>syevd('v', uplo, n, H, n, e, work, lwork, iwork, liwork, info)
+      end subroutine syevd<%= k %>
 
 
       ! derivative free
