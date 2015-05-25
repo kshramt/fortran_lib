@@ -159,7 +159,7 @@ contains
          dx(:) = s%x - s%x_prev
          DEBUG_ASSERT(dot_product(dx, s%g_prev) <= 0)
          if(f >= s%f_prev)then
-            DEBUG_PRINT('BEGIN Line Search')
+            DEBUG_PRINT('Line Search')
             l = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
 
@@ -168,7 +168,6 @@ contains
             DEBUG_PRINT_VARIABLE(l_new)
             s%is_within = .true.
             s%x(:) = s%x_prev + l_new/l*dx
-            DEBUG_PRINT('END Line Search')
             return
          end if
 

@@ -14,7 +14,7 @@ program main
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_k1_mu_best(5)
    Real(kind=real64):: t_end, normalize_interval
-   Real(kind=real64):: f, g(5), H(5, 5), f_best, bound, dx(5)
+   Real(kind=real64):: f, g(5), H(5, 5), f_best, H_best(5, 5), bound, dx(5)
    type(Dual64_2_5):: c, p, alpha, k1, mu, fgh
    Integer(kind=int64):: n, i
    Logical:: converge
@@ -54,7 +54,7 @@ program main
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
-      write(output_unit, *) s%is_convex, s%is_within, f, s%x, g
+      write(error_unit, *) norm2(dx), s%is_convex, s%is_within, f, s%x, g
       call update(s, f, g, H, 'u')
       if(s%is_saddle_or_peak)then
          call random_number(s%x)
@@ -64,10 +64,20 @@ program main
       if(f < f_best)then
          c_p_alpha_k1_mu_best = s%x
          f_best = f
+         H_best = H
       end if
       if(converge) exit
    end do
-   write(output_unit, *) s%iter, f_best, c_p_alpha_k1_mu_best
+   write(output_unit, '(a)') 'iterations'
+   write(output_unit, '(g0)') s%iter
+   write(output_unit, '(a)') 'best log-likelihood'
+   write(output_unit, '(g0)') -f_best
+   write(output_unit, '(a)') 'c, p, α, K₁, μ'
+   write(output_unit, '(g0, 4("	", g0))') c_p_alpha_k1_mu_best
+   write(output_unit, '(a)') 'Hessian'
+   do i = 1, 5
+      write(output_unit, '(g0, 4("	", g0))') -H_best(i, :)
+   end do
 
    stop
 end program main
