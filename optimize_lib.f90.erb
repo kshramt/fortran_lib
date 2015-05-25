@@ -140,8 +140,6 @@ contains
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
 
             ASSERT(s%is_convex)
-            ASSERT(0 < l_new)
-            ASSERT(l_new < l)
             s%is_within = .true.
             s%x(:) = s%x_prev + l_new/l*dx
             DEBUG_PRINT('END Line Search')
