@@ -14,7 +14,7 @@ program main
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_k1_mu_best(5)
    Real(kind=real64):: t_end, normalize_interval
-   Real(kind=real64):: f, g(5), H(5, 5), f_best, bound
+   Real(kind=real64):: f, g(5), H(5, 5), f_best, bound, dx(5)
    type(Dual64_2_5):: c, p, alpha, k1, mu, fgh
    Integer(kind=int64):: n, i
    Logical:: converge
@@ -35,12 +35,13 @@ program main
 
    f_best = huge(f_best)
    do
+      dx = s%x - s%x_prev
       do i = 1, 5
          if(s%x(i) <= c_min)then
-            bound = (c_min - s%x_prev(i))/(s%x(i) - s%x_prev(i))
-            s%x = bound*(s%x - s%x_prev) + s%x_prev
+            bound = (c_min - s%x_prev(i))/dx(i)
             DEBUG_PRINT_VARIABLE(i)
             DEBUG_PRINT_VARIABLE(bound)
+            s%x(i) = bound*dx(i) + s%x_prev(i)
          end if
       end do
       c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
