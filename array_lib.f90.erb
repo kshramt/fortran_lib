@@ -2,12 +2,21 @@
   require 'fort'
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
-  reals = ::Fort::Type::Real.multi_provide(dim: 1)
+  REAL1S = ::Fort::Type::Real.multi_provide(dim: 1)
+  COMPLEX1S = ::Fort::Type::Complex.multi_provide(dim: 1)
   ARRAYS =
-  ::Fort::Type::Complex.multi_provide(dim: 1) +
+  COMPLEX1S +
   ::Fort::Type::Logical.multi_provide(dim: 1) +
   ::Fort::Type::Integer.multi_provide(dim: 1) +
-  ::Fort::Type::Real.multi_provide(dim: 1)
+  REAL1S
+
+  def kind_max(t1, t2)
+     [kind(t1), kind(t2)].max
+  end
+
+  def kind(t)
+    t.kind.to_s.sub(/\AREAL/, '').to_i
+ end
 -%>
 
 # include "fortran_lib.h"
@@ -19,10 +28,18 @@ module array_lib
    implicit none
 
    private
+   public:: mul_diag
    public:: get
    public:: eye
    public:: l2_norm
    public:: iota
+
+   <%- (REAL1S + COMPLEX1S).product((REAL1S + COMPLEX1S)).each{|t1, t2| -%>
+      interface mul_diag
+         module procedure mul_diag_Ad<%= t1 %><%= t2 %>
+         module procedure mul_diag_dA<%= t1 %><%= t2 %>
+      end interface mul_diag
+   <%- } -%>
 
    <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
       interface get
@@ -37,7 +54,7 @@ module array_lib
       end interface eye
    <%- } -%>
 
-   <%- reals.each{|t| -%>
+   <%- REAL1S.each{|t| -%>
       interface l2_norm
          module procedure l2_norm<%= t %>
       end interface l2_norm
@@ -75,6 +92,35 @@ module array_lib
 
 contains
 
+   <%- (REAL1S + COMPLEX1S).product((REAL1S + COMPLEX1S)).each{|t1, t2| -%>
+      <%-
+         t_ret = (t1.type == :Complex or t2.type == :Complex) ? :Complex : :Real
+         k_ret = "REAL#{kind_max(t1, t2)}".to_sym
+      -%>
+      function mul_diag_Ad<%= t1 %><%= t2 %>(A, d) result(ret)
+         Integer(kind=int64):: i
+         <%= t1.declare %>, intent(in):: A(:, :)
+         <%= t2.declare %>, intent(in):: d(size(A, 2, kind=kind(i)))
+         <%= t_ret %>(kind=<%= k_ret %>):: ret(size(A, 1, kind=kind(i)), size(A, 2, kind=kind(i)))
+
+         do i = 1, size(A, 2, kind=kind(i))
+            ret(:, i) = A(:, i)*d(i)
+         end do
+      end function mul_diag_Ad<%= t1 %><%= t2 %>
+
+      ! `d` is named `d_` to avoid ambiguity
+      function mul_diag_dA<%= t1 %><%= t2 %>(d_, A) result(ret)
+         Integer(kind=int64):: i
+         <%= t1.declare %>, intent(in):: A(:, :)
+         <%= t2.declare %>, intent(in):: d_(size(A, 1, kind=kind(i)))
+         <%= t_ret %>(kind=<%= k_ret %>):: ret(size(A, 1, kind=kind(i)), size(A, 2, kind=kind(i)))
+
+         do i = 1, size(A, 1, kind=kind(i))
+            ret(i, :) = d_(i)*A(i, :)
+         end do
+      end function mul_diag_dA<%= t1 %><%= t2 %>
+   <%- } -%>
+
    <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
       function get<%= t %><%= ti %>(xs, i) result(ret)
          <%= t.declare %>, intent(in):: xs
@@ -105,7 +151,7 @@ contains
       end function eye_mn<%= t %>
    <%- } -%>
 
-   <%- reals.each{|t| -%>
+   <%- REAL1S.each{|t| -%>
       pure function l2_norm<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(in):: xs
          Real(kind=kind(xs)):: ret

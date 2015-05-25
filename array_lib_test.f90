@@ -4,12 +4,26 @@ program main
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: INT64
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   use, non_intrinsic:: array_lib, only: iota, l2_norm, eye, get
-   
+   use, non_intrinsic:: array_lib, only: iota, l2_norm, eye, get, mul_diag
+
    implicit none
 
    Integer:: i
    Integer:: nss(3, 4)
+   Real:: A(3, 4), B(3, 4)
+
+   A(1, :) = [1, 2, 3, 4]
+   A(2, :) = [5, 6, 7, 8]
+   A(3, :) = [9, 10, 11, 12]
+   B(:, 1) = 1*A(:, 1)
+   B(:, 2) = 2*A(:, 2)
+   B(:, 3) = 3*A(:, 3)
+   B(:, 4) = 4*A(:, 4)
+   TEST(all(almost_equal(mul_diag(A, [1.0, 2.0, 3.0, 4.0]), B)))
+   B(1, :) = 1*A(1, :)
+   B(2, :) = 2*A(2, :)
+   B(3, :) = 3*A(3, :)
+   TEST(all(almost_equal(mul_diag([1.0, 2.0, 3.0], A), B)))
 
    TEST(almost_equal(l2_norm([1.0, 2.0]), 5.0))
 
