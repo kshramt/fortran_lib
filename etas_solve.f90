@@ -3,7 +3,7 @@ program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   use, non_intrinsic:: optimize_lib, only: NewtonStateRealDim0KindREAL64, init, update
+   use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas
 
@@ -11,7 +11,7 @@ program main
 
    Real(kind=real64), parameter:: c_min = 1d-6
    Real(kind=real64), allocatable:: ts(:), ms(:)
-   type(NewtonStateRealDim0KindREAL64):: s
+   type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_k1_mu_best(5)
    Real(kind=real64):: t_end, normalize_interval
    Real(kind=real64):: f, g(5), H(5, 5), f_best, bound

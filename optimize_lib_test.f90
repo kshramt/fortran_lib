@@ -6,7 +6,7 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: math_lib, only: rosenbrock_fgh
    use, non_intrinsic:: optimize_lib, only: nnls
-   use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate0RealDim0KindREAL64, Linesearchstate1RealDim0KindREAL64, NewtonStateRealDim0KindREAL64
+   use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate64_0, Linesearchstate64_1, NewtonState64
 
    implicit none
 
@@ -57,7 +57,7 @@ contains
 
       Real(kind=kind(x0)):: x_best(size(x0)), f, f_best, g(size(x0)), H(size(x0), size(x0)), xtol
       Logical:: converge_x
-      type(NewtonStateRealDim0KindREAL64):: s
+      type(NewtonState64):: s
 
       xtol = 1d-2
       call init(s, x0, l)
@@ -83,7 +83,7 @@ contains
       Real(kind=real64), intent(in):: x0, dx, x_theoretical
       Real(kind=kind(x0)):: f, x, xl, xr, x_best, f_best, xtol
       Logical:: converge_x
-      type(LineSearchState0RealDim0KindREAL64):: s
+      type(LineSearchState64_0):: s
 
       ret = .true.
       xtol = 1e-2
@@ -137,7 +137,7 @@ contains
       Real(kind=real64), intent(in):: x0, dx, x_theoretical
       Real(kind=kind(x0)):: f, g, x, x_best, f_best, g_best, xtol
       Logical:: converge
-      type(LineSearchState1RealDim0KindREAL64):: s
+      type(LineSearchState64_1):: s
 
       ret = .true.
       xtol = 1e-2

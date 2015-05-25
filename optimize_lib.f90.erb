@@ -1,24 +1,22 @@
 <%-
-   require 'fort'
-   reals = ::Fort::Type::Real.multi_provide(dim: 0, kind: [:REAL32, :REAL64])
-   orders = [0, 1]
+   RKINDS = [32, 64]
+   ORDERS = [0, 1]
 
-   def s_or_d(t)
-      if t.kind == :REAL64
+   def s_or_d(k)
+      if k == 64
          'd'
-      elsif t.kind == :REAL32
+      elsif k == 32
          's'
       else
-         raise "Unsupported kind: #{t.kind}::#{t.kind.class} for #{t}"
+         raise "Unsupported kind: #{k}"
       end
    end
 -%>
 #include "fortran_lib.h"
 module optimize_lib
    USE_FORTRAN_LIB_H
-   <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
-   use, intrinsic:: iso_fortran_env, only: int8, int64, real64
+   use, intrinsic:: iso_fortran_env, only: int8, int32, int64, real32, real64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: array_lib, only: l2_norm
 
@@ -29,108 +27,108 @@ module optimize_lib
    public:: update, init
 
 
-   <%- reals.each{|t| -%>
-      type, public:: NewtonState<%= t %>
+   <%- RKINDS.each{|k| -%>
+      type, public:: NewtonState<%= k %>
          Logical(kind=int8):: is_convex
          Logical(kind=int8):: is_within
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
-         <%= t.declare %>, allocatable:: x(:)
-         <%= t.declare %>, allocatable:: x_prev(:)
-         <%= t.declare %>:: f_prev
-         <%= t.declare %>, allocatable:: g_prev(:)
-      end type NewtonState<%= t %>
+         Real(kind=real<%= k %>), allocatable:: x(:)
+         Real(kind=real<%= k %>), allocatable:: x_prev(:)
+         Real(kind=real<%= k %>):: f_prev
+         Real(kind=real<%= k %>), allocatable:: g_prev(:)
+      end type NewtonState<%= k %>
 
-      type, public:: LineSearchState0<%= t %>
+      type, public:: LineSearchState<%= k %>_0
          Logical(kind=int8):: is_convex
          Logical(kind=int8):: is_within
          Integer(kind=int64):: iter = -1
-         <%= t.declare %>:: dx
-         <%= t.declare %>:: x
-         <%= t.declare %>:: xl
-         <%= t.declare %>:: xr
-         <%= t.declare %>:: fl
-         <%= t.declare %>:: fr
-      end type LineSearchState0<%= t %>
+         Real(kind=real<%= k %>):: dx
+         Real(kind=real<%= k %>):: x
+         Real(kind=real<%= k %>):: xl
+         Real(kind=real<%= k %>):: xr
+         Real(kind=real<%= k %>):: fl
+         Real(kind=real<%= k %>):: fr
+      end type LineSearchState<%= k %>_0
 
-      type, public:: LineSearchState1<%= t %>
+      type, public:: LineSearchState<%= k %>_1
          Logical(kind=int8):: is_convex
          Logical(kind=int8):: is_within
          Integer(kind=int64):: iter = -1
-         <%= t.declare %>:: dx
-         <%= t.declare %>:: x
-         <%= t.declare %>:: x_best
-         <%= t.declare %>:: f_best
-         <%= t.declare %>:: g_best
-      end type LineSearchState1<%= t %>
+         Real(kind=real<%= k %>):: dx
+         Real(kind=real<%= k %>):: x
+         Real(kind=real<%= k %>):: x_best
+         Real(kind=real<%= k %>):: f_best
+         Real(kind=real<%= k %>):: g_best
+      end type LineSearchState<%= k %>_1
    <%- } -%>
 
-   <%- reals.each{|t| -%>
+   <%- RKINDS.each{|k| -%>
       interface update
-         module procedure updateNewtonState<%= t %>
+         module procedure updateNewtonState<%= k %>
       end interface update
 
       interface update_
-         module procedure update_NewtonState<%= t %>
+         module procedure update_NewtonState<%= k %>
       end interface update_
 
       interface restrict_step_size
-         module procedure restrict_step_size<%= t %>
+         module procedure restrict_step_size<%= k %>
       end interface restrict_step_size
 
       interface init
-         module procedure initNewtonState<%= t %>
+         module procedure initNewtonState<%= k %>
       end interface init
 
       interface newton
-         module procedure newton<%= t %>
+         module procedure newton<%= k %>
       end interface newton
 
-      <%- orders.each{|order| -%>
+      <%- ORDERS.each{|order| -%>
          interface update
-            module procedure updateLineSearchState<%= order %><%= t %>
+            module procedure updateLineSearchState<%= k %>_<%= order %>
          end interface update
 
          interface update_
-            module procedure update_LineSearchState<%= order %><%= t %>
+            module procedure update_LineSearchState<%= k %>_<%= order %>
          end interface update_
 
          interface init
-            module procedure initLineSearchState<%= order %><%= t %>
+            module procedure initLineSearchState<%= k %>_<%= order %>
          end interface init
 
          interface line_search_interpolate
-            module procedure line_search_interpolate<%= order %><%= t %>
+            module procedure line_search_interpolate<%= k %>_<%= order %>
          end interface line_search_interpolate
       <%- } -%>
 
       interface nnls
-         module procedure nnls<%= t %>
+         module procedure nnls<%= k %>
       end interface nnls
    <%- } -%>
 
 contains
 
-   <%- reals.each{|t| -%>
-      <%- sd = s_or_d(t) -%>
+   <%- RKINDS.each{|k| -%>
+      <%- sd = s_or_d(k) -%>
 
       ! Newton
 
-      subroutine updateNewtonState<%= t %>(s, f, g, H, uplo)
+      subroutine updateNewtonState<%= k %>(s, f, g, H, uplo)
          ! call init(s, x0, l)
          ! do
          !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
          ! end do
-         <%= t.declare %>, parameter:: zero = 0
-         <%= t.declare %>, parameter:: max_scale = 2
-         type(NewtonState<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: f, g(s%dim), H(s%dim, s%dim)
+         Real(kind=real<%= k %>), parameter:: zero = 0
+         Real(kind=real<%= k %>), parameter:: max_scale = 2
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
-         <%= t.declare %>:: l, l_new, lg, dx(s%dim), dx_new(s%dim)
+         Real(kind=real<%= k %>):: l, l_new, lg, dx(s%dim), dx_new(s%dim)
 
 
          if(s%iter < 0)then
-            RAISE('`NewtonState<%= t %>` should be `init`ialized before `update`d')
+            RAISE('`NewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
 
@@ -174,25 +172,25 @@ contains
          s%is_within = .false.
          call update_(s, dx_new, f, g)
          DEBUG_PRINT('END Steepest Descent')
-      end subroutine updateNewtonState<%= t %>
+      end subroutine updateNewtonState<%= k %>
 
 
-      subroutine update_NewtonState<%= t %>(s, dx_new, f, g)
-         type(NewtonState<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: dx_new(s%dim), f, g(s%dim)
+      subroutine update_NewtonState<%= k %>(s, dx_new, f, g)
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: dx_new(s%dim), f, g(s%dim)
 
          s%x_prev(:) = s%x
          s%x(:) = s%x_prev + dx_new
          s%f_prev = f
          s%g_prev(:) = g
-      end subroutine update_NewtonState<%= t %>
+      end subroutine update_NewtonState<%= k %>
 
-      subroutine restrict_step_size<%= t %>(dx, dx_prev, max_scale, is_within)
-         <%= t.declare %>, intent(inout):: dx(:)
-         <%= t.declare %>, intent(in):: dx_prev(size(dx))
-         <%= t.declare %>, intent(in):: max_scale
+      subroutine restrict_step_size<%= k %>(dx, dx_prev, max_scale, is_within)
+         Real(kind=real<%= k %>), intent(inout):: dx(:)
+         Real(kind=real<%= k %>), intent(in):: dx_prev(size(dx))
+         Real(kind=real<%= k %>), intent(in):: max_scale
          Logical(kind=int8), intent(out):: is_within
-         <%= t.declare %>:: l, l_prev, c
+         Real(kind=real<%= k %>):: l, l_prev, c
 
          is_within = .true.
          l_prev = norm2(dx_prev)
@@ -206,13 +204,13 @@ contains
             dx(:) = -l_prev/(2*c)*dx
             is_within = .false.
          end if
-      end subroutine restrict_step_size<%= t %>
+      end subroutine restrict_step_size<%= k %>
 
 
-      subroutine initNewtonState<%= t %>(s, x0, l)
-         type(NewtonState<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: x0(:) ! initial solution
-         <%= t.declare %>, intent(in):: l ! initial step length
+      subroutine initNewtonState<%= k %>(s, x0, l)
+         type(NewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
+         Real(kind=real<%= k %>), intent(in):: l ! initial step length
 
          ASSERT(l > 0)
          s%is_convex = .false.
@@ -229,16 +227,16 @@ contains
          s%x_prev(:) = s%x - sqrt(l/s%dim)
          s%f_prev = get_infinity()
          s%g_prev(:) = 0
-      end subroutine initNewtonState<%= t %>
+      end subroutine initNewtonState<%= k %>
 
 
-      subroutine newton<%= t %>(uplo, g, H, dx, is_convex)
+      subroutine newton<%= k %>(uplo, g, H, dx, is_convex)
          Integer(kind=int32), parameter:: nrhs = 1
          Character(len=1), intent(in):: uplo
-         <%= t.declare %>, intent(in):: g(:), H(size(g), size(g))
-         <%= t.declare %>, intent(out):: dx(size(g))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
+         Real(kind=real<%= k %>), intent(out):: dx(size(g))
          Logical(kind=int8), intent(out):: is_convex
-         <%= t.declare %>:: A(size(g), size(g))
+         Real(kind=real<%= k %>):: A(size(g), size(g))
          Integer(kind=kind(nrhs)):: n, info
 
          n = size(dx, kind=kind(n))
@@ -249,23 +247,23 @@ contains
          call <%= sd %>posv(uplo, n, nrhs, A, n, dx, n, info)
          ASSERT(info >= 0)
          is_convex = info == 0
-      end subroutine newton<%= t %>
+      end subroutine newton<%= k %>
 
 
       ! derivative free
 
-      subroutine updateLineSearchState0<%= t %>(s, f)
+      subroutine updateLineSearchState<%= k %>_0(s, f)
          ! call init(s, dx)
          ! do
          !    call update(s, f(x0 + s%x))
          ! end do
-         type(LineSearchState0<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: f
-         <%= t.declare %>:: x_new, x1, x2, x3, f1, f2, f3, step, xlim
-         <%= t.declare %>, parameter:: enlarge = real(5, kind=kind(enlarge))/4
+         type(LineSearchState<%= k %>_0), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f
+         Real(kind=real<%= k %>):: x_new, x1, x2, x3, f1, f2, f3, step, xlim
+         Real(kind=real<%= k %>), parameter:: enlarge = real(5, kind=kind(enlarge))/4
 
          if(s%iter < 0)then
-            RAISE('`LineSearchState0<%= t %>` should be `init`ialized before `update`d')
+            RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 1)then
@@ -360,23 +358,23 @@ contains
                call update_(s, x2, x3 ,f2, f3)
             end if
          end if
-      end subroutine updateLineSearchState0<%= t %>
+      end subroutine updateLineSearchState<%= k %>_0
 
 
-      subroutine update_LineSearchState0<%= t %>(s, xl, xr, fl, fr)
-         type(LineSearchState0<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: xl, xr, fl, fr
+      subroutine update_LineSearchState<%= k %>_0(s, xl, xr, fl, fr)
+         type(LineSearchState<%= k %>_0), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: xl, xr, fl, fr
 
          s%xl = xl
          s%xr = xr
          s%fl = fl
          s%fr = fr
-      end subroutine update_LineSearchState0<%= t %>
+      end subroutine update_LineSearchState<%= k %>_0
 
 
-      subroutine initLineSearchState0<%= t %>(s, dx)
-         type(LineSearchState0<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: dx
+      subroutine initLineSearchState<%= k %>_0(s, dx)
+         type(LineSearchState<%= k %>_0), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
          s%is_convex = .false.
@@ -392,14 +390,14 @@ contains
             s%xl = dx
             s%x = s%xr
          end if
-      end subroutine initLineSearchState0<%= t %>
+      end subroutine initLineSearchState<%= k %>_0
 
 
-      subroutine line_search_interpolate0<%= t %>(x1, x2, x3, f1, f2, f3, x_opt, is_convex)
-         <%= t.declare %>, intent(in):: x1, x2, x3, f1, f2, f3
-         <%= t.declare %>, intent(out):: x_opt
+      subroutine line_search_interpolate<%= k %>_0(x1, x2, x3, f1, f2, f3, x_opt, is_convex)
+         Real(kind=real<%= k %>), intent(in):: x1, x2, x3, f1, f2, f3
+         Real(kind=real<%= k %>), intent(out):: x_opt
          Logical(kind=int8), intent(out):: is_convex
-         <%= t.declare %>:: x12, x13, x23, f1x1213, f2x1223, f3x1323, a, b_neg
+         Real(kind=real<%= k %>):: x12, x13, x23, f1x1213, f2x1223, f3x1323, a, b_neg
 
          x12 = x1 - x2
          x13 = x1 - x3
@@ -423,23 +421,23 @@ contains
          else
             x_opt = x3
          end if
-      end subroutine line_search_interpolate0<%= t %>
+      end subroutine line_search_interpolate<%= k %>_0
 
 
       ! use gradient information
 
-      subroutine updateLineSearchState1<%= t %>(s, f, g)
+      subroutine updateLineSearchState<%= k %>_1(s, f, g)
          ! call init(s, dx)
          ! do
          !    call update(s, f(x0 + s%x), grad(x0 + s%x))
          ! end do
-         type(LineSearchState1<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: f, g
-         <%= t.declare %>:: x1, f1, g1, x2, f2, g2, step, xl, xr, x_new, xlim
-         <%= t.declare %>, parameter:: enlarge = 2
+         type(LineSearchState<%= k %>_1), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f, g
+         Real(kind=real<%= k %>):: x1, f1, g1, x2, f2, g2, step, xl, xr, x_new, xlim
+         Real(kind=real<%= k %>), parameter:: enlarge = 2
 
          if(s%iter < 0)then
-            RAISE('`LineSearchState1<%= t %>` should be `init`ialized before `update`d')
+            RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 1)then
@@ -507,22 +505,22 @@ contains
                s%x = x1 - step
             end if
          end if
-      end subroutine updateLineSearchState1<%= t %>
+      end subroutine updateLineSearchState<%= k %>_1
 
 
-      subroutine update_LineSearchState1<%= t %>(s, x_best, f_best, g_best)
-         type(LineSearchState1<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: x_best, f_best, g_best
+      subroutine update_LineSearchState<%= k %>_1(s, x_best, f_best, g_best)
+         type(LineSearchState<%= k %>_1), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: x_best, f_best, g_best
 
          s%x_best = x_best
          s%f_best = f_best
          s%g_best = g_best
-      end subroutine update_LineSearchState1<%= t %>
+      end subroutine update_LineSearchState<%= k %>_1
 
 
-      subroutine initLineSearchState1<%= t %>(s, dx)
-         type(LineSearchState1<%= t %>), intent(inout):: s
-         <%= t.declare %>, intent(in):: dx
+      subroutine initLineSearchState<%= k %>_1(s, dx)
+         type(LineSearchState<%= k %>_1), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
          s%is_convex = .false.
@@ -533,14 +531,14 @@ contains
          s%x_best = get_infinity()
          s%f_best = get_infinity()
          s%g_best = get_infinity()
-      end subroutine initLineSearchState1<%= t %>
+      end subroutine initLineSearchState<%= k %>_1
 
 
-      subroutine line_search_interpolate1<%= t %>(x1, f1, g1, x2, f2, x_new, is_convex)
-         <%= t.declare %>, intent(in):: x1, f1, g1, x2, f2
-         <%= t.declare %>, intent(out):: x_new
+      subroutine line_search_interpolate<%= k %>_1(x1, f1, g1, x2, f2, x_new, is_convex)
+         Real(kind=real<%= k %>), intent(in):: x1, f1, g1, x2, f2
+         Real(kind=real<%= k %>), intent(out):: x_new
          Logical(kind=int8), intent(out):: is_convex
-         <%= t.declare %>:: x12, a
+         Real(kind=real<%= k %>):: x12, a
 
          x12 = x2 - x1
          a = ((f2 - f1) - g1*x12)/x12**2
@@ -552,11 +550,11 @@ contains
          else
             x_new = x2
          end if
-      end subroutine line_search_interpolate1<%= t %>
+      end subroutine line_search_interpolate<%= k %>_1
 
 
-      pure function nnls<%= t %>(A, b) result(ret)
-         <%= t.declare %>, intent(in):: A(:, :), b(:)
+      pure function nnls<%= k %>(A, b) result(ret)
+         Real(kind=real<%= k %>), intent(in):: A(:, :), b(:)
          Real(kind=kind(A)), allocatable:: tAA(:, :), tAb(:), x(:), x_pre(:), g(:), ret(:)
          Real(kind=kind(A)):: d, d_pre, alpha, alpha_, l2_Ag
          Integer(kind=INT64):: i, n
@@ -606,6 +604,6 @@ contains
             end if
             x(:) = x + min(l2_norm(g)/l2_Ag, alpha)*g
          end do
-      end function nnls<%= t %>
+      end function nnls<%= k %>
    <%- } -%>
 end module optimize_lib
