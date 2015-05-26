@@ -49,8 +49,7 @@ program main
       alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
       k1 = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
       mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
-      ! todo: implement negation
-      fgh = 0 - log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms)
+      fgh = -log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms)
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)

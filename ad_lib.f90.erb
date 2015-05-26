@@ -136,6 +136,10 @@ module ad_lib
          end interface <%= fn1 %>
       <%- } -%>
 
+      interface operator(-)
+         module procedure neg_<%= kd %>_<%= o %>_<%= n %>
+      end interface operator(-)
+
       <%- (OPS.merge(COMPS)).each{|fn2, op| -%>
          <%- RKINDS.each{|kdr| -%>
             interface operator(<%= op %>)
@@ -296,8 +300,20 @@ contains
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
       <%- } -%>
 
+      elemental function neg_<%= kd %>_<%= o %>_<%= n %>(x) result(y)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+         type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+
+         y%f = -x%f
+         y%g = -x%g
+         <%- if o > 1 -%>
+            y%h = -x%h
+         <%- end -%>
+      end function neg_<%= kd %>_<%= o %>_<%= n %>
+
       <%- RKINDS.each{|kd2| -%>
          <%- suffix = "_dd_#{kd}_#{kd2}_#{o}_#{n}"-%>
+
          <%- [:add, :sub].each{|fn2| -%>
             <%- op = OPS[fn2] -%>
             elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
