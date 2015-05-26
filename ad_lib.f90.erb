@@ -403,7 +403,7 @@ contains
                   xj_par_x = xj/xf
                   yj_par_x = y%g(j)/xf
                   yj_logx_y_xj_par_x = y%g(j)*log_x + y_par_x*x%g(j)
-                  do i = j, <%= n %>
+                  do, concurrent(i = j:<%= n %>)
                      z%h(i, j) = z%h(i, j) + (x%g(i)*(yj_par_x - y_par_x*xj_par_x + y_par_x*yj_logx_y_xj_par_x) + y%g(i)*(xj_par_x + log_x*yj_logx_y_xj_par_x))*x_pow_y
                   end do
                end do
