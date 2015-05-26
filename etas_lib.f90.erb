@@ -59,7 +59,7 @@ contains
 
       recursive function sum_log_lambda<%= t %>(i1, i2, c, p, mu_normalized, ts, ks) result(ret)
          Integer(kind=int64), parameter:: blocksize = 2**2
-         <%= decl %>:: ret, ret_
+         <%= decl %>:: ret, ret1, ret2
          Integer(kind=kind(blocksize)), intent(in):: i1, i2
          Real(kind=real64), intent(in):: ts(:)
          <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
@@ -72,12 +72,12 @@ contains
             end do
          else
             i_mid = (i1 + i2)/2
-            !$omp task shared(ret_) untied
-            ret_ = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, ks)
+            !$omp task shared(ret2) untied
+            ret2 = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, ks)
             !$omp end task
-            ret = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, ks)
+            ret1 = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, ks)
             !$omp taskwait
-            ret = ret + ret_
+            ret = ret1 + ret2
          end if
       end function sum_log_lambda<%= t %>
 
