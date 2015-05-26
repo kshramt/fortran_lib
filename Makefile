@@ -62,11 +62,14 @@ all:
 deps: $(DEPS:%=dep/%.updated)
 
 
+# Functions
+sha256 = $(1:%=%.sha256)
+unsha256 = $(1:%.sha256=%)
+
 define MAIN_TEMPLATE =
 # Functions
 mod_$(1) = $$(patsubst %,$(1)/%.mod,$$(filter %_lib,$$(1)))
 o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
-
 
 .PHONY: all-$(1) check-$(1) clean-$(1)
 
@@ -127,7 +130,7 @@ $(1)/test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $$(call o_mod_
 
 
 # Rules
-$(1)/src/%.f90.make: script/make_include_make.sh $(1)/src/%.f90 script/fort_deps.sh
+$(1)/src/%.f90.make: script/make_include_make.sh $(1)/src/%.f90.sha256 script/fort_deps.sh
 	$$< $(1)/src/$$*.f90 $(1) >| $$@
 
 
@@ -153,20 +156,26 @@ $(1)/bin/%.exe:
 	$(FC) $$(FFLAGS_$(1)) -o bin/$$*.exe $$(patsubst $(1)/%,%,$$(filter-out %.mod,$$^)) $(LAPACK)
 
 
-$(1)/%_lib.o $(1)/%_lib.mod: $(1)/src/%_lib.f90
+$(1)/%_lib.o $(1)/%_lib.mod: $(1)/src/%_lib.f90.sha256
 	cd $(1)
 	$(FC) $$(FFLAGS_$(1)) -c -o $$*_lib.o src/$$*_lib.f90 $(LAPACK)
 	touch $$*_lib.mod
-$(1)/%.o: $(1)/src/%.f90
+
+$(1)/%.o: $(1)/src/%.f90.sha256
 	cd $(1)
 	$(FC) $$(FFLAGS_$(1)) -c -o $$*.o src/$$*.f90 $(LAPACK)
 
+$(1)/src/%.f90.sha256: $(1)/src/%.f90.sha256.new
+	cmp -s $$< $$@ || cp -f $$< $$@
 
-$(1)/src/%.f90._new_ $(1)/src/%.f90: %.f90 fortran_lib.h
-	[[ -e $$@ ]] && ! script/need_make.sh $$@._new_ $$^ && exit 0
+$(1)/src/%.f90.sha256.new: $(1)/src/%.f90
+	sha256sum $$< >| $$@
+
+$(1)/src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $$(@D)
-	$(CPP) $$(CPP_FLAGS_$(1)) $$< $$@._new_
-	script/update_if_changed.sh $$@._new_ $$@
+	$(CPP) $$(CPP_FLAGS_$(1)) $$< $$@
+
+.PRECIOUS: $(1)/src/%.f90.sha256.new $(1)/src/%.f90.sha256
 endef
 $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
@@ -182,11 +191,9 @@ endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
 
-%.f90._new_ %.f90: %.f90.erb dep/fort/lib/fort.rb
-	[[ -e $@ ]] && ! script/need_make.sh $@._new_ $^ && exit 0
+%.f90: %.f90.erb dep/fort/lib/fort.rb
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
-	$(ERB) $(ERB_FLAGS) $< >| $@._new_
-	script/update_if_changed.sh $@._new_ $@
+	$(ERB) $(ERB_FLAGS) $< >| $@
 
 
 define DEPS_RULE_TEMPLATE =
