@@ -51,7 +51,6 @@ EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_TEMPLATE_NAMES)
 .SUFFIXES:
 .DELETE_ON_ERROR:
 .ONESHELL:
-.PRECIOUS: %.f90
 export SHELL := /bin/bash
 export SHELLOPTS := pipefail:errexit:nounset:noclobber
 
