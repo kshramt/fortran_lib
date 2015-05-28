@@ -389,30 +389,34 @@ contains
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
-            Real(kind=real<%= [kd, kd2].max %>):: xf, yf, x_pow_y, log_x, y_par_x
+            Real(kind=real<%= [kd, kd2].max %>):: xf, yf, fn_px, fn_py, x_pow_y, x_pow_y_sub_1, log_x
             <%- if o > 1 -%>
-               Real(kind=real<%= [kd, kd2].max %>):: yj_logx_y_xj_par_x, xj, xj_par_x, yj_par_x
                Integer:: i, j
+               Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxx, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
             <%- end -%>
-
 
             xf = x%f
             yf = y%f
             x_pow_y = xf**yf
-            log_x = log(xf)
-            y_par_x = yf/xf
-
             z%f = x_pow_y
-            z%g = (y%g*log_x + x%g*y_par_x)*x_pow_y
+
+            x_pow_y_sub_1 = xf**(yf - 1)
+            fn_px = yf*x_pow_y_sub_1
+            log_x = log(xf)
+            fn_py = log_x*x_pow_y
+            z%g = x%g*fn_px + y%g*fn_py
             <%- if o > 1 -%>
-               z%h = (x%h*y_par_x + y%h*log_x)*x_pow_y
-               do, concurrent(j = 1:<%= n%>)
+               z%h = x%h*fn_px + y%h*fn_py
+               fn_pxx = yf*(yf - 1)*xf**(yf - 2)
+               fn_pxy = (1 + yf*log_x)*x_pow_y_sub_1
+               fn_pyy = log_x*fn_py ! = log_x**2*x_pow_y
+               do, concurrent(j = 1:<%= n %>)
                   xj = x%g(j)
-                  xj_par_x = xj/xf
-                  yj_par_x = y%g(j)/xf
-                  yj_logx_y_xj_par_x = y%g(j)*log_x + y_par_x*x%g(j)
-                  do, concurrent(i = j:<%= n %>)
-                     z%h(i, j) = z%h(i, j) + (x%g(i)*(yj_par_x - y_par_x*xj_par_x + y_par_x*yj_logx_y_xj_par_x) + y%g(i)*(xj_par_x + log_x*yj_logx_y_xj_par_x))*x_pow_y
+                  yj = y%g(j)
+                  fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
+                  fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+                  do i = j, <%= n %>
+                     z%h(i, j) = z%h(i, j) + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
             <%- end -%>
