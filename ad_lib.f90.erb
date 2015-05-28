@@ -42,10 +42,6 @@
 -%>
 #include "fortran_lib.h"
 
-! todo: optimize
-#define mul_g() (x%g*y%f + x%f*y%g)
-#define mul_h_ij(i, j) (x%h(i, j)*y%f + x%g(i)*y%g(j) + x%g(j)*y%g(i) + x%f*y%h(i, j))
-#define div_h_ij(i, j) (((x%h(i, j)*yf - y%h(i, j)*xf - y%g(i)*x%g(j))*yf - y%g(j)*(x%g(i)*yf - 2*y%g(i)*xf))*par_yf3)
 #define exp_p1(x) (exp(x))
 #define exp_p2(x) (exp(x))
 #define log_p1(x) (1/(x))
