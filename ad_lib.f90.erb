@@ -51,7 +51,6 @@
 #define log_p1(x) (1/(x))
 #define log_p2(x) (-1/(x)**2)
 #define abs_p1(x) (sign(real(1, kind=kind(x)), x))
-#define abs_p2(x) 0
 
 module ad_lib
    <%- RKINDS.each{|k|-%>
@@ -287,7 +286,9 @@ contains
             Real(kind=real<%= kd %>):: xf, fn_p1
             <%- if o > 1 -%>
                Integer:: i, j
-               Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
+               <%- unless fn1 == :abs -%>
+                  Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
+               <%- end -%>
             <%- end -%>
 
             xf = x%f
@@ -296,13 +297,15 @@ contains
             y%g = fn_p1*x%g
             <%- if o > 1 -%>
                y%h = fn_p1*x%h
-               fn_p2 = <%= fn1 %>_p2(xf)
-               do, concurrent(j = 1:<%= n %>)
-                  fn_p2_xj = fn_p2*x%g(j)
-                  do, concurrent(i = j:<%= n %>)
-                     y%h(i, j) = y%h(i, j) + fn_p2_xj*x%g(i)
+               <%- unless fn1 == :abs -%>
+                  fn_p2 = <%= fn1 %>_p2(xf)
+                  do, concurrent(j = 1:<%= n %>)
+                     fn_p2_xj = fn_p2*x%g(j)
+                     do, concurrent(i = j:<%= n %>)
+                        y%h(i, j) = y%h(i, j) + fn_p2_xj*x%g(i)
+                     end do
                   end do
-               end do
+               <%- end -%>
             <%- end -%>
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
       <%- } -%>
