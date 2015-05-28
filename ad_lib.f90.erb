@@ -441,33 +441,125 @@ contains
          end function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
       <%- } -%>
 
-      ! todo: optimize for integers
-      <%- OPS.each{|fn2, op| -%>
-         <%- [:r, :i].each{|t| -%>
-            <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
-               <%-
-                 t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
-                 # this promotion rule emulates Fortran
-                 k_ret = t == :r ? [kd, kri].max : kd
-                 d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
-                 ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
-               -%>
-               elemental function <%= d_ri %>(x, y) result(z)
-                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
-                  <%= t_decl %>, intent(in):: y
-                  type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+      <%- [:r, :i].each{|t| -%>
+         <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
+            <%-
+              t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+              # this promotion rule emulates Fortran
+              k_ret = t == :r ? [kd, kri].max : kd
+              d_ri = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
+              ri_d = "_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
+            -%>
+            elemental function add<%= d_ri %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               <%= t_decl %>, intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
 
-                  z = x <%= op %> Dual<%= k_ret %>_<%= o %>_<%= n %>(y)
-               end function <%= d_ri %>
+               z%f = x%f + y
+               z%g = x%g
+               <%- if o > 1 -%>
+                  z%h = x%h
+               <%- end -%>
+            end function add<%= d_ri %>
 
-               elemental function <%= ri_d %>(x, y) result(z)
-                  <%= t_decl %>, intent(in):: x
-                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
-                  type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+            elemental function add<%= ri_d %>(x, y) result(z)
+               <%= t_decl %>, intent(in):: x
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
 
-                  z = Dual<%= k_ret %>_<%= o %>_<%= n %>(x) <%= op %> y
-               end function <%= ri_d %>
-            <%- } -%>
+               z%f = x + y%f
+               z%g = y%g
+               <%- if o > 1 -%>
+                  z%h = y%h
+               <%- end -%>
+            end function add<%= ri_d %>
+
+            elemental function sub<%= d_ri %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               <%= t_decl %>, intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               z%f = x%f - y
+               z%g = x%g
+               <%- if o > 1 -%>
+                  z%h = x%h
+               <%- end -%>
+            end function sub<%= d_ri %>
+
+            elemental function sub<%= ri_d %>(x, y) result(z)
+               <%= t_decl %>, intent(in):: x
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               z%f = x - y%f
+               z%g = -y%g
+               <%- if o > 1 -%>
+                  z%h = -y%h
+               <%- end -%>
+            end function sub<%= ri_d %>
+
+            elemental function mul<%= d_ri %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               <%= t_decl %>, intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               z%f = x%f*y
+               z%g = x%g*y
+               <%- if o > 1 -%>
+                  z%h = x%h*y
+               <%- end -%>
+            end function mul<%= d_ri %>
+
+            elemental function mul<%= ri_d %>(x, y) result(z)
+               <%= t_decl %>, intent(in):: x
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               z%f = x*y%f
+               z%g = x*y%g
+               <%- if o > 1 -%>
+                  z%h = x*y%h
+               <%- end -%>
+            end function mul<%= ri_d %>
+
+            elemental function div<%= d_ri %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               <%= t_decl %>, intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               z%f = x%f/y
+               z%g = x%g/y
+               <%- if o > 1 -%>
+                  z%h = x%h/y
+               <%- end -%>
+            end function div<%= d_ri %>
+
+            elemental function div<%= ri_d %>(x, y) result(z)
+               <%= t_decl %>, intent(in):: x
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               ! todo: optimize
+               z = Dual<%= k_ret %>_<%= o %>_<%= n %>(x)/y
+            end function div<%= ri_d %>
+
+            elemental function pow<%= d_ri %>(x, y) result(z)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+               <%= t_decl %>, intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               ! todo: optimize
+               z = x**Dual<%= k_ret %>_<%= o %>_<%= n %>(y)
+            end function pow<%= d_ri %>
+
+            elemental function pow<%= ri_d %>(x, y) result(z)
+               <%= t_decl %>, intent(in):: x
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+               type(Dual<%= k_ret %>_<%= o %>_<%= n %>):: z
+
+               ! todo: optimize
+               z = Dual<%= k_ret %>_<%= o %>_<%= n %>(x)**y
+            end function pow<%= ri_d %>
          <%- } -%>
       <%- } -%>
 
