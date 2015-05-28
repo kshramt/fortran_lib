@@ -336,50 +336,65 @@ contains
             end function <%= fn2 %><%= suffix %>
          <%- } -%>
 
-         <%- [:mul].each{|fn2| -%>
-            <%- op = OPS[fn2] -%>
-            elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
-               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
-               type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
-               type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
-               <%- if o > 1 -%>
-                  Integer:: i, j
-               <%- end -%>
+         elemental function mul_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
+            type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+            type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
+            type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
+            Real(kind=real<%= [kd, kd2].max %>):: xf, yf
+            <%- if o > 1 -%>
+               Integer:: i, j
+               Real(kind=real<%= [kd, kd2].max %>):: xj, yj
+            <%- end -%>
 
-               z%f = x%f <%= op %> y%f
-               z%g = <%= fn2 %>_g()
-               <%- if o > 1 -%>
-                  do j = 1, <%= n %>
-                     z%h(j, j) = <%= fn2 %>_h_ij(j, j)
-                     do i = j + 1, <%= n %>
-                        z%h(i, j) = <%= fn2 %>_h_ij(i, j)
-                     end do
+            xf = x%f
+            yf = y%f
+            z%f = xf*yf
+
+            z%g = x%g*yf + y%g*xf
+            <%- if o > 1 -%>
+               z%h = x%h*yf + y%h*xf
+               do, concurrent(j = 1:<%= n %>)
+                  xj = x%g(j)
+                  yj = y%g(j)
+                  do i = j, <%= n %>
+                     z%h(i, j) = z%h(i, j) + x%g(i)*yj + y%g(i)*xj
                   end do
-               <%- end -%>
-            end function <%= fn2 %><%= suffix %>
-         <%- } -%>
+               end do
+            <%- end -%>
+         end function mul_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
 
          elemental function div_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
-            Real(kind=real<%= [kd, kd2].max %>):: xf, yf, par_yf3
+            Real(kind=real<%= [kd, kd2].max %>):: xf, yf, div_y, div_y2, x_div_y2, fn_py
             <%- if o > 1 -%>
                Integer:: i, j
+               Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
             <%- end -%>
-
 
             xf = x%f
             yf = y%f
-            par_yf3 = 1/yf**3
+            div_y = 1/yf
+            z%f = xf*div_y
 
-            z%f = xf/yf
-            z%g = (x%g*yf - xf*y%g)/yf**2
+            ! fn_px = div_y
+            div_y2 = div_y*div_y
+            x_div_y2 = xf*div_y2
+            fn_py = -x_div_y2
+            z%g = x%g*div_y + y%g*fn_py
             <%- if o > 1 -%>
-               do j = 1, <%= n %>
-                  z%h(j, j) = div_h_ij(j, j)
-                  do i = j + 1, <%= n %>
-                     z%h(i, j) = div_h_ij(i, j)
+               z%h = x%h*div_y + y%h*fn_py
+               ! fn_pxx = 0
+               fn_pxy = -div_y2
+               fn_pyy = 2*x_div_y2*div_y
+               do, concurrent(j = 1:<%= n %>)
+                  xj = x%g(j)
+                  yj = y%g(j)
+                  fn_pxx_xj_add_fn_pxy_yj = fn_pxy*yj ! + fn_pxx*xj
+                  fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+                  do i = j, <%= n %>
+                     z%h(i, j) = z%h(i, j) + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
             <%- end -%>
