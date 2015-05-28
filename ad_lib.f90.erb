@@ -23,6 +23,7 @@
   FN1S = [
     :exp,
     :log,
+    :abs,
   ]
   OPS = {
     add: :+,
@@ -45,11 +46,12 @@
 #define mul_g() (x%g*y%f + x%f*y%g)
 #define mul_h_ij(i, j) (x%h(i, j)*y%f + x%g(i)*y%g(j) + x%g(j)*y%g(i) + x%f*y%h(i, j))
 #define div_h_ij(i, j) (((x%h(i, j)*yf - y%h(i, j)*xf - y%g(i)*x%g(j))*yf - y%g(j)*(x%g(i)*yf - 2*y%g(i)*xf))*par_yf3)
-#define f_h_ij(f1, f2, i, j) ((f2(x%f))*x%g(i)*x%g(j) + (f1(x%f))*x%h(i, j))
 #define exp_p1(x) (exp(x))
 #define exp_p2(x) (exp(x))
 #define log_p1(x) (1/(x))
 #define log_p2(x) (-1/(x)**2)
+#define abs_p1(x) (sign(real(1, kind=kind(x)), x))
+#define abs_p2(x) 0
 
 module ad_lib
    <%- RKINDS.each{|k|-%>
@@ -282,17 +284,23 @@ contains
          elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(y)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
+            Real(kind=real<%= kd %>):: xf, fn_p1
             <%- if o > 1 -%>
                Integer:: i, j
+               Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
             <%- end -%>
 
-            y%f = <%= fn1 %>(x%f)
-            y%g = <%= fn1 %>_p1(x%f)*x%g
+            xf = x%f
+            y%f = <%= fn1 %>(xf)
+            fn_p1 = <%= fn1 %>_p1(xf)
+            y%g = fn_p1*x%g
             <%- if o > 1 -%>
-               do j = 1, <%= n %>
-                  y%h(j, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, j, j)
-                  do i = j + 1, <%= n %>
-                     y%h(i, j) = f_h_ij(<%= fn1 %>_p1, <%= fn1 %>_p2, i, j)
+               y%h = fn_p1*x%h
+               fn_p2 = <%= fn1 %>_p2(xf)
+               do, concurrent(j = 1:<%= n %>)
+                  fn_p2_xj = fn_p2*x%g(j)
+                  do, concurrent(i = j:<%= n %>)
+                     y%h(i, j) = y%h(i, j) + fn_p2_xj*x%g(i)
                   end do
                end do
             <%- end -%>

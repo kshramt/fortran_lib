@@ -121,6 +121,7 @@ program main
    TEST(almost_equal(h(2, 2), zero))
    TEST(almost_equal(h(2, 2), zero))
 
+   ! exp
    z = exp(x)
    TEST(almost_equal(real(z), exp(a)))
    j = jaco(z)
@@ -143,6 +144,7 @@ program main
    TEST(almost_equal(h(2, 1), zero))
    TEST(almost_equal(h(2, 2), exp(b)))
 
+   ! log
    z = log(x)
    TEST(almost_equal(real(z), log(a)))
    j = jaco(z)
@@ -164,6 +166,21 @@ program main
    TEST(almost_equal(h(1, 2), zero))
    TEST(almost_equal(h(2, 1), zero))
    TEST(almost_equal(h(2, 2), -1/b**2))
+
+   ! abs
+   z = abs(Dual64_2_2(+zero, [1, 0]))
+   TEST(almost_equal(real(z), zero))
+   j = jaco(z)
+   TEST(almost_equal(j(1), one))
+   TEST(almost_equal(j(2), zero))
+   TEST(all(almost_equal(hess(z), zero)))
+
+   z = abs(Dual64_2_2(-zero, [0, 1]))
+   TEST(almost_equal(real(z), zero))
+   j = jaco(z)
+   TEST(almost_equal(j(1), zero))
+   TEST(almost_equal(j(2), -one))
+   TEST(all(almost_equal(hess(z), zero)))
 
    z = exp(log(x + y))
    TEST(almost_equal(real(z), a + b))
