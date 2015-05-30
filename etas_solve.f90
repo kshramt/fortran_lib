@@ -13,6 +13,7 @@ program main
    Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-6, 0d0, -huge(0d0), 1d-6, 1d-6]
    Real(kind=real64), parameter:: upper_bounds(n_params) = [10d0, 10d0, 10d0, huge(0d0), huge(0d0)]
    Real(kind=real64), allocatable:: ts(:), ms(:)
+   Real(kind=real64):: M_max
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_K_mu_best(n_params)
    Real(kind=real64):: t_end, normalize_interval
@@ -30,7 +31,8 @@ program main
    do i = 1, n
       read(input_unit, *) ts(i), ms(i)
    end do
-   ms(:) = ms - maxval(ms)
+   M_max = maxval(ms)
+   ms(:) = ms - M_max
    ts(:) = ts - ts(1)
 
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
@@ -77,7 +79,7 @@ program main
    write(output_unit, '(a)') 'iterations'
    write(output_unit, '(g0)') s%iter
    write(output_unit, '(a)') 'M_max'
-   write(output_unit, '(g0)') maxval(ms)
+   write(output_unit, '(g0)') M_max
    write(output_unit, '(a)') 'best log-likelihood'
    write(output_unit, '(g0)') -f_best
    write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
