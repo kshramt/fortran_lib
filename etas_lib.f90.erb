@@ -123,8 +123,8 @@ contains
 
          j = 0
          do i = 1, size(ts, kind=kind(i))
-            if(ts(i) > t)then
-               j = i
+            if(ts(i) >= t)then
+               j = i - 1
                exit
             end if
          end do
