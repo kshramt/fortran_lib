@@ -14,7 +14,7 @@ ifeq ($(FC),ifort)
    LAPACK := -mkl
 else
    FFLAG_COMMON := -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
-   FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ggdb -pg --coverage -DDEBUG
+   FFLAG_DEBUG := -fbounds-check -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -ggdb -pg --coverage -DDEBUG
    FFLAG_OPTIMIZE := -O3 -flto -fwhole-program
    ifneq ($(shell uname -s),Darwin)
       FFLAG_OPTIMIZE += -march=native -fopenmp -ftree-parallelize-loops=$(shell nproc)
