@@ -10,7 +10,7 @@ program main
    implicit none
 
    Integer(kind=int64), parameter:: n_params = 5
-   Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-6, -huge(0d0), -huge(0d0), 1d-6, 1d-6]
+   Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -huge(0d0), -huge(0d0), 0d0, 1d-8]
    Real(kind=real64), parameter:: upper_bounds(n_params) = [10d0, 10d0, 10d0, huge(0d0), huge(0d0)]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: M_max
