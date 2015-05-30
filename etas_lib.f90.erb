@@ -17,6 +17,7 @@ module etas_lib
 
    private
    public:: log_likelihood_etas
+   public:: omori_integrate
 
    <%- T_DECLS.each{|t, _| -%>
       <%- [:log_likelihood_etas, :sum_log_lambda, :lambda_integrate, :kernel_coeff, :kernel_integrate, :omori_integrate, :utsu_seki].each{|fn| -%>

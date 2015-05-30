@@ -5,7 +5,7 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
-   use, non_intrinsic:: etas_lib, only: log_likelihood_etas
+   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate
 
    implicit none
 
@@ -72,8 +72,8 @@ program main
    write(output_unit, '(g0)') s%iter
    write(output_unit, '(a)') 'best log-likelihood'
    write(output_unit, '(g0)') -f_best
-   write(output_unit, '(a)') 'c, p, α, K₁, μ'
-   write(output_unit, '(g0, 4("	", g0))') c_p_alpha_k1_mu_best
+   write(output_unit, '(a)') 'c, p, α, K₁, μ, K₁_for_other_programs, μ_for_other_programs'
+   write(output_unit, '(g0, 6("	", g0))') c_p_alpha_k1_mu_best, c_p_alpha_k1_mu_best(4)/omori_integrate(normalize_interval, c_p_alpha_k1_mu_best(1), c_p_alpha_k1_mu_best(2)), c_p_alpha_k1_mu_best(5)/normalize_interval
    write(output_unit, '(a)') 'Hessian'
    do i = 1, 5
       write(output_unit, '(g0, 4("	", g0))') -H_best(i, :)
