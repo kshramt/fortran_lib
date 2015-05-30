@@ -157,7 +157,6 @@ contains
          s%iter = s%iter + 1
 
          dx(:) = s%x - s%x_prev
-         DEBUG_ASSERT(dot_product(dx, s%g_prev) <= 0)
          if(f >= s%f_prev)then
             DEBUG_PRINT('Line Search')
             l = norm2(dx)
