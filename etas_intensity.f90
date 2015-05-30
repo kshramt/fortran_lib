@@ -22,7 +22,7 @@ program main
    do i = 1, n
       read(input_unit, *) ts(i), ms(i)
    end do
-   ms(:) = ms - ms(1)
+   ms(:) = ms - maxval(ms)
    ts(:) = ts - ts(1)
 
    do
