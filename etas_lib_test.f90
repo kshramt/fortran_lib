@@ -39,8 +39,8 @@ program main
       -6.9d0, &
       -6.9d0 &
       ]
-   Real(kind=kind(ts)):: t_end, normalize_interval, c, p, alpha, k1, mu
-   type(Dual64_2_5):: d_c, d_p, d_alpha, d_k1, d_mu
+   Real(kind=kind(ts)):: t_end, normalize_interval, c, p, alpha, K, mu
+   type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu
 
    t_end = 1.5d0
    normalize_interval = 1
@@ -52,18 +52,18 @@ program main
    d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
 
    p = 2d-1
-   k1 = 104
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms), -238.82597918687705d0))
+   K = 104
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -238.82597918687705d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
-   d_k1 = Dual64_2_5(k1, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_k1, d_mu, ts, ms)), -238.82597918687705d0))
+   d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -238.82597918687705d0))
 
    p = 6d-1
-   k1 = 120
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms), -243.80278501664003d0))
+   K = 120
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -243.80278501664003d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
-   d_k1 = Dual64_2_5(k1, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_k1, d_mu, ts, ms)), -243.80278501664003d0))
+   d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -243.80278501664003d0))
 
    stop
 end program main

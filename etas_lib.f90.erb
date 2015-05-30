@@ -42,67 +42,67 @@ module etas_lib
 contains
 
    <%- T_DECLS.each{|t, decl| -%>
-      function intensity_etas<%= t %>(t, normalize_interval, c, p, alpha, k1, mu, ts, ms) result(ret)
+      function intensity_etas<%= t %>(t, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t, normalize_interval, ts(:), ms(size(ts))
-         <%= decl %>, intent(in):: c, p, alpha, k1, mu
-         <%= decl %>:: ks(size(ms))
+         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
 
-         ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
+         coeffs = kernel_coeff(ms, c, p, alpha, K, normalize_interval)
          mu_normalized = mu/normalize_interval
-         ret = lambda(t, c, p, mu_normalized, ts, ks)
+         ret = lambda(t, c, p, mu_normalized, ts, coeffs)
       end function intensity_etas<%= t %>
 
 
-      function log_likelihood_etas<%= t %>(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms) result(ret)
+      function log_likelihood_etas<%= t %>(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
          Integer(kind=int64):: one = 1
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t_end, normalize_interval, ts(:), ms(size(ts))
-         <%= decl %>, intent(in):: c, p, alpha, k1, mu
-         <%= decl %>:: ks(size(ms))
+         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
 
-         ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
+         coeffs = kernel_coeff(ms, c, p, alpha, K, normalize_interval)
          mu_normalized = mu/normalize_interval
          !$omp parallel
          !$omp single
-         ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, ks) - lambda_integrate(t_end, c, p, mu_normalized, ts, ks)
+         ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, coeffs) - lambda_integrate(t_end, c, p, mu_normalized, ts, coeffs)
          !$omp end single
          !$omp end parallel
       end function log_likelihood_etas<%= t %>
 
 
-      recursive function sum_log_lambda<%= t %>(i1, i2, c, p, mu_normalized, ts, ks) result(ret)
+      recursive function sum_log_lambda<%= t %>(i1, i2, c, p, mu_normalized, ts, coeffs) result(ret)
          Integer(kind=int64), parameter:: blocksize = 2**2
          <%= decl %>:: ret, ret1, ret2
          Integer(kind=kind(blocksize)), intent(in):: i1, i2
          Real(kind=real64), intent(in):: ts(:)
-         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
          Integer(kind=int64):: i, i_mid
 
          if(i1 + blocksize > i2)then
-            ret = log(lambda(i1, c, p, mu_normalized, ts, ks))
+            ret = log(lambda(i1, c, p, mu_normalized, ts, coeffs))
             do i = i1 + 1, i2
-               ret = ret + log(lambda(i, c, p, mu_normalized, ts, ks))
+               ret = ret + log(lambda(i, c, p, mu_normalized, ts, coeffs))
             end do
          else
             i_mid = (i1 + i2)/2
             !$omp task shared(ret2) untied
-            ret2 = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, ks)
+            ret2 = sum_log_lambda(i_mid + 1, i2, c, p, mu_normalized, ts, coeffs)
             !$omp end task
-            ret1 = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, ks)
+            ret1 = sum_log_lambda(i1, i_mid, c, p, mu_normalized, ts, coeffs)
             !$omp taskwait
             ret = ret1 + ret2
          end if
       end function sum_log_lambda<%= t %>
 
 
-      pure function lambda_i<%= t %>(i, c, p, mu_normalized, ts, ks) result(ret)
+      pure function lambda_i<%= t %>(i, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: i
          Real(kind=real64), intent(in):: ts(:)
-         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
          Real(kind=kind(ts)):: ti
          Integer(kind=kind(i)):: j
 
@@ -111,14 +111,14 @@ contains
             if(j <= 0) exit
             if(ts(j) < ti) exit
          end do
-         ret = lambda(j, ti, c, p, mu_normalized, ts, ks)
+         ret = lambda(j, ti, c, p, mu_normalized, ts, coeffs)
       end function lambda_i<%= t %>
 
 
-      pure function lambda_t<%= t %>(t, c, p, mu_normalized, ts, ks) result(ret)
+      pure function lambda_t<%= t %>(t, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t, ts(:)
-         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
          Integer(kind=int64):: i, j
 
          j = 0
@@ -128,45 +128,45 @@ contains
                exit
             end if
          end do
-         ret = lambda(j, t, c, p, mu_normalized, ts, ks)
+         ret = lambda(j, t, c, p, mu_normalized, ts, coeffs)
       end function lambda_t<%= t %>
 
 
-      pure function lambda_i_t<%= t %>(i, t, c, p, mu_normalized, ts, ks) result(ret)
+      pure function lambda_i_t<%= t %>(i, t, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: i
          Real(kind=real64), intent(in):: t, ts(:)
-         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
-         ret = mu_normalized + dot_product(ks(1:i), omori((t + c) - ts(1:i), p))
+         ret = mu_normalized + dot_product(coeffs(1:i), omori((t + c) - ts(1:i), p))
       end function lambda_i_t<%= t %>
 
 
-      pure function lambda_integrate<%= t %>(t_end, c, p, mu_normalized, ts, ks) result(ret)
+      pure function lambda_integrate<%= t %>(t_end, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t_end, ts(:)
-         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
-         ! todo: sum(kernel_integrate(t_end - ts, ks, c, p))
-         ret = t_end*mu_normalized + sum(kernel_integrate(t_end - ts, ks, c, p))
+         ! todo: sum(kernel_integrate(t_end - ts, coeffs, c, p))
+         ret = t_end*mu_normalized + sum(kernel_integrate(t_end - ts, coeffs, c, p))
       end function lambda_integrate<%= t %>
 
 
-      elemental function kernel_integrate<%= t %>(t, k, c, p) result(ret)
+      elemental function kernel_integrate<%= t %>(t, K, c, p) result(ret)
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t
-         <%= decl %>, intent(in)::  k, c, p
+         <%= decl %>, intent(in)::  K, c, p
 
-         ret = k*omori_integrate(t, c, p)
+         ret = K*omori_integrate(t, c, p)
       end function kernel_integrate<%= t %>
 
 
-      elemental function kernel_coeff<%= t %>(dm, c, p, alpha, k1, normalize_interval) result(ret)
+      elemental function kernel_coeff<%= t %>(dm, c, p, alpha, K, normalize_interval) result(ret)
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: dm, normalize_interval
-         <%= decl %>, intent(in):: c, p, alpha, k1
+         <%= decl %>, intent(in):: c, p, alpha, K
 
-         ret = k1*utsu_seki(dm, alpha)/omori_integrate(normalize_interval, c, p)
+         ret = K*utsu_seki(dm, alpha)/omori_integrate(normalize_interval, c, p)
       end function kernel_coeff<%= t %>
 
 
