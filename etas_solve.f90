@@ -9,12 +9,13 @@ program main
 
    implicit none
 
-   Real(kind=real64), parameter:: c_min = 1d-6
+   Integer(kind=int64), parameter:: n_params = 5
+   Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-6, 0d0, 0d0, 1d-6, 0d0]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    type(NewtonState64):: s
-   Real(kind=real64):: c_p_alpha_k1_mu_best(5)
+   Real(kind=real64):: c_p_alpha_k1_mu_best(n_params)
    Real(kind=real64):: t_end, normalize_interval
-   Real(kind=real64):: f, g(5), H(5, 5), f_best, H_best(5, 5), bound, dx(5)
+   Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, H_best(n_params, n_params), bound, dx(n_params)
    type(Dual64_2_5):: c, p, alpha, k1, mu, fgh
    Integer(kind=int64):: n, i
    Logical:: converge
@@ -36,9 +37,9 @@ program main
    f_best = huge(f_best)
    do
       dx = s%x - s%x_prev
-      do i = 1, 5
-         if(s%x(i) <= c_min)then
-            bound = (c_min - s%x_prev(i))/dx(i)
+      do i = 1, n_params
+         if(s%x(i) < lower_bounds(i))then
+            bound = (lower_bounds(i) - s%x_prev(i))/dx(i)
             DEBUG_PRINT_VARIABLE(i)
             DEBUG_PRINT_VARIABLE(bound)
             s%x(i) = bound*dx(i) + s%x_prev(i)
