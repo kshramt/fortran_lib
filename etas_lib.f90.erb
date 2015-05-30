@@ -16,11 +16,12 @@ module etas_lib
    implicit none
 
    private
+   public:: intensity_etas
    public:: log_likelihood_etas
    public:: omori_integrate
 
    <%- T_DECLS.each{|t, _| -%>
-      <%- [:log_likelihood_etas, :sum_log_lambda, :lambda_integrate, :kernel_coeff, :kernel_integrate, :omori_integrate, :utsu_seki].each{|fn| -%>
+      <%- [:intensity_etas, :log_likelihood_etas, :sum_log_lambda, :lambda_integrate, :kernel_coeff, :kernel_integrate, :omori_integrate, :utsu_seki].each{|fn| -%>
          interface <%= fn %>
             module procedure <%= fn %><%= t %>
          end interface <%= fn %>
@@ -33,6 +34,7 @@ module etas_lib
 
       interface lambda
          module procedure lambda_i<%= t %>
+         module procedure lambda_t<%= t %>
          module procedure lambda_i_t<%= t %>
       end interface lambda
    <%- } -%>
@@ -40,6 +42,19 @@ module etas_lib
 contains
 
    <%- T_DECLS.each{|t, decl| -%>
+      function intensity_etas<%= t %>(t, normalize_interval, c, p, alpha, k1, mu, ts, ms) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t, normalize_interval, ts(:), ms(size(ts))
+         <%= decl %>, intent(in):: c, p, alpha, k1, mu
+         <%= decl %>:: ks(size(ms))
+         <%= decl %>:: mu_normalized
+
+         ks = kernel_coeff(ms, c, p, alpha, k1, normalize_interval)
+         mu_normalized = mu/normalize_interval
+         ret = lambda(t, c, p, mu_normalized, ts, ks)
+      end function intensity_etas<%= t %>
+
+
       function log_likelihood_etas<%= t %>(t_end, normalize_interval, c, p, alpha, k1, mu, ts, ms) result(ret)
          Integer(kind=int64):: one = 1
          <%= decl %>:: ret
@@ -98,6 +113,23 @@ contains
          end do
          ret = lambda(j, ti, c, p, mu_normalized, ts, ks)
       end function lambda_i<%= t %>
+
+
+      pure function lambda_t<%= t %>(t, c, p, mu_normalized, ts, ks) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real64), intent(in):: t, ts(:)
+         <%= decl %>, intent(in):: c, p, mu_normalized, ks(size(ts))
+         Integer(kind=int64):: i, j
+
+         j = 0
+         do i = 1, size(ts, kind=kind(i))
+            if(ts(i) > t)then
+               j = i
+               exit
+            end if
+         end do
+         ret = lambda(j, t, c, p, mu_normalized, ts, ks)
+      end function lambda_t<%= t %>
 
 
       pure function lambda_i_t<%= t %>(i, t, c, p, mu_normalized, ts, ks) result(ret)
