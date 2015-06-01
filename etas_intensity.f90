@@ -10,7 +10,7 @@ program main
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: c, p, alpha, K, mu
    Real(kind=real64):: normalize_interval
-   Real(kind=real64):: t, t1
+   Real(kind=real64):: t
    Integer(kind=int64):: i, n
    Integer:: ios
 
@@ -23,13 +23,11 @@ program main
       read(input_unit, *) ts(i), ms(i)
    end do
    ms(:) = ms - maxval(ms)
-   t1 = ts(1)
-   ts(:) = ts - t1
 
    do
       read(input_unit, *, iostat=ios) t
       if(ios /= 0) exit
-      write(output_unit, '(g0, "	", g0)') t, intensity_etas(t - t1, normalize_interval, c, p, alpha, K, mu, ts, ms)
+      write(output_unit, '(g0, "	", g0)') t, intensity_etas(t, normalize_interval, c, p, alpha, K, mu, ts, ms)
    end do
 
    stop
