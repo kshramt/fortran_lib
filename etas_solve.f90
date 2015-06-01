@@ -37,8 +37,9 @@ program main
    end do
    M_max = maxval(ms)
    ms(:) = ms - M_max
+   ASSERT(t_begin <= ts(1))
+   ASSERT(ts(n) <= t_end)
    ts(:) = ts - t_begin
-   ASSERT(ts(1) >= 0)
    t_len = t_end - t_begin
 
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
