@@ -26,9 +26,7 @@ program main
    read(input_unit, *) t_begin
    read(input_unit, *) t_end
    ASSERT(t_end >= t_begin)
-   do i = 1, n_params
-      read(input_unit, *) c_p_alpha_K_mu_best(i)
-   end do
+   read(input_unit, *) c_p_alpha_K_mu_best
    read(input_unit, *) n
    allocate(ts(n))
    allocate(ms(n))
