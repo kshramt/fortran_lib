@@ -96,6 +96,7 @@ $(1)/bin/get_wgs84_from_ecef.exe: $$(call o_mod_$(1),character_lib constant_lib 
 $(1)/bin/get_ecef_from_wgs84.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_ecef_from_wgs84)
 $(1)/bin/etas_solve.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib optimize_lib ad_lib etas_lib etas_solve)
 $(1)/bin/etas_intensity.exe: $$(call o_mod_$(1),ad_lib etas_lib etas_intensity)
+$(1)/bin/etas_log_likelihood.exe: $$(call o_mod_$(1),ad_lib etas_lib etas_log_likelihood)
 
 ## Tests
 $(1)/test/array_lib_test.exe: $$(call o_mod_$(1),comparable_lib array_lib array_lib_test)
