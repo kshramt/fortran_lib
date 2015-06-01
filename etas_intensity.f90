@@ -27,7 +27,7 @@ program main
    do
       read(input_unit, *, iostat=ios) t
       if(ios /= 0) exit
-      write(output_unit, '(g0, "	", g0)') t, intensity_etas(t, normalize_interval, c, p, alpha, K, mu, ts, ms)
+      write(output_unit, '(g0, " ", g0)') t, intensity_etas(t, normalize_interval, c, p, alpha, K, mu, ts, ms)
    end do
 
    stop
