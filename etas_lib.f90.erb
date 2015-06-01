@@ -55,10 +55,10 @@ contains
       end function intensity_etas<%= t %>
 
 
-      function log_likelihood_etas<%= t %>(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
+      function log_likelihood_etas<%= t %>(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
          Integer(kind=int64):: one = 1
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t_end, normalize_interval, ts(:), ms(size(ts))
+         Real(kind=real64), intent(in):: t_len, normalize_interval, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
@@ -67,7 +67,7 @@ contains
          mu_normalized = mu/normalize_interval
          !$omp parallel
          !$omp single
-         ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, coeffs) - lambda_integrate(t_end, c, p, mu_normalized, ts, coeffs)
+         ret = sum_log_lambda(one, size(ts, kind=kind(one)), c, p, mu_normalized, ts, coeffs) - lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs)
          !$omp end single
          !$omp end parallel
       end function log_likelihood_etas<%= t %>
@@ -143,13 +143,13 @@ contains
       end function lambda_i_t<%= t %>
 
 
-      pure function lambda_integrate<%= t %>(t_end, c, p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_integrate<%= t %>(t_len, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t_end, ts(:)
+         Real(kind=real64), intent(in):: t_len, ts(:)
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
-         ! todo: sum(kernel_integrate(t_end - ts, coeffs, c, p))
-         ret = t_end*mu_normalized + sum(kernel_integrate(t_end - ts, coeffs, c, p))
+         ! todo: sum(kernel_integrate(t_len - ts, coeffs, c, p))
+         ret = t_len*mu_normalized + sum(kernel_integrate(t_len - ts, coeffs, c, p))
       end function lambda_integrate<%= t %>
 
 

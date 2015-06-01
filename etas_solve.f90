@@ -16,15 +16,19 @@ program main
    Real(kind=real64):: M_max
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_K_mu_best(n_params)
-   Real(kind=real64):: t_end, normalize_interval
+   Real(kind=real64):: t_begin, t_end, t_len, normalize_interval
    Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, H_best(n_params, n_params), bound, dx(n_params)
    type(Dual64_2_5):: c, p, alpha, K, mu, fgh
    Integer(kind=int64):: n, i
    Logical:: converge
 
    read(input_unit, *) normalize_interval
+   read(input_unit, *) t_begin
    read(input_unit, *) t_end
-   read(input_unit, *) c_p_alpha_K_mu_best
+   ASSERT(t_end >= t_begin)
+   do i = 1, n_params
+      read(input_unit, *) c_p_alpha_K_mu_best(i)
+   end do
    read(input_unit, *) n
    allocate(ts(n))
    allocate(ms(n))
@@ -33,7 +37,9 @@ program main
    end do
    M_max = maxval(ms)
    ms(:) = ms - M_max
-   ts(:) = ts - ts(1)
+   ts(:) = ts - t_begin
+   ASSERT(ts(1) >= 0)
+   t_len = t_end - t_begin
 
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
 
@@ -58,7 +64,7 @@ program main
       alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
       K = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
       mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
-      fgh = -log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms)
+      fgh = -log_likelihood_etas(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms)
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
