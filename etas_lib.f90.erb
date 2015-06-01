@@ -1,15 +1,17 @@
 <%-
   T_DECLS = [
     [:r, 'Real(kind=real64)'],
-    [:d, 'type(Dual64_2_5)'],
+    [:q, 'Real(kind=real128)'],
+    [:dr, 'type(Dual64_2_5)'],
+    [:dq, 'type(Dual128_2_5)'],
   ]
 -%>
 
 #include "fortran_lib.h"
 module etas_lib
    USE_FORTRAN_LIB_H
-   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64, real128
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5, Dual128_2_5
    use, non_intrinsic:: ad_lib, only: operator(+), operator(*), operator(-), operator(/), operator(**), operator(==)
    use, non_intrinsic:: ad_lib, only: exp, log, sum, dot_product
 
