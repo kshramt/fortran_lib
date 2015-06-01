@@ -4,7 +4,7 @@ program main
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, int64, real64
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: ad_lib, only: Dual64_2_5
-   use, non_intrinsic:: ad_lib, only: real
+   use, non_intrinsic:: ad_lib, only: real, jaco
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas
 
    implicit none
@@ -64,6 +64,15 @@ program main
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
    TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -243.80278501664003d0))
+
+   p = 1
+   K = 120
+   PRINT_VARIABLE(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms))
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -232.04236722101803d0))
+   d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
+   d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -232.04236722101803d0))
+   TEST(all(almost_equal(jaco(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), [-66.823472324117404d0, 38.410272133423234d0, 50.443481642939808d0, -1.2014840427587559d0, -1.4229686278967888d0])))
 
    stop
 end program main
