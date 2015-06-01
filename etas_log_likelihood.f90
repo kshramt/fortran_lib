@@ -47,10 +47,10 @@ program main
       jacobian = jaco(log_likelihood)
       hessian = hess(log_likelihood)
       write(output_unit, *) c, p, alpha, K, mu
-      write(output_unit, *) -real(log_likelihood)
-      write(output_unit, *) (-jacobian(i), i = 1, n_params)
+      write(output_unit, *) real(log_likelihood)
+      write(output_unit, *) (jacobian(i), i = 1, n_params)
       do i = 1, n_params
-         write(output_unit, *) (-hessian(i, j), j = 1, n_params)
+         write(output_unit, *) (hessian(i, j), j = 1, n_params)
       end do
    end do
 
