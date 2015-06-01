@@ -119,10 +119,11 @@ contains
          <%= decl %>:: ret
          Real(kind=real64), intent(in):: t, ts(:)
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
-         Integer(kind=int64):: i, j
+         Integer(kind=int64):: i, j, n
 
-         j = 0
-         do i = 1, size(ts, kind=kind(i))
+         n = size(ts, kind=kind(j))
+         j = n
+         do i = 1, n
             if(ts(i) >= t)then
                j = i - 1
                exit
