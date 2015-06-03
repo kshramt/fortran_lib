@@ -67,7 +67,6 @@ program main
 
    p = 1
    K = 120
-   PRINT_VARIABLE(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms))
    TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -232.04236722101803d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
