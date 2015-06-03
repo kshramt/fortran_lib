@@ -33,6 +33,9 @@ endif
 CPP_FLAGS_release := $(CPP_FLAG_COMMON)
 CPP_FLAGS_debug := $(CPP_FLAG_COMMON) -DDEBUG
 
+MY_SHA256SUM ?= sha256sum
+SHA256SUM := $(MY_SHA256SUM)
+
 FILES := $(shell git ls-files)
 F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
 ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
@@ -166,10 +169,10 @@ $(1)/%.o: $(1)/src/%.f90.sha256
 	$(FC) $$(FFLAGS_$(1)) -c -o $$*.o src/$$*.f90 $(LAPACK)
 
 $(1)/src/%.f90.sha256: $(1)/src/%.f90.sha256.new
-	cmp -s $$< $$@ || cp -f $$< $$@
+	@cmp -s $$< $$@ || cp -f $$< $$@
 
 $(1)/src/%.f90.sha256.new: $(1)/src/%.f90
-	sha256sum $$< >| $$@
+	$(SHA256SUM) $$< >| $$@
 
 $(1)/src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $$(@D)
