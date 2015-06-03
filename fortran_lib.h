@@ -2,14 +2,10 @@
 #  define _FORTRAN_LIB_H_
 #  define USE_FORTRAN_LIB_H use, intrinsic:: iso_fortran_env, only: ERROR_UNIT, OUTPUT_UNIT
 #  define WHERE_AM_I __FILE__, " ", __LINE__
-#  ifdef __GFORTRAN__
-#    define quote(x) "x"
+#  ifdef __STDC__
+#    define quote(x) #x
 #  else
-#    ifdef __INTEL_COMPILER
-#      define quote(x) #x
-#    else
-#      define quote(x) #x
-#    endif
+#    define quote(x) "x"
 #  endif
 #  define WARN(message) write(ERROR_UNIT, *) "WARN: ", WHERE_AM_I, (message)
 #  define RAISE(message) write(ERROR_UNIT, *) "RAISE: ", WHERE_AM_I, (message); error stop
