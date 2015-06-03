@@ -22,17 +22,17 @@ program io_lib_test
    TEST(isEqual)
    isEqual = get_column_format_string(.false., 1) == '(g0)'
    TEST(isEqual)
-   isEqual = get_column_format_string(1, 2) == '(g0, *("	", g0))'
+   isEqual = get_column_format_string(1, 2) == '(g0, *(" ", g0))'
    TEST(isEqual)
-   isEqual = get_column_format_string(1, 3) == '(g0, *("	", g0))'
+   isEqual = get_column_format_string(1, 3) == '(g0, *(" ", g0))'
    TEST(isEqual)
    isEqual = get_column_format_string((1.2, 2.3), 0) == '()'
    TEST(isEqual)
    isEqual = get_column_format_string((1.2, 2.3), 1) == '("(", g0, ", ", g0, ")")'
    TEST(isEqual)
-   isEqual = get_column_format_string((1.2, 2.3), 2) == '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
+   isEqual = get_column_format_string((1.2, 2.3), 2) == '("(", g0, ", ", g0, ")", *(" ", "(", g0, ", ", g0, ")"))'
    TEST(isEqual)
-   isEqual = get_column_format_string((1.2, 2.3), 3) == '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
+   isEqual = get_column_format_string((1.2, 2.3), 3) == '("(", g0, ", ", g0, ")", *(" ", "(", g0, ", ", g0, ")"))'
    TEST(isEqual)
 
    call mktemp(io)

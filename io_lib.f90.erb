@@ -95,7 +95,7 @@ contains
    <%- INTEGER_DIM_0S.each{|tn| -%>
       <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| -%>
          function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
-            Character(len=*), parameter:: multi_args = '(g0, *("	", g0))'
+            Character(len=*), parameter:: multi_args = '(g0, *(" ", g0))'
             <%= t.declare %>, intent(in):: x
             <%= tn.declare %>, intent(in):: n
             Character(len=len(multi_args)):: ret
@@ -115,7 +115,7 @@ contains
       ! number of columns should explicitly be given since unlimited format gives an extra parenthesis ` (` at the end.
       <%- COMPLEX_DIM_0S.each{|t| -%>
          function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
-            Character(len=*), parameter:: multi_args = '("(", g0, ", ", g0, ")", *("	", "(", g0, ", ", g0, ")"))'
+            Character(len=*), parameter:: multi_args = '("(", g0, ", ", g0, ")", *(" ", "(", g0, ", ", g0, ")"))'
             <%= t.declare %>, intent(in):: x
             <%= tn.declare %>, intent(in):: n
             Character(len=len(multi_args)):: ret
