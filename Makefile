@@ -33,7 +33,7 @@ endif
 CPP_FLAGS_release := $(CPP_FLAG_COMMON)
 CPP_FLAGS_debug := $(CPP_FLAG_COMMON) -DDEBUG
 
-MY_SHA256SUM ?= sha256sum
+export MY_SHA256SUM ?= sha256sum
 SHA256SUM := $(MY_SHA256SUM)
 
 export MY_SED ?= sed
