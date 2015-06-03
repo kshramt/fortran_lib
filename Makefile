@@ -36,6 +36,8 @@ CPP_FLAGS_debug := $(CPP_FLAG_COMMON) -DDEBUG
 MY_SHA256SUM ?= sha256sum
 SHA256SUM := $(MY_SHA256SUM)
 
+export MY_SED ?= sed
+
 FILES := $(shell git ls-files)
 F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
 ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
