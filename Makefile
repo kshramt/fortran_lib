@@ -196,7 +196,7 @@ endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
 
-%.f90: %.f90.erb dep/fort/lib/fort.rb
+%.f90: %.f90.erb dep/fort.updated
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 
