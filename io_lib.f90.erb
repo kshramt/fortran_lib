@@ -389,6 +389,7 @@ contains
 
          open(newunit=unit, file=s(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
          read(unit) self
+         close(unit)
       end subroutine load_array_v_2<%= t %>
 
       subroutine load_array_v_1<%= t %>(self, dir)
@@ -416,6 +417,7 @@ contains
 
          open(newunit=unit, file=s(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
          read(unit) self
+         close(unit)
       end subroutine load_array_v_1<%= t %>
    <%- } -%>
 end module io_lib
