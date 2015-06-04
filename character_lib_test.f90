@@ -6,8 +6,19 @@ program character_lib_test
 
    implicit none
 
-   Character(len = 8):: sBuffer
-   Character(len = 17):: dBuffer
+   Character(len=8):: sBuffer
+   Character(len=17):: dBuffer
+   Character(len=*), parameter:: ascii = ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+   Character(len=*), parameter:: ascii_up = ' !"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`ABCDEFGHIJKLMNOPQRSTUVWXYZ{|}~'
+   Character(len=*), parameter:: ascii_low = ' !"#$%&''()*+,-./0123456789:;<=>?@abcdefghijklmnopqrstuvwxyz[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+
+   ! upper
+   TEST(upper(ascii) == ascii_up)
+   TEST(upper('あaA') == 'あAA')
+
+   ! lower
+   TEST(lower(ascii) == ascii_low)
+   TEST(lower('あaA') == 'あaa')
 
    ! replace
    TEST(replace('a', 'a', 'bc') == 'bc')
