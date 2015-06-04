@@ -5,8 +5,7 @@
   = ::Fort::Type::Logical.multi_provide(dim: (1..7))\
   + ::Fort::Type::Integer.multi_provide(dim: (1..7))\
   + ::Fort::Type::Real.multi_provide(dim: (1..7))\
-  + ::Fort::Type::Complex.multi_provide(dim: (1..7))\
-  + ::Fort::Type::Character.multi_provide(dim: (1..7))
+  + ::Fort::Type::Complex.multi_provide(dim: (1..7))
 
   LOGICAL_DIM_0S = ::Fort::Type::Logical.multi_provide(dim: 0)
   INTEGER_DIM_0S = ::Fort::Type::Integer.multi_provide(dim: 0)
@@ -18,7 +17,7 @@
   end
 
   NUM_DESC_MAX = 10
-  LEN_TYPE_STR_MAX = TYPES.map(&:to_s).map(&:size).max
+  LEN_TYPE_STR_MAX = TYPES.map{|t| t.type.size}.max
 %>
 
 #include "fortran_lib.h"
@@ -31,31 +30,34 @@ module io_lib
    use, non_intrinsic:: ifport, only: system
 # endif
    use, non_intrinsic:: character_lib, only: str, operator(+)
-   use, non_intrinsic:: config_lib, only: get_config_value
 
    implicit none
 
    private
    public:: get_column_format_string
-   public:: dump, load, load_version, load_meta
+   public:: dump, load, load_version, load_meta_v_3
    public:: lines_of, columns_of, file_shape
    public:: mktemp
    public:: sh
 
-   Integer, parameter, public:: version = 2 ! Array file format's compatibility.
-   Integer, parameter:: len_data_type_str_max = <%= LEN_TYPE_STR_MAX %>
+   Integer(kind=int64), parameter, public:: version = 3 ! array serialization format version
    Character(len=*), parameter, public:: array_data_file = 'data.bin'
    Character(len=*), parameter:: array_meta_file_v_1 = 'meta.nml'
    Character(len=*), parameter:: array_meta_file_v_2 = 'meta.kv'
-   Character(len=*), parameter, public:: array_meta_file = array_meta_file_v_2
+   Character(len=*), parameter:: array_meta_file_v_3 = 'meta.dat'
+   Character(len=*), parameter, public:: array_meta_file = array_meta_file_v_3
    Character(len=*), parameter, public:: array_version_file = 'version.dat'
    Character(len=*), parameter, public:: array_description_file = 'description.txt'
 
    type, public:: ArrayMeta
-      Character(len=len_data_type_str_max):: dataType
-      Integer:: dim
-      Integer, allocatable:: sizes(:)
    end type ArrayMeta
+
+   type, extends(ArrayMeta), public:: ArrayMetaV3
+      Character(len=<%= LEN_TYPE_STR_MAX %>):: type_ = 'UNINIT'
+      Integer(kind=int8):: kind_ = -1
+      Integer(kind=int8):: dim = -1
+      Integer(kind=int64), allocatable:: sizes(:)
+   end type ArrayMetaV3
 
    <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S + COMPLEX_DIM_0S).product(INTEGER_DIM_0S).each{|t, tn| -%>
       interface get_column_format_string
@@ -71,9 +73,9 @@ module io_lib
       module procedure columns_of
    end interface columns_of
 
-   interface load_meta
-      module procedure load_array_meta
-   end interface load_meta
+   interface load_meta_v_3
+      module procedure load_array_meta_v_3
+   end interface load_meta_v_3
 
    interface load_version
       module procedure load_array_version
@@ -87,14 +89,6 @@ module io_lib
       interface load
          module procedure load_array<%= t %>
       end interface load
-
-      interface load_v_2
-         module procedure load_array_v_2<%= t %>
-      end interface load_v_2
-
-      interface load_v_1
-         module procedure load_array_v_1<%= t %>
-      end interface load_v_1
    <%- } -%>
 
 contains
@@ -147,7 +141,7 @@ contains
 # ifdef __INTEL_COMPILER
       exitStatus = system(trim(cmd))
 # else
-      call execute_command_line(trim(cmd), exitstat = exitStatus)
+      call execute_command_line(trim(cmd), exitstat=exitStatus)
 # endif
 
       isSuccess = (exitStatus == 0)
@@ -157,15 +151,15 @@ contains
       Character(len=*), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
 
       Integer, intent(out):: unit
-      Integer(kind = INT64), intent(in), optional:: suffixMin
+      Integer(kind=int64), intent(in), optional:: suffixMin
       Character(len=*), intent(in), optional:: form
       Character(len=*), intent(out), optional:: file
-      Integer(kind = kind(suffixMin)), intent(out), optional:: suffix
+      Integer(kind=kind(suffixMin)), intent(out), optional:: suffix
 
-      Integer(kind = kind(suffixMin)):: suffix_, suffixMin_
+      Integer(kind=kind(suffixMin)):: suffix_, suffixMin_
       Integer:: ios
-      Character(len = len(PREFIX) + ceiling(log10(real(huge(suffix_))))):: file_
-      Character(len = max(len('unformatted'), len('formatted'))):: form_
+      Character(len=len(PREFIX) + ceiling(log10(real(huge(suffix_))))):: file_
+      Character(len=max(len('unformatted'), len('formatted'))):: form_
 
       form_ = 'formatted'
       if(present(form))then
@@ -240,10 +234,10 @@ contains
       end enum
       Character, parameter:: separators(1:2) = [' ', '	'] ! space and TAB
 
-      Integer:: unit, ios, i, mode
+      Integer:: unit, ios, mode
       Character:: c
 
-      Integer(kind=kind(n_headers)):: n_headers_
+      Integer(kind=kind(n_headers)):: n_headers_, i
 
       n_headers_ = 0
       if(present(n_headers)) n_headers_ = n_headers
@@ -283,79 +277,68 @@ contains
       close(unit)
    end function load_array_version
 
-   subroutine load_array_meta(self, dir)
-      type(ArrayMeta), intent(inout):: self
-      Character(len=*), intent(in):: dir
-      Integer:: version_
-
-      version_ = load_array_version(trim(dir))
-      select case(version_)
-      case(2)
-         call load_array_meta_v_2(self, trim(dir))
-      case default
-         RAISE('Unsupported version ' + str(version_) + ' for ' + trim(dir))
-      end select
-   end subroutine load_array_meta
-
-   subroutine load_array_meta_v_2(self, dir)
-      type(ArrayMeta), intent(inout):: self
+   subroutine load_array_meta_v_3(self, dir)
+      type(ArrayMetaV3), intent(inout):: self
       Character(len=*), intent(in):: dir
 
       Integer:: unit
-      Integer:: dim
+      Integer(kind=kind(self%dim)):: i
 
-      open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_2, status='old', action='read')
-      ASSERT(get_config_value(unit, 'dataType', self%dataType))
-      ASSERT(get_config_value(unit, 'dim', self%dim))
-      if(allocated(self%sizes)) deallocate(self%sizes)
-      allocate(self%sizes(1:self%dim))
-      do ALL_OF(dim, self%sizes, 1)
-         ASSERT(get_config_value(unit, 'sizes(' + str(dim) + ')', self%sizes(dim)))
+      open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_3, status='old', action='read')
+      read(unit, '(a)') self%type_
+      read(unit, *) self%kind_
+      read(unit, *) self%dim
+      ENSURE_DEALLOCATED(self%sizes)
+      allocate(self%sizes(self%dim))
+      do i = 1, self%dim
+         read(unit, *) self%sizes(i)
       end do
       close(unit)
-   end subroutine load_array_meta_v_2
+   end subroutine load_array_meta_v_3
 
    <%- TYPES.each{|t| -%>
       subroutine dump_array<%= t %>(self, dir<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
+         Character(len=*), parameter:: type_ = '<%= t.type %>'
+         Integer(kind=int8), parameter:: kind_ = <%= t.kind %>
+         Integer(kind=int8), parameter:: dim = <%= t.dim %>
+
          <%= t.declare %>, intent(in):: self
          Character(len=*), intent(in):: dir
          <%- if NUM_DESC_MAX >= 1 -%>
             Character(len=*), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
          <%- end -%>
 
-         Character(len=*), parameter:: data_type_for_self = '<%= t %>'
-         Integer, parameter:: dim_for_self = <%= t.dim %>
-
-         Character(len=len(data_type_for_self)) dataType
-         Integer:: dim
-         Integer:: sizes(1:dim_for_self)
+         Integer(kind=int64):: sizes(dim)
+         Integer(kind=kind(dim)):: i
          Integer:: unit
 
          ASSERT(sh('mkdir -p ' + trim(dir)))
 
+         ! version
          open(newunit=unit, file=trim(dir) + '/' + array_version_file, status='replace', action='write')
-         write(unit, *) VERSION
+         write(unit, '(g0)') version
          close(unit)
 
+         ! metadata
+         open(newunit=unit, file=trim(dir) + '/' + array_meta_file, status='replace', action='write')
+         write(unit, '(a)') type_
+         write(unit, '(g0)') kind_
+         write(unit, '(g0)') dim
+         sizes = shape(self)
+         do i = 1, dim
+            write(unit, '(g0)') sizes(i)
+         end do
+         close(unit)
+
+         ! data
          open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='replace', action='write', form='unformatted', access='stream')
          write(unit) self
          close(unit)
 
-         dataType = data_type_for_self
-         dim = dim_for_self
-         sizes = shape(self)
-         open(newunit=unit, file=trim(dir) + '/' + ARRAY_META_FILE, status='replace', action='write')
-         WRITE_KEY_VALUE(unit, dim)
-         WRITE_KEY_VALUE(unit, dataType)
-         <%- t.dim.times.each{|dim| -%>
-           WRITE_KEY_VALUE(unit, sizes(<%= dim + 1 %>))
-         <%- } -%>
-         close(unit)
-
-
-         open(newunit=unit, file=trim(dir) + '/' + ARRAY_DESCRIPTION_FILE, status='replace', action='write')
+         ! descriptions
+         open(newunit=unit, file=trim(dir) + '/' + array_description_file, status='replace', action='write')
          <%- (1..NUM_DESC_MAX).each{|i| -%>
-            if(present(desc<%= i %>)) write(unit, *) desc<%= i %>
+            if(present(desc<%= i %>)) write(unit, '(a)') desc<%= i %>
          <%- } -%>
          close(unit)
       end subroutine dump_array<%= t %>
@@ -368,63 +351,36 @@ contains
 
          version_ = load_array_version(trim(dir))
          select case(version_)
-         case(1)
-            call load_v_1(self, dir)
-         case(2)
-            call load_v_2(self, dir)
+         case(3)
+            call load_array_v_3<%= t %>(self, dir)
          case default
             RAISE('Unsupported version ' + str(version_) + ' for ' + trim(dir))
          end select
       end subroutine load_array<%= t %>
 
-      subroutine load_array_v_2<%= t %>(self, dir)
+      subroutine load_array_v_3<%= t %>(self, dir)
+         Character(len=*), parameter:: type_ = '<%= t.type %>'
+         Integer(kind=int8), parameter:: kind_ = <%= t.kind %>
+         Integer(kind=int8), parameter:: dim = <%= t.dim %>
+
          <%= t.declare %>, intent(inout), allocatable:: self
          Character(len=*), intent(in):: dir
 
-         Character(len=*), parameter:: data_type_for_self = '<%= t %>'
-         Integer, parameter:: dim_for_self = <%= t.dim %>
-         type(ArrayMeta):: meta
+         type(ArrayMetaV3):: meta
          Integer:: unit
 
-         call load_array_meta_v_2(meta, trim(dir))
+         call load_array_meta_v_3(meta, trim(dir))
 
-         ASSERT(meta%dataType == data_type_for_self)
-         ASSERT(meta%dim == dim_for_self)
+         ASSERT(meta%type_ == type_)
+         ASSERT(meta%kind_ == kind_)
+         ASSERT(meta%dim == dim)
 
-         if(allocated(self)) deallocate(self)
+         ENSURE_DEALLOCATED(self)
          allocate(self(<%= list(t.dim){|i| "1:meta%sizes(#{i})"} %>))
 
          open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
          read(unit) self
          close(unit)
-      end subroutine load_array_v_2<%= t %>
-
-      subroutine load_array_v_1<%= t %>(self, dir)
-         <%= t.declare %>, intent(inout), allocatable:: self
-         Character(len=*), intent(in):: dir
-
-         Character(len=*), parameter:: data_type_for_self = '<%= t %>'
-         Integer, parameter:: dim_for_self = <%= t.dim %>
-         Character(len=<%= TYPES.map{|_| _.to_s.size}.max %>):: dataType
-         Integer:: dim
-         Integer:: sizes(1:dim_for_self)
-         Integer:: unit
-         namelist /array_meta/ dataType, dim, sizes
-
-         open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_1, status='old', action='read', delim='quote')
-         read(unit, nml=array_meta)
-
-         ASSERT(trim(dataType) == data_type_for_self)
-         ASSERT(dim == dim_for_self)
-
-         close(unit)
-
-         if(allocated(self)) deallocate(self)
-         allocate(self(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
-
-         open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
-         read(unit) self
-         close(unit)
-      end subroutine load_array_v_1<%= t %>
+      end subroutine load_array_v_3<%= t %>
    <%- } -%>
 end module io_lib

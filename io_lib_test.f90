@@ -8,13 +8,13 @@ program io_lib_test
 
    implicit none
 
-   Real(kind = REAL64), allocatable:: xs(:), xsOriginal(:)
-   Integer(kind = INT8), allocatable:: ns(:, :), nsOriginal(:, :)
+   Real(kind=real64), allocatable:: xs(:), xsOriginal(:)
+   Integer(kind=int8), allocatable:: ns(:, :), nsOriginal(:, :)
    Integer:: io
    Character(len = len('readwrite') + 1):: action
    Character(len = 2**10):: form, fileMktemp, fileInquire
    Logical:: isNamed, isEqual
-   type(ArrayMeta):: meta
+   type(ArrayMetaV3):: meta
 
    isEqual = get_column_format_string(.true., 0) == '()'
    TEST(isEqual)
@@ -55,8 +55,9 @@ program io_lib_test
    call dump(xs, 'xs.array', 'Real 1D test', 'Multiple descriptions.')
    TEST(all(almost_equal(xs, xsOriginal)))
    TEST(load_version('xs.array') == io_lib_version)
-   call load_meta(meta, 'xs.array')
-   TEST(meta%dataType == 'RealDim1KindREAL64')
+   call load_meta_v_3(meta, 'xs.array')
+   TEST(meta%type_ == 'Real')
+   TEST(meta%kind_ == real64)
    TEST(meta%dim == 1)
    TEST(all(meta%sizes == shape(xs)))
    call load(xs, 'xs.array')

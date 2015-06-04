@@ -21,48 +21,53 @@
 program main
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
-   use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, int64
-   use, non_intrinsic:: character_lib, only: operator(+)
-   use, non_intrinsic:: io_lib, only: ArrayMeta
-   use, non_intrinsic:: io_lib, only: load, load_meta, get_column_format_string
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, int64
+   use, non_intrinsic:: character_lib, only: operator(+), str
+   use, non_intrinsic:: io_lib, only: ArrayMetaV3
+   use, non_intrinsic:: io_lib, only: load, load_version, load_meta_v_3, get_column_format_string
 
    implicit none
 
    <%- TYPES.each{|t| -%>
      <%= t.declare %>, allocatable:: array<%= t %>
    <%- } -%>
-   Character(len=2**10):: arrayDir
-   type(ArrayMeta):: meta
+   Character(len=2**10):: dir
+   type(ArrayMetaV3):: meta_v_3
+   Integer(kind=int64):: version
    Integer:: i
    Integer:: status
    Character(len=:), allocatable:: form
 
    if(command_argument_count() /= 1) call usage_and_exit()
-   call get_command_argument(1, value=arrayDir, status=status)
+   call get_command_argument(1, value=dir, status=status)
    ASSERT(status == 0)
 
-   if(arrayDir == '-h' .or. arrayDir == '--help') call usage_and_exit()
-   call load_meta(meta, trim(arrayDir))
+   if(dir == '-h' .or. dir == '--help') call usage_and_exit()
 
-   select case(meta%dataType)
-   <%- TYPES_1.each{|t| -%>
-     case('<%= t %>')
-        call load(array<%= t %>, trim(arrayDir))
-        form = get_column_format_string(array<%= t %>(1), 1)
-        do ALL_OF(i, array<%= t %>, 1)
-           write(OUTPUT_UNIT, form) array<%= t %>(i)
-        end do
-   <%- } -%>
-   <%- TYPES_2.each{|t| -%>
-     case('<%= t %>')
-        call load(array<%= t %>, trim(arrayDir))
-        form = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2, kind=int64))
-        do ALL_OF(i, array<%= t %>, 1)
-           write(OUTPUT_UNIT, form) array<%= t %>(i, :)
-        end do
-   <%- } -%>
+   version = load_version(trim(dir))
+   select case(version)
+   case(3)
+      call load_meta_v_3(meta_v_3, trim(dir))
+      if(.false.)then
+      <%- (TYPES_1 + TYPES_2).each{|t| -%>
+         else if(meta_v_3%type_ == '<%= t.type %>' .and. meta_v_3%kind_ == <%= t.kind %> .and. meta_v_3%dim == <%= t.dim %>)then
+            call load(array<%= t %>, trim(dir))
+            <%- if t.dim == 1 -%>
+               do ALL_OF(i, array<%= t %>, 1)
+                  write(output_unit, '(g0)') array<%= t %>(i)
+               end do
+            <%- else -%>
+               form = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2, kind=int64))
+               do ALL_OF(i, array<%= t %>, 1)
+                  write(output_unit, form) array<%= t %>(i, :)
+               end do
+            <%- end -%>
+      <%- } -%>
+      else
+         RAISE('Unsupported data type: ' + str(meta_v_3%type_) + ' ' + str(meta_v_3%kind_) + ' ' + str(meta_v_3%dim))
+      end if
    case default
-      RAISE('Unsupported data type: ' + trim(meta%dataType))
+      RAISE('Unsupported version: ' + str(version))
    end select
 
    stop
