@@ -30,7 +30,6 @@ module io_lib
 # ifdef __INTEL_COMPILER
    use, non_intrinsic:: ifport, only: system
 # endif
-   use, non_intrinsic:: constant_lib, only: TAB
    use, non_intrinsic:: character_lib, only: str, operator(+)
    use, non_intrinsic:: config_lib, only: get_config_value
 
@@ -231,7 +230,7 @@ contains
       enum, bind(c)
          enumerator:: SEEK_NORMAL_CHAR, SEEK_SEPARATOR
       end enum
-      Character, parameter:: SEPARATORS(1:2) = [' ', TAB]
+      Character, parameter:: SEPARATORS(1:2) = [' ', '	'] ! space and TAB
 
       Integer:: unit, ios, i, mode
       Character:: c

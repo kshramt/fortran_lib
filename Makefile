@@ -96,7 +96,7 @@ clean-$(1):
 
 ## Executables
 $(1)/bin/sac_to_json.exe: $$(call o_mod_$(1),character_lib sac_lib sac_to_json)
-$(1)/bin/text_dump_array.exe: $$(call o_mod_$(1),constant_lib character_lib config_lib io_lib text_dump_array)
+$(1)/bin/text_dump_array.exe: $$(call o_mod_$(1),character_lib config_lib io_lib text_dump_array)
 $(1)/bin/get_wgs84_from_ecef.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_wgs84_from_ecef)
 $(1)/bin/get_ecef_from_wgs84.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_ecef_from_wgs84)
 $(1)/bin/etas_solve.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib optimize_lib ad_lib etas_lib etas_solve)
@@ -112,7 +112,7 @@ $(1)/test/sort_lib_test.exe: $$(call o_mod_$(1),constant_lib stack_lib array_lib
 $(1)/test/list_lib_test.exe: $$(call o_mod_$(1),comparable_lib list_lib list_lib_test)
 $(1)/test/stack_lib_test.exe: $$(call o_mod_$(1),stack_lib stack_lib_test)
 $(1)/test/queue_lib_test.exe: $$(call o_mod_$(1),queue_lib queue_lib_test)
-$(1)/test/io_lib_test.exe: $$(call o_mod_$(1),config_lib constant_lib character_lib comparable_lib io_lib io_lib_test)
+$(1)/test/io_lib_test.exe: $$(call o_mod_$(1),config_lib character_lib comparable_lib io_lib io_lib_test)
 $(1)/test/config_lib_test.exe: $$(call o_mod_$(1),config_lib config_lib_test)
 $(1)/test/binary_tree_map_lib_test.exe: $$(call o_mod_$(1),binary_tree_map_lib binary_tree_map_lib_test)
 $(1)/test/sac_lib_test.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_test)
