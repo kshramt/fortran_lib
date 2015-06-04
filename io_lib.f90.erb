@@ -31,7 +31,7 @@ module io_lib
    use, non_intrinsic:: ifport, only: system
 # endif
    use, non_intrinsic:: constant_lib, only: TAB
-   use, non_intrinsic:: character_lib, only: s, str, operator(+)
+   use, non_intrinsic:: character_lib, only: str, operator(+)
    use, non_intrinsic:: config_lib, only: get_config_value
 
    implicit none
@@ -271,7 +271,7 @@ contains
       Integer:: version_
       Integer:: unit
 
-      open(newunit=unit, file=s(dir) + '/' + array_version_file, status='old', action='read')
+      open(newunit=unit, file=trim(dir) + '/' + array_version_file, status='old', action='read')
       read(unit, *) version_
       close(unit)
    end function load_array_version
@@ -297,7 +297,7 @@ contains
       Integer:: unit
       Integer:: dim
 
-      open(newunit=unit, file=s(dir) + '/' + array_meta_file_v_2, status='old', action='read')
+      open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_2, status='old', action='read')
       ASSERT(get_config_value(unit, 'dataType', self%dataType))
       ASSERT(get_config_value(unit, 'dim', self%dim))
       if(allocated(self%sizes)) deallocate(self%sizes)
@@ -326,18 +326,18 @@ contains
 
          ASSERT(sh('mkdir -p ' + trim(dir)))
 
-         open(newunit=unit, file=s(dir) + '/' + array_version_file, status='replace', action='write')
+         open(newunit=unit, file=trim(dir) + '/' + array_version_file, status='replace', action='write')
          write(unit, *) VERSION
          close(unit)
 
-         open(newunit=unit, file=s(dir) + '/' + array_data_file, status='replace', action='write', form='unformatted', access='stream')
+         open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='replace', action='write', form='unformatted', access='stream')
          write(unit) self
          close(unit)
 
          dataType = DATA_TYPE_FOR_SELF
          dim = dim_for_self
          sizes = shape(self)
-         open(newunit=unit, file=s(dir) + '/' + ARRAY_META_FILE, status='replace', action='write')
+         open(newunit=unit, file=trim(dir) + '/' + ARRAY_META_FILE, status='replace', action='write')
          WRITE_KEY_VALUE(unit, dim)
          WRITE_KEY_VALUE(unit, dataType)
          <%- t.dim.times.each{|dim| -%>
@@ -346,7 +346,7 @@ contains
          close(unit)
 
 
-         open(newunit=unit, file=s(dir) + '/' + ARRAY_DESCRIPTION_FILE, status='replace', action='write')
+         open(newunit=unit, file=trim(dir) + '/' + ARRAY_DESCRIPTION_FILE, status='replace', action='write')
          <%- (1..NUM_DESC_MAX).each{|i| -%>
             if(present(desc<%= i %>)) write(unit, *) desc<%= i %>
          <%- } -%>
@@ -387,7 +387,7 @@ contains
          if(allocated(self)) deallocate(self)
          allocate(self(<%= list(t.dim){|i| "1:meta%sizes(#{i})"} %>))
 
-         open(newunit=unit, file=s(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
+         open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
          read(unit) self
          close(unit)
       end subroutine load_array_v_2<%= t %>
@@ -404,10 +404,10 @@ contains
          Integer:: unit
          namelist /array_meta/ dataType, dim, sizes
 
-         open(newunit=unit, file=s(dir) + '/' + array_meta_file_v_1, status='old', action='read', delim='quote')
+         open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_1, status='old', action='read', delim='quote')
          read(unit, nml=array_meta)
 
-         ASSERT(s(dataType) == data_type_for_self)
+         ASSERT(trim(dataType) == data_type_for_self)
          ASSERT(dim == dim_for_self)
 
          close(unit)
@@ -415,7 +415,7 @@ contains
          if(allocated(self)) deallocate(self)
          allocate(self(<%= list(t.dim){|i| "1:sizes(#{i})"} %>))
 
-         open(newunit=unit, file=s(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
+         open(newunit=unit, file=trim(dir) + '/' + array_data_file, status='old', action='read', form='unformatted', access='stream')
          read(unit) self
          close(unit)
       end subroutine load_array_v_1<%= t %>
