@@ -38,7 +38,7 @@ module io_lib
    private
    public:: get_column_format_string
    public:: dump, load, load_version, load_meta
-   public:: get_line_number, number_of_columns, file_shape
+   public:: lines_of, columns_of, file_shape
    public:: mktemp
    public:: sh
 
@@ -62,6 +62,14 @@ module io_lib
          module procedure get_column_format_string<%= t.id %><%= tn.id %>
       end interface get_column_format_string
    <%- } -%>
+
+   interface lines_of
+      module procedure lines_of
+   end interface lines_of
+
+   interface columns_of
+      module procedure columns_of
+   end interface columns_of
 
    interface load_meta
       module procedure load_array_meta
@@ -186,28 +194,28 @@ contains
       RAISE('Could not create temp file')
    end subroutine mktemp
 
-   ! @desc Return a size 2 array which contains (/numberOfLines, numberOfColumns/) of the file fileName.
-   function file_shape(fileName, numberOfHeaders) result(answer)
-      Integer(int64):: answer(1:2)
-      Character(len=*), intent(in):: fileName
-      Integer, intent(in), optional:: numberOfHeaders
+   function file_shape(file, n_headers) result(ret)
+      ! Return a size 2 vector which contains `[n_lines, n_columns]` of `file`.
+      Integer(int64):: ret(1:2)
+      Character(len=*), intent(in):: file
+      Integer(kind=kind(ret)), intent(in), optional:: n_headers
 
-      Integer:: numberOfHeaders_
+      Integer(kind=kind(n_headers)):: n_headers_
 
-      numberOfHeaders_ = 0
-      if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
+      n_headers_ = 0
+      if(present(n_headers)) n_headers_ = n_headers
 
-      answer = (/get_line_number(fileName) - numberOfHeaders_, number_of_columns(fileName, numberOfHeaders_)/)
+      ret = [lines_of(file) - n_headers_, columns_of(file, n_headers_)]
    end function file_shape
 
-   function get_line_number(path) result(ret)
-      Integer(kind=INT64):: ret
-      Character(len=*), intent(in):: path
+   function lines_of(file) result(ret)
+      Integer(kind=int64):: ret
+      Character(len=*), intent(in):: file
 
       Integer:: unit, ios
       Character:: trash
 
-      open(newunit=unit, file=path, status='old', action='read')
+      open(newunit=unit, file=file, status='old', action='read')
       ret = 0
       do
          read(unit, *, iostat=ios) trash
@@ -217,33 +225,33 @@ contains
          ret = ret + 1
       end do
       close(unit)
-   end function get_line_number
+   end function lines_of
 
-   function number_of_columns(file, numberOfHeaders) result(answer)
-      ! Return number of columns at line `(numberOfHeaders + 1)` in `file`.
+   function columns_of(file, n_headers) result(ret)
+      ! Return number of columns at line `(n_headers + 1)` in `file`.
       ! The line is assumed to be separated by space and TAB characters.
       ! Quoted string containing space/TAB characteres is not handled properly.
-      Integer(int64):: answer
+      Integer(kind=int64):: ret
       Character(len=*), intent(in):: file
-      Integer, intent(in), optional:: numberOfHeaders
+      Integer(kind=kind(ret)), intent(in), optional:: n_headers
 
       enum, bind(c)
-         enumerator:: SEEK_NORMAL_CHAR, SEEK_SEPARATOR
+         enumerator:: seek_normal_char, seek_separator
       end enum
-      Character, parameter:: SEPARATORS(1:2) = [' ', '	'] ! space and TAB
+      Character, parameter:: separators(1:2) = [' ', '	'] ! space and TAB
 
       Integer:: unit, ios, i, mode
       Character:: c
 
-      Integer:: numberOfHeaders_
+      Integer(kind=kind(n_headers)):: n_headers_
 
-      numberOfHeaders_ = 0
-      if(present(numberOfHeaders)) numberOfHeaders_ = numberOfHeaders
+      n_headers_ = 0
+      if(present(n_headers)) n_headers_ = n_headers
 
-      mode = SEEK_NORMAL_CHAR
-      answer = 0
+      mode = seek_normal_char
+      ret = 0
       open(newunit=unit, file=file, status='old', action='read')
-      do i = 1, numberOfHeaders_
+      do i = 1, n_headers_
          read(unit, *)
       end do
       do
@@ -251,19 +259,19 @@ contains
          if(is_iostat_bad(ios) .or. c == new_line('_')) exit
 
          select case(mode)
-         case(SEEK_SEPARATOR)
-            if(has_val(SEPARATORS, c)) mode = SEEK_NORMAL_CHAR
-         case(SEEK_NORMAL_CHAR)
-            if(.not.has_val(SEPARATORS, c))then
-               ASSERT(answer <= huge(answer) - 1)
+         case(seek_separator)
+            if(has_val(separators, c)) mode = seek_normal_char
+         case(seek_normal_char)
+            if(.not.has_val(separators, c))then
+               ASSERT(ret <= huge(ret) - 1)
 
-               answer = answer + 1
-               mode = SEEK_SEPARATOR
+               ret = ret + 1
+               mode = seek_separator
             end if
          end select
       end do
       close(unit)
-   end function number_of_columns
+   end function columns_of
 
    function load_array_version(dir) result(version_)
       Character(len=*), intent(in):: dir
