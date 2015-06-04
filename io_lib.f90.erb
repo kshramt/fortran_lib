@@ -219,10 +219,10 @@ contains
       close(unit)
    end function get_line_number
 
-   ! @desc Return number of columns at line (numberOfHeaders + 1) in file fileName.
-   ! @desc The line is separated by space and tabs character.
-   ! @desc Quoted string containing space/tab characteres is not considared.
    function number_of_columns(file, numberOfHeaders) result(answer)
+      ! Return number of columns at line `(numberOfHeaders + 1)` in `file`.
+      ! The line is assumed to be separated by space and TAB characters.
+      ! Quoted string containing space/TAB characteres is not handled properly.
       Integer(int64):: answer
       Character(len=*), intent(in):: file
       Integer, intent(in), optional:: numberOfHeaders
