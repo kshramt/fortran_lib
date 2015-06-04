@@ -316,10 +316,10 @@ contains
             Character(len=*), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
          <%- end -%>
 
-         Character(len=*), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
+         Character(len=*), parameter:: data_type_for_self = '<%= t %>'
          Integer, parameter:: dim_for_self = <%= t.dim %>
 
-         Character(len=len(DATA_TYPE_FOR_SELF)) dataType
+         Character(len=len(data_type_for_self)) dataType
          Integer:: dim
          Integer:: sizes(1:dim_for_self)
          Integer:: unit
@@ -334,7 +334,7 @@ contains
          write(unit) self
          close(unit)
 
-         dataType = DATA_TYPE_FOR_SELF
+         dataType = data_type_for_self
          dim = dim_for_self
          sizes = shape(self)
          open(newunit=unit, file=trim(dir) + '/' + ARRAY_META_FILE, status='replace', action='write')
@@ -374,14 +374,14 @@ contains
          <%= t.declare %>, intent(inout), allocatable:: self
          Character(len=*), intent(in):: dir
 
-         Character(len=*), parameter:: DATA_TYPE_FOR_SELF = '<%= t %>'
+         Character(len=*), parameter:: data_type_for_self = '<%= t %>'
          Integer, parameter:: dim_for_self = <%= t.dim %>
          type(ArrayMeta):: meta
          Integer:: unit
 
          call load_array_meta_v_2(meta, trim(dir))
 
-         ASSERT(meta%dataType == DATA_TYPE_FOR_SELF)
+         ASSERT(meta%dataType == data_type_for_self)
          ASSERT(meta%dim == dim_for_self)
 
          if(allocated(self)) deallocate(self)
