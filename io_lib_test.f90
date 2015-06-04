@@ -1,10 +1,8 @@
 #include "fortran_lib.h"
 program io_lib_test
-   use, intrinsic:: iso_fortran_env, only: &
-      INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, &
-      REAL64, INT8
    USE_FORTRAN_LIB_H
-   use, non_intrinsic:: io_lib, IO_LIB_VERSION => VERSION
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int8
+   use, non_intrinsic:: io_lib, io_lib_version => version
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: character_lib, only: operator(+)
 
@@ -56,7 +54,7 @@ program io_lib_test
    xsOriginal = xs
    call dump(xs, 'xs.array', 'Real 1D test', 'Multiple descriptions.')
    TEST(all(almost_equal(xs, xsOriginal)))
-   TEST(load_version('xs.array') == IO_LIB_VERSION)
+   TEST(load_version('xs.array') == io_lib_version)
    call load_meta(meta, 'xs.array')
    TEST(meta%dataType == 'RealDim1KindREAL64')
    TEST(meta%dim == 1)
@@ -73,6 +71,6 @@ program io_lib_test
    TEST(all(almost_equal(ns, nsOriginal)))
 
    write (OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
-   
+
    stop
 end program io_lib_test
