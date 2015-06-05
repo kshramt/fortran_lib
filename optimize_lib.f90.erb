@@ -300,14 +300,11 @@ contains
             Vi = V(:, i)
             Vig = dot_product(Vi, g)
             if(e(i) == 0)then
-               is_convex = .false.
                dx_0 = dx_0 - Vig*Vi
+            else if(e(i) > 0)then
+               dx_scale = dx_scale - Vig/e(i)*Vi
             else
-               if(e(i) > 0)then
-                  dx_scale = dx_scale - Vig/e(i)*Vi
-               else
-                  dx_scale = dx_scale + Vig/(2*e(i))*Vi ! 2 is a heuristics
-               end if
+               dx_scale = dx_scale + Vig/(2*e(i))*Vi ! 2 is a heuristics
             end if
          end do
          dx = dx_scale
