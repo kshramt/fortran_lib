@@ -11,7 +11,6 @@ program main
 
    Integer(kind=int64), parameter:: n_params = 5
    Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -huge(0d0), -huge(0d0), 0d0, 1d-8]
-   Real(kind=real64), parameter:: upper_bounds(n_params) = [10d0, 10d0, 10d0, huge(0d0), huge(0d0)]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: M_max
    type(NewtonState64):: s
@@ -51,11 +50,6 @@ program main
             DEBUG_PRINT_VARIABLE(i)
             DEBUG_PRINT_VARIABLE(bound)
             s%x(i) = bound*dx(i) + s%x_prev(i)
-         ! else if(s%x(i) > upper_bounds(i))then
-         !    bound = (upper_bounds(i) - s%x_prev(i))/dx(i)
-         !    DEBUG_PRINT_VARIABLE(i)
-         !    DEBUG_PRINT_VARIABLE(bound)
-         !    s%x(i) = bound*dx(i) + s%x_prev(i)
          end if
       end do
       c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
