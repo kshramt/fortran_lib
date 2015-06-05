@@ -18,6 +18,7 @@ program main
    Real(kind=real64):: t_begin, t_end, t_len, normalize_interval
    Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), bound, dx(n_params)
    type(Dual64_2_5):: c, p, alpha, K, mu, fgh
+   Integer(kind=kind(s%iter)):: iter_best
    Integer(kind=int64):: n, i
    Logical:: converge
 
@@ -64,6 +65,7 @@ program main
       H = hess(fgh)
       write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, f, s%x, g
       if(f < f_best)then
+         iter_best = s%iter
          c_p_alpha_K_mu_best = s%x
          f_best = f
          g_best = g
@@ -81,6 +83,8 @@ program main
    write(output_unit, '(g0)') s%iter
    write(output_unit, '(a)') 'M_max'
    write(output_unit, '(g0)') M_max
+   write(output_unit, '(a)') 'iter_best'
+   write(output_unit, '(g0)') iter_best
    write(output_unit, '(a)') 'best log-likelihood'
    write(output_unit, '(g0)') -f_best
    write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
