@@ -42,6 +42,7 @@ program main
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
 
    f_best = huge(f_best)
+   converge = .false.
    do
       dx = s%x - s%x_prev
       do i = 1, n_params
@@ -62,12 +63,6 @@ program main
       g = jaco(fgh)
       H = hess(fgh)
       write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, f, s%x, g
-      call update(s, f, g, H, 'u')
-      if(s%is_saddle_or_peak)then
-         call random_number(s%x)
-         s%x = (2*s%x - 1)*norm2(dx)
-      end if
-      converge = s%is_convex .and. s%is_within .and. (all(almost_equal(s%x_prev, s%x, relative=1d-6, absolute=1d-6)) .or. norm2(g) <= 1d-6)
       if(f < f_best)then
          c_p_alpha_K_mu_best = s%x
          f_best = f
@@ -75,6 +70,12 @@ program main
          H_best = H
       end if
       if(converge) exit
+      call update(s, f, g, H, 'u')
+      if(s%is_saddle_or_peak)then
+         call random_number(s%x)
+         s%x = (2*s%x - 1)*norm2(dx)
+      end if
+      converge = s%is_convex .and. s%is_within .and. (all(almost_equal(s%x_prev, s%x, relative=1d-6, absolute=1d-6)) .or. norm2(g) <= 1d-6)
    end do
    write(output_unit, '(a)') 'iterations'
    write(output_unit, '(g0)') s%iter
