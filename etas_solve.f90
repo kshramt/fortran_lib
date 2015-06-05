@@ -61,7 +61,7 @@ program main
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
-      write(error_unit, *) norm2(dx), s%is_convex, s%is_within, f, s%x, g
+      write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, f, s%x, g
       call update(s, f, g, H, 'u')
       if(s%is_saddle_or_peak)then
          call random_number(s%x)
