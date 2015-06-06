@@ -180,7 +180,7 @@ $(1)/src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $$(@D)
 	$(CPP) $$(CPP_FLAGS_$(1)) $$< $$@
 
-.PRECIOUS: $(1)/src/%.f90.sha256.new $(1)/src/%.f90.sha256
+.SECONDARY: $(1)/src/%.f90.sha256.new $(1)/src/%.f90.sha256
 endef
 $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
