@@ -47,7 +47,7 @@ module etas_lib
       interface lambda_neg_p
          module procedure lambda_neg_p_i<%= t %>
          module procedure lambda_neg_p_t<%= t %>
-         module procedure lambda_neg_p_i_t<%= t %>
+         module procedure lambda_neg_p_j_t<%= t %>
       end interface lambda_neg_p
    <%- } -%>
 
@@ -144,14 +144,14 @@ contains
       end function lambda_neg_p_t<%= t %>
 
 
-      pure function lambda_neg_p_i_t<%= t %>(i, t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_j_t<%= t %>(j, t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
-         Integer(kind=int64), intent(in):: i
+         Integer(kind=int64), intent(in):: j
          Real(kind=real64), intent(in):: t, ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
 
-         ret = mu_normalized + dot_product(coeffs(:i), omori_neg_p(c + (t - ts(:i)), neg_p))
-      end function lambda_neg_p_i_t<%= t %>
+         ret = mu_normalized + dot_product(coeffs(:j), omori_neg_p(c + (t - ts(:j)), neg_p))
+      end function lambda_neg_p_j_t<%= t %>
 
 
       pure function lambda_integrate<%= t %>(t_len, c, p, mu_normalized, ts, coeffs) result(ret)
