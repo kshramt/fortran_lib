@@ -86,7 +86,7 @@ contains
 
 
       recursive function sum_log_lambda_neg_p<%= t %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs) result(ret)
-         Integer(kind=int64), parameter:: blocksize = 2**2
+         Integer(kind=int64), parameter:: blocksize = 2**4
          <%= decl %>:: ret, ret1, ret2
          Integer(kind=kind(blocksize)), intent(in):: i1, i2
          Real(kind=real64), intent(in):: ts(:)
