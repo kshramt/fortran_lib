@@ -304,7 +304,7 @@ contains
             else if(e(i) > 0)then
                dx_scale = dx_scale - Vig/e(i)*Vi
             else
-               dx_scale = dx_scale + Vig/(2*e(i))*Vi ! 2 is a heuristics
+               dx_scale = dx_scale + (Vig/e(i))*Vi
             end if
          end do
          dx = dx_scale
