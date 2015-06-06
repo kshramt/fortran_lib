@@ -351,12 +351,11 @@ contains
 
             z%g = x%g*yf + y%g*xf
             <%- if o > 1 -%>
-               z%h = x%h*yf + y%h*xf
                do, concurrent(j = 1:<%= n %>)
                   xj = x%g(j)
                   yj = y%g(j)
-                  do i = j, <%= n %>
-                     z%h(i, j) = z%h(i, j) + x%g(i)*yj + y%g(i)*xj
+                  do, concurrent(i = j:<%= n %>)
+                     z%h(i, j) = x%h(i, j)*yf + y%h(i, j)*xf + x%g(i)*yj + y%g(i)*xj
                   end do
                end do
             <%- end -%>
@@ -383,7 +382,6 @@ contains
             fn_py = -x_div_y2
             z%g = x%g*div_y + y%g*fn_py
             <%- if o > 1 -%>
-               z%h = x%h*div_y + y%h*fn_py
                ! fn_pxx = 0
                fn_pxy = -div_y2
                fn_pyy = 2*x_div_y2*div_y
@@ -392,8 +390,8 @@ contains
                   yj = y%g(j)
                   fn_pxx_xj_add_fn_pxy_yj = fn_pxy*yj ! + fn_pxx*xj
                   fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
-                  do i = j, <%= n %>
-                     z%h(i, j) = z%h(i, j) + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+                  do, concurrent(i = j:<%= n %>)
+                     z%h(i, j) = x%h(i, j)*div_y + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
             <%- end -%>
@@ -420,7 +418,6 @@ contains
             fn_py = log_x*x_pow_y
             z%g = x%g*fn_px + y%g*fn_py
             <%- if o > 1 -%>
-               z%h = x%h*fn_px + y%h*fn_py
                fn_pxx = yf*(yf - 1)*xf**(yf - 2)
                fn_pxy = (1 + yf*log_x)*x_pow_y_sub_1
                fn_pyy = log_x*fn_py ! = log_x**2*x_pow_y
@@ -430,7 +427,7 @@ contains
                   fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
                   fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
                   do i = j, <%= n %>
-                     z%h(i, j) = z%h(i, j) + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+                     z%h(i, j) = x%h(i, j)*fn_px + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
             <%- end -%>
