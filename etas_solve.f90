@@ -10,14 +10,14 @@ program main
    implicit none
 
    Integer(kind=int64), parameter:: n_params = 5
-   Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -huge(0d0), -huge(0d0), 0d0, 1d-8]
+   Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -1d0, -1d0, 0d0, 1d-8]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: m_max
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
    Real(kind=real64):: t_begin, t_end, t_len, normalize_interval
    Real(kind=real64):: m_for_K
-   Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), bound, dx(n_params)
+   Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), dx(n_params)
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=kind(s%iter)):: iter_best
    Integer(kind=int64):: n, i
@@ -48,14 +48,7 @@ program main
    converge = .false.
    do
       dx = s%x - s%x_prev
-      do i = 1, n_params
-         if(s%x(i) < lower_bounds(i))then
-            bound = (lower_bounds(i) - s%x_prev(i))/dx(i)
-            DEBUG_PRINT_VARIABLE(i)
-            DEBUG_PRINT_VARIABLE(bound)
-            s%x(i) = bound*dx(i) + s%x_prev(i)
-         end if
-      end do
+      s%x = max(s%x, lower_bounds)
       d_c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
       d_p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
       d_alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
