@@ -11,7 +11,7 @@ program main
 
    Integer(kind=int64), parameter:: n_params = 5
    Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -1d0, -1d0, 0d0, 1d-8]
-   Real(kind=real64), parameter:: upper_bounds(n_params) = [huge(0d0), 10d0, 10d0, huge(0d0), huge(0d0)]
+   Real(kind=real64), parameter:: upper_bounds(n_params) = [huge(0d0), 30d0, 10d0, huge(0d0), huge(0d0)]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: m_max
    type(NewtonState64):: s
