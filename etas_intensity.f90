@@ -9,12 +9,13 @@ program main
 
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: c, p, alpha, K, mu
-   Real(kind=real64):: normalize_interval
+   Real(kind=real64):: normalize_interval, m_for_K
    Real(kind=real64):: t
    Integer(kind=int64):: i, n
    Integer:: ios
 
    read(input_unit, *) normalize_interval
+   read(input_unit, *) m_for_K
    read(input_unit, *) c, p, alpha, K, mu
    read(input_unit, *) n
    allocate(ts(n))
@@ -22,7 +23,7 @@ program main
    do i = 1, n
       read(input_unit, *) ts(i), ms(i)
    end do
-   ms(:) = ms - maxval(ms)
+   ms(:) = ms - m_for_K
 
    do
       read(input_unit, *, iostat=ios) t
