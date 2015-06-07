@@ -5,24 +5,26 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
-   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate
+   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate, utsu_seki
 
    implicit none
 
    Integer(kind=int64), parameter:: n_params = 5
    Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -huge(0d0), -huge(0d0), 0d0, 1d-8]
    Real(kind=real64), allocatable:: ts(:), ms(:)
-   Real(kind=real64):: M_max
+   Real(kind=real64):: m_max
    type(NewtonState64):: s
-   Real(kind=real64):: c_p_alpha_K_mu_best(n_params)
+   Real(kind=real64):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
    Real(kind=real64):: t_begin, t_end, t_len, normalize_interval
+   Real(kind=real64):: m_for_K
    Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), bound, dx(n_params)
-   type(Dual64_2_5):: c, p, alpha, K, mu, fgh
+   type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=kind(s%iter)):: iter_best
    Integer(kind=int64):: n, i
    Logical:: converge
 
    read(input_unit, *) normalize_interval
+   read(input_unit, *) m_for_K
    read(input_unit, *) t_begin
    read(input_unit, *) t_end
    ASSERT(t_end >= t_begin)
@@ -33,8 +35,8 @@ program main
    do i = 1, n
       read(input_unit, *) ts(i), ms(i)
    end do
-   M_max = maxval(ms)
-   ms(:) = ms - M_max
+   m_max = maxval(ms)
+   ms(:) = ms - m_for_K
    ASSERT(t_begin <= ts(1))
    ASSERT(ts(n) <= t_end)
    ts(:) = ts - t_begin
@@ -54,12 +56,12 @@ program main
             s%x(i) = bound*dx(i) + s%x_prev(i)
          end if
       end do
-      c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
-      p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
-      alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
-      K = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
-      mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
-      fgh = -log_likelihood_etas(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms)
+      d_c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
+      d_p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
+      d_alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
+      d_K = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
+      d_mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
+      fgh = -log_likelihood_etas(t_len, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
@@ -81,14 +83,19 @@ program main
    end do
    write(output_unit, '(a)') 'iterations'
    write(output_unit, '(g0)') s%iter
-   write(output_unit, '(a)') 'M_max'
-   write(output_unit, '(g0)') M_max
+   write(output_unit, '(a)') 'm_max'
+   write(output_unit, '(g0)') m_max
    write(output_unit, '(a)') 'iter_best'
    write(output_unit, '(g0)') iter_best
    write(output_unit, '(a)') 'best log-likelihood'
    write(output_unit, '(g0)') -f_best
    write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
-   write(output_unit, '(g0, 6(" ", g0))') c_p_alpha_K_mu_best, c_p_alpha_K_mu_best(4)/omori_integrate(normalize_interval, c_p_alpha_K_mu_best(1), c_p_alpha_K_mu_best(2)), c_p_alpha_K_mu_best(5)/normalize_interval
+   c = c_p_alpha_K_mu_best(1)
+   p = c_p_alpha_K_mu_best(2)
+   alpha = c_p_alpha_K_mu_best(3)
+   K = c_p_alpha_K_mu_best(4)
+   mu = c_p_alpha_K_mu_best(5)
+   write(output_unit, '(g0, 6(" ", g0))') c, p, alpha, K, mu, utsu_seki(m_max - m_for_K, alpha)*K/omori_integrate(normalize_interval, c, p), mu/normalize_interval
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, '(g0, 4(" ", g0))') -g_best
    write(output_unit, '(a)') 'Hessian'
