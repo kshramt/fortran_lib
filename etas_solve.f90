@@ -11,6 +11,7 @@ program main
 
    Integer(kind=int64), parameter:: n_params = 5
    Real(kind=real64), parameter:: lower_bounds(n_params) = [1d-8, -1d0, -1d0, 0d0, 1d-8]
+   Real(kind=real64), parameter:: upper_bounds(n_params) = [huge(0d0), 10d0, 10d0, huge(0d0), huge(0d0)]
    Real(kind=real64), allocatable:: ts(:), ms(:)
    Real(kind=real64):: m_max
    type(NewtonState64):: s
@@ -48,7 +49,7 @@ program main
    converge = .false.
    do
       dx = s%x - s%x_prev
-      s%x = max(s%x, lower_bounds)
+      s%x = min(max(s%x, lower_bounds), upper_bounds)
       d_c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
       d_p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
       d_alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
