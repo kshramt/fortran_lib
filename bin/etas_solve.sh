@@ -99,12 +99,10 @@ done
 [[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
 
 
-{
-   echo "$t_normalization"
-   echo "$m_for_K"
-   echo "$t_begin"
-   echo "$t_end"
-   echo "$c" "$p" "$alpha" "$K" "$mu"
-   wc -l "$data_file" | awk '{print $1}'
-   cat "$data_file"
-}
+echo "$t_normalization"
+echo "$m_for_K"
+echo "$t_begin"
+echo "$t_end"
+echo "$c" "$p" "$alpha" "$K" "$mu"
+wc -l "$data_file" | awk '{print $1}'
+cat "$data_file"
