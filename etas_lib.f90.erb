@@ -1,10 +1,25 @@
 <%-
-  T_DECLS = [
-    [:r, 'Real(kind=real64)'],
-    [:q, 'Real(kind=real128)'],
-    [:dr, 'type(Dual64_2_5)'],
-    [:dq, 'type(Dual128_2_5)'],
+  KS = [
+    64,
+    128,
   ]
+  RD = [
+    :Real,
+    :Dual,
+  ]
+  RD_KS = RD.product(KS)
+
+  def _decl(t, k)
+    if t == :Real
+      "#{t}(kind=real#{k})"
+    else
+      "type(#{t}#{k}_2_5)"
+    end
+  end
+
+  def _suffix(t, k)
+    "#{t}#{k}"
+  end
 -%>
 
 #include "fortran_lib.h"
@@ -23,7 +38,8 @@ module etas_lib
    public:: omori_integrate
    public:: utsu_seki
 
-   <%- T_DECLS.each{|t, _| -%>
+   <%- RD_KS.each{|t, k| -%>
+      <%- suffix = _suffix(t, k) -%>
       <%-
         [
           :intensity_etas,
@@ -37,27 +53,29 @@ module etas_lib
         ].each{|fn|
       -%>
          interface <%= fn %>
-            module procedure <%= fn %><%= t %>
+            module procedure <%= fn %><%= suffix %>
          end interface <%= fn %>
       <%- } -%>
 
       interface omori_neg_p
-         module procedure omori_t_0_neg_p<%= t %>
+         module procedure omori_t_0_neg_p<%= suffix %>
       end interface omori_neg_p
 
       interface lambda_neg_p
-         module procedure lambda_neg_p_i<%= t %>
-         module procedure lambda_neg_p_t<%= t %>
-         module procedure lambda_neg_p_j_t<%= t %>
+         module procedure lambda_neg_p_i<%= suffix %>
+         module procedure lambda_neg_p_t<%= suffix %>
+         module procedure lambda_neg_p_j_t<%= suffix %>
       end interface lambda_neg_p
    <%- } -%>
 
 contains
 
-   <%- T_DECLS.each{|t, decl| -%>
-      function intensity_etas<%= t %>(t, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
+   <%- RD_KS.each{|t, k| -%>
+      <%- decl = _decl(t, k) -%>
+      <%- suffix = _suffix(t, k) -%>
+      function intensity_etas<%= suffix %>(t, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t, normalize_interval, ts(:), ms(size(ts))
+         Real(kind=real<%= k %>), intent(in):: t, normalize_interval, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
@@ -65,13 +83,13 @@ contains
          coeffs = kernel_coeff(ms, c, p, alpha, K, normalize_interval)
          mu_normalized = mu/normalize_interval
          ret = lambda_neg_p(t, c, -p, mu_normalized, ts, coeffs)
-      end function intensity_etas<%= t %>
+      end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= t %>(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
+      function log_likelihood_etas<%= suffix %>(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
          Integer(kind=int64):: one = 1
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t_len, normalize_interval, ts(:), ms(size(ts))
+         Real(kind=real<%= k %>), intent(in):: t_len, normalize_interval, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
@@ -83,14 +101,14 @@ contains
          ret = sum_log_lambda_neg_p(one, size(ts, kind=kind(one)), c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs)
          !$omp end single
          !$omp end parallel
-      end function log_likelihood_etas<%= t %>
+      end function log_likelihood_etas<%= suffix %>
 
 
-      recursive function sum_log_lambda_neg_p<%= t %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      recursive function sum_log_lambda_neg_p<%= suffix %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs) result(ret)
          Integer(kind=int64), parameter:: blocksize = 2**4
          <%= decl %>:: ret, ret1, ret2
          Integer(kind=kind(blocksize)), intent(in):: i1, i2
-         Real(kind=real64), intent(in):: ts(:)
+         Real(kind=real<%= k %>), intent(in):: ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
          Integer(kind=int64):: i, i_mid
 
@@ -108,13 +126,13 @@ contains
             !$omp taskwait
             ret = ret1 + ret2
          end if
-      end function sum_log_lambda_neg_p<%= t %>
+      end function sum_log_lambda_neg_p<%= suffix %>
 
 
-      pure function lambda_neg_p_i<%= t %>(i, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_i<%= suffix %>(i, c, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: i
-         Real(kind=real64), intent(in):: ts(:)
+         Real(kind=real<%= k %>), intent(in):: ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
          Real(kind=kind(ts)):: ti
          Integer(kind=kind(i)):: j
@@ -124,12 +142,12 @@ contains
             if(ts(j) < ti) exit
          end do
          ret = lambda_neg_p(j, ti, c, neg_p, mu_normalized, ts, coeffs)
-      end function lambda_neg_p_i<%= t %>
+      end function lambda_neg_p_i<%= suffix %>
 
 
-      pure function lambda_neg_p_t<%= t %>(t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_t<%= suffix %>(t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t, ts(:)
+         Real(kind=real<%= k %>), intent(in):: t, ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
          Integer(kind=int64):: i, j, n
 
@@ -142,59 +160,59 @@ contains
             end if
          end do
          ret = lambda_neg_p(j, t, c, neg_p, mu_normalized, ts, coeffs)
-      end function lambda_neg_p_t<%= t %>
+      end function lambda_neg_p_t<%= suffix %>
 
 
-      pure function lambda_neg_p_j_t<%= t %>(j, t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_j_t<%= suffix %>(j, t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: j
-         Real(kind=real64), intent(in):: t, ts(:)
+         Real(kind=real<%= k %>), intent(in):: t, ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
 
          ret = mu_normalized + dot_product(coeffs(:j), omori_neg_p(c + (t - ts(:j)), neg_p))
-      end function lambda_neg_p_j_t<%= t %>
+      end function lambda_neg_p_j_t<%= suffix %>
 
 
-      pure function lambda_integrate<%= t %>(t_len, c, p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_integrate<%= suffix %>(t_len, c, p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t_len, ts(:)
+         Real(kind=real<%= k %>), intent(in):: t_len, ts(:)
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
          ! todo: sum(kernel_integrate(t_len - ts, coeffs, c, p))
          ret = t_len*mu_normalized + sum(kernel_integrate(t_len - ts, coeffs, c, p))
-      end function lambda_integrate<%= t %>
+      end function lambda_integrate<%= suffix %>
 
 
-      elemental function kernel_integrate<%= t %>(t, K, c, p) result(ret)
+      elemental function kernel_integrate<%= suffix %>(t, K, c, p) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t
+         Real(kind=real<%= k %>), intent(in):: t
          <%= decl %>, intent(in)::  K, c, p
 
          ret = K*omori_integrate(t, c, p)
-      end function kernel_integrate<%= t %>
+      end function kernel_integrate<%= suffix %>
 
 
-      elemental function kernel_coeff<%= t %>(dm, c, p, alpha, K, normalize_interval) result(ret)
+      elemental function kernel_coeff<%= suffix %>(dm, c, p, alpha, K, normalize_interval) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: dm, normalize_interval
+         Real(kind=real<%= k %>), intent(in):: dm, normalize_interval
          <%= decl %>, intent(in):: c, p, alpha, K
 
          ! normalization by `omori_integrate` reduces correlation of objective function and improves convergence rate.
          ret = K*utsu_seki(dm, alpha)/omori_integrate(normalize_interval, c, p)
-      end function kernel_coeff<%= t %>
+      end function kernel_coeff<%= suffix %>
 
 
-      elemental function omori_t_0_neg_p<%= t %>(t, neg_p) result(ret)
+      elemental function omori_t_0_neg_p<%= suffix %>(t, neg_p) result(ret)
          <%= decl %>:: ret
          <%= decl %>, intent(in):: t, neg_p
 
          ret = t**neg_p
-      end function omori_t_0_neg_p<%= t %>
+      end function omori_t_0_neg_p<%= suffix %>
 
 
-      elemental function omori_integrate<%= t %>(t, c, p) result(ret)
+      elemental function omori_integrate<%= suffix %>(t, c, p) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: t
+         Real(kind=real<%= k %>), intent(in):: t
          <%= decl %>, intent(in):: c, p
 
          if(p == 1)then
@@ -207,15 +225,15 @@ contains
          else
             ret = ((t + c)**(1 - p) - c**(1 - p))/(1 - p)
          end if
-      end function omori_integrate<%= t %>
+      end function omori_integrate<%= suffix %>
 
 
-      elemental function utsu_seki<%= t %>(dm, alpha) result(ret)
+      elemental function utsu_seki<%= suffix %>(dm, alpha) result(ret)
          <%= decl %>:: ret
-         Real(kind=real64), intent(in):: dm
+         Real(kind=real<%= k %>), intent(in):: dm
          <%= decl %>, intent(in):: alpha
 
          ret = exp(alpha*dm)
-      end function utsu_seki<%= t %>
+      end function utsu_seki<%= suffix %>
    <%- } -%>
 end module etas_lib
