@@ -14,9 +14,27 @@ This module contains `almost_equal`.
 
 ## Command line programs
 
-### `etas_solve.exe`
+### `release/bin/etas_solve.exe`
 
-This program estimates ETAS parameters.
+This program estimates the ETAS parameters.
+Please run
+
+```bash
+bin/etas_solve.sh --help
+```
+
+for the details.
+
+### `release/bin/etas_intensity.exe`
+
+This program calculates the intensity function given data and the parameters estimated by `etas_solve`.
+Please run
+
+```bash
+bin/etas_intensity.sh --help
+```
+
+for the details.
 
 ### `sac_to_json.exe`
 
