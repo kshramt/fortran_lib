@@ -31,6 +31,7 @@ program main
    ASSERT(t_end >= t_begin)
    read(input_unit, *) c_p_alpha_K_mu_best
    read(input_unit, *) n
+   ASSERT(n >= n_params)
    allocate(ts(n))
    allocate(ms(n))
    do i = 1, n
