@@ -301,10 +301,8 @@ contains
             Vig = dot_product(Vi, g)
             if(e(i) == 0)then
                dx_0 = dx_0 - Vig*Vi
-            else if(e(i) > 0)then
-               dx_scale = dx_scale - Vig/e(i)*Vi
             else
-               dx_scale = dx_scale + (Vig/e(i))*Vi
+               dx_scale = dx_scale - Vig/abs(e(i))*Vi
             end if
          end do
          dx = dx_scale
