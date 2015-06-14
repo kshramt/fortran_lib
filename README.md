@@ -4,11 +4,11 @@ This Fortran library provides basic data structures, algorithms and some handy u
 
 ## Modules
 
-### `ad_lib`
+### `release/src/ad_lib.f90`
 
 This module contains types and routines for automatic differentiation up to second-order derivatives with 1, 2 and 5 independent variables.
 
-### `comparable_lib`
+### `release/src/comparable_lib.f90`
 
 This module contains `almost_equal`.
 
@@ -36,9 +36,9 @@ bin/etas_intensity.sh --help
 
 for the details.
 
-### `etas_log_likelihood`
+### `release/bin/etas_log_likelihood.exe`
 
-This program returnes log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
+This program returns log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
 Please run
 
 ```bash
@@ -47,7 +47,7 @@ bin/etas_log_likelihood.sh --help
 
 for the details.
 
-### `sac_to_json.exe`
+### `release/bin/sac_to_json.exe`
 
 This program converts binary SAC file to JSON format.
 
