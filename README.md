@@ -64,6 +64,12 @@ gmake check
 - GFortran 4.9 or newer.
 - Ruby 1.9 or newer.
 
+### Notes for Mac users
+
+GNU version of basic commands (`sed`, `awk`, `getopt` and so on) are assumed to be installed.
+For example, `script/make_include_make.sh` does not work with BSD-sed.
+Please install GNU Coreutils and GNU version of other necessary commands.
+
 ## License
 
 GPL Version 3.

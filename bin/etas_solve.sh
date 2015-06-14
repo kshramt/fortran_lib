@@ -11,7 +11,28 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "$program_name" '--t_normalization=1 --m_for_K=7 --t_begin=0 --t_end=60 --c=1 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe'
+      cat <<EOF
+$program_name --t_normalization=1 --m_for_K=7 --t_begin=0 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
+# c, p, alpha, K, mu:
+# Initial values.
+#
+# t_begin, t_end:
+# Time range to fit the ETAS parameters.
+#
+# data_file:
+# The first column should be time, and the second column should be magnitude.
+# Time should be sorted in ascending order.
+# The first time should be later than or equal to t_begin.
+# The last time should be faster than or equal to t_end.
+#
+# m_for_K:
+# Reference magnitude.
+#
+# t_normalization:
+# Normalization time interval.
+# Background intensity produces mu earthquakes per t_normalization on average.
+# A magnitude m_for_K earthquake produces K direct aftershocks per t_normalization on average.
+EOF
    } >&2
    exit "${1:-1}"
 }
