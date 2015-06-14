@@ -11,7 +11,7 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "$program_name" '--t_normalization=1 --m_for_K=7 --c=1 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe'
+      echo "seq 0 0.01 7 | $program_name" '--t_normalization=1 --m_for_K=7 --c=1 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_intensity.exe'
    } >&2
    exit "${1:-1}"
 }
