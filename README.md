@@ -36,6 +36,17 @@ bin/etas_intensity.sh --help
 
 for the details.
 
+### `etas_log_likelihood`
+
+This program returnes log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
+Please run
+
+```bash
+bin/etas_log_likelihood.sh --help
+```
+
+for the details.
+
 ### `sac_to_json.exe`
 
 This program converts binary SAC file to JSON format.
