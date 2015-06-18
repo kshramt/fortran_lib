@@ -38,7 +38,7 @@ $program_name [options] --t_normalize_len=1 --m_for_K=7 --t_begin=0 --t_pad=10 -
 # [options]:
 #
 # mask[=t,t,t,t,t]:
-# If you want to fix alpha by the initial value while performing optimization, try --mask=t,t,f,t,t.
+# If you want to fix alpha by the initial value while performing optimization, please try --mask=t,t,f,t,t.
 #
 # lower_bounds[=1d-8,-1,-1,0,1d-8]:
 # Lower bounds of the ETAS parameters.

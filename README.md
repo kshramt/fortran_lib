@@ -60,6 +60,7 @@ gmake check
 
 ## Dependencies
 
+- Git
 - GNU Make 3.82 or newer.
 - GFortran 4.9 or newer.
 - Ruby 1.9 or newer.
