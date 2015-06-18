@@ -11,7 +11,7 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "$program_name" '--t_normalization=1 --m_for_K=7 --t_begin=0 --t_pad=10 --t_end=60 --data_file=path/to/data_file < /path/to/etas_parameters | path/to/etas_log_likelihood.exe'
+      echo "$program_name" '--t_normalize_len=1 --m_for_K=7 --t_begin=0 --t_pad=10 --t_end=60 --data_file=path/to/data_file < /path/to/etas_parameters | path/to/etas_log_likelihood.exe'
    } >&2
    exit "${1:-1}"
 }
@@ -22,7 +22,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_begin:,t_end:,t_pad:,t_normalization:,m_for_K:,data_file: \
+      --longoptions help,t_begin:,t_end:,t_pad:,t_normalize_len:,m_for_K:,data_file: \
       --name="$program_name" \
       -- \
       "$@"
@@ -47,8 +47,8 @@ do
          t_end="$2"
          shift
          ;;
-      --t_normalization)
-         t_normalization="$2"
+      --t_normalize_len)
+         t_normalize_len="$2"
          shift
          ;;
       --m_for_K)
@@ -71,7 +71,7 @@ do
 done
 
 
-[[ -z "${t_normalization:-}" ]] && { echo 't_normalization not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
 [[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_pad:-}" ]] && { echo 't_pad not specified' >&2 ; usage_and_exit ; }
