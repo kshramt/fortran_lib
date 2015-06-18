@@ -12,12 +12,14 @@ readonly program_name="${0##*/}"
 usage_and_exit(){
    {
       cat <<EOF
-$program_name --t_normalization=1 --m_for_K=7 --t_begin=0 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
+$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_begin=0 --t_pad=10 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=10 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
 # c, p, alpha, K, mu:
 # Initial values.
 #
-# t_begin, t_end:
-# Time range to fit the ETAS parameters.
+# t_begin, t_pad, t_end:
+# t_begin <= t_pad <= t_end.
+# Earthquakes in [t_pad, t_end] are fitted by etas_solve.exe.
+# Earthquakes in [t_begin, t_pad) are not fitted although intensities from them to earthquakes in [t_pad, t_end] are considered.
 #
 # data_file:
 # The first column should be time, and the second column should be magnitude.
@@ -28,10 +30,21 @@ $program_name --t_normalization=1 --m_for_K=7 --t_begin=0 --t_end=60 --c=0.01 --
 # m_for_K:
 # Reference magnitude.
 #
-# t_normalization:
+# t_normalize_len:
 # Normalization time interval.
-# Background intensity produces mu earthquakes per t_normalization on average.
-# A magnitude m_for_K earthquake produces K direct aftershocks per t_normalization on average.
+# Background intensity produces mu earthquakes per t_normalize_len on average.
+# A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on average.
+#
+# [options]:
+#
+# mask[=t,t,t,t,t]:
+# If you want to fix alpha by the initial value while performing optimization, try --mask=t,t,f,t,t.
+#
+# lower_bounds[=1d-8,-1,-1,0,1d-8]:
+# Lower bounds of the ETAS parameters.
+#
+# upper_bounds[=1d308,30,10,1d308,1d308]:
+# Upper bounds of the ETAS parameters.
 EOF
    } >&2
    exit "${1:-1}"
@@ -43,13 +56,16 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_begin:,t_end:,t_normalization:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file: \
+      --longoptions help,t_begin:,t_pad:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,mask:,lower_bounds:,upper_bounds: \
       --name="$program_name" \
       -- \
       "$@"
 )"
 eval set -- "$opts"
 
+mask=t,t,t,t,t
+lower_bounds=1d-8,-1,-1,0,1d-8
+upper_bounds=1d308,30,10,1d308,1d308
 while true
 do
    case "${1}" in
@@ -64,8 +80,12 @@ do
          t_end="$2"
          shift
          ;;
-      --t_normalization)
-         t_normalization="$2"
+      --t_pad)
+         t_pad="$2"
+         shift
+         ;;
+      --t_normalize_len)
+         t_normalize_len="$2"
          shift
          ;;
       --m_for_K)
@@ -96,6 +116,18 @@ do
          data_file="$2"
          shift
          ;;
+      --mask)
+         mask="$2"
+         shift
+         ;;
+      --lower_bounds)
+         lower_bounds="$2"
+         shift
+         ;;
+      --upper_bounds)
+         upper_bounds="$2"
+         shift
+         ;;
       --)
          shift
          break
@@ -108,9 +140,10 @@ do
 done
 
 
-[[ -z "${t_normalization:-}" ]] && { echo 't_normalization not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
 [[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_pad:-}" ]] && { echo 't_pad not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
 [[ -z "${c:-}" ]] && { echo 'c not specified' >&2 ; usage_and_exit ; }
 [[ -z "${p:-}" ]] && { echo 'p not specified' >&2 ; usage_and_exit ; }
@@ -120,10 +153,14 @@ done
 [[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
 
 
-echo "$t_normalization"
-echo "$m_for_K"
-echo "$t_begin"
-echo "$t_end"
+echo "$mask"
 echo "$c" "$p" "$alpha" "$K" "$mu"
+echo "$lower_bounds"
+echo "$upper_bounds"
+echo "$m_for_K"
+echo "$t_normalize_len"
+echo "$t_begin"
+echo "$t_pad"
+echo "$t_end"
 wc -l "$data_file" | awk '{print $1}'
 cat "$data_file"

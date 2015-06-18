@@ -37,6 +37,10 @@ module etas_lib
    public:: log_likelihood_etas
    public:: omori_integrate
    public:: utsu_seki
+   public:: get_indices
+   public:: index_ge
+   public:: index_le
+   public:: load
 
    <%- RD_KS.each{|t, k| -%>
       <%- suffix = _suffix(t, k) -%>
@@ -66,6 +70,38 @@ module etas_lib
          module procedure lambda_neg_p_t<%= suffix %>
          module procedure lambda_neg_p_j_t<%= suffix %>
       end interface lambda_neg_p
+
+      <%- if t == :Real -%>
+         interface get_indices
+            module procedure get_indices<%= suffix %>
+         end interface get_indices
+
+         interface index_ge
+            module procedure index_ge<%= suffix %>
+         end interface index_ge
+
+         interface index_le
+            module procedure index_le<%= suffix %>
+         end interface index_le
+
+         interface load
+            module procedure loadEtasInputs<%= k %>
+         end interface load
+      <%- end -%>
+   <%- } -%>
+
+   <%- KS.each{|k| -%>
+      type, public:: EtasInputs<%= k %>
+         Real(kind=real<%= k %>):: m_for_K
+         Real(kind=real<%= k %>):: t_normalize_len
+         Real(kind=real<%= k %>):: t_begin
+         Real(kind=real<%= k %>):: t_pad
+         Real(kind=real<%= k %>):: t_end
+         Real(kind=real<%= k %>), allocatable:: ts(:)
+         Real(kind=real<%= k %>), allocatable:: ms(:)
+         Integer(kind=int64):: i_pad
+         Integer(kind=int64):: n
+      end type EtasInputs<%= k %>
    <%- } -%>
 
 contains
@@ -73,32 +109,32 @@ contains
    <%- RD_KS.each{|t, k| -%>
       <%- decl = _decl(t, k) -%>
       <%- suffix = _suffix(t, k) -%>
-      function intensity_etas<%= suffix %>(t, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
+      function intensity_etas<%= suffix %>(t, t_normalize_len, c, p, alpha, K, mu, ts, ms) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: t, normalize_interval, ts(:), ms(size(ts))
+         Real(kind=real<%= k %>), intent(in):: t, t_normalize_len, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
 
-         coeffs = kernel_coeff(ms, c, p, alpha, K, normalize_interval)
-         mu_normalized = mu/normalize_interval
+         coeffs = kernel_coeff(ms, c, p, alpha, K, t_normalize_len)
+         mu_normalized = mu/t_normalize_len
          ret = lambda_neg_p(t, c, -p, mu_normalized, ts, coeffs)
       end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= suffix %>(t_len, normalize_interval, c, p, alpha, K, mu, ts, ms) result(ret)
-         Integer(kind=int64):: one = 1
+      function log_likelihood_etas<%= suffix %>(t_len, t_normalize_len, c, p, alpha, K, mu, ts, ms, i_pad) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: t_len, normalize_interval, ts(:), ms(size(ts))
+         Real(kind=real<%= k %>), intent(in):: t_len, t_normalize_len, ts(:), ms(size(ts))
+         Integer(kind=int64), intent(in):: i_pad
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
 
-         coeffs = kernel_coeff(ms, c, p, alpha, K, normalize_interval)
-         mu_normalized = mu/normalize_interval
+         coeffs = kernel_coeff(ms, c, p, alpha, K, t_normalize_len)
+         mu_normalized = mu/t_normalize_len
          !$omp parallel
          !$omp single
-         ret = sum_log_lambda_neg_p(one, size(ts, kind=kind(one)), c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs)
+         ret = sum_log_lambda_neg_p(i_pad, size(ts, kind=kind(i_pad)), c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_pad)
          !$omp end single
          !$omp end parallel
       end function log_likelihood_etas<%= suffix %>
@@ -173,13 +209,14 @@ contains
       end function lambda_neg_p_j_t<%= suffix %>
 
 
-      pure function lambda_integrate<%= suffix %>(t_len, c, p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_integrate<%= suffix %>(t_len, c, p, mu_normalized, ts, coeffs, i_pad) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_len, ts(:)
+         Integer(kind=int64), intent(in):: i_pad
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
          ! todo: sum(kernel_integrate(t_len - ts, coeffs, c, p))
-         ret = t_len*mu_normalized + sum(kernel_integrate(t_len - ts, coeffs, c, p))
+         ret = t_len*mu_normalized + sum(kernel_integrate(t_len - ts, coeffs, c, p)) - sum(kernel_integrate(0 - ts(:(i_pad - 1)), coeffs(:(i_pad - 1)), c, p))
       end function lambda_integrate<%= suffix %>
 
 
@@ -192,13 +229,13 @@ contains
       end function kernel_integrate<%= suffix %>
 
 
-      elemental function kernel_coeff<%= suffix %>(dm, c, p, alpha, K, normalize_interval) result(ret)
+      elemental function kernel_coeff<%= suffix %>(dm, c, p, alpha, K, t_normalize_len) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: dm, normalize_interval
+         Real(kind=real<%= k %>), intent(in):: dm, t_normalize_len
          <%= decl %>, intent(in):: c, p, alpha, K
 
          ! normalization by `omori_integrate` reduces correlation of objective function and improves convergence rate.
-         ret = K*utsu_seki(dm, alpha)/omori_integrate(normalize_interval, c, p)
+         ret = K*utsu_seki(dm, alpha)/omori_integrate(t_normalize_len, c, p)
       end function kernel_coeff<%= suffix %>
 
 
@@ -235,5 +272,111 @@ contains
 
          ret = exp(alpha*dm)
       end function utsu_seki<%= suffix %>
+
+      <%- if t == :Real -%>
+         pure subroutine get_indices<%= suffix %>(ts, t_begin, t_pad, t_end, i_begin, i_pad, i_end)
+            ! Assumptions:
+            ! - ts is sorted in ascending order
+            ! - t_begin <= t_pad <= t_end
+            Integer(kind=int64), parameter:: one = 1
+            <%= decl %>, intent(in):: ts(:), t_begin, t_pad, t_end
+            Integer(kind=int64), intent(out):: i_begin, i_pad, i_end
+            Integer(kind=kind(one)):: n
+
+            n = size(ts, kind=kind(n))
+            i_begin = index_ge(ts, t_begin, one, n)
+            i_pad = index_ge(ts, t_pad, i_begin, n)
+            i_end = index_le(ts, t_end, i_pad, n)
+         end subroutine get_indices<%= suffix %>
+
+         pure recursive function index_ge<%= suffix %>(ts, t, i1, i2) result(ret)
+            ! Return the smallest ret where ts(ret) >= t
+            ! Assumptions:
+            ! - ts is sorted in ascending order
+            Integer(kind=int64):: ret
+            <%= decl %>, intent(in):: ts(:), t
+            Integer(kind=int64), intent(in):: i1, i2
+            Integer(kind=kind(i1)):: i_mid
+
+            if(i1 == i2)then
+               if(ts(i1) < t)then
+                  ret = i1 + 1
+               else
+                  ret = i1
+               end if
+            else
+               i_mid = (i1 + i2)/2 ! this will not overflow in practice
+               if(ts(i_mid) < t)then
+                  ret = index_ge(ts, t, i_mid + 1, i2)
+               else
+                  ret = index_ge(ts, t, i1, i_mid)
+               end if
+            end if
+         end function index_ge<%= suffix %>
+
+         pure recursive function index_le<%= suffix %>(ts, t, i1, i2) result(ret)
+            ! Return the largest ret where ts(ret) <= t
+            ! Assumptions:
+            ! - ts is sorted in ascending order
+            Integer(kind=int64):: ret
+            <%= decl %>, intent(in):: ts(:), t
+            Integer(kind=int64), intent(in):: i1, i2
+            Integer(kind=kind(i1)):: i_mid
+
+            if(i1 == i2)then
+               if(t < ts(i1))then
+                  ret = i1 - 1
+               else
+                  ret = i1
+               end if
+            else
+               i_mid = (i1 + i2)/2 + 1 ! this will not overflow in practice
+               if(t < ts(i_mid))then
+                  ret = index_le(ts, t, i1, i_mid - 1)
+               else
+                  ret = index_le(ts, t, i_mid, i2)
+               end if
+            end if
+         end function index_le<%= suffix %>
+
+         subroutine loadEtasInputs<%= k %>(self, unit)
+            type(EtasInputs<%= k %>), intent(out):: self
+            Integer(kind=kind(input_unit)), intent(in):: unit
+            Real(kind=kind(self%ts)), allocatable:: ts(:), ms(:)
+            Integer(kind=kind(self%n)):: i, n, i_begin, i_pad, i_end
+
+            read(unit, *) self%m_for_K
+            read(unit, *) self%t_normalize_len
+            ASSERT(self%t_normalize_len > 0)
+            read(unit, *) self%t_begin
+            read(unit, *) self%t_pad
+            read(unit, *) self%t_end
+            ASSERT(self%t_begin <= self%t_pad)
+            ASSERT(self%t_pad <= self%t_end)
+            read(unit, *) n
+            ASSERT(n > 0)
+            allocate(ts(n))
+            allocate(ms(n))
+            do i = 1, n
+               read(unit, *) ts(i), ms(i)
+               if(i > 1)then
+                  ASSERT(ts(i) >= ts(i - 1))
+                  if(ts(i) > self%t_end)then
+                     exit
+                  end if
+               end if
+            end do
+            call get_indices(ts, self%t_begin, self%t_pad, self%t_end, i_begin, i_pad, i_end)
+            ASSERT(i_begin <= i_pad)
+            ASSERT(i_pad <= i_end)
+
+            self%i_pad = i_pad - i_begin + 1
+            self%n = i_end - i_begin + 1
+            ENSURE_DEALLOCATED(self%ts)
+            ENSURE_DEALLOCATED(self%ms)
+            allocate(self%ts(self%n), source=ts(i_begin:i_end))
+            allocate(self%ms(self%n), source=ms(i_begin:i_end))
+         end subroutine loadEtasInputs<%= k %>
+      <%- end -%>
    <%- } -%>
 end module etas_lib

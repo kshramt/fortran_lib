@@ -5,10 +5,11 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: ad_lib, only: Dual64_2_5
    use, non_intrinsic:: ad_lib, only: real, jaco
-   use, non_intrinsic:: etas_lib, only: log_likelihood_etas
+   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le
 
    implicit none
 
+   Integer(kind=int64), parameter:: one = 1
    Real(kind=real64), parameter:: ts(13) = [ &
       0d0, &
       0.0689465277779985d0, &
@@ -53,25 +54,41 @@ program main
 
    p = 2d-1
    K = 104
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -238.82597918687705d0))
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -238.82597918687705d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -238.82597918687705d0))
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -238.82597918687705d0))
 
    p = 6d-1
    K = 120
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -243.80278501664003d0))
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -243.80278501664003d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -243.80278501664003d0))
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -243.80278501664003d0))
 
    p = 1
    K = 120
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms), -232.04236722101803d0))
+   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -232.04236722101803d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), -232.04236722101803d0))
-   TEST(all(almost_equal(jaco(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms)), [-66.823472324117404d0, 38.410272133423234d0, 50.443481642939808d0, -1.2014840427587559d0, -1.4229686278967888d0])))
+   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -232.04236722101803d0))
+   TEST(all(almost_equal(jaco(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), [-66.823472324117404d0, 38.410272133423234d0, 50.443481642939808d0, -1.2014840427587559d0, -1.4229686278967888d0])))
+
+   ASSERT(index_ge(ts, 0d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_ge(ts, 0d0, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_ge(ts, 0.0689465277779985d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 2)
+   ASSERT(index_ge(ts, 0.0689465277779985d0, int(1, kind=int64), size(ts, kind=int64)) == 2)
+   ASSERT(index_ge(ts, 1.39746527777778d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
+   ASSERT(index_ge(ts, 1.39746527777778d0, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
+   ASSERT(index_ge(ts, 1.39746527777778d0 + 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64) + 1)
+
+   ASSERT(index_le(ts, 0d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 0)
+   ASSERT(index_le(ts, 0d0, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_le(ts, 0.0689465277779985d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_le(ts, 0.0689465277779985d0, int(1, kind=int64), size(ts, kind=int64)) == 2)
+   ASSERT(index_le(ts, 1.39746527777778d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64) - 1)
+   ASSERT(index_le(ts, 1.39746527777778d0, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
+   ASSERT(index_le(ts, 1.39746527777778d0 + 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
 
    stop
 end program main
