@@ -194,9 +194,9 @@ contains
             Real(kind=real<%= kd %>):: ret(<%= n %>, <%= n %>)
             Integer:: i, j
 
-            do j = 1, <%= n %>
+            do, concurrent(j = 1:<%= n %>)
                ret(j, j) = x%h(j, j)
-               do i = j + 1, <%= n %>
+               do, concurrent(i = (j + 1):<%= n %>)
                   ret(i, j) = x%h(i, j)
                   ret(j, i) = x%h(i, j)
                end do
@@ -426,7 +426,7 @@ contains
                   yj = y%g(j)
                   fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
                   fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
-                  do i = j, <%= n %>
+                     do, concurrent(i = j:<%= n %>)
                      z%h(i, j) = x%h(i, j)*fn_px + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
