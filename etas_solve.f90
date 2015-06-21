@@ -3,7 +3,7 @@ module etas_solve
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: int64, real64
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
-   use, non_intrinsic:: etas_lib, only: EtasInputs64, load
+   use, non_intrinsic:: etas_lib, only: EtasInputs64, load, index_ge
 
    implicit none
 
@@ -24,12 +24,15 @@ module etas_solve
       Real(kind=real_kind):: initial(n_params) ! c, p, alpha, K, mu
       Real(kind=real_kind):: lower_bounds(n_params)
       Real(kind=real_kind):: upper_bounds(n_params)
+      Real(kind=real_kind):: t_begin
       type(EtasInputs64):: ei
+      Integer(kind=int_kind):: i_begin
    end type EtasSolveInputs
 
 contains
 
    subroutine loadEtasSolveInputs(self, unit)
+      Integer(kind=int_kind), parameter:: one = 1
       Integer(kind=kind(input_unit)), intent(in):: unit
       type(EtasSolveInputs), intent(out):: self
 
@@ -38,8 +41,10 @@ contains
       read(unit, *) self%lower_bounds
       read(unit, *) self%upper_bounds
       ASSERT(all((self%lower_bounds <= self%initial) .and. (self%initial <= self%upper_bounds)))
+      read(unit, *) self%t_begin
       call load(self%ei, unit)
-      ASSERT(self%ei%n - self%ei%i_pad + 1 >= n_params)
+      self%i_begin = index_ge(self%ei%ts, self%t_begin, one, self%ei%n)
+      ASSERT(self%ei%n - self%i_begin + 1 >= n_params)
    end subroutine loadEtasSolveInputs
 end module etas_solve
 
@@ -59,7 +64,6 @@ program main
    Real(kind=real64):: m_max
    type(NewtonState64):: s
    Real(kind=real64):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
-   Real(kind=real64):: t_len
    Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), dx(n_params)
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=int64):: i
@@ -69,8 +73,6 @@ program main
    call load(esi, input_unit)
    ASSERT(any(esi%mask))
    esi%ei%ms(:) = esi%ei%ms - esi%ei%m_for_K
-   esi%ei%ts(:) = esi%ei%ts - esi%ei%t_pad
-   t_len = esi%ei%t_end - esi%ei%t_pad
    c_p_alpha_K_mu_best(:) = esi%initial
 
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
@@ -85,7 +87,7 @@ program main
       d_alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
       d_K = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
       d_mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
-      fgh = -log_likelihood_etas(t_len, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%ei%i_pad)
+      fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin)
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)

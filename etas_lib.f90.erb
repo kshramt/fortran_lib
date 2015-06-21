@@ -37,7 +37,6 @@ module etas_lib
    public:: log_likelihood_etas
    public:: omori_integrate
    public:: utsu_seki
-   public:: get_indices
    <%- [:ge, :le, :lt].each{|name| -%>
       public:: index_<%= name %>
    <%- } -%>
@@ -48,7 +47,6 @@ module etas_lib
       <%-
         [
           :intensity_etas,
-          :log_likelihood_etas,
           :sum_log_lambda_neg_p,
           :lambda_integrate,
           :kernel_coeff,
@@ -62,6 +60,11 @@ module etas_lib
          end interface <%= fn %>
       <%- } -%>
 
+      interface log_likelihood_etas
+         module procedure log_likelihood_etas<%= suffix %>
+         module procedure log_likelihood_etas_range<%= suffix %>
+      end interface log_likelihood_etas
+
       interface omori_neg_p
          module procedure omori_t_0_neg_p<%= suffix %>
       end interface omori_neg_p
@@ -73,10 +76,6 @@ module etas_lib
       end interface lambda_neg_p
 
       <%- if t == :Real -%>
-         interface get_indices
-            module procedure get_indices<%= suffix %>
-         end interface get_indices
-
          <%- [:ge, :le, :lt].each{|name| -%>
             interface index_<%= name %>
                module procedure index_<%= name %><%= suffix %>
@@ -93,12 +92,10 @@ module etas_lib
       type, public:: EtasInputs<%= k %>
          Real(kind=real<%= k %>):: m_for_K
          Real(kind=real<%= k %>):: t_normalize_len
-         Real(kind=real<%= k %>):: t_begin
-         Real(kind=real<%= k %>):: t_pad
+         Real(kind=real<%= k %>):: t_pre
          Real(kind=real<%= k %>):: t_end
          Real(kind=real<%= k %>), allocatable:: ts(:)
          Real(kind=real<%= k %>), allocatable:: ms(:)
-         Integer(kind=int64):: i_pad
          Integer(kind=int64):: n
       end type EtasInputs<%= k %>
    <%- } -%>
@@ -121,22 +118,41 @@ contains
       end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= suffix %>(t_len, t_normalize_len, c, p, alpha, K, mu, ts, ms, i_pad) result(ret)
+      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms, i_begin) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: t_len, t_normalize_len, ts(:), ms(size(ts))
-         Integer(kind=int64), intent(in):: i_pad
+         Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), ms(size(ts))
+         Integer(kind=int64), intent(in):: i_begin
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
+         Integer(kind=kind(i_begin)):: n
 
+         n = size(ts, kind=kind(n))
+         ASSERT(t_begin <= ts(i_begin) .and. ts(i_begin) <= ts(n) .and. ts(n) <= t_end)
          coeffs = kernel_coeff(ms, c, p, alpha, K, t_normalize_len)
          mu_normalized = mu/t_normalize_len
+         ! PRINT_VARIABLE(real(sum_log_lambda_neg_p(i_begin, size(ts, kind=kind(i_begin)), c, -p, mu_normalized, ts, coeffs)))
+         ! PRINT_VARIABLE(real(lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_begin)))
          !$omp parallel
          !$omp single
-         ret = sum_log_lambda_neg_p(i_pad, size(ts, kind=kind(i_pad)), c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_pad)
+         ret = sum_log_lambda_neg_p(i_begin, n, c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
          !$omp end single
          !$omp end parallel
       end function log_likelihood_etas<%= suffix %>
+
+
+      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms) result(ret)
+         Integer(kind=int64):: one
+         <%= decl %>:: ret
+         Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), ms(size(ts))
+         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         Integer(kind=kind(one)):: n, i_begin, i_end
+
+         n = size(ts, kind=kind(n))
+         i_begin = index_ge(ts, t_begin, one, n)
+         i_end = index_le(ts, t_end, i_begin, n)
+         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), ms(:i_end), i_begin)
+      end function log_likelihood_etas_range<%= suffix %>
 
 
       recursive function sum_log_lambda_neg_p<%= suffix %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs) result(ret)
@@ -199,14 +215,13 @@ contains
       end function lambda_neg_p_j_t<%= suffix %>
 
 
-      pure function lambda_integrate<%= suffix %>(t_len, c, p, mu_normalized, ts, coeffs, i_pad) result(ret)
+      pure function lambda_integrate<%= suffix %>(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: t_len, ts(:)
-         Integer(kind=int64), intent(in):: i_pad
+         Real(kind=real<%= k %>), intent(in):: t_begin, t_end, ts(:)
+         Integer(kind=int64), intent(in):: i_begin
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size(ts))
 
-         ! todo: sum(kernel_integrate(t_len - ts, coeffs, c, p))
-         ret = t_len*mu_normalized + sum(kernel_integrate(t_len - ts, coeffs, c, p)) - sum(kernel_integrate(0 - ts(:(i_pad - 1)), coeffs(:(i_pad - 1)), c, p))
+         ret = (t_end - t_begin)*mu_normalized + sum(kernel_integrate(t_end - ts, coeffs, c, p)) - sum(kernel_integrate(t_begin - ts(:(i_begin - 1)), coeffs(:(i_begin - 1)), c, p))
       end function lambda_integrate<%= suffix %>
 
 
@@ -264,21 +279,6 @@ contains
       end function utsu_seki<%= suffix %>
 
       <%- if t == :Real -%>
-         pure subroutine get_indices<%= suffix %>(ts, t_begin, t_pad, t_end, i_begin, i_pad, i_end)
-            ! Assumptions:
-            ! - ts is sorted in ascending order
-            ! - t_begin <= t_pad <= t_end
-            Integer(kind=int64), parameter:: one = 1
-            <%= decl %>, intent(in):: ts(:), t_begin, t_pad, t_end
-            Integer(kind=int64), intent(out):: i_begin, i_pad, i_end
-            Integer(kind=kind(one)):: n
-
-            n = size(ts, kind=kind(n))
-            i_begin = index_ge(ts, t_begin, one, n)
-            i_pad = index_ge(ts, t_pad, i_begin, n)
-            i_end = index_le(ts, t_end, i_pad, n)
-         end subroutine get_indices<%= suffix %>
-
          pure recursive function index_ge<%= suffix %>(ts, t, i1, i2) result(ret)
             ! Return the smallest ret where ts(ret) >= t
             ! Assumptions:
@@ -355,19 +355,18 @@ contains
          end function index_lt<%= suffix %>
 
          subroutine loadEtasInputs<%= k %>(self, unit)
+            Integer(kind=int64), parameter:: one = 1
             type(EtasInputs<%= k %>), intent(out):: self
             Integer(kind=kind(input_unit)), intent(in):: unit
             Real(kind=kind(self%ts)), allocatable:: ts(:), ms(:)
-            Integer(kind=kind(self%n)):: i, n, i_begin, i_pad, i_end
+            Integer(kind=kind(self%n)):: i, n, i_pre, i_end
 
             read(unit, *) self%m_for_K
             read(unit, *) self%t_normalize_len
             ASSERT(self%t_normalize_len > 0)
-            read(unit, *) self%t_begin
-            read(unit, *) self%t_pad
+            read(unit, *) self%t_pre
             read(unit, *) self%t_end
-            ASSERT(self%t_begin <= self%t_pad)
-            ASSERT(self%t_pad <= self%t_end)
+            ASSERT(self%t_pre <= self%t_end)
             read(unit, *) n
             ASSERT(n > 0)
             allocate(ts(n))
@@ -381,16 +380,15 @@ contains
                   end if
                end if
             end do
-            call get_indices(ts, self%t_begin, self%t_pad, self%t_end, i_begin, i_pad, i_end)
-            ASSERT(i_begin <= i_pad)
-            ASSERT(i_pad <= i_end)
+            i_pre = index_ge(ts, self%t_pre, one, n)
+            i_end = index_le(ts, self%t_end, i_pre, n)
+            ASSERT(i_pre <= i_end)
 
-            self%i_pad = i_pad - i_begin + 1
-            self%n = i_end - i_begin + 1
+            self%n = i_end - i_pre + 1
             ENSURE_DEALLOCATED(self%ts)
             ENSURE_DEALLOCATED(self%ms)
-            allocate(self%ts(self%n), source=ts(i_begin:i_end))
-            allocate(self%ms(self%n), source=ms(i_begin:i_end))
+            allocate(self%ts(self%n), source=ts(i_pre:i_end))
+            allocate(self%ms(self%n), source=ms(i_pre:i_end))
          end subroutine loadEtasInputs<%= k %>
       <%- end -%>
    <%- } -%>

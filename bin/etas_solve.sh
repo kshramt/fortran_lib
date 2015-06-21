@@ -12,19 +12,19 @@ readonly program_name="${0##*/}"
 usage_and_exit(){
    {
       cat <<EOF
-$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_begin=0 --t_pad=10 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=10 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
+$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=10 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
 # c, p, alpha, K, mu:
 # Initial values.
 #
-# t_begin, t_pad, t_end:
-# t_begin <= t_pad <= t_end.
-# Earthquakes in [t_pad, t_end] are fitted by etas_solve.exe.
-# Earthquakes in [t_begin, t_pad) are not fitted although intensities from them to earthquakes in [t_pad, t_end] are considered.
+# t_pre, t_begin, t_end:
+# t_pre <= t_begin <= t_end.
+# Earthquakes in [t_begin, t_end] are fitted by etas_solve.exe.
+# Earthquakes in [t_pre, t_begin) are not fitted although intensities from them to earthquakes in [t_begin, t_end] are considered.
 #
 # data_file:
 # The first column should be time, and the second column should be magnitude.
 # Time should be sorted in ascending order.
-# The first time should be later than or equal to t_begin.
+# The first time should be later than or equal to t_pre.
 # The last time should be faster than or equal to t_end.
 #
 # m_for_K:
@@ -56,7 +56,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_begin:,t_pad:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,mask:,lower_bounds:,upper_bounds: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,mask:,lower_bounds:,upper_bounds: \
       --name="$program_name" \
       -- \
       "$@"
@@ -72,16 +72,16 @@ do
       -h | --help)
          usage_and_exit 0
          ;;
-      --t_begin)
-         t_begin="$2"
+      --t_pre)
+         t_pre="$2"
          shift
          ;;
       --t_end)
          t_end="$2"
          shift
          ;;
-      --t_pad)
-         t_pad="$2"
+      --t_begin)
+         t_begin="$2"
          shift
          ;;
       --t_normalize_len)
@@ -142,8 +142,8 @@ done
 
 [[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
 [[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_pre:-}" ]] && { echo 't_pre not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_pad:-}" ]] && { echo 't_pad not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
 [[ -z "${c:-}" ]] && { echo 'c not specified' >&2 ; usage_and_exit ; }
 [[ -z "${p:-}" ]] && { echo 'p not specified' >&2 ; usage_and_exit ; }
@@ -157,10 +157,10 @@ echo "$mask"
 echo "$c" "$p" "$alpha" "$K" "$mu"
 echo "$lower_bounds"
 echo "$upper_bounds"
+echo "$t_begin"
 echo "$m_for_K"
 echo "$t_normalize_len"
-echo "$t_begin"
-echo "$t_pad"
+echo "$t_pre"
 echo "$t_end"
 wc -l "$data_file" | awk '{print $1}'
 cat "$data_file"

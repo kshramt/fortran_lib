@@ -54,25 +54,25 @@ program main
 
    p = 2d-1
    K = 104
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -238.82597918687705d0))
+   TEST(almost_equal(log_likelihood_etas(0d0, t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -238.82597918687705d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -238.82597918687705d0))
+   TEST(almost_equal(real(log_likelihood_etas(0d0, t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -238.82597918687705d0))
 
    p = 6d-1
    K = 120
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -243.80278501664003d0))
+   TEST(almost_equal(log_likelihood_etas(0d0, t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -243.80278501664003d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -243.80278501664003d0))
+   TEST(almost_equal(real(log_likelihood_etas(0d0, t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -243.80278501664003d0))
 
    p = 1
    K = 120
-   TEST(almost_equal(log_likelihood_etas(t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -232.04236722101803d0))
+   TEST(almost_equal(log_likelihood_etas(0d0, t_end, normalize_interval, c, p, alpha, K, mu, ts, ms, one), -232.04236722101803d0))
    d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
    d_k = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   TEST(almost_equal(real(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -232.04236722101803d0))
-   TEST(all(almost_equal(jaco(log_likelihood_etas(t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), [-66.823472324117404d0, 38.410272133423234d0, 50.443481642939808d0, -1.2014840427587559d0, -1.4229686278967888d0])))
+   TEST(almost_equal(real(log_likelihood_etas(0d0, t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), -232.04236722101803d0))
+   TEST(all(almost_equal(jaco(log_likelihood_etas(0d0, t_end, normalize_interval, d_c, d_p, d_alpha, d_K, d_mu, ts, ms, one)), [-66.823472324117404d0, 38.410272133423234d0, 50.443481642939808d0, -1.2014840427587559d0, -1.4229686278967888d0])))
 
    ASSERT(index_ge(ts, 0d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 1)
    ASSERT(index_ge(ts, 0d0, int(1, kind=int64), size(ts, kind=int64)) == 1)
