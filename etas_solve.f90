@@ -3,12 +3,14 @@ module etas_solve
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: int64, real64
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5
    use, non_intrinsic:: etas_lib, only: EtasInputs64, load, index_ge
 
    implicit none
 
    private
    public:: load
+   public:: new_value
 
    Integer(kind=int64), parameter, public:: n_params = 5
    Integer, parameter, public:: real_kind = real64
@@ -18,6 +20,10 @@ module etas_solve
    interface load
       module procedure loadEtasSolveInputs
    end interface load
+
+   interface new_value
+      module procedure new_value
+   end interface new_value
 
    type, public:: EtasSolveInputs
       Logical:: mask(n_params)
@@ -46,6 +52,16 @@ contains
       self%i_begin = index_ge(self%ei%ts, self%t_begin, one, self%ei%n)
       ASSERT(self%ei%n - self%i_begin + 1 >= n_params)
    end subroutine loadEtasSolveInputs
+
+
+   function new_value(i, xs) result(ret)
+      type(Dual64_2_5):: ret
+      Integer(kind=int64), intent(in):: i
+      Real(kind=real64), intent(in):: xs(:)
+
+      ret%f = xs(i)
+      ret%g(i) = 1
+   end function new_value
 end module etas_solve
 
 
@@ -56,7 +72,7 @@ program main
    use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate, utsu_seki
-   use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load
+   use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load, new_value
 
    implicit none
 
@@ -82,11 +98,19 @@ program main
    do
       dx = s%x - s%x_prev
       s%x = min(max(s%x, esi%lower_bounds), esi%upper_bounds)
-      d_c = Dual64_2_5(s%x(1), [1, 0, 0, 0, 0])
-      d_p = Dual64_2_5(s%x(2), [0, 1, 0, 0, 0])
-      d_alpha = Dual64_2_5(s%x(3), [0, 0, 1, 0, 0])
-      d_K = Dual64_2_5(s%x(4), [0, 0, 0, 1, 0])
-      d_mu = Dual64_2_5(s%x(5), [0, 0, 0, 0, 1])
+
+      ! fix numerical error
+      do i = 1, n_params
+         if(.not.esi%mask(i))then
+            s%x(i) = esi%initial(i)
+         end if
+      end do
+
+      d_c = new_value(1_int64, s%x)
+      d_p = new_value(2_int64, s%x)
+      d_alpha = new_value(3_int64, s%x)
+      d_K = new_value(4_int64, s%x)
+      d_mu = new_value(5_int64, s%x)
       fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin)
       f = real(fgh)
       g = jaco(fgh)
@@ -100,6 +124,16 @@ program main
          H_best = H
       end if
       if(converge) exit
+
+      do i = 1, n_params
+         if(.not.esi%mask(i))then
+            g(i) = 0
+            H(i, :) = 0
+            H(:, i) = 0
+            H(i, i) = 2**10
+         end if
+      end do
+
       call update(s, f, g, H, 'u')
       if(s%is_saddle_or_peak)then
          call random_number(s%x)
