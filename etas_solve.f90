@@ -96,7 +96,6 @@ program main
    f_best = huge(f_best)
    converge = .false.
    do
-      dx = s%x - s%x_prev
       s%x = min(max(s%x, esi%lower_bounds), esi%upper_bounds)
 
       ! fix numerical error
@@ -105,6 +104,8 @@ program main
             s%x(i) = esi%initial(i)
          end if
       end do
+
+      dx = s%x - s%x_prev
 
       d_c = new_value(1_int64, s%x)
       d_p = new_value(2_int64, s%x)
