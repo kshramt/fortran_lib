@@ -14,7 +14,7 @@ program main
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu
    Real(kind=real64):: jacobian(n_params), hessian(n_params, n_params)
    Real(kind=real64):: c, p, alpha, K, mu
-   Real(kind=real64):: t_pad, t_end
+   Real(kind=real64):: t_begin, t_end
    Integer(kind=int64):: i, j
    Integer:: ios
 
@@ -22,14 +22,14 @@ program main
    ei%ms(:) = ei%ms - ei%m_for_K
 
    do
-      read(input_unit, *, iostat=ios) t_pad, t_end, c, p, alpha, K, mu
+      read(input_unit, *, iostat=ios) t_begin, t_end, c, p, alpha, K, mu
       if(ios /= 0) exit
       d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
       d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
       d_alpha = Dual64_2_5(alpha, [0, 0, 1, 0, 0])
       d_K = Dual64_2_5(K, [0, 0, 0, 1, 0])
       d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
-      log_likelihood = log_likelihood_etas(t_pad, t_end, ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, ei%ts, ei%ms)
+      log_likelihood = log_likelihood_etas(t_begin, t_end, ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, ei%ts, ei%ms)
       jacobian = jaco(log_likelihood)
       hessian = hess(log_likelihood)
       write(output_unit, *) real(log_likelihood)
