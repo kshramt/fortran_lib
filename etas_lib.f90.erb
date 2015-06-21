@@ -38,8 +38,9 @@ module etas_lib
    public:: omori_integrate
    public:: utsu_seki
    public:: get_indices
-   public:: index_ge
-   public:: index_le
+   <%- [:ge, :le, :lt].each{|name| -%>
+      public:: index_<%= name %>
+   <%- } -%>
    public:: load
 
    <%- RD_KS.each{|t, k| -%>
@@ -76,13 +77,11 @@ module etas_lib
             module procedure get_indices<%= suffix %>
          end interface get_indices
 
-         interface index_ge
-            module procedure index_ge<%= suffix %>
-         end interface index_ge
-
-         interface index_le
-            module procedure index_le<%= suffix %>
-         end interface index_le
+         <%- [:ge, :le, :lt].each{|name| -%>
+            interface index_<%= name %>
+               module procedure index_<%= name %><%= suffix %>
+            end interface index_<%= name %>
+         <%- } -%>
 
          interface load
             module procedure loadEtasInputs<%= k %>
@@ -185,17 +184,8 @@ contains
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
-         Integer(kind=int64):: i, j, n
 
-         n = size(ts, kind=kind(j))
-         j = n
-         do i = 1, n
-            if(ts(i) >= t)then
-               j = i - 1
-               exit
-            end if
-         end do
-         ret = lambda_neg_p(j, t, c, neg_p, mu_normalized, ts, coeffs)
+         ret = lambda_neg_p(index_lt(ts, t, int(1, kind=int64), size(ts, kind=int64)), t, c, neg_p, mu_normalized, ts, coeffs)
       end function lambda_neg_p_t<%= suffix %>
 
 
@@ -338,6 +328,31 @@ contains
                end if
             end if
          end function index_le<%= suffix %>
+
+         pure recursive function index_lt<%= suffix %>(ts, t, i1, i2) result(ret)
+            ! Return the largest ret where ts(ret) < t
+            ! Assumptions:
+            ! - ts is sorted in ascending order
+            Integer(kind=int64):: ret
+            <%= decl %>, intent(in):: ts(:), t
+            Integer(kind=int64), intent(in):: i1, i2
+            Integer(kind=kind(i1)):: i_mid
+
+            if(i1 == i2)then
+               if(ts(i1) < t)then
+                  ret = i1
+               else
+                  ret = i1 - 1
+               end if
+            else
+               i_mid = (i1 + i2)/2 ! this will not overflow in practice
+               if(ts(i_mid) < t)then
+                  ret = index_lt(ts, t, i_mid + 1, i2)
+               else
+                  ret = index_lt(ts, t, i1, i_mid)
+               end if
+            end if
+         end function index_lt<%= suffix %>
 
          subroutine loadEtasInputs<%= k %>(self, unit)
             type(EtasInputs<%= k %>), intent(out):: self

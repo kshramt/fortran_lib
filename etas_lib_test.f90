@@ -5,7 +5,7 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: ad_lib, only: Dual64_2_5
    use, non_intrinsic:: ad_lib, only: real, jaco
-   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le
+   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le, index_lt
 
    implicit none
 
@@ -89,6 +89,15 @@ program main
    ASSERT(index_le(ts, 1.39746527777778d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64) - 1)
    ASSERT(index_le(ts, 1.39746527777778d0, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
    ASSERT(index_le(ts, 1.39746527777778d0 + 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
+
+   PRINT_VARIABLE(index_lt(ts, 0d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)))
+   ASSERT(index_lt(ts, 0d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 0)
+   ASSERT(index_lt(ts, 0d0, int(1, kind=int64), size(ts, kind=int64)) == 0)
+   ASSERT(index_lt(ts, 0.0689465277779985d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_lt(ts, 0.0689465277779985d0, int(1, kind=int64), size(ts, kind=int64)) == 1)
+   ASSERT(index_lt(ts, 1.39746527777778d0 - 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64) - 1)
+   ASSERT(index_lt(ts, 1.39746527777778d0, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64) - 1)
+   ASSERT(index_lt(ts, 1.39746527777778d0 + 0.01, int(1, kind=int64), size(ts, kind=int64)) == size(ts, kind=int64))
 
    stop
 end program main
