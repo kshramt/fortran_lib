@@ -157,7 +157,7 @@ program main
    alpha = c_p_alpha_K_mu_best(3)
    K = c_p_alpha_K_mu_best(4)
    mu = c_p_alpha_K_mu_best(5)
-   write(output_unit, '(g0, 6(" ", g0))') c, p, alpha, K, mu, utsu_seki(m_max - esi%ei%m_for_K, alpha)*K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
+   write(output_unit, '(g0, 6(" ", g0))') c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, '(g0, 4(" ", g0))') -g_best
    write(output_unit, '(a)') 'Hessian'
