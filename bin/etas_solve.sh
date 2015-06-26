@@ -37,8 +37,8 @@ $program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 -
 #
 # [options]:
 #
-# mask[=t,t,t,t,t]:
-# If you want to fix alpha by the initial value while performing optimization, please try --mask=t,t,f,t,t.
+# fixed[=f,f,f,f,f]:
+# If you want to fix alpha by the initial value while performing optimization, please try --fixed=f,f,t,f,f
 #
 # lower_bounds[=1d-8,-1,-1,0,1d-8]:
 # Lower bounds of the ETAS parameters.
@@ -56,14 +56,14 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,mask:,lower_bounds:,upper_bounds: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,lower_bounds:,upper_bounds: \
       --name="$program_name" \
       -- \
       "$@"
 )"
 eval set -- "$opts"
 
-mask=t,t,t,t,t
+fixed=f,f,f,f,f
 lower_bounds=1d-8,-1,-1,0,1d-8
 upper_bounds=1d308,30,10,1d308,1d308
 while true
@@ -116,8 +116,8 @@ do
          data_file="$2"
          shift
          ;;
-      --mask)
-         mask="$2"
+      --fixed)
+         fixed="$2"
          shift
          ;;
       --lower_bounds)
@@ -153,7 +153,7 @@ done
 [[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
 
 
-echo "$mask"
+echo "$fixed"
 echo "$c" "$p" "$alpha" "$K" "$mu"
 echo "$lower_bounds"
 echo "$upper_bounds"

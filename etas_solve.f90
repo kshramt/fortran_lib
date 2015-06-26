@@ -26,7 +26,7 @@ module etas_solve
    end interface new_value
 
    type, public:: EtasSolveInputs
-      Logical:: mask(n_params)
+      Logical:: fixed(n_params)
       Real(kind=real_kind):: initial(n_params) ! c, p, alpha, K, mu
       Real(kind=real_kind):: lower_bounds(n_params)
       Real(kind=real_kind):: upper_bounds(n_params)
@@ -42,7 +42,7 @@ contains
       Integer(kind=kind(input_unit)), intent(in):: unit
       type(EtasSolveInputs), intent(out):: self
 
-      read(unit, *) self%mask
+      read(unit, *) self%fixed
       read(unit, *) self%initial
       read(unit, *) self%lower_bounds
       read(unit, *) self%upper_bounds
@@ -87,7 +87,7 @@ program main
    Logical:: converge
 
    call load(esi, input_unit)
-   ASSERT(any(esi%mask))
+   ASSERT(.not.all(esi%fixed))
    esi%ei%ms(:) = esi%ei%ms - esi%ei%m_for_K
    c_p_alpha_K_mu_best(:) = esi%initial
 
@@ -100,7 +100,7 @@ program main
 
       ! fix numerical error
       do i = 1, n_params
-         if(.not.esi%mask(i))then
+         if(esi%fixed(i))then
             s%x(i) = esi%initial(i)
          end if
       end do
@@ -127,7 +127,7 @@ program main
       if(converge) exit
 
       do i = 1, n_params
-         if(.not.esi%mask(i))then
+         if(esi%fixed(i))then
             g(i) = 0
             H(i, :) = 0
             H(:, i) = 0
