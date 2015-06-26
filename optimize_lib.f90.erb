@@ -64,6 +64,7 @@ module optimize_lib
       end type LineSearchState<%= k %>_1
    <%- } -%>
 
+
    <%- RKINDS.each{|k| -%>
       interface update
          module procedure updateNewtonState<%= k %>
@@ -139,10 +140,6 @@ contains
       end subroutine updateNewtonState<%= k %>
 
       subroutine updateNewtonState_<%= k %>(s, f, g, H, uplo, max_scale)
-         ! call init(s, x0, l)
-         ! do
-         !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
-         ! end do
          Real(kind=real<%= k %>), parameter:: zero = 0
          type(NewtonState<%= k %>), intent(inout):: s
          Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
@@ -185,6 +182,7 @@ contains
          call adaptive_steepest_descent(uplo, g, H, dx, s%is_convex, s%is_saddle_or_peak)
          s%is_within = s%is_convex
       end subroutine updateNewtonState_adaptive_steepest_descent<%= k %>
+
 
       subroutine updateNewtonState_newton<%= k %>(s, g, H, uplo, dx)
          type(NewtonState<%= k %>), intent(inout):: s
@@ -251,10 +249,9 @@ contains
          ENSURE_DEALLOCATED(s%x_prev)
          ENSURE_DEALLOCATED(s%g_prev)
          s%dim = size(x0)
-         allocate(s%x(s%dim))
+         allocate(s%x(s%dim), source=x0)
          allocate(s%x_prev(s%dim))
          allocate(s%g_prev(s%dim))
-         s%x(:) = x0
          s%x_prev(:) = s%x - sqrt(r/s%dim)
          s%f_prev = get_infinity()
          s%g_prev(:) = 0
