@@ -125,7 +125,7 @@ contains
       ! Newton
 
       subroutine updateNewtonState<%= k %>(s, f, g, H, uplo)
-         ! call init(s, x0, l)
+         ! call init(s, x0, r)
          ! do
          !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
          ! end do
@@ -148,7 +148,7 @@ contains
          Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
          Real(kind=real<%= k %>), intent(in):: max_scale
-         Real(kind=real<%= k %>):: l, l_new, dx(s%dim), dx_new(s%dim)
+         Real(kind=real<%= k %>):: r, r_new, dx(s%dim), dx_new(s%dim)
 
 
          if(s%iter < 0)then
@@ -159,14 +159,14 @@ contains
          dx(:) = s%x - s%x_prev
          if(f >= s%f_prev)then
             DEBUG_PRINT('Line Search')
-            l = norm2(dx)
-            call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/l, l, f, l_new, s%is_convex)
+            r = norm2(dx)
+            call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
 
             ASSERT(s%is_convex)
-            DEBUG_PRINT_VARIABLE(l)
-            DEBUG_PRINT_VARIABLE(l_new)
+            DEBUG_PRINT_VARIABLE(r)
+            DEBUG_PRINT_VARIABLE(r_new)
             s%is_within = .true.
-            s%x(:) = s%x_prev + l_new/l*dx
+            s%x(:) = s%x_prev + r_new/r*dx
             return
          end if
 
@@ -221,28 +221,28 @@ contains
          Real(kind=real<%= k %>), intent(in):: dx_prev(size(dx))
          Real(kind=real<%= k %>), intent(in):: max_scale
          Logical(kind=int8), intent(out):: is_within
-         Real(kind=real<%= k %>):: l, l_prev, c
+         Real(kind=real<%= k %>):: r, r_prev, c
 
-         l_prev = norm2(dx_prev)
-         l = norm2(dx)
-         if(l > max_scale*l_prev)then
-            dx(:) = max_scale*l_prev/l*dx
+         r_prev = norm2(dx_prev)
+         r = norm2(dx)
+         if(r > max_scale*r_prev)then
+            dx(:) = max_scale*r_prev/r*dx
             is_within = .false.
          end if
-         c = dot_product(dx_prev, dx)/l_prev
-         if(c < -l_prev/2)then
-            dx(:) = -l_prev/(2*c)*dx
+         c = dot_product(dx_prev, dx)/r_prev
+         if(c < -r_prev/2)then
+            dx(:) = -r_prev/(2*c)*dx
             is_within = .false.
          end if
       end subroutine restrict_step_size<%= k %>
 
 
-      subroutine initNewtonState<%= k %>(s, x0, l)
+      subroutine initNewtonState<%= k %>(s, x0, r)
          type(NewtonState<%= k %>), intent(inout):: s
          Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
-         Real(kind=real<%= k %>), intent(in):: l ! initial step length
+         Real(kind=real<%= k %>), intent(in):: r ! initial step length
 
-         ASSERT(l > 0)
+         ASSERT(r > 0)
          s%is_convex = .false.
          s%is_within = .false.
          s%is_saddle_or_peak = .false.
@@ -255,7 +255,7 @@ contains
          allocate(s%x_prev(s%dim))
          allocate(s%g_prev(s%dim))
          s%x(:) = x0
-         s%x_prev(:) = s%x - sqrt(l/s%dim)
+         s%x_prev(:) = s%x - sqrt(r/s%dim)
          s%f_prev = get_infinity()
          s%g_prev(:) = 0
       end subroutine initNewtonState<%= k %>
