@@ -245,15 +245,12 @@ contains
          s%is_within = .false.
          s%is_saddle_or_peak = .false.
          s%iter = 0
-         ENSURE_DEALLOCATED(s%x)
-         ENSURE_DEALLOCATED(s%x_prev)
-         ENSURE_DEALLOCATED(s%g_prev)
          s%dim = size(x0)
-         allocate(s%x(s%dim), source=x0)
-         allocate(s%x_prev(s%dim))
-         allocate(s%g_prev(s%dim))
-         s%x_prev(:) = s%x - sqrt(r/s%dim)
+         s%x = x0
+         s%x_prev = s%x - sqrt(r/s%dim)
          s%f_prev = get_infinity()
+         ENSURE_DEALLOCATED(s%g_prev)
+         allocate(s%g_prev(s%dim))
          s%g_prev(:) = 0
       end subroutine initNewtonState<%= k %>
 
