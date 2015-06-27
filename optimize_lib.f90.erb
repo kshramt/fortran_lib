@@ -29,9 +29,9 @@ module optimize_lib
 
    <%- RKINDS.each{|k| -%>
       type, public:: NewtonState<%= k %>
-         Logical(kind=int8):: is_convex
-         Logical(kind=int8):: is_within
-         Logical(kind=int8):: is_saddle_or_peak
+         Logical:: is_convex
+         Logical:: is_within
+         Logical:: is_saddle_or_peak
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
@@ -41,8 +41,8 @@ module optimize_lib
       end type NewtonState<%= k %>
 
       type, public:: LineSearchState<%= k %>_0
-         Logical(kind=int8):: is_convex
-         Logical(kind=int8):: is_within
+         Logical:: is_convex
+         Logical:: is_within
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
@@ -53,8 +53,8 @@ module optimize_lib
       end type LineSearchState<%= k %>_0
 
       type, public:: LineSearchState<%= k %>_1
-         Logical(kind=int8):: is_convex
-         Logical(kind=int8):: is_within
+         Logical:: is_convex
+         Logical:: is_within
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
@@ -218,7 +218,7 @@ contains
          Real(kind=real<%= k %>), intent(inout):: dx(:)
          Real(kind=real<%= k %>), intent(in):: dx_prev(size(dx))
          Real(kind=real<%= k %>), intent(in):: max_scale
-         Logical(kind=int8), intent(out):: is_within
+         Logical, intent(out):: is_within
          Real(kind=real<%= k %>):: r, r_prev, c
 
          r_prev = norm2(dx_prev)
@@ -260,7 +260,7 @@ contains
          Character(len=1), intent(in):: uplo
          Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
          Real(kind=kind(g)), intent(out):: dx(size(g))
-         Logical(kind=int8), intent(out):: is_convex, is_saddle_or_peak
+         Logical, intent(out):: is_convex, is_saddle_or_peak
          Real(kind=kind(g)):: V(size(g), size(g)), e(size(g)), dx_0(size(g)), dx_scale(size(g)), Vi(size(g)), Vig
          Integer(kind=kind(nrhs)):: n, i, info
 
@@ -311,7 +311,7 @@ contains
          Character(len=1), intent(in):: uplo
          Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
          Real(kind=real<%= k %>), intent(out):: dx(size(g))
-         Logical(kind=int8), intent(out):: is_convex
+         Logical, intent(out):: is_convex
          Real(kind=real<%= k %>):: A(size(g), size(g))
          Integer(kind=kind(nrhs)):: n, info
 
@@ -498,7 +498,7 @@ contains
       subroutine line_search_interpolate<%= k %>_0(x1, x2, x3, f1, f2, f3, x_opt, is_convex)
          Real(kind=real<%= k %>), intent(in):: x1, x2, x3, f1, f2, f3
          Real(kind=real<%= k %>), intent(out):: x_opt
-         Logical(kind=int8), intent(out):: is_convex
+         Logical, intent(out):: is_convex
          Real(kind=real<%= k %>):: x12, x13, x23, f1x1213, f2x1223, f3x1323, a, b_neg
 
          x12 = x1 - x2
@@ -639,7 +639,7 @@ contains
       subroutine line_search_interpolate<%= k %>_1(x1, f1, g1, x2, f2, x_new, is_convex)
          Real(kind=real<%= k %>), intent(in):: x1, f1, g1, x2, f2
          Real(kind=real<%= k %>), intent(out):: x_new
-         Logical(kind=int8), intent(out):: is_convex
+         Logical, intent(out):: is_convex
          Real(kind=real<%= k %>):: x12, a
 
          x12 = x2 - x1
