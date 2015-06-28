@@ -6,13 +6,18 @@ program main
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: math_lib, only: rosenbrock_fgh
    use, non_intrinsic:: optimize_lib, only: nnls
-   use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate64_0, Linesearchstate64_1, NewtonState64
+   use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate64_0, Linesearchstate64_1, NewtonState64, BoundNewtonState64
+   use, non_intrinsic:: optimize_lib, only: combinations, combination
 
    implicit none
 
    Integer:: ix, iy
    Real(kind=real64):: x, y
 
+
+   TEST(all(reshape([1, 2, 3], [1, 3]) == combinations(int([1, 2, 3], kind=int64), 1_int64)))
+   TEST(all(reshape([1, 2, 1, 3, 2, 3], [2, 3]) == combinations(int([1, 2, 3], kind=int64), 2_int64)))
+   TEST(all(reshape([1, 2, 3], [3, 1]) == combinations(int([1, 2, 3], kind=int64), 3_int64)))
 
   TEST(all(almost_equal(nnls(real(reshape([73, 87, 72, 80, 71, 74, 2, 89, 52, 46, 7, 71], shape=[4, 3]), kind=REAL64), real([49, 67, 68, 20], kind=REAL64)), [0.6495384364022547_REAL64, 0.0_REAL64, 0.0_REAL64])))
    TEST(all(almost_equal(nnls(real(reshape([1, 1, 0, 1], shape=[2, 2]), kind=REAL64), real([1, 0], kind=REAL64)), [1.0/2, 0.0])))
@@ -42,6 +47,7 @@ program main
      do iy = -2, 5
         y = iy
         TEST(test_newton([x, y], 1d-1))
+        TEST(test_bound_newton([x, y], [-1d1, -1d1], [1d1, 1d1], 1d-1, [1d0, 1d0]))
      end do
   end do
 
@@ -51,16 +57,16 @@ program main
 
 contains
 
-   function test_newton(x0, l) result(ret)
+   function test_newton(x0, r) result(ret)
       Logical:: ret
-      Real(kind=real64), intent(in):: x0(:), l
+      Real(kind=real64), intent(in):: x0(:), r
 
       Real(kind=kind(x0)):: x_best(size(x0)), f, f_best, g(size(x0)), H(size(x0), size(x0)), xtol
       Logical:: converge_x
       type(NewtonState64):: s
 
       xtol = 1d-2
-      call init(s, x0, l)
+      call init(s, x0, r)
       x_best(:) = x0
       f_best = huge(f_best)
       do
@@ -77,6 +83,33 @@ contains
       write(output_unit, *) s%iter, x_best
       ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
    end function test_newton
+
+   function test_bound_newton(x_ini, lower, upper, r, x0) result(ret)
+      Logical:: ret
+      Real(kind=real64), intent(in):: x_ini(:), lower(size(x_ini)), upper(size(x_ini)), r, x0(size(x_ini))
+
+      Real(kind=kind(x_ini)):: x_best(size(x_ini)), f, f_best, g(size(x_ini)), H(size(x_ini), size(x_ini)), xtol
+      Logical:: converge_x
+      type(BoundNewtonState64):: s
+
+      xtol = 1d-2
+      call init(s, x_ini, r, lower, upper)
+      x_best(:) = x_ini
+      f_best = huge(f_best)
+      do
+         call rosenbrock_fgh(s%x, f, g, H)
+         ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
+         call update(s, f, g, H, 'u')
+         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
+         if(f < f_best)then
+            x_best(:) = s%x
+            f_best = f
+         end if
+         if(converge_x) exit
+      end do
+      write(output_unit, *) s%iter, x_best
+      ret = all(almost_equal(x0, x_best, absolute=abs(xtol)))
+   end function test_bound_newton
 
    function test_line_search0(x0, dx, x_theoretical) result(ret)
       Logical:: ret

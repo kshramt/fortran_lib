@@ -18,16 +18,36 @@ module optimize_lib
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT
    use, intrinsic:: iso_fortran_env, only: int8, int32, int64, real32, real64
    use, non_intrinsic:: constant_lib, only: get_infinity
-   use, non_intrinsic:: array_lib, only: l2_norm
+   use, non_intrinsic:: array_lib, only: l2_norm, iota
 
    implicit none
 
    private
    public:: nnls
    public:: update, init
+   ! for test
+   public:: combination
+   public:: combinations
 
 
    <%- RKINDS.each{|k| -%>
+      type, public:: BoundNewtonState<%= k %>
+         Logical:: is_convex
+         Logical:: is_within
+         Logical:: is_saddle_or_peak
+         Logical:: is_at_corner
+         Integer(kind=int64):: dim
+         Integer(kind=int64):: iter = -1
+         Real(kind=real<%= k %>), allocatable:: x(:)
+         Real(kind=real<%= k %>), allocatable:: x_prev(:)
+         Real(kind=real<%= k %>):: f_prev
+         Real(kind=real<%= k %>), allocatable:: g_prev(:)
+         Real(kind=real<%= k %>), allocatable:: lower(:)
+         Real(kind=real<%= k %>), allocatable:: upper(:)
+         Logical, allocatable:: on_lower(:)
+         Logical, allocatable:: on_upper(:)
+      end type BoundNewtonState<%= k %>
+
       type, public:: NewtonState<%= k %>
          Logical:: is_convex
          Logical:: is_within
@@ -69,10 +89,13 @@ module optimize_lib
       interface update
          module procedure updateNewtonState<%= k %>
          module procedure updateNewtonState_<%= k %>
+         module procedure updateBoundNewtonState<%= k %>
+         module procedure updateBoundNewtonState_<%= k %>
       end interface update
 
       interface update_
          module procedure update_NewtonState<%= k %>
+         module procedure update_BoundNewtonState<%= k %>
       end interface update_
 
       interface restrict_step_size
@@ -81,6 +104,7 @@ module optimize_lib
 
       interface init
          module procedure initNewtonState<%= k %>
+         module procedure initBoundNewtonState<%= k %>
       end interface init
 
       interface adaptive_steepest_descent
@@ -167,42 +191,233 @@ contains
             return
          end if
 
-         call updateNewtonState_adaptive_steepest_descent<%= k %>(s, g, H, uplo, dx_new)
-         ! call updateNewtonState_newton<%= k %>(s, g, H, uplo, dx_new)
+         call update_adaptive_steepest_descent<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
+         ! call update_newton<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
          call update_(s, dx_new, f, g)
       end subroutine updateNewtonState_<%= k %>
 
-      subroutine updateNewtonState_adaptive_steepest_descent<%= k %>(s, g, H, uplo, dx)
-         type(NewtonState<%= k %>), intent(inout):: s
-         Real(kind=real<%= k %>), intent(in):: g(s%dim), H(s%dim, s%dim)
+
+      subroutine updateBoundNewtonState<%= k %>(s, f, g, H, uplo)
+         ! call init(s, x0, r, lower, upper)
+         ! do
+         !    call update(s, f(s%x), g(s%x), H(s%x), 'u')
+         ! end do
+         Real(kind=real<%= k %>), parameter:: max_scale = 2
+         type(BoundNewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
-         Real(kind=real<%= k %>), intent(out):: dx(s%dim)
 
-         call adaptive_steepest_descent(uplo, g, H, dx, s%is_convex, s%is_saddle_or_peak)
-         s%is_within = s%is_convex
-      end subroutine updateNewtonState_adaptive_steepest_descent<%= k %>
+         call update(s, f, g, H, uplo, max_scale)
+      end subroutine updateBoundNewtonState<%= k %>
 
 
-      subroutine updateNewtonState_newton<%= k %>(s, g, H, uplo, dx)
-         type(NewtonState<%= k %>), intent(inout):: s
-         Real(kind=real<%= k %>), intent(in):: g(s%dim), H(s%dim, s%dim)
+      subroutine updateBoundNewtonState_<%= k %>(s, f, g, H, uplo, max_scale)
+         ! todo: refactoring
+         Real(kind=real<%= k %>), parameter:: zero = 0
+         type(BoundNewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
-         Real(kind=real<%= k %>), intent(out):: dx(s%dim)
+         Real(kind=real<%= k %>), intent(in):: max_scale
+         Real(kind=real<%= k %>):: r, r_new, dx(s%dim)
+         Real(kind=real<%= k %>), allocatable:: dx_new(:)
 
-         call newton(uplo, g, H, dx, s%is_convex)
-         s%is_within = .true.
-         if(s%is_convex) return
+         Integer(kind=int64):: one_to_dim(s%dim)
+         Integer(kind=int64), allocatable:: bound_indices(:), bound_indices_list(:, :)
+         Integer(kind=int64):: i_bound_indices_list, n_active_bounds
+         Real(kind=real<%= k %>), allocatable:: g_(:), H_(:, :)
+         Logical:: active_bounds(s%dim)
+         Logical:: on_bound(s%dim)
 
-         s%is_saddle_or_peak = norm2(g) <= 0
-         if(s%is_saddle_or_peak)then
+
+         ASSERT(all(s%lower <= s%x) .and. all(s%x <= s%upper))
+         ASSERT(.not.any(s%on_lower .and. s%on_upper))
+         if(s%iter < 0)then
+            RAISE('`BoundNewtonState<%= k %>` should be `init`ialized before `update`d')
+         end if
+         s%iter = s%iter + 1
+
+         dx = s%x - s%x_prev
+         if(f >= s%f_prev)then
+            DEBUG_PRINT('Line Search')
+            r = norm2(dx)
+            call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
+
+            ASSERT(s%is_convex)
+            DEBUG_PRINT_VARIABLE(r)
+            DEBUG_PRINT_VARIABLE(r_new)
+            s%is_within = .true.
+            s%x(:) = s%x_prev + r_new/r*dx
+            return
+         end if
+
+         one_to_dim = iota(1, s%dim)
+         allocate(dx_new(s%dim))
+         call update_adaptive_steepest_descent<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
+         ! call update_newton<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
+         if(any(still_on_bound<%= k %>(s%lower, s%upper, s%on_lower, s%on_upper, .false., s%x + dx_new)))then
+            on_bound(:) = s%on_lower .or. s%on_upper
+            bound_indices = pack(one_to_dim, on_bound)
+            ! increase number of active bounds
+            n_active_bounds_loop: do n_active_bounds = 1, count(on_bound, kind=kind(n_active_bounds))
+               if(n_active_bounds == s%dim)then
+                  ENSURE_DEALLOCATED(dx_new)
+                  allocate(dx_new(s%dim))
+                  dx_new = 0
+                  s%is_at_corner = .true.
+                  call update_(s, dx_new, f, g)
+                  return
+               end if
+               bound_indices_list = combinations(bound_indices, n_active_bounds)
+               ! Try all combinations where `n_active_bounds` bounds are active
+               do i_bound_indices_list = 1, size(bound_indices_list, 2, kind=kind(i_bound_indices_list))
+                  active_bounds = mask_indices(bound_indices_list(:, i_bound_indices_list), s%dim)
+                  call pack_active_bounds<%= k %>(g, H, active_bounds, g_, H_)
+                  deallocate(dx_new)
+                  allocate(dx_new(s%dim - count(active_bounds)))
+                  call update_adaptive_steepest_descent<%= k %>(g_, H_, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
+                  ! call update_newton<%= k %>(g_, H_, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
+                  call unpack_active_bounds<%= k %>(dx_new, active_bounds)
+                  if(.not.any(still_on_bound<%= k %>(s%lower, s%upper, s%on_lower, s%on_upper, active_bounds, s%x + dx_new))) exit n_active_bounds_loop
+               end do
+            end do n_active_bounds_loop
+         end if
+         call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+         call bound_constraint<%= k %>(dx_new, s%lower - s%x, s%upper - s%x, s%on_lower, s%on_upper, active_bounds)
+         call update_(s, dx_new, f, g)
+      end subroutine updateBoundNewtonState_<%= k %>
+
+
+      subroutine bound_constraint<%= k %>(dx, d_lower, d_upper, on_lower, on_upper, active_bounds)
+         Real(kind=real<%= k %>), intent(inout):: dx(:)
+         Real(kind=kind(dx)), intent(in):: d_lower(size(dx, kind=int64)), d_upper(size(dx, kind=int64))
+         Logical, intent(inout):: on_lower(size(d_lower, kind=int64)), on_upper(size(d_upper, kind=int64))
+         Logical, intent(in):: active_bounds(size(dx, kind=int64))
+         Logical:: on_lower_new(size(on_lower, kind=int64)), on_upper_new(size(on_upper, kind=int64))
+         Real(kind=kind(dx)):: c, c_min
+         Integer(kind=int64):: i, n
+
+         c = 1
+         n = size(dx, kind=kind(n))
+         on_lower = on_lower .and. active_bounds
+         on_upper = on_upper .and. active_bounds
+         on_lower_new = .false.
+         on_upper_new = .false.
+         c_min = 1
+         do i = 1, n
+            if(on_lower(i)) cycle
+            if(on_upper(i)) cycle
+            if(dx(i) <= d_lower(i))then
+               c = d_lower(i)/dx(i)
+               if(c < c_min)then
+                  on_lower_new = .false.
+                  on_upper_new = .false.
+                  on_lower_new(i) = .true.
+                  c_min = c
+               else if(c == c_min)then
+                  on_lower_new(i) = .true.
+               end if
+            else if(dx(i) >= d_upper(i))then
+               c = d_upper(i)/dx(i)
+               if(c < c_min)then
+                  on_lower_new = .false.
+                  on_upper_new = .false.
+                  on_upper_new(i) = .true.
+                  c_min = c
+               else if(c == c_min)then
+                  on_upper_new(i) = .true.
+               end if
+            end if
+         end do
+         ASSERT(c_min > 0)
+         dx = c_min*dx
+         on_lower = on_lower .or. on_lower_new
+         on_upper = on_upper .or. on_upper_new
+      end subroutine bound_constraint<%= k %>
+
+
+      subroutine unpack_active_bounds<%= k %>(dx_new, active_bounds)
+         Real(kind=real<%= k %>), allocatable, intent(inout):: dx_new(:)
+         Logical, intent(in):: active_bounds(:)
+         Real(kind=kind(dx_new)):: buf(size(dx_new, kind=int64))
+         Integer(kind=int64):: i, ii, n
+
+         buf = dx_new
+         n = size(active_bounds, kind=kind(n))
+         deallocate(dx_new)
+         allocate(dx_new(n))
+         ii = 1
+         do i = 1, n
+            if(active_bounds(i))then
+               dx_new(i) = 0
+            else
+               dx_new(i) = buf(ii)
+               ii = ii + 1
+            end if
+         end do
+      end subroutine unpack_active_bounds<%= k %>
+
+
+      subroutine pack_active_bounds<%= k %>(g, H, active_bounds, g_, H_)
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
+         Logical, intent(in):: active_bounds(size(g, kind=int64))
+         Real(kind=real<%= k %>), allocatable, intent(inout):: g_(:), H_(:, :)
+         Integer(kind=int64):: j, jj, n, m
+
+         n = size(g, kind=kind(n))
+         m = n - count(active_bounds, kind=kind(n))
+         g_ = pack(g, .not.active_bounds)
+         ENSURE_DEALLOCATED(H_)
+         allocate(H_(m, m))
+         jj = 1
+         do j = 1, n
+            if(active_bounds(j)) cycle
+            H_(:, jj) = pack(H(:, j), .not.active_bounds)
+            jj = jj + 1
+         end do
+      end subroutine pack_active_bounds<%= k %>
+
+
+      elemental function still_on_bound<%= k %>(lower, upper, on_lower, on_upper, ignore, x) result(ret)
+         Real(kind=real<%= k %>), intent(in):: lower, upper, x
+         Logical, intent(in):: on_lower, on_upper, ignore
+         Logical:: ret
+
+         ret = (.not. ignore) .and. ((on_lower .and. x <= lower) .or. (on_upper .and. x >= upper))
+      end function still_on_bound<%= k %>
+
+
+      subroutine update_adaptive_steepest_descent<%= k %>(g, H, uplo, is_convex, is_saddle_or_peak, is_within, dx)
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
+         Character(len=1), intent(in):: uplo
+         Logical, intent(out):: is_convex, is_saddle_or_peak, is_within
+         Real(kind=real<%= k %>), intent(out):: dx(size(g, kind=int64))
+
+         call adaptive_steepest_descent(uplo, g, H, dx, is_convex, is_saddle_or_peak)
+         is_within = is_convex
+      end subroutine update_adaptive_steepest_descent<%= k %>
+
+
+      subroutine update_newton<%= k %>(g, H, uplo, is_convex, is_saddle_or_peak, is_within, dx)
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
+         Character(len=1), intent(in):: uplo
+         Logical, intent(out):: is_convex, is_saddle_or_peak, is_within
+         Real(kind=real<%= k %>), intent(out):: dx(size(g, kind=int64))
+
+         call newton(uplo, g, H, dx, is_convex)
+         is_within = .true.
+         if(is_convex) return
+
+         is_saddle_or_peak = norm2(g) <= 0
+         if(is_saddle_or_peak)then
             DEBUG_WARN('Saddle or peak')
             dx = 0
          end if
 
-         dx(:) = -g/2
-         s%is_within = .false.
-      end subroutine updateNewtonState_newton<%= k %>
+         dx = -g/2
+         is_within = .false.
+      end subroutine update_newton<%= k %>
+
 
       subroutine update_NewtonState<%= k %>(s, dx_new, f, g)
          type(NewtonState<%= k %>), intent(inout):: s
@@ -213,6 +428,16 @@ contains
          s%f_prev = f
          s%g_prev(:) = g
       end subroutine update_NewtonState<%= k %>
+
+      subroutine update_BoundNewtonState<%= k %>(s, dx_new, f, g)
+         type(BoundNewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: dx_new(s%dim), f, g(s%dim)
+
+         s%x_prev(:) = s%x
+         s%x(:) = s%x_prev + dx_new
+         s%f_prev = f
+         s%g_prev(:) = g
+      end subroutine update_BoundNewtonState<%= k %>
 
       subroutine restrict_step_size<%= k %>(dx, dx_prev, max_scale, is_within)
          Real(kind=real<%= k %>), intent(inout):: dx(:)
@@ -253,6 +478,36 @@ contains
          allocate(s%g_prev(s%dim))
          s%g_prev(:) = 0
       end subroutine initNewtonState<%= k %>
+
+
+      subroutine initBoundNewtonState<%= k %>(s, x0, r, lower, upper)
+         type(BoundNewtonState<%= k %>), intent(inout):: s
+         Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
+         Real(kind=real<%= k %>), intent(in):: r ! initial step length
+         Real(kind=real<%= k %>), intent(in):: lower(size(x0, kind=int64))
+         Real(kind=real<%= k %>), intent(in):: upper(size(x0, kind=int64))
+
+         ASSERT(r > 0)
+         ASSERT(all(lower < upper))
+         ASSERT(all(lower <= x0) .and. all(x0 <= upper))
+         s%is_convex = .false.
+         s%is_within = .false.
+         s%is_saddle_or_peak = .false.
+         s%is_at_corner = .false.
+         s%iter = 0
+         s%dim = size(x0)
+         s%x = x0
+         s%x_prev = s%x - sqrt(r/s%dim)
+         s%lower = lower
+         s%upper = upper
+         s%on_lower = s%x <= s%lower
+         s%on_upper = s%upper <= s%x
+         s%f_prev = get_infinity()
+
+         ENSURE_DEALLOCATED(s%g_prev)
+         allocate(s%g_prev(s%dim))
+         s%g_prev(:) = 0
+      end subroutine initBoundNewtonState<%= k %>
 
 
       subroutine adaptive_steepest_descent<%= k %>(uplo, g, H, dx, is_convex, is_saddle_or_peak)
@@ -708,4 +963,61 @@ contains
          end do
       end function nnls<%= k %>
    <%- } -%>
+
+
+   function combinations(is, n) result(ret)
+      ! Assumptions:
+      ! - `unique(xs) == xs`
+      Integer(kind=int64), intent(in):: is(:), n
+      Integer(kind=kind(is)):: ret(n, combination(size(is, kind=kind(n)), n))
+
+      ASSERT(0 <= n .and. n <= size(is, kind=kind(n)))
+      call combinations_(size(is, kind=kind(is)), is, n, ret)
+   end function combinations
+
+
+   pure recursive subroutine combinations_(n_is, is, n, ret)
+      ! todo: optimize
+      Integer(kind=int64), intent(in):: n_is, is(n_is), n
+      Integer(kind=kind(is)), intent(out):: ret(:, :)
+      Integer(kind=kind(is)):: m
+
+
+      if(n <= 0)then
+         return
+      else if(n == 1)then
+         ret(1, :) = is
+      else if(n == n_is)then
+         ret(:, 1) = is
+      else
+         m = combination(n_is - 1, n - 1)
+         ret(1, :m) = is(1)
+         call combinations_(n_is - 1, is(2:), n - 1, ret(2:, :m))
+         call combinations_(n_is - 1, is(2:), n, ret(:, (m + 1):))
+      end if
+   end subroutine combinations_
+
+
+   elemental function combination(n, k) result(ret)
+      Integer(kind=int64), intent(in):: n, k
+      Integer(kind=kind(n)):: ret
+      Integer(kind=kind(n)):: i
+
+      ret = 1
+      do i = n - k + 1, n
+         ret = ret*i
+      end do
+      do i = 2, k
+         ret = ret/i
+      end do
+   end function combination
+
+
+   pure function mask_indices(xs, n) result(ret)
+      Integer(kind=int64), intent(in):: xs(:), n
+      Logical:: ret(n)
+
+      ret(:) = .false.
+      ret(xs) = .true.
+   end function mask_indices
 end module optimize_lib
