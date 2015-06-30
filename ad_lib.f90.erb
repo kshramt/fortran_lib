@@ -411,6 +411,9 @@ contains
             yf = y%f
             x_pow_y = xf**yf
             z%f = x_pow_y
+            ! this is not mathematically correct but might be useful enough in practice.
+            ! todo: `0**0`
+            if(xf == 0) return
 
             x_pow_y_sub_1 = xf**(yf - 1)
             fn_px = yf*x_pow_y_sub_1
