@@ -285,8 +285,6 @@ contains
          end if
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
          call bound_constraint<%= k %>(dx_new, s%lower - s%x, s%upper - s%x, s%on_lower, s%on_upper, active_bounds)
-         ASSERT(all(pack(g, s%on_lower) >= 0))
-         ASSERT(all(pack(g, s%on_upper) <= 0))
          call update_(s, dx_new, f, g)
       end subroutine updateBoundNewtonState_<%= k %>
 
