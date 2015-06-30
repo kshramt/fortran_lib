@@ -258,6 +258,7 @@ contains
          end if
 
          one_to_dim = iota(1, s%dim)
+         active_bounds = .false.
          allocate(dx_new(s%dim))
          call update_adaptive_steepest_descent<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
          ! call update_newton<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
