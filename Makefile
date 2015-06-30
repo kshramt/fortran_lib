@@ -120,7 +120,7 @@ $(1)/test/path_lib_test.exe: $$(call o_mod_$(1),path_lib path_lib_test)
 $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib geodetic_lib geodetic_lib_test)
 $(1)/test/math_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib math_lib_test)
 $(1)/test/dual_lib_test.exe: $$(call o_mod_$(1),comparable_lib dual_lib dual_lib_test)
-$(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib optimize_lib optimize_lib_test)
+$(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib ad_lib optimize_lib optimize_lib_test)
 $(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib etas_lib etas_lib_test)
 $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib ad_lib_test)
 $(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe.in

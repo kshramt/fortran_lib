@@ -7,6 +7,7 @@ program main
    use, non_intrinsic:: math_lib, only: rosenbrock_fgh
    use, non_intrinsic:: optimize_lib, only: nnls
    use, non_intrinsic:: optimize_lib, only: init, update, Linesearchstate64_0, Linesearchstate64_1, NewtonState64, BoundNewtonState64
+   use, non_intrinsic:: ad_lib
    use, non_intrinsic:: optimize_lib, only: combinations, combination
 
    implicit none
@@ -47,9 +48,31 @@ program main
       do iy = -2, 5
          y = iy
          TEST(test_newton([x, y], 1d-1))
-         TEST(test_bound_newton([x, y], [-1d1, -1d1], [1d1, 1d1], 1d-1, [1d0, 1d0]))
       end do
    end do
+   write(error_unit, *) 'BoundNewton'
+   TEST(test_bound_newton([0d0, 0d0], [-2d0, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([-1d0, 1d0], [-2d0, -2d0], [2d0, 2d0]))
+
+   TEST(test_bound_newton([1d0, 1d0], [-2d0, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([1d0, 1d0], [5d-1, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([1d0, 1d0], [5d-1, 5d-1], [2d0, 2d0]))
+   TEST(test_bound_newton([1d0, 1d0], [-2d0, 5d-1], [2d0, 2d0]))
+
+   TEST(test_bound_newton([-1d0, -1d0], [-2d0, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([-1d0, -1d0], [-2d0, -2d0], [-5d-1, 2d0]))
+   TEST(test_bound_newton([-1d0, -1d0], [-2d0, -2d0], [-5d-1, -5d-1]))
+   TEST(test_bound_newton([-1d0, -1d0], [-2d0, -2d0], [2d0, -5d-1]))
+
+   TEST(test_bound_newton([1d0, -1d0], [-2d0, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([1d0, -1d0], [5d-1, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([1d0, -1d0], [5d-1, -2d0], [2d0, -5d-1]))
+   TEST(test_bound_newton([1d0, -1d0], [-2d0, -2d0], [2d0, -5d-1]))
+
+   TEST(test_bound_newton([-1d0, 1d0], [-2d0, -2d0], [2d0, 2d0]))
+   TEST(test_bound_newton([-1d0, 1d0], [-2d0, -2d0], [-5d-1, 2d0]))
+   TEST(test_bound_newton([-1d0, 1d0], [-2d0, 5d-1], [-5d-1, 2d0]))
+   TEST(test_bound_newton([-1d0, 1d0], [-2d0, 5d-1], [2d0, 2d0]))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
@@ -85,30 +108,43 @@ contains
       ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
    end function test_newton
 
-   function test_bound_newton(x_ini, lower, upper, r, x0) result(ret)
+   function test_bound_newton(x_ini, lower, upper) result(ret)
       Logical:: ret
-      Real(kind=real64), intent(in):: x_ini(:), lower(size(x_ini)), upper(size(x_ini)), r, x0(size(x_ini))
+      Real(kind=real64), intent(in):: x_ini(:), lower(size(x_ini)), upper(size(x_ini))
 
-      Real(kind=kind(x_ini)):: x_best(size(x_ini)), f, f_best, g(size(x_ini)), H(size(x_ini), size(x_ini)), xtol
-      Logical:: converge_x
+      Real(kind=kind(x_ini)):: x_best(size(x_ini)), f_best, x0(size(x_ini)), xtol
+      type(Dual64_2_2):: z
+      Logical:: converge
       type(BoundNewtonState64):: s
 
-      xtol = 1d-2
-      call init(s, x_ini, r, lower, upper)
+
+      x0 = 0
+      where(x_ini > 0 .and. lower > 0)
+         x0 = lower
+      elsewhere(x_ini < 0 .and. upper < 0)
+         x0 = upper
+      end where
+
+
+      xtol = 1d-3
+      call init(s, x_ini, 1d-3, lower, upper)
       x_best(:) = x_ini
       f_best = huge(f_best)
+      converge = .false.
       do
-         call rosenbrock_fgh(s%x, f, g, H)
-         ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
-         if(f < f_best)then
+         z = fb1(Dual64_2_2(s%x(1), [1, 0]), Dual64_2_2(s%x(2), [0, 1]))
+         write(output_unit, *) s%is_convex, s%x, real(z), s%f_prev, jaco(z)
+         if(real(z) < f_best)then
             x_best(:) = s%x
-            f_best = f
+            f_best = real(z)
          end if
-         if(converge_x) exit
-         call update(s, f, g, H, 'u')
-         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
+         if(converge) exit
+         call update(s, real(z), jaco(z), hess(z), 'u')
+         converge = s%is_at_corner .or. (all(abs(pack(jaco(z), .not.(s%on_lower .or. s%on_upper))) < 1e-5) .and. all(pack(jaco(z), s%on_lower) >= 0) .and. all(pack(jaco(z), s%on_upper) <= 0))
       end do
       write(output_unit, *) s%iter, x_best
+      PRINT_VARIABLE(x0)
+      PRINT_VARIABLE(x_best)
       ret = all(almost_equal(x0, x_best, absolute=abs(xtol)))
    end function test_bound_newton
 
@@ -252,4 +288,13 @@ contains
       x_ = x - x_theoretical
       y = 2*x_ + 7*sin(x_)
    end function g2
+
+
+   pure function fb1(x, y) result(ret)
+      type(Dual64_2_2), intent(in):: x, y
+      type(Dual64_2_2):: ret
+
+      ! `(-1.2)**2.4` is prohibited
+      ret = exp(abs(x)**2 + abs(y)**2)
+   end function fb1
 end program main
