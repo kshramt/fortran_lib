@@ -72,13 +72,13 @@ contains
       do
          call rosenbrock_fgh(s%x, f, g, H)
          ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
-         call update(s, f, g, H, 'u')
-         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
          if(f < f_best)then
             x_best(:) = s%x
             f_best = f
          end if
          if(converge_x) exit
+         call update(s, f, g, H, 'u')
+         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
       end do
       write(output_unit, *) s%iter, x_best
       ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
@@ -99,13 +99,13 @@ contains
       do
          call rosenbrock_fgh(s%x, f, g, H)
          ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
-         call update(s, f, g, H, 'u')
-         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
          if(f < f_best)then
             x_best(:) = s%x
             f_best = f
          end if
          if(converge_x) exit
+         call update(s, f, g, H, 'u')
+         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
       end do
       write(output_unit, *) s%iter, x_best
       ret = all(almost_equal(x0, x_best, absolute=abs(xtol)))
