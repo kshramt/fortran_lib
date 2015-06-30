@@ -69,6 +69,7 @@ contains
       call init(s, x0, r)
       x_best(:) = x0
       f_best = huge(f_best)
+      converge_x = .false.
       do
          call rosenbrock_fgh(s%x, f, g, H)
          ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
@@ -78,7 +79,7 @@ contains
          end if
          if(converge_x) exit
          call update(s, f, g, H, 'u')
-         converge_x = all(almost_equal(s%x, x_best, absolute=abs(xtol)/100)) .or. all(abs(g) < 1e-5)
+         converge_x = all(abs(g) < 1e-5)
       end do
       write(output_unit, *) s%iter, x_best
       ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
