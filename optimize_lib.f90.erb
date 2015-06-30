@@ -278,6 +278,7 @@ contains
                   call update_adaptive_steepest_descent<%= k %>(g_, H_, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
                   ! call update_newton<%= k %>(g_, H_, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
                   call unpack_active_bounds<%= k %>(dx_new, active_bounds)
+                  ! todo: choose active bounds based on expected reduction
                   if(.not.any(still_on_bound<%= k %>(s%lower, s%upper, s%on_lower, s%on_upper, active_bounds, s%x + dx_new))) exit n_active_bounds_loop
                end do
             end do n_active_bounds_loop
