@@ -100,11 +100,7 @@ program main
 
    do
       ! fix numerical error
-      do i = 1, n_params
-         if(esi%fixed(i))then
-            s%x(i) = esi%initial(i)
-         end if
-      end do
+      where(esi%fixed) s%x = esi%initial
 
       dx = s%x - s%x_prev
 
