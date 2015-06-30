@@ -19,37 +19,37 @@ program main
    TEST(all(reshape([1, 2, 1, 3, 2, 3], [2, 3]) == combinations(int([1, 2, 3], kind=int64), 2_int64)))
    TEST(all(reshape([1, 2, 3], [3, 1]) == combinations(int([1, 2, 3], kind=int64), 3_int64)))
 
-  TEST(all(almost_equal(nnls(real(reshape([73, 87, 72, 80, 71, 74, 2, 89, 52, 46, 7, 71], shape=[4, 3]), kind=REAL64), real([49, 67, 68, 20], kind=REAL64)), [0.6495384364022547_REAL64, 0.0_REAL64, 0.0_REAL64])))
+   TEST(all(almost_equal(nnls(real(reshape([73, 87, 72, 80, 71, 74, 2, 89, 52, 46, 7, 71], shape=[4, 3]), kind=REAL64), real([49, 67, 68, 20], kind=REAL64)), [0.6495384364022547_REAL64, 0.0_REAL64, 0.0_REAL64])))
    TEST(all(almost_equal(nnls(real(reshape([1, 1, 0, 1], shape=[2, 2]), kind=REAL64), real([1, 0], kind=REAL64)), [1.0/2, 0.0])))
 
-  TEST(test_line_search0(-3d0, 2d0, 1d1))
-  TEST(test_line_search0(-3d0, -2d0, 1d1))
-  TEST(test_line_search0(23d0, 2d0, 1d1))
-  TEST(test_line_search0(23d0, -2d0, 1d1))
+   TEST(test_line_search0(-3d0, 2d0, 1d1))
+   TEST(test_line_search0(-3d0, -2d0, 1d1))
+   TEST(test_line_search0(23d0, 2d0, 1d1))
+   TEST(test_line_search0(23d0, -2d0, 1d1))
 
-  TEST(test_line_search0(5d1, 15d-2, 1d1))
-  TEST(test_line_search0(5d1, -15d-2, 1d1))
-  TEST(test_line_search0(-3d1, 15d-2, 1d1))
-  TEST(test_line_search0(-3d1, -15d-2, 1d1))
+   TEST(test_line_search0(5d1, 15d-2, 1d1))
+   TEST(test_line_search0(5d1, -15d-2, 1d1))
+   TEST(test_line_search0(-3d1, 15d-2, 1d1))
+   TEST(test_line_search0(-3d1, -15d-2, 1d1))
 
-  TEST(test_line_search1(-3d0, 2d0, 1d1))
-  TEST(test_line_search1(-3d0, -2d0, 1d1))
-  TEST(test_line_search1(23d0, 2d0, 1d1))
-  TEST(test_line_search1(23d0, -2d0, 1d1))
+   TEST(test_line_search1(-3d0, 2d0, 1d1))
+   TEST(test_line_search1(-3d0, -2d0, 1d1))
+   TEST(test_line_search1(23d0, 2d0, 1d1))
+   TEST(test_line_search1(23d0, -2d0, 1d1))
 
-  TEST(test_line_search1(5d1, 15d-2, 1d1))
-  TEST(test_line_search1(5d1, -15d-2, 1d1))
-  TEST(test_line_search1(-3d1, 15d-2, 1d1))
-  TEST(test_line_search1(-3d1, -15d-2, 1d1))
+   TEST(test_line_search1(5d1, 15d-2, 1d1))
+   TEST(test_line_search1(5d1, -15d-2, 1d1))
+   TEST(test_line_search1(-3d1, 15d-2, 1d1))
+   TEST(test_line_search1(-3d1, -15d-2, 1d1))
 
-  do ix = -2, 5
-     x = ix
-     do iy = -2, 5
-        y = iy
-        TEST(test_newton([x, y], 1d-1))
-        TEST(test_bound_newton([x, y], [-1d1, -1d1], [1d1, 1d1], 1d-1, [1d0, 1d0]))
-     end do
-  end do
+   do ix = -2, 5
+      x = ix
+      do iy = -2, 5
+         y = iy
+         TEST(test_newton([x, y], 1d-1))
+         TEST(test_bound_newton([x, y], [-1d1, -1d1], [1d1, 1d1], 1d-1, [1d0, 1d0]))
+      end do
+   end do
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 
