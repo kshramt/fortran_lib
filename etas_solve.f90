@@ -139,7 +139,7 @@ program main
          call random_number(s%x)
          s%x = (2*s%x - 1)*norm2(dx)
       end if
-      converge = s%is_at_corner .or. all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= 1d-6)
+      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= 1d-6) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0))
    end do
 
    write(output_unit, '(a)') 'iterations'
