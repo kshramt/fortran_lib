@@ -12,9 +12,9 @@ module etas_solve
    public:: load
    public:: new_value
 
-   Integer(kind=int64), parameter, public:: n_params = 5
    Integer, parameter, public:: real_kind = real64
    Integer, parameter, public:: int_kind = int64
+   Integer(kind=int_kind), parameter, public:: n_params = 5
 
    ! Interface
    interface load
@@ -24,6 +24,7 @@ module etas_solve
    interface new_value
       module procedure new_value
    end interface new_value
+
 
    type, public:: EtasSolveInputs
       Logical:: fixed(n_params)
@@ -56,8 +57,8 @@ contains
 
    function new_value(i, xs) result(ret)
       type(Dual64_2_5):: ret
-      Integer(kind=int64), intent(in):: i
-      Real(kind=real64), intent(in):: xs(:)
+      Integer(kind=int_kind), intent(in):: i
+      Real(kind=real_kind), intent(in):: xs(:)
 
       ret%f = xs(i)
       ret%g(i) = 1
@@ -72,19 +73,21 @@ program main
    use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate, utsu_seki
-   use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load, new_value
+   use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load, new_value, real_kind, int_kind
 
    implicit none
 
    type(EtasSolveInputs):: esi
-   Real(kind=real64):: m_max
    type(NewtonState64):: s
-   Real(kind=real64):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
-   Real(kind=real64):: f, g(n_params), H(n_params, n_params), f_best, g_best(n_params), H_best(n_params, n_params), dx(n_params)
+   Real(kind=real_kind):: m_max
+   Real(kind=real_kind):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
+   Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
+   Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
+   Real(kind=real_kind):: dx(n_params)
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
-   Integer(kind=int64):: i
+   Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
-   Logical:: converge
+   Logical:: converge = .false.
 
    call load(esi, input_unit)
    ASSERT(.not.all(esi%fixed))
@@ -93,8 +96,6 @@ program main
 
    call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
 
-   f_best = huge(f_best)
-   converge = .false.
    do
       s%x = min(max(s%x, esi%lower_bounds), esi%upper_bounds)
 
@@ -107,11 +108,11 @@ program main
 
       dx = s%x - s%x_prev
 
-      d_c = new_value(1_int64, s%x)
-      d_p = new_value(2_int64, s%x)
-      d_alpha = new_value(3_int64, s%x)
-      d_K = new_value(4_int64, s%x)
-      d_mu = new_value(5_int64, s%x)
+      d_c = new_value(1_int_kind, s%x)
+      d_p = new_value(2_int_kind, s%x)
+      d_alpha = new_value(3_int_kind, s%x)
+      d_K = new_value(4_int_kind, s%x)
+      d_mu = new_value(5_int_kind, s%x)
       fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin)
       f = real(fgh)
       g = jaco(fgh)
