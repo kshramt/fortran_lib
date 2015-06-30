@@ -375,6 +375,7 @@ contains
             H_(:, jj) = pack(H(:, j), .not.active_bounds)
             jj = jj + 1
          end do
+         ASSERT(jj == m + 1)
       end subroutine pack_active_bounds<%= k %>
 
 
