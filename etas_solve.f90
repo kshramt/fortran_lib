@@ -70,7 +70,7 @@ program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   use, non_intrinsic:: optimize_lib, only: NewtonState64, init, update
+   use, non_intrinsic:: optimize_lib, only: BoundNewtonState64, init, update
    use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate, utsu_seki
    use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load, new_value, real_kind, int_kind
@@ -78,7 +78,7 @@ program main
    implicit none
 
    type(EtasSolveInputs):: esi
-   type(NewtonState64):: s
+   type(BoundNewtonState64):: s
    Real(kind=real_kind):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
    Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
    Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
@@ -87,17 +87,18 @@ program main
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
    Logical:: converge = .false.
+   Logical:: on_lower_best(n_params), on_upper_best(n_params)
 
    call load(esi, input_unit)
    ASSERT(.not.all(esi%fixed))
    esi%ei%ms(:) = esi%ei%ms - esi%ei%m_for_K
    c_p_alpha_K_mu_best(:) = esi%initial
 
-   call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3))
+   call init(s, c_p_alpha_K_mu_best, max(minval(abs(c_p_alpha_K_mu_best))/10, 1d-3), esi%lower_bounds, esi%upper_bounds)
+   on_lower_best = s%on_lower
+   on_upper_best = s%on_upper
 
    do
-      s%x = min(max(s%x, esi%lower_bounds), esi%upper_bounds)
-
       ! fix numerical error
       do i = 1, n_params
          if(esi%fixed(i))then
@@ -123,6 +124,8 @@ program main
          f_best = f
          g_best = g
          H_best = H
+         on_lower_best = s%on_lower
+         on_upper_best = s%on_upper
       end if
       if(converge) exit
 
@@ -140,7 +143,7 @@ program main
          call random_number(s%x)
          s%x = (2*s%x - 1)*norm2(dx)
       end if
-      converge = s%is_convex .and. s%is_within .and. norm2(g) <= 1d-6
+      converge = s%is_at_corner .or. all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= 1d-6)
    end do
 
    write(output_unit, '(a)') 'iterations'
@@ -155,6 +158,9 @@ program main
    alpha = c_p_alpha_K_mu_best(3)
    K = c_p_alpha_K_mu_best(4)
    mu = c_p_alpha_K_mu_best(5)
+   write(output_unit, '(g0, 6(" ", g0))') esi%fixed
+   write(output_unit, '(g0, 6(" ", g0))') on_lower_best
+   write(output_unit, '(g0, 6(" ", g0))') on_upper_best
    write(output_unit, '(g0, 6(" ", g0))') c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, '(g0, 4(" ", g0))') -g_best
