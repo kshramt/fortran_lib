@@ -19,6 +19,7 @@ module optimize_lib
    use, intrinsic:: iso_fortran_env, only: int8, int32, int64, real32, real64
    use, non_intrinsic:: constant_lib, only: get_infinity
    use, non_intrinsic:: array_lib, only: l2_norm, iota
+   use, non_intrinsic:: comparable_lib, only: almost_equal
 
    implicit none
 
@@ -226,12 +227,15 @@ contains
          Integer(kind=int64), allocatable:: bound_indices(:), bound_indices_list(:, :)
          Integer(kind=int64):: i_bound_indices_list, n_active_bounds
          Real(kind=real<%= k %>), allocatable:: g_(:), H_(:, :)
+         Real(kind=real<%= k %>):: c
          Logical:: active_bounds(s%dim)
          Logical:: on_bound(s%dim)
 
 
          ASSERT(all(s%lower <= s%x) .and. all(s%x <= s%upper))
          ASSERT(.not.any(s%on_lower .and. s%on_upper))
+         ASSERT(all(pack(almost_equal(s%x, s%lower), s%on_lower)))
+         ASSERT(all(pack(almost_equal(s%x, s%upper), s%on_upper)))
          if(s%iter < 0)then
             RAISE('`BoundNewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
@@ -247,7 +251,9 @@ contains
             DEBUG_PRINT_VARIABLE(r)
             DEBUG_PRINT_VARIABLE(r_new)
             s%is_within = .true.
-            s%x(:) = s%x_prev + r_new/r*dx
+            c = r_new/r
+            ASSERT(c < 1)
+            s%x(:) = s%x_prev + c*dx
             return
          end if
 
@@ -298,6 +304,7 @@ contains
          Real(kind=kind(dx)):: c, c_min
          Integer(kind=int64):: i, n
 
+         ASSERT(.not.any((.not.(on_lower .or. on_upper)) .and. active_bounds))
          c = 1
          n = size(dx, kind=kind(n))
          on_lower = on_lower .and. active_bounds
