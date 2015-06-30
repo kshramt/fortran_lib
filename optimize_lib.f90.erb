@@ -439,6 +439,11 @@ contains
 
          s%x_prev(:) = s%x
          s%x(:) = s%x_prev + dx_new
+         where(s%on_lower)
+            s%x = s%lower
+         elsewhere(s%on_upper)
+            s%x = s%upper
+         end where
          s%f_prev = f
          s%g_prev(:) = g
       end subroutine update_BoundNewtonState<%= k %>
