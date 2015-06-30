@@ -79,7 +79,6 @@ program main
 
    type(EtasSolveInputs):: esi
    type(NewtonState64):: s
-   Real(kind=real_kind):: m_max
    Real(kind=real_kind):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
    Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
    Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
@@ -146,8 +145,6 @@ program main
 
    write(output_unit, '(a)') 'iterations'
    write(output_unit, '(g0)') s%iter
-   write(output_unit, '(a)') 'm_max'
-   write(output_unit, '(g0)') m_max
    write(output_unit, '(a)') 'iter_best'
    write(output_unit, '(g0)') iter_best
    write(output_unit, '(a)') 'best log-likelihood'
