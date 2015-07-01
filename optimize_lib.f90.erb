@@ -47,6 +47,8 @@ module optimize_lib
          Real(kind=real<%= k %>), allocatable:: upper(:)
          Logical, allocatable:: on_lower(:)
          Logical, allocatable:: on_upper(:)
+         Logical, allocatable:: on_lower_prev(:)
+         Logical, allocatable:: on_upper_prev(:)
       end type BoundNewtonState<%= k %>
 
       type, public:: NewtonState<%= k %>
@@ -253,7 +255,10 @@ contains
             s%is_within = .true.
             c = r_new/r
             ASSERT(c < 1)
+            s%on_lower = s%on_lower .and. s%on_lower_prev
+            s%on_upper = s%on_upper .and. s%on_upper_prev
             s%x(:) = s%x_prev + c*dx
+            call adjust_active_bounds<%= k %>(s)
             return
          end if
 
@@ -291,6 +296,8 @@ contains
             end do n_active_bounds_loop
          end if
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+         s%on_lower_prev = s%on_lower
+         s%on_upper_prev = s%on_upper
          call bound_constraint<%= k %>(dx_new, s%lower - s%x, s%upper - s%x, s%on_lower, s%on_upper, active_bounds)
          call update_(s, dx_new, f, g)
       end subroutine updateBoundNewtonState_<%= k %>
@@ -445,14 +452,20 @@ contains
 
          s%x_prev(:) = s%x
          s%x(:) = s%x_prev + dx_new
+         call adjust_active_bounds<%= k %>(s)
+         s%f_prev = f
+         s%g_prev(:) = g
+      end subroutine update_BoundNewtonState<%= k %>
+
+      subroutine adjust_active_bounds<%= k %>(s)
+         type(BoundNewtonState<%= k %>), intent(inout):: s
+
          where(s%on_lower)
             s%x = s%lower
          elsewhere(s%on_upper)
             s%x = s%upper
          end where
-         s%f_prev = f
-         s%g_prev(:) = g
-      end subroutine update_BoundNewtonState<%= k %>
+      end subroutine adjust_active_bounds<%= k %>
 
       subroutine restrict_step_size<%= k %>(dx, dx_prev, max_scale, is_within)
          Real(kind=real<%= k %>), intent(inout):: dx(:)
@@ -517,6 +530,10 @@ contains
          s%upper = upper
          s%on_lower = s%x <= s%lower
          s%on_upper = s%upper <= s%x
+         allocate(s%on_lower_prev(s%dim))
+         allocate(s%on_upper_prev(s%dim))
+         s%on_lower_prev(:) = .true.
+         s%on_upper_prev(:) = .true.
          s%f_prev = get_infinity()
 
          ENSURE_DEALLOCATED(s%g_prev)
