@@ -48,6 +48,7 @@ program main
       do iy = -2, 5
          y = iy
          TEST(test_newton([x, y], 1d-1))
+         TEST(test_bound_newton_2([x, y], 1d-1))
       end do
    end do
    write(error_unit, *) 'BoundNewton'
@@ -107,6 +108,34 @@ contains
       write(output_unit, *) s%iter, x_best
       ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
    end function test_newton
+
+   function test_bound_newton_2(x0, r) result(ret)
+      Logical:: ret
+      Real(kind=real64), intent(in):: x0(:), r
+
+      Real(kind=kind(x0)):: x_best(size(x0)), f, f_best, g(size(x0)), H(size(x0), size(x0)), xtol
+      Logical:: converge_x
+      type(BoundNewtonState64):: s
+
+      xtol = 1d-2
+      call init(s, x0, r, [-1d8, -1d8], [1d8,1d8])
+      x_best(:) = x0
+      f_best = huge(f_best)
+      converge_x = .false.
+      do
+         call rosenbrock_fgh(s%x, f, g, H)
+         ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
+         if(f < f_best)then
+            x_best(:) = s%x
+            f_best = f
+         end if
+         if(converge_x) exit
+         call update(s, f, g, H, 'u')
+         converge_x = all(abs(g) < 1e-5)
+      end do
+      write(output_unit, *) s%iter, x_best
+      ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
+   end function test_bound_newton_2
 
    function test_bound_newton(x_ini, lower, upper) result(ret)
       Logical:: ret
