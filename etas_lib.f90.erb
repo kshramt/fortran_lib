@@ -143,7 +143,7 @@ contains
 
 
       function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms, targets) result(ret)
-         Integer(kind=int64):: one
+         Integer(kind=int64), parameter:: one = 1
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
