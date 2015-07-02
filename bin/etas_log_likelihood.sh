@@ -11,7 +11,15 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "$program_name" '--t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file < /path/to/etas_parameters | path/to/etas_log_likelihood.exe'
+      cat <<EOF
+$program_name --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file < path/to/etas_parameters | path/to/etas_log_likelihood.exe
+
+If you want to interact with data as a neural network based optimizer, rlwrap may be useful:
+rlwrap $program_name --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file | path/to/etas_log_likelihood.exe
+
+etas_parameters should contain following 8 columns:
+m_fit_min t_begin t_end c p α K μ
+EOF
    } >&2
    exit "${1:-1}"
 }
