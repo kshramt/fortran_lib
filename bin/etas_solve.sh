@@ -69,7 +69,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol: \
       --name="$program_name" \
       -- \
       "$@"
@@ -81,6 +81,7 @@ by_log=t,f,f,t,t
 lower=1d-8,-1,-1,0,1d-8
 upper=2,3,10,1d308,1d308
 m_fit_min=-1d308
+gtol=1d-6
 while true
 do
    case "${1}" in
@@ -151,6 +152,10 @@ do
          upper="$2"
          shift
          ;;
+      --gtol)
+         gtol="$2"
+         shift
+         ;;
       --)
          shift
          break
@@ -183,6 +188,7 @@ echo "$lower"
 echo "$upper"
 echo "$m_fit_min"
 echo "$t_begin"
+echo "$gtol"
 echo "$m_for_K"
 echo "$t_normalize_len"
 echo "$t_pre"

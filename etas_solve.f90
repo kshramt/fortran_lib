@@ -35,6 +35,7 @@ module etas_solve
       Real(kind=real_kind):: upper(n_params)
       Logical, allocatable:: targets(:)
       Real(kind=real_kind):: t_begin
+      Real(kind=real_kind):: gtol
       type(EtasInputs64):: ei
       Integer(kind=int_kind):: i_begin
    end type EtasSolveInputs
@@ -64,6 +65,8 @@ contains
 
       read(unit, *) m_fit_min
       read(unit, *) self%t_begin
+      read(unit, *) self%gtol
+      ASSERT(self%gtol > 0)
       call load(self%ei, unit)
       self%i_begin = index_ge(self%ei%ts, self%t_begin, one, self%ei%n)
       ASSERT(self%ei%n - self%i_begin + 1 >= n_params)
@@ -182,7 +185,7 @@ program main
          call random_number(s%x)
          s%x = (2*s%x - 1)*norm2(dx)
       end if
-      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= 1d-6) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0))
+      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0))
    end do
 
    write(output_unit, '(a)') 'iterations'
