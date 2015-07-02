@@ -199,7 +199,7 @@ program main
    z = log(exp(x + y))
    TEST(almost_equal(real(z), a + b))
    TEST(all(almost_equal(jaco(z), one)))
-   TEST(all(almost_equal(hess(z), zero)))
+   TEST(all(almost_equal(hess(z), zero, absolute=epsilon(z))))
 
    z = log(x*x/y + exp(y))
    TEST(almost_equal(real(z), log(a*a/b + exp(b))))
