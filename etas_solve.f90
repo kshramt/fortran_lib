@@ -134,6 +134,9 @@ program main
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
    Logical:: converge = .false.
+   Logical:: converge_by_gradient = .false.
+   Logical:: converge_by_step_size = .false.
+   Logical:: converge_at_corner = .false.
    Logical:: on_lower_best(n_params), on_upper_best(n_params)
 
    call load(esi, input_unit)
@@ -144,7 +147,7 @@ program main
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
-   write(output_unit, '(a)') 'output_format_version: 5'
+   write(output_unit, '(a)') 'output_format_version: 6'
    do
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
@@ -187,7 +190,10 @@ program main
          call random_number(s%x)
          s%x = (2*s%x - 1)*r_dx
       end if
-      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0)) .or. r_dx <= 0
+      converge_by_gradient = all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0)
+      converge_by_step_size = r_dx <= 0
+      converge_at_corner = s%is_at_corner
+      converge = converge_by_gradient .or. converge_by_step_size .or. converge_at_corner
    end do
 
    write(output_unit, '(a)') 'iterations'
@@ -235,6 +241,8 @@ program main
       write(output_unit, *) -H_best(i, :)
    end do
 
+   write(output_unit, '(a)') 'converge_at_corner, converge_by_gradient, converge_by_step_size'
+   write(output_unit, *) converge_by_gradient, converge_by_step_size, converge_at_corner
    write(output_unit, '(a)') 'fixed'
    write(output_unit, *) esi%fixed
    write(output_unit, '(a)') 'on_lower'
