@@ -118,10 +118,11 @@ contains
       end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms, i_begin) result(ret)
+      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms, i_begin, targets) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), ms(size(ts))
          Integer(kind=int64), intent(in):: i_begin
+         Logical, intent(in):: targets(size(ts, kind=int64))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          <%= decl %>:: coeffs(size(ms))
          <%= decl %>:: mu_normalized
@@ -135,45 +136,53 @@ contains
          ! PRINT_VARIABLE(real(lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_begin)))
          !$omp parallel
          !$omp single
-         ret = sum_log_lambda_neg_p(i_begin, n, c, -p, mu_normalized, ts, coeffs) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
+         ret = sum_log_lambda_neg_p(i_begin, n, c, -p, mu_normalized, ts, coeffs, targets) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
          !$omp end single
          !$omp end parallel
       end function log_likelihood_etas<%= suffix %>
 
 
-      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms) result(ret)
+      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, ms, targets) result(ret)
          Integer(kind=int64):: one
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), ms(size(ts))
          <%= decl %>, intent(in):: c, p, alpha, K, mu
          Integer(kind=kind(one)):: n, i_begin, i_end
+         Logical, intent(in):: targets(size(ts, kind=int64))
 
          n = size(ts, kind=kind(n))
          i_begin = index_ge(ts, t_begin, one, n)
          i_end = index_le(ts, t_end, i_begin, n)
-         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), ms(:i_end), i_begin)
+         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), ms(:i_end), i_begin, targets)
       end function log_likelihood_etas_range<%= suffix %>
 
 
-      recursive function sum_log_lambda_neg_p<%= suffix %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      recursive function sum_log_lambda_neg_p<%= suffix %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs, targets) result(ret)
          Integer(kind=int64), parameter:: blocksize = 2**4
          <%= decl %>:: ret, ret1, ret2
          Integer(kind=kind(blocksize)), intent(in):: i1, i2
          Real(kind=real<%= k %>), intent(in):: ts(:)
          <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size(ts))
+         Logical, intent(in):: targets(size(ts, kind=int64))
          Integer(kind=int64):: i, i_mid
 
          if(i1 + blocksize > i2)then
-            ret = log(lambda_neg_p(i1, c, neg_p, mu_normalized, ts, coeffs))
-            do i = i1 + 1, i2
-               ret = ret + log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
+            <%- if t == :Real -%>
+               ret = 0
+            <%- else -%>
+               ! Dual is initialized to 0
+            <%- end -%>
+            do i = i1, i2
+               if(targets(i))then
+                  ret = ret + log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
+               end if
             end do
          else
             i_mid = (i1 + i2)/2
             !$omp task shared(ret2) untied
-            ret2 = sum_log_lambda_neg_p(i_mid + 1, i2, c, neg_p, mu_normalized, ts, coeffs)
+            ret2 = sum_log_lambda_neg_p(i_mid + 1, i2, c, neg_p, mu_normalized, ts, coeffs, targets)
             !$omp end task
-            ret1 = sum_log_lambda_neg_p(i1, i_mid, c, neg_p, mu_normalized, ts, coeffs)
+            ret1 = sum_log_lambda_neg_p(i1, i_mid, c, neg_p, mu_normalized, ts, coeffs, targets)
             !$omp taskwait
             ret = ret1 + ret2
          end if

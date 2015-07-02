@@ -12,39 +12,52 @@ readonly program_name="${0##*/}"
 usage_and_exit(){
    {
       cat <<EOF
+Example:
 $program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=10 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
-# c, p, alpha, K, mu:
-# Initial values.
-#
-# t_pre, t_begin, t_end:
-# t_pre <= t_begin <= t_end.
-# Earthquakes in [t_begin, t_end] are fitted by etas_solve.exe.
-# Earthquakes in [t_pre, t_begin) are not fitted although intensities from them to earthquakes in [t_begin, t_end] are considered.
-#
-# data_file:
-# The first column should be time, and the second column should be magnitude.
-# Time should be sorted in ascending order.
-# The first time should be later than or equal to t_pre.
-# The last time should be faster than or equal to t_end.
-#
-# m_for_K:
-# Reference magnitude.
-#
-# t_normalize_len:
-# Normalization time interval.
-# Background intensity produces mu earthquakes per t_normalize_len on average.
-# A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on average.
-#
-# [options]:
-#
-# fixed[=f,f,f,f,f]:
-# If you want to fix alpha by the initial value while performing optimization, please try --fixed=f,f,t,f,f
-#
-# lower_bounds[=1d-8,-1,-1,0,1d-8]:
-# Lower bounds of the ETAS parameters.
-#
-# upper_bounds[=1d308,30,10,1d308,1d308]:
-# Upper bounds of the ETAS parameters.
+
+c, p, alpha, K, mu:
+Initial values.
+Using a good initial value may reduce number of iterations needed to converge.
+Initial value should satisfy lower <= initial value <= upper.
+
+t_pre, t_begin, t_end:
+t_pre <= t_begin <= t_end.
+Earthquakes in [t_begin, t_end] are fitted by etas_solve.exe.
+Earthquakes in [t_pre, t_begin) are not fitted although intensities from them to earthquakes in [t_begin, t_end] are considered.
+
+data_file:
+The first column should be time, and the second column should be magnitude.
+Time should be sorted in ascending order.
+
+m_for_K:
+Reference magnitude.
+
+t_normalize_len:
+Normalization time interval.
+Background intensity produces mu earthquakes per t_normalize_len on average.
+A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on average.
+
+[options]:
+
+lower[=1d-8,-1,-1,0,1d-8]:
+Lower bounds of the ETAS parameters.
+Order is c,p,alpha,K,mu.
+
+upper[=2,3,10,1d308,1d308]:
+Upper bounds of the ETAS parameters.
+Order is c,p,alpha,K,mu.
+Setting a reasonably tight bound reduces number of iterations needed to converge.
+I set these upper bounds assuming that a time unit is day.
+
+fixed[=f,f,f,f,f]:
+If you want to fix p by the initial value while performing optimization, please try --fixed=f,t,f,f,f
+Order is c,p,alpha,K,mu.
+
+by_log[=t,f,f,t,t]:
+log(c), log(K) and log(mu) are searched instead of c, K and mu since their values can change several orders during optimization.
+The default setting seems to reduces number of iterations needed to converge.
+You can disable the search-by-log feature by --by-log=f,f,f,f,f
+Order is c,p,alpha,K,mu.
 EOF
    } >&2
    exit "${1:-1}"
@@ -56,7 +69,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,lower_bounds:,upper_bounds: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper: \
       --name="$program_name" \
       -- \
       "$@"
@@ -64,8 +77,10 @@ opts="$(
 eval set -- "$opts"
 
 fixed=f,f,f,f,f
-lower_bounds=1d-8,-1,-1,0,1d-8
-upper_bounds=1d308,30,10,1d308,1d308
+by_log=t,f,f,t,t
+lower=1d-8,-1,-1,0,1d-8
+upper=2,3,10,1d308,1d308
+m_fit_min=-1d308
 while true
 do
    case "${1}" in
@@ -86,6 +101,10 @@ do
          ;;
       --t_normalize_len)
          t_normalize_len="$2"
+         shift
+         ;;
+      --m_fit_min)
+         m_fit_min="$2"
          shift
          ;;
       --m_for_K)
@@ -120,12 +139,16 @@ do
          fixed="$2"
          shift
          ;;
-      --lower_bounds)
-         lower_bounds="$2"
+      --by_log)
+         by_log="$2"
          shift
          ;;
-      --upper_bounds)
-         upper_bounds="$2"
+      --lower)
+         lower="$2"
+         shift
+         ;;
+      --upper)
+         upper="$2"
          shift
          ;;
       --)
@@ -154,9 +177,11 @@ done
 
 
 echo "$fixed"
+echo "$by_log"
 echo "$c" "$p" "$alpha" "$K" "$mu"
-echo "$lower_bounds"
-echo "$upper_bounds"
+echo "$lower"
+echo "$upper"
+echo "$m_fit_min"
 echo "$t_begin"
 echo "$m_for_K"
 echo "$t_normalize_len"
