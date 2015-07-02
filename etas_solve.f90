@@ -144,6 +144,7 @@ program main
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
+   write(output_unit, '(a)') 'output_format_version: 1'
    do
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
