@@ -190,30 +190,30 @@ program main
    end do
 
    write(output_unit, '(a)') 'iterations'
-   write(output_unit, '(g0)') s%iter
+   write(output_unit, *) s%iter
    write(output_unit, '(a)') 'iter_best'
-   write(output_unit, '(g0)') iter_best
+   write(output_unit, *) iter_best
    write(output_unit, '(a)') 'best log-likelihood'
-   write(output_unit, '(g0)') -f_best
+   write(output_unit, *) -f_best
    write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
    c = exp_if_true(c_p_alpha_K_mu_best(1), esi%by_log(1))
    p = exp_if_true(c_p_alpha_K_mu_best(2), esi%by_log(2))
    alpha = exp_if_true(c_p_alpha_K_mu_best(3), esi%by_log(3))
    K = exp_if_true(c_p_alpha_K_mu_best(4), esi%by_log(4))
    mu = exp_if_true(c_p_alpha_K_mu_best(5), esi%by_log(5))
-   write(output_unit, '(g0, 6(" ", g0))') c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
+   write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
-   write(output_unit, '(g0, 4(" ", g0))') -g_best
+   write(output_unit, *) -g_best
    write(output_unit, '(a)') 'Hessian'
    do i = 1, 5
-      write(output_unit, '(g0, 4(" ", g0))') -H_best(i, :)
+      write(output_unit, *) -H_best(i, :)
    end do
    write(output_unit, '(a)') 'fixed'
-   write(output_unit, '(g0, 6(" ", g0))') esi%fixed
+   write(output_unit, *) esi%fixed
    write(output_unit, '(a)') 'on_lower'
-   write(output_unit, '(g0, 6(" ", g0))') on_lower_best
+   write(output_unit, *) on_lower_best
    write(output_unit, '(a)') 'on_upper'
-   write(output_unit, '(g0, 6(" ", g0))') on_upper_best
+   write(output_unit, *) on_upper_best
 
    stop
 end program main

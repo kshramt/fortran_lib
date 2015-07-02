@@ -8,7 +8,7 @@ ERB_FLAGS := -T '-' -P
 MY_FC ?= gfortran
 FC := $(MY_FC)
 ifeq ($(FC),ifort)
-   FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz
+   FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz -no-wrap-margin
    FFLAG_DEBUG := -check nouninit -trace -O0 -p -g -DDEBUG -debug all
    FFLAG_OPTIMIZE := -openmp -ip -ipo -parallel -O3 -xHost
    LAPACK := -mkl
