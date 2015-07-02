@@ -12,30 +12,30 @@ program main
    type(EtasInputs64):: ei
    type(Dual64_2_5):: log_likelihood
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu
-   Real(kind=real64):: jacobian(n_params), hessian(n_params, n_params)
+   Real(kind=real64):: hessian(n_params, n_params)
    Real(kind=real64):: c, p, alpha, K, mu
-   Real(kind=real64):: t_begin, t_end
-   Integer(kind=int64):: i, j
+   Real(kind=real64):: t_begin, t_end, m_fit_min
+   Integer(kind=int64):: i
    Integer:: ios
 
    call load(ei, input_unit)
    ei%ms(:) = ei%ms - ei%m_for_K
 
    do
-      read(input_unit, *, iostat=ios) t_begin, t_end, c, p, alpha, K, mu
+      read(input_unit, *, iostat=ios) m_fit_min, t_begin, t_end, c, p, alpha, K, mu
+      ASSERT(t_begin <= t_end)
       if(ios /= 0) exit
       d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
       d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
       d_alpha = Dual64_2_5(alpha, [0, 0, 1, 0, 0])
       d_K = Dual64_2_5(K, [0, 0, 0, 1, 0])
       d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
-      log_likelihood = log_likelihood_etas(t_begin, t_end, ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, ei%ts, ei%ms)
-      jacobian = jaco(log_likelihood)
+      log_likelihood = log_likelihood_etas(t_begin, t_end, ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, ei%ts, ei%ms, ei%ms >= m_fit_min)
       hessian = hess(log_likelihood)
       write(output_unit, *) real(log_likelihood)
-      write(output_unit, *) (jacobian(i), i = 1, n_params)
+      write(output_unit, *) jaco(log_likelihood)
       do i = 1, n_params
-         write(output_unit, *) (hessian(i, j), j = 1, n_params)
+         write(output_unit, *) hessian(i, :)
       end do
    end do
 

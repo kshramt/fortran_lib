@@ -153,7 +153,10 @@ contains
          n = size(ts, kind=kind(n))
          i_begin = index_ge(ts, t_begin, one, n)
          i_end = index_le(ts, t_end, i_begin, n)
-         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), ms(:i_end), i_begin, targets)
+         ASSERT(1 <= i_begin)
+         ASSERT(i_begin <= i_end)
+         ASSERT(i_end <= n)
+         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), ms(:i_end), i_begin, targets(:i_end))
       end function log_likelihood_etas_range<%= suffix %>
 
 

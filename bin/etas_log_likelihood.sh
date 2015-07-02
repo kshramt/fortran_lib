@@ -11,7 +11,7 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "$program_name" '--t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --data_file=path/to/data_file < /path/to/etas_parameters | path/to/etas_log_likelihood.exe'
+      echo "$program_name" '--t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file < /path/to/etas_parameters | path/to/etas_log_likelihood.exe'
    } >&2
    exit "${1:-1}"
 }
@@ -22,7 +22,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_end:,t_begin:,t_normalize_len:,m_for_K:,data_file: \
+      --longoptions help,t_pre:,t_end:,t_normalize_len:,m_for_K:,data_file: \
       --name="$program_name" \
       -- \
       "$@"
@@ -37,10 +37,6 @@ do
          ;;
       --t_pre)
          t_pre="$2"
-         shift
-         ;;
-      --t_begin)
-         t_begin="$2"
          shift
          ;;
       --t_end)
@@ -74,7 +70,6 @@ done
 [[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
 [[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_pre:-}" ]] && { echo 't_pre not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
 [[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
 
@@ -82,7 +77,6 @@ done
 echo "$m_for_K"
 echo "$t_normalize_len"
 echo "$t_pre"
-echo "$t_begin"
 echo "$t_end"
 wc -l "$data_file" | awk '{print $1}'
 cat "$data_file"
