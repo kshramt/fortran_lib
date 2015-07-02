@@ -24,6 +24,7 @@ program main
    do
       read(input_unit, *, iostat=ios) m_fit_min, t_begin, t_end, c, p, alpha, K, mu
       ASSERT(t_begin <= t_end)
+      m_fit_min = m_fit_min - ei%m_for_K
       if(ios /= 0) exit
       d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
       d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
