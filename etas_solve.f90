@@ -52,7 +52,7 @@ contains
       read(unit, *) self%by_log
       read(unit, *) self%initial
       ASSERT(.not.any(self%initial <= 0 .and. self%by_log .and. self%fixed))
-      ! there is no need to change fixed variables
+      ! there is no need to take the logarithm of fixed variables
       self%by_log = self%by_log .and. (.not.self%fixed)
 
       read(unit, *) self%lower
