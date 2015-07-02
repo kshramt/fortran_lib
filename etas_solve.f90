@@ -129,7 +129,7 @@ program main
    Real(kind=real_kind):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
    Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
    Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
-   Real(kind=real_kind):: dx(n_params)
+   Real(kind=real_kind):: dx(n_params), r_dx
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
@@ -150,6 +150,7 @@ program main
       where(esi%fixed) s%x = esi%initial
 
       dx = s%x - s%x_prev
+      r_dx = norm2(dx)
 
       d_c = exp_if_true(Dual64_2_5(s%x(1), [1, 0, 0, 0, 0]), esi%by_log(1))
       d_p = exp_if_true(Dual64_2_5(s%x(2), [0, 1, 0, 0, 0]), esi%by_log(2))
@@ -160,7 +161,7 @@ program main
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
-      write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_lower, s%on_upper
+      write(output_unit, *) 'LOG: ', r_dx, s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_lower, s%on_upper
       if(f < f_best)then
          iter_best = s%iter
          c_p_alpha_K_mu_best = s%x
@@ -184,9 +185,9 @@ program main
       call update(s, f, g, H, 'u')
       if(s%is_saddle_or_peak)then
          call random_number(s%x)
-         s%x = (2*s%x - 1)*norm2(dx)
+         s%x = (2*s%x - 1)*r_dx
       end if
-      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0))
+      converge = s%is_at_corner .or. (all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0)) .or. r_dx <= 0
    end do
 
    write(output_unit, '(a)') 'iterations'
