@@ -182,7 +182,7 @@ contains
          s%iter = s%iter + 1
 
          dx(:) = s%x - s%x_prev
-         if(f >= s%f_prev)then
+         if(f > s%f_prev)then
             DEBUG_PRINT('Line Search')
             r = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
@@ -245,7 +245,7 @@ contains
          s%iter = s%iter + 1
 
          dx = s%x - s%x_prev
-         s%is_line_search = f >= s%f_prev
+         s%is_line_search = f > s%f_prev
          if(s%is_line_search)then
             r = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
