@@ -144,7 +144,7 @@ program main
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
-   write(output_unit, '(a)') 'output_format_version: 4'
+   write(output_unit, '(a)') 'output_format_version: 5'
    do
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
@@ -193,6 +193,8 @@ program main
    write(output_unit, *) s%iter
    write(output_unit, '(a)') 'iter_best'
    write(output_unit, *) iter_best
+   write(output_unit, '(a)') 'best log-likelihood'
+   write(output_unit, *) -f_best
 
    ! transformed parameters
    write(output_unit, '(a)') 'by_log: c, p, α, K, μ'
@@ -221,11 +223,8 @@ program main
    d_K = Dual64_2_5(K, [0, 0, 0, 1, 0])
    d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
    fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
-   f_best = real(fgh)
    g_best = jaco(fgh)
    H_best = hess(fgh)
-   write(output_unit, '(a)') 'best log-likelihood'
-   write(output_unit, *) -f_best
    write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
    write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
