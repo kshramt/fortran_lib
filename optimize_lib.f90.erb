@@ -37,6 +37,7 @@ module optimize_lib
          Logical:: is_within
          Logical:: is_saddle_or_peak
          Logical:: is_at_corner
+         Logical:: is_line_search
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
@@ -244,8 +245,8 @@ contains
          s%iter = s%iter + 1
 
          dx = s%x - s%x_prev
-         if(f >= s%f_prev)then
-            DEBUG_PRINT('Line Search')
+         s%is_line_search = f >= s%f_prev
+         if(s%is_line_search)then
             r = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
 
@@ -522,6 +523,7 @@ contains
          s%is_within = .false.
          s%is_saddle_or_peak = .false.
          s%is_at_corner = .false.
+         s%is_line_search = .false.
          s%iter = 0
          s%dim = size(x0)
          s%x = x0
