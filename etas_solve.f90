@@ -144,7 +144,7 @@ program main
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
-   write(output_unit, '(a)') 'output_format_version: 3'
+   write(output_unit, '(a)') 'output_format_version: 4'
    do
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
@@ -160,7 +160,7 @@ program main
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
-      write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_upper .or. s%on_lower
+      write(output_unit, *) 'LOG: ', norm2(dx), s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_lower, s%on_upper
       if(f < f_best)then
          iter_best = s%iter
          c_p_alpha_K_mu_best = s%x
