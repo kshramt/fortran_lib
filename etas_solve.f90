@@ -130,7 +130,7 @@ program main
             g(i) = 0
             H(i, :) = 0
             H(:, i) = 0
-            H(i, i) = 2**10
+            H(i, i) = 1
          end if
       end do
 
