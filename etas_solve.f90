@@ -144,7 +144,7 @@ program main
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
-   write(output_unit, '(a)') 'output_format_version: 2'
+   write(output_unit, '(a)') 'output_format_version: 3'
    do
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
@@ -193,14 +193,40 @@ program main
    write(output_unit, *) s%iter
    write(output_unit, '(a)') 'iter_best'
    write(output_unit, *) iter_best
-   write(output_unit, '(a)') 'best log-likelihood'
-   write(output_unit, *) -f_best
-   write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
+
+   ! transformed parameters
+   write(output_unit, '(a)') 'by_log: c, p, α, K, μ'
+   c = c_p_alpha_K_mu_best(1)
+   p = c_p_alpha_K_mu_best(2)
+   alpha = c_p_alpha_K_mu_best(3)
+   K = c_p_alpha_K_mu_best(4)
+   mu = c_p_alpha_K_mu_best(5)
+   write(output_unit, *) c, p, alpha, K, mu
+   write(output_unit, '(a)') 'by_log: Jacobian'
+   write(output_unit, *) -g_best
+   write(output_unit, '(a)') 'by_log: Hessian'
+   do i = 1, 5
+      write(output_unit, *) -H_best(i, :)
+   end do
+
+   ! non-transformed parameters
    c = exp_if_true(c_p_alpha_K_mu_best(1), esi%by_log(1))
    p = exp_if_true(c_p_alpha_K_mu_best(2), esi%by_log(2))
    alpha = exp_if_true(c_p_alpha_K_mu_best(3), esi%by_log(3))
    K = exp_if_true(c_p_alpha_K_mu_best(4), esi%by_log(4))
    mu = exp_if_true(c_p_alpha_K_mu_best(5), esi%by_log(5))
+   d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
+   d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
+   d_alpha = Dual64_2_5(alpha, [0, 0, 1, 0, 0])
+   d_K = Dual64_2_5(K, [0, 0, 0, 1, 0])
+   d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
+   fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
+   f_best = real(fgh)
+   g_best = jaco(fgh)
+   H_best = hess(fgh)
+   write(output_unit, '(a)') 'best log-likelihood'
+   write(output_unit, *) -f_best
+   write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
    write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, *) -g_best
@@ -208,6 +234,7 @@ program main
    do i = 1, 5
       write(output_unit, *) -H_best(i, :)
    end do
+
    write(output_unit, '(a)') 'fixed'
    write(output_unit, *) esi%fixed
    write(output_unit, '(a)') 'on_lower'
