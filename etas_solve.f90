@@ -71,6 +71,7 @@ contains
       self%i_begin = index_ge(self%ei%ts, self%t_begin, one, self%ei%n)
       ASSERT(self%ei%n - self%i_begin + 1 >= n_params)
       self%targets = self%ei%ms >= m_fit_min
+      self%ei%ms(:) = self%ei%ms - self%ei%m_for_K
    end subroutine loadEtasSolveInputs
 
 
@@ -140,7 +141,6 @@ program main
    Logical:: on_lower_best(n_params), on_upper_best(n_params)
 
    call load(esi, input_unit)
-   esi%ei%ms(:) = esi%ei%ms - esi%ei%m_for_K
    c_p_alpha_K_mu_best(:) = esi%initial
 
    call init(s, c_p_alpha_K_mu_best, min(1d0, minval(esi%upper - esi%lower)/4), esi%lower, esi%upper)
