@@ -299,34 +299,45 @@ contains
          call restrict_step_size(dx_new, dx, max_scale, s%is_within)
          s%on_lower_prev = s%on_lower
          s%on_upper_prev = s%on_upper
-         call bound_constraint<%= k %>(dx_new, s%lower - s%x, s%upper - s%x, s%on_lower, s%on_upper, active_bounds)
+         call bound_constraint<%= k %>(dx_new, s%x, s%lower, s%upper, s%on_lower, s%on_upper, active_bounds)
          call update_(s, dx_new, f, g)
       end subroutine updateBoundNewtonState_<%= k %>
 
 
-      subroutine bound_constraint<%= k %>(dx, d_lower, d_upper, on_lower, on_upper, active_bounds)
+      subroutine bound_constraint<%= k %>(dx, x, lower, upper, on_lower, on_upper, active_bounds)
          Real(kind=real<%= k %>), intent(inout):: dx(:)
-         Real(kind=kind(dx)), intent(in):: d_lower(size(dx, kind=int64)), d_upper(size(dx, kind=int64))
-         Logical, intent(inout):: on_lower(size(d_lower, kind=int64)), on_upper(size(d_upper, kind=int64))
+         Real(kind=kind(dx)), intent(in):: x(size(dx, kind=int64)), lower(size(dx, kind=int64)), upper(size(dx, kind=int64))
+         Logical, intent(inout):: on_lower(size(lower, kind=int64)), on_upper(size(upper, kind=int64))
          Logical, intent(in):: active_bounds(size(dx, kind=int64))
          Logical:: on_lower_new(size(on_lower, kind=int64)), on_upper_new(size(on_upper, kind=int64))
-         Real(kind=kind(dx)):: c, c_min
+         ! Multiple variables can reach bounds in the same iteration.
+         ! However, `c == c_min` may not hold due to rounding error.
+         ! In such cases, `c` (hopefully) becomes 0 at the next iteration.
+         ! We should treat those "missed" bounds separately.
+         Logical:: on_lower_missed(size(on_lower, kind=int64)), on_upper_missed(size(on_upper, kind=int64))
+         Real(kind=kind(dx)):: c, c_min, xi, xi_new, dxi
          Integer(kind=int64):: i, n
 
          ASSERT(.not.any((.not.(on_lower .or. on_upper)) .and. active_bounds))
-         c = 1
          n = size(dx, kind=kind(n))
          on_lower = on_lower .and. active_bounds
          on_upper = on_upper .and. active_bounds
+         c = 1
+         c_min = c
          on_lower_new = .false.
          on_upper_new = .false.
-         c_min = 1
+         on_lower_missed = .false.
+         on_upper_missed = .false.
          do i = 1, n
-            if(on_lower(i)) cycle
-            if(on_upper(i)) cycle
-            if(dx(i) <= d_lower(i))then
-               c = d_lower(i)/dx(i)
-               if(c < c_min)then
+            if(on_lower(i) .or. on_upper(i)) cycle
+            xi = x(i)
+            dxi = dx(i)
+            xi_new = xi + dxi
+            if(xi_new <= lower(i))then
+               c = (lower(i) - xi)/dxi
+               if(c <= 0)then
+                  on_lower_missed(i) = .true.
+               else if(c < c_min)then
                   on_lower_new = .false.
                   on_upper_new = .false.
                   on_lower_new(i) = .true.
@@ -334,9 +345,11 @@ contains
                else if(c == c_min)then
                   on_lower_new(i) = .true.
                end if
-            else if(dx(i) >= d_upper(i))then
-               c = d_upper(i)/dx(i)
-               if(c < c_min)then
+            else if(xi_new >= upper(i))then
+               c = (upper(i) - xi)/dxi
+               if(c <= 0)then
+                  on_upper_missed(i) = .true.
+               else if(c < c_min)then
                   on_lower_new = .false.
                   on_upper_new = .false.
                   on_upper_new(i) = .true.
@@ -348,8 +361,8 @@ contains
          end do
          ASSERT(c_min > 0)
          dx = c_min*dx
-         on_lower = on_lower .or. on_lower_new
-         on_upper = on_upper .or. on_upper_new
+         on_lower = on_lower .or. on_lower_new .or. on_lower_missed
+         on_upper = on_upper .or. on_upper_new .or. on_upper_missed
       end subroutine bound_constraint<%= k %>
 
 
