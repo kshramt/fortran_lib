@@ -315,7 +315,7 @@ contains
          ! In such cases, `c` (hopefully) becomes 0 at the next iteration.
          ! We should treat those "missed" bounds separately.
          Logical:: on_lower_missed(size(on_lower, kind=int64)), on_upper_missed(size(on_upper, kind=int64))
-         Real(kind=kind(dx)):: c, c_min, xi, xi_new, dxi
+         Real(kind=kind(dx)):: c, c_min, xi, xi_new, dxi, x_new(size(x, kind=int64))
          Integer(kind=int64):: i, n
 
          ASSERT(.not.any((.not.(on_lower .or. on_upper)) .and. active_bounds))
@@ -361,8 +361,9 @@ contains
          end do
          ASSERT(c_min > 0)
          dx = c_min*dx
-         on_lower = on_lower .or. on_lower_new .or. on_lower_missed
-         on_upper = on_upper .or. on_upper_new .or. on_upper_missed
+         x_new = x + dx
+         on_lower = on_lower .or. on_lower_new .or. on_lower_missed .or. x_new <= lower
+         on_upper = on_upper .or. on_upper_new .or. on_upper_missed .or. x_new >= upper
       end subroutine bound_constraint<%= k %>
 
 
