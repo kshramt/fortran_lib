@@ -383,17 +383,20 @@ contains
             ASSERT(n > 0)
             allocate(ts(n))
             allocate(ms(n))
+            i_end = n
             do i = 1, n
                read(unit, *) ts(i), ms(i)
                if(i > 1)then
                   ASSERT(ts(i) >= ts(i - 1))
                   if(ts(i) > self%t_end)then
+                     i_end = i
                      exit
                   end if
                end if
             end do
-            i_pre = index_ge(ts, self%t_pre, one, n)
-            i_end = index_le(ts, self%t_end, i_pre, n)
+            i_pre = index_ge(ts, self%t_pre, one, i_end)
+            ! todo: search from tail should be much faster
+            i_end = index_le(ts, self%t_end, i_pre, i_end)
             ASSERT(i_pre <= i_end)
 
             self%n = i_end - i_pre + 1
