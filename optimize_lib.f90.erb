@@ -306,16 +306,16 @@ contains
 
       subroutine bound_constraint<%= k %>(dx, x, lower, upper, on_lower, on_upper, active_bounds)
          Real(kind=real<%= k %>), intent(inout):: dx(:)
-         Real(kind=kind(dx)), intent(in):: x(size(dx, kind=int64)), lower(size(dx, kind=int64)), upper(size(dx, kind=int64))
-         Logical, intent(inout):: on_lower(size(lower, kind=int64)), on_upper(size(upper, kind=int64))
-         Logical, intent(in):: active_bounds(size(dx, kind=int64))
-         Logical:: on_lower_new(size(on_lower, kind=int64)), on_upper_new(size(on_upper, kind=int64))
+         Real(kind=kind(dx)), intent(in):: x(size64(dx)), lower(size64(dx)), upper(size64(dx))
+         Logical, intent(inout):: on_lower(size64(lower)), on_upper(size64(upper))
+         Logical, intent(in):: active_bounds(size64(dx))
+         Logical:: on_lower_new(size64(on_lower)), on_upper_new(size64(on_upper))
          ! Multiple variables can reach bounds in the same iteration.
          ! However, `c == c_min` may not hold due to rounding error.
          ! In such cases, `c` (hopefully) becomes 0 at the next iteration.
          ! We should treat those "missed" bounds separately.
-         Logical:: on_lower_missed(size(on_lower, kind=int64)), on_upper_missed(size(on_upper, kind=int64))
-         Real(kind=kind(dx)):: c, c_min, xi, xi_new, dxi, x_new(size(x, kind=int64))
+         Logical:: on_lower_missed(size64(on_lower)), on_upper_missed(size64(on_upper))
+         Real(kind=kind(dx)):: c, c_min, xi, xi_new, dxi, x_new(size64(x))
          Integer(kind=int64):: i, n
 
          ASSERT(.not.any((.not.(on_lower .or. on_upper)) .and. active_bounds))
@@ -370,7 +370,7 @@ contains
       subroutine unpack_active_bounds<%= k %>(dx_new, active_bounds)
          Real(kind=real<%= k %>), allocatable, intent(inout):: dx_new(:)
          Logical, intent(in):: active_bounds(:)
-         Real(kind=kind(dx_new)):: buf(size(dx_new, kind=int64))
+         Real(kind=kind(dx_new)):: buf(size64(dx_new))
          Integer(kind=int64):: i, ii, n
 
          buf = dx_new
@@ -390,8 +390,8 @@ contains
 
 
       subroutine pack_active_bounds<%= k %>(g, H, active_bounds, g_, H_)
-         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
-         Logical, intent(in):: active_bounds(size(g, kind=int64))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size64(g), size64(g))
+         Logical, intent(in):: active_bounds(size64(g))
          Real(kind=real<%= k %>), allocatable, intent(inout):: g_(:), H_(:, :)
          Integer(kind=int64):: j, jj, n, m
 
@@ -420,10 +420,10 @@ contains
 
 
       subroutine update_adaptive_steepest_descent<%= k %>(g, H, uplo, is_convex, is_saddle_or_peak, is_within, dx)
-         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size64(g), size64(g))
          Character(len=1), intent(in):: uplo
          Logical, intent(out):: is_convex, is_saddle_or_peak, is_within
-         Real(kind=real<%= k %>), intent(out):: dx(size(g, kind=int64))
+         Real(kind=real<%= k %>), intent(out):: dx(size64(g))
 
          call adaptive_steepest_descent(uplo, g, H, dx, is_convex, is_saddle_or_peak)
          is_within = is_convex
@@ -431,10 +431,10 @@ contains
 
 
       subroutine update_newton<%= k %>(g, H, uplo, is_convex, is_saddle_or_peak, is_within, dx)
-         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g, kind=int64), size(g, kind=int64))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size64(g), size64(g))
          Character(len=1), intent(in):: uplo
          Logical, intent(out):: is_convex, is_saddle_or_peak, is_within
-         Real(kind=real<%= k %>), intent(out):: dx(size(g, kind=int64))
+         Real(kind=real<%= k %>), intent(out):: dx(size64(g))
 
          call newton(uplo, g, H, dx, is_convex)
          is_within = .true.
@@ -484,7 +484,7 @@ contains
 
       subroutine restrict_step_size<%= k %>(dx, dx_prev, max_scale, is_within)
          Real(kind=real<%= k %>), intent(inout):: dx(:)
-         Real(kind=real<%= k %>), intent(in):: dx_prev(size(dx))
+         Real(kind=real<%= k %>), intent(in):: dx_prev(size64(dx))
          Real(kind=real<%= k %>), intent(in):: max_scale
          Logical, intent(out):: is_within
          Real(kind=real<%= k %>):: r, r_prev, c
@@ -523,14 +523,14 @@ contains
          type(BoundNewtonState<%= k %>), intent(out):: s
          Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
          Real(kind=real<%= k %>), intent(in):: r ! initial step length
-         Real(kind=real<%= k %>), intent(in):: lower(size(x0, kind=int64))
-         Real(kind=real<%= k %>), intent(in):: upper(size(x0, kind=int64))
+         Real(kind=real<%= k %>), intent(in):: lower(size64(x0))
+         Real(kind=real<%= k %>), intent(in):: upper(size64(x0))
 
          ASSERT(r > 0)
          ASSERT(all(lower < upper))
          ASSERT(all(lower <= x0) .and. all(x0 <= upper))
          s%iter = 0
-         s%dim = size(x0)
+         s%dim = size(x0, kind=kind(s%dim))
          s%x = x0
          s%x_prev = s%x - sqrt(r/s%dim)
          s%lower = lower
@@ -551,10 +551,10 @@ contains
       subroutine adaptive_steepest_descent<%= k %>(uplo, g, H, dx, is_convex, is_saddle_or_peak)
          Integer(kind=int32), parameter:: nrhs = 1
          Character(len=1), intent(in):: uplo
-         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
-         Real(kind=kind(g)), intent(out):: dx(size(g))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size64(g), size64(g))
+         Real(kind=kind(g)), intent(out):: dx(size64(g))
          Logical, intent(out):: is_convex, is_saddle_or_peak
-         Real(kind=kind(g)):: V(size(g), size(g)), e(size(g)), dx_0(size(g)), dx_scale(size(g)), Vi(size(g)), Vig
+         Real(kind=kind(g)):: V(size64(g), size64(g)), e(size64(g)), dx_0(size64(g)), dx_scale(size64(g)), Vi(size64(g)), Vig
          Integer(kind=kind(nrhs)):: n, i, info
 
          n = size(dx, kind=kind(n))
@@ -602,10 +602,10 @@ contains
       subroutine newton<%= k %>(uplo, g, H, dx, is_convex)
          Integer(kind=int32), parameter:: nrhs = 1
          Character(len=1), intent(in):: uplo
-         Real(kind=real<%= k %>), intent(in):: g(:), H(size(g), size(g))
-         Real(kind=real<%= k %>), intent(out):: dx(size(g))
+         Real(kind=real<%= k %>), intent(in):: g(:), H(size64(g), size64(g))
+         Real(kind=real<%= k %>), intent(out):: dx(size64(g))
          Logical, intent(out):: is_convex
-         Real(kind=real<%= k %>):: A(size(g), size(g))
+         Real(kind=real<%= k %>):: A(size64(g), size64(g))
          Integer(kind=kind(nrhs)):: n, info
 
          n = size(dx, kind=kind(n))

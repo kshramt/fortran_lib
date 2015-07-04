@@ -34,6 +34,7 @@
      write(output_unit, '(a)', advance='no') '.'
 #  define check_bound(index, array, dim_) \
      (lbound(array, dim_) <= index .and. index <= ubound(array, dim_))
+#  define size64(x) size(x, kind=int64)
 
 #  ifdef DEBUG
 #    define DEBUG_WARN(message) WARN(message)
