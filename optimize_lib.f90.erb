@@ -33,11 +33,11 @@ module optimize_lib
 
    <%- RKINDS.each{|k| -%>
       type, public:: BoundNewtonState<%= k %>
-         Logical:: is_convex
-         Logical:: is_within
-         Logical:: is_saddle_or_peak
-         Logical:: is_at_corner
-         Logical:: is_line_search
+         Logical:: is_convex = .false.
+         Logical:: is_within = .false.
+         Logical:: is_saddle_or_peak = .false.
+         Logical:: is_at_corner = .false.
+         Logical:: is_line_search = .false.
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
@@ -53,9 +53,9 @@ module optimize_lib
       end type BoundNewtonState<%= k %>
 
       type, public:: NewtonState<%= k %>
-         Logical:: is_convex
-         Logical:: is_within
-         Logical:: is_saddle_or_peak
+         Logical:: is_convex = .false.
+         Logical:: is_within = .false.
+         Logical:: is_saddle_or_peak = .false.
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
@@ -65,8 +65,8 @@ module optimize_lib
       end type NewtonState<%= k %>
 
       type, public:: LineSearchState<%= k %>_0
-         Logical:: is_convex
-         Logical:: is_within
+         Logical:: is_convex = .false.
+         Logical:: is_within = .false.
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
@@ -77,8 +77,8 @@ module optimize_lib
       end type LineSearchState<%= k %>_0
 
       type, public:: LineSearchState<%= k %>_1
-         Logical:: is_convex
-         Logical:: is_within
+         Logical:: is_convex = .false.
+         Logical:: is_within = .false.
          Integer(kind=int64):: iter = -1
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
@@ -504,27 +504,23 @@ contains
 
 
       subroutine initNewtonState<%= k %>(s, x0, r)
-         type(NewtonState<%= k %>), intent(inout):: s
+         type(NewtonState<%= k %>), intent(out):: s
          Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
          Real(kind=real<%= k %>), intent(in):: r ! initial step length
 
          ASSERT(r > 0)
-         s%is_convex = .false.
-         s%is_within = .false.
-         s%is_saddle_or_peak = .false.
          s%iter = 0
-         s%dim = size(x0)
+         s%dim = size(x0, kind=kind(s%dim))
          s%x = x0
          s%x_prev = s%x - sqrt(r/s%dim)
          s%f_prev = get_infinity()
-         ENSURE_DEALLOCATED(s%g_prev)
          allocate(s%g_prev(s%dim))
          s%g_prev(:) = 0
       end subroutine initNewtonState<%= k %>
 
 
       subroutine initBoundNewtonState<%= k %>(s, x0, r, lower, upper)
-         type(BoundNewtonState<%= k %>), intent(inout):: s
+         type(BoundNewtonState<%= k %>), intent(out):: s
          Real(kind=real<%= k %>), intent(in):: x0(:) ! initial solution
          Real(kind=real<%= k %>), intent(in):: r ! initial step length
          Real(kind=real<%= k %>), intent(in):: lower(size(x0, kind=int64))
@@ -533,11 +529,6 @@ contains
          ASSERT(r > 0)
          ASSERT(all(lower < upper))
          ASSERT(all(lower <= x0) .and. all(x0 <= upper))
-         s%is_convex = .false.
-         s%is_within = .false.
-         s%is_saddle_or_peak = .false.
-         s%is_at_corner = .false.
-         s%is_line_search = .false.
          s%iter = 0
          s%dim = size(x0)
          s%x = x0
@@ -552,7 +543,6 @@ contains
          s%on_upper_prev(:) = .true.
          s%f_prev = get_infinity()
 
-         ENSURE_DEALLOCATED(s%g_prev)
          allocate(s%g_prev(s%dim))
          s%g_prev(:) = 0
       end subroutine initBoundNewtonState<%= k %>
@@ -778,12 +768,10 @@ contains
 
 
       subroutine initLineSearchState<%= k %>_0(s, dx)
-         type(LineSearchState<%= k %>_0), intent(inout):: s
+         type(LineSearchState<%= k %>_0), intent(out):: s
          Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
-         s%is_convex = .false.
-         s%is_within = .false.
          s%iter = 0
          s%dx = dx
          if(s%dx > 0)then
@@ -924,12 +912,10 @@ contains
 
 
       subroutine initLineSearchState<%= k %>_1(s, dx)
-         type(LineSearchState<%= k %>_1), intent(inout):: s
+         type(LineSearchState<%= k %>_1), intent(out):: s
          Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
-         s%is_convex = .false.
-         s%is_within = .false.
          s%iter = 0
          s%dx = dx
          s%x = 0
