@@ -13,12 +13,7 @@ usage_and_exit(){
    {
       cat <<EOF
 Example:
-$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --c=0.01 --p=1 --alpha=1 --K=10 --mu=1 --data_file=path/to/data_file | path/to/etas_solve.exe
-
-c, p, alpha, K, mu:
-Initial values.
-Using a good initial value may reduce number of iterations needed to converge.
-Initial value should satisfy lower <= initial value <= upper.
+$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --data_file=path/to/data_file | path/to/etas_solve.exe
 
 t_pre, t_begin, t_end:
 t_pre <= t_begin <= t_end.
@@ -38,6 +33,11 @@ Background intensity produces mu earthquakes per t_normalize_len on average.
 A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on average.
 
 [options]:
+
+c[=0.01], p[=1.1], alpha[=0.5], K[=1], mu[=1]:
+Initial values.
+Using a good initial value may reduce number of iterations needed to converge.
+Initial value should satisfy lower <= initial value <= upper.
 
 lower[=1d-8,-1,-1,0,1d-8]:
 Lower bounds of the ETAS parameters.
@@ -76,6 +76,11 @@ opts="$(
 )"
 eval set -- "$opts"
 
+c=0.01
+p=1.1
+alpha=0.5
+K=1
+mu=1
 fixed=f,f,f,f,f
 by_log=t,f,f,t,t
 lower=1d-8,-1,-1,0,1d-8
@@ -173,11 +178,6 @@ done
 [[ -z "${t_pre:-}" ]] && { echo 't_pre not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
 [[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
-[[ -z "${c:-}" ]] && { echo 'c not specified' >&2 ; usage_and_exit ; }
-[[ -z "${p:-}" ]] && { echo 'p not specified' >&2 ; usage_and_exit ; }
-[[ -z "${alpha:-}" ]] && { echo 'alpha not specified' >&2 ; usage_and_exit ; }
-[[ -z "${K:-}" ]] && { echo 'K not specified' >&2 ; usage_and_exit ; }
-[[ -z "${mu:-}" ]] && { echo 'mu not specified' >&2 ; usage_and_exit ; }
 [[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
 
 
