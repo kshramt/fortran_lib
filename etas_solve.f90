@@ -143,7 +143,7 @@ program main
    call load(esi, input_unit)
    c_p_alpha_K_mu_best(:) = esi%initial
 
-   call init(s, c_p_alpha_K_mu_best, min(1d0, minval(esi%upper - esi%lower)/4), esi%lower, esi%upper)
+   call init(s, c_p_alpha_K_mu_best, min(1d0, minval(esi%upper - esi%lower)/8), esi%lower, esi%upper)
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
