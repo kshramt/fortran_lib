@@ -12,6 +12,9 @@ readonly program_name="${0##*/}"
 usage_and_exit(){
    {
       cat <<EOF
+This program makes input data for etas_solve.exe
+If you want to convert output of etas_solve.exe to the JSON format, please use etas_solve_to_json.py
+
 Example:
 $program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --data_file=path/to/data_file | path/to/etas_solve.exe
 

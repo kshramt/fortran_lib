@@ -14,9 +14,9 @@ This module contains `almost_equal`.
 
 ## Command line programs
 
-### `release/bin/etas_solve.exe`
+### `bin/etas_solve.sh` and `release/bin/etas_solve.exe`
 
-This program estimates the ETAS parameters.
+These programs estimate the ETAS parameters.
 Please run
 
 ```bash
@@ -25,9 +25,14 @@ bin/etas_solve.sh --help
 
 for the details.
 
-### `release/bin/etas_intensity.exe`
+### `bin/etas_solve_to_json.py`
 
-This program calculates the intensity function given data and the parameters estimated by `etas_solve`.
+This program converts output of `etas_solve.exe` to the JSON format.
+You need Python 3 to run this program.
+
+### `bin/etas_intensity.sh` and `release/bin/etas_intensity.exe`
+
+These programs calculate the intensity function given data and parameters.
 Please run
 
 ```bash
@@ -36,9 +41,9 @@ bin/etas_intensity.sh --help
 
 for the details.
 
-### `release/bin/etas_log_likelihood.exe`
+### `bin/etas_log_likelihood.sh` and `release/bin/etas_log_likelihood.exe`
 
-This program returns log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
+These programs calculate log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
 Please run
 
 ```bash
