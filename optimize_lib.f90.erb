@@ -39,7 +39,7 @@ module optimize_lib
          Logical:: is_at_corner = .false.
          Logical:: is_line_search = .false.
          Integer(kind=int64):: dim
-         Integer(kind=int64):: iter = -1
+         Integer(kind=int64):: iter = 0
          Real(kind=real<%= k %>), allocatable:: x(:)
          Real(kind=real<%= k %>), allocatable:: x_prev(:)
          Real(kind=real<%= k %>):: f_prev
@@ -57,7 +57,7 @@ module optimize_lib
          Logical:: is_within = .false.
          Logical:: is_saddle_or_peak = .false.
          Integer(kind=int64):: dim
-         Integer(kind=int64):: iter = -1
+         Integer(kind=int64):: iter = 0
          Real(kind=real<%= k %>), allocatable:: x(:)
          Real(kind=real<%= k %>), allocatable:: x_prev(:)
          Real(kind=real<%= k %>):: f_prev
@@ -67,7 +67,7 @@ module optimize_lib
       type, public:: LineSearchState<%= k %>_0
          Logical:: is_convex = .false.
          Logical:: is_within = .false.
-         Integer(kind=int64):: iter = -1
+         Integer(kind=int64):: iter = 0
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
          Real(kind=real<%= k %>):: xl
@@ -79,7 +79,7 @@ module optimize_lib
       type, public:: LineSearchState<%= k %>_1
          Logical:: is_convex = .false.
          Logical:: is_within = .false.
-         Integer(kind=int64):: iter = -1
+         Integer(kind=int64):: iter = 0
          Real(kind=real<%= k %>):: dx
          Real(kind=real<%= k %>):: x
          Real(kind=real<%= k %>):: x_best
@@ -176,7 +176,7 @@ contains
          Real(kind=real<%= k %>):: r, r_new, dx(s%dim), dx_new(s%dim)
 
 
-         if(s%iter < 0)then
+         if(s%iter < 1)then
             RAISE('`NewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
@@ -239,7 +239,7 @@ contains
          ASSERT(.not.any(s%on_lower .and. s%on_upper))
          ASSERT(all(pack(almost_equal(s%x, s%lower), s%on_lower)))
          ASSERT(all(pack(almost_equal(s%x, s%upper), s%on_upper)))
-         if(s%iter < 0)then
+         if(s%iter < 1)then
             RAISE('`BoundNewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
@@ -509,7 +509,7 @@ contains
          Real(kind=real<%= k %>), intent(in):: r ! initial step length
 
          ASSERT(r > 0)
-         s%iter = 0
+         s%iter = 1
          s%dim = size(x0, kind=kind(s%dim))
          s%x = x0
          s%x_prev = s%x - sqrt(r/s%dim)
@@ -529,7 +529,7 @@ contains
          ASSERT(r > 0)
          ASSERT(all(lower < upper))
          ASSERT(all(lower <= x0) .and. all(x0 <= upper))
-         s%iter = 0
+         s%iter = 1
          s%dim = size(x0, kind=kind(s%dim))
          s%x = x0
          s%x_prev = s%x - sqrt(r/s%dim)
@@ -657,11 +657,11 @@ contains
          Real(kind=real<%= k %>):: x_new, x1, x2, x3, f1, f2, f3, step, xlim
          Real(kind=real<%= k %>), parameter:: enlarge = real(5, kind=kind(enlarge))/4
 
-         if(s%iter < 0)then
+         if(s%iter < 1)then
             RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
-         if(s%iter == 1)then
+         if(s%iter == 2)then
             s%x = s%dx
             if(s%dx > 0)then
                s%fl = f
@@ -669,7 +669,7 @@ contains
                s%fr = f
             end if
             return
-         else if(s%iter == 2)then
+         else if(s%iter == 3)then
             if(s%dx > 0)then
                ASSERT(s%x > s%xl)
                s%xr = s%x
@@ -772,7 +772,7 @@ contains
          Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
-         s%iter = 0
+         s%iter = 1
          s%dx = dx
          if(s%dx > 0)then
             s%xl = 0
@@ -829,11 +829,11 @@ contains
          Real(kind=real<%= k %>):: x1, f1, g1, x2, f2, g2, step, xl, xr, x_new, xlim
          Real(kind=real<%= k %>), parameter:: enlarge = 2
 
-         if(s%iter < 0)then
+         if(s%iter < 1)then
             RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
-         if(s%iter == 1)then
+         if(s%iter == 2)then
             s%x_best = s%x
             s%f_best = f
             s%g_best = g
@@ -916,7 +916,7 @@ contains
          Real(kind=real<%= k %>), intent(in):: dx
 
          ASSERT(abs(dx) > 0)
-         s%iter = 0
+         s%iter = 1
          s%dx = dx
          s%x = 0
          s%x_best = get_infinity()
