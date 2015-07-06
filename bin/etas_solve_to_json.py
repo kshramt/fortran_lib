@@ -34,7 +34,7 @@ def parse_etas_solve_6(fp, ret):
             ret['iterations'] = int(fp.readline())
         elif l.startswith('iter_best'):
             ret['iter_best'] = int(fp.readline())
-        elif l.startswith('best log-likelihood'):
+        elif l.startswith('best log likelihood'):
             ret['log_likelihood'] = float(fp.readline())
         elif l.startswith('by_log: c, p, α, K, μ'):
             ret['by_log']['solution'] = list(map(float, fp.readline().split()))
@@ -148,7 +148,7 @@ iterations
                    13
 iter_best
                    13
-best log-likelihood
+best log likelihood
    123.45
 by_log: c, p, α, K, μ
   -1E0 -2E0 -3E0 -4E0 -5E0

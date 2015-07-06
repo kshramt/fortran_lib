@@ -43,7 +43,7 @@ for the details.
 
 ### `bin/etas_log_likelihood.sh` and `release/bin/etas_log_likelihood.exe`
 
-These programs calculate log-likelihood, Jacobian and Hessian for given data and successive parameter sets.
+These programs calculate log likelihood, Jacobian and Hessian for given data and successive parameter sets.
 Please run
 
 ```bash

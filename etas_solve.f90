@@ -200,7 +200,7 @@ program main
    write(output_unit, *) s%iter
    write(output_unit, '(a)') 'iter_best'
    write(output_unit, *) iter_best
-   write(output_unit, '(a)') 'best log-likelihood'
+   write(output_unit, '(a)') 'best log likelihood'
    write(output_unit, *) -f_best
 
    ! transformed parameters
