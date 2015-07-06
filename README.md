@@ -59,17 +59,15 @@ This program converts binary SAC file to JSON format.
 ## Compilation
 
 ```bash
-gmake
-gmake check
+make
 ```
 
 ## Dependencies
 
 - Git
-- GNU Make 3.82 or newer.
-- GFortran 4.9 or newer.
-- Ruby 1.9 or newer.
-- Python 3 or newer.
+- GNU Make 3.82 or newer
+- GFortran 4.9 or newer
+- Ruby 1.9 or newer
 
 ### Notes for Mac users
 
