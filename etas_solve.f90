@@ -241,7 +241,7 @@ program main
       write(output_unit, *) -H_best(i, :)
    end do
 
-   write(output_unit, '(a)') 'converge_at_corner, converge_by_gradient, converge_by_step_size'
+   write(output_unit, '(a)') 'converge_by_gradient, converge_by_step_size, converge_at_corner'
    write(output_unit, *) converge_by_gradient, converge_by_step_size, converge_at_corner
    write(output_unit, '(a)') 'fixed'
    write(output_unit, *) esi%fixed
