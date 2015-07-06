@@ -38,6 +38,9 @@ SHA256SUM := $(MY_SHA256SUM)
 
 export MY_SED ?= sed
 
+export MY_PYTHON ?= python3
+PYTHON := $(MY_PYTHON)
+
 FILES := $(shell git ls-files)
 F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
 ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
@@ -65,6 +68,7 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 all:
 deps: $(DEPS:%=dep/%.updated)
 
+check: bin/etas_solve_to_json.py.tested
 
 # Functions
 sha256 = $(1:%=%.sha256)
@@ -195,6 +199,9 @@ $(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
 endef
 $(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
+bin/%.py.tested: bin/%.py
+	$(MY_PYTHON) $< --test
+	touch $@
 
 %.f90: %.f90.erb dep/fort.updated
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
