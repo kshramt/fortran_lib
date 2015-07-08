@@ -25,11 +25,6 @@ bin/etas_solve.sh --help
 
 for the details.
 
-### `bin/etas_solve_to_json.py`
-
-This program converts output of `etas_solve.exe` to the JSON format.
-You need Python 3 to run this program.
-
 ### `bin/etas_intensity.sh` and `release/bin/etas_intensity.exe`
 
 These programs calculate the intensity function given data and parameters.
