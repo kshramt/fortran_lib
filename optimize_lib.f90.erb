@@ -532,7 +532,7 @@ contains
          s%iter = 1
          s%dim = size(x0, kind=kind(s%dim))
          s%x = x0
-         s%x_prev = s%x - sqrt(r/s%dim)
+         s%x_prev = s%x - r/sqrt(real(s%dim, kind=kind(r)))
          s%lower = lower
          s%upper = upper
          s%on_lower = s%x <= s%lower
