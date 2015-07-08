@@ -63,6 +63,10 @@ Order is c,p,alpha,K,mu.
 
 iter_limit[=1000]:
 Maximum number of iterations.
+
+initial_step_size[=-1]:
+Maximum initial step size (may be doubled or halved).
+If initial_step_size <= 0, it is reset by etas_solve.exe.
 EOF
    } >&2
    exit "${1:-1}"
@@ -74,7 +78,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
       --name="$program_name" \
       -- \
       "$@"
@@ -93,6 +97,7 @@ upper=1.5,2.5,2.5,1d308,1d308
 m_fit_min=-1d308
 gtol=1d-6
 iter_limit=1000
+initial_step_size=-1
 while true
 do
    case "${1}" in
@@ -171,6 +176,10 @@ do
          iter_limit="$2"
          shift
          ;;
+      --initial_step_size)
+         initial_step_size="$2"
+         shift
+         ;;
       --)
          shift
          break
@@ -200,6 +209,7 @@ echo "$upper"
 echo "$m_fit_min"
 echo "$t_begin"
 echo "$gtol"
+echo "$initial_step_size"
 echo "$m_for_K"
 echo "$t_normalize_len"
 echo "$t_pre"

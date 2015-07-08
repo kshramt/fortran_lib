@@ -37,6 +37,7 @@ module etas_solve
       Logical, allocatable:: targets(:)
       Real(kind=real_kind):: t_begin
       Real(kind=real_kind):: gtol
+      Real(kind=real_kind):: initial_step_size
       type(EtasInputs64):: ei
       Integer(kind=int_kind):: i_begin
    end type EtasSolveInputs
@@ -68,6 +69,7 @@ contains
       read(unit, *) m_fit_min
       read(unit, *) self%t_begin
       read(unit, *) self%gtol
+      read(unit, *) self%initial_step_size
       ASSERT(self%gtol > 0)
       call load(self%ei, unit)
       self%i_begin = index_ge(self%ei%ts, self%t_begin, one, self%ei%n)
@@ -133,6 +135,7 @@ program main
    Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
    Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
    Real(kind=real_kind):: dx(n_params), r_dx
+   Real(kind=kind(esi%initial_step_size)):: initial_step_size
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
@@ -146,8 +149,14 @@ program main
 
    call load(esi, input_unit)
    c_p_alpha_K_mu_best(:) = esi%initial
+   if(esi%initial_step_size > 0)then
+      initial_step_size = esi%initial_step_size
+   else
+      initial_step_size = min(1d0, minval(esi%upper - esi%lower)/8)
+   end if
+   PRINT_VARIABLE(initial_step_size)
 
-   call init(s, c_p_alpha_K_mu_best, min(1d0, minval(esi%upper - esi%lower)/8), esi%lower, esi%upper)
+   call init(s, c_p_alpha_K_mu_best, initial_step_size, esi%lower, esi%upper)
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
