@@ -30,6 +30,7 @@ module etas_solve
    type, public:: EtasSolveInputs
       Logical:: fixed(n_params)
       Logical:: by_log(n_params)
+      Integer(kind=int_kind):: iter_limit
       Real(kind=real_kind):: initial(n_params) ! c, p, alpha, K, mu
       Real(kind=real_kind):: lower(n_params)
       Real(kind=real_kind):: upper(n_params)
@@ -50,6 +51,7 @@ contains
 
       read(unit, *) self%fixed
       read(unit, *) self%by_log
+      read(unit, *) self%iter_limit
       read(unit, *) self%initial
       ASSERT(.not.any(self%initial <= 0 .and. self%by_log .and. self%fixed))
       ! there is no need to take the logarithm of fixed variables
@@ -134,10 +136,12 @@ program main
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
+   Integer(kind=kind(esi%iter_limit)):: iter
    Logical:: converge = .false.
    Logical:: converge_by_gradient = .false.
    Logical:: converge_by_step_size = .false.
    Logical:: converge_at_corner = .false.
+   Logical:: converge_by_iter_limit = .true.
    Logical:: on_lower_best(n_params), on_upper_best(n_params)
 
    call load(esi, input_unit)
@@ -148,7 +152,7 @@ program main
    on_upper_best = s%on_upper
 
    write(output_unit, '(a)') 'output_format_version: 6'
-   do
+   do iter = 1, esi%iter_limit
       ! fix numerical error
       where(esi%fixed) s%x = esi%initial
 
@@ -174,7 +178,10 @@ program main
          on_lower_best = s%on_lower
          on_upper_best = s%on_upper
       end if
-      if(converge) exit
+      if(converge)then
+         converge_by_iter_limit = .false.
+         exit
+      end if
 
       do i = 1, n_params
          if(esi%fixed(i))then
@@ -241,8 +248,8 @@ program main
       write(output_unit, *) -H_best(i, :)
    end do
 
-   write(output_unit, '(a)') 'converge_by_gradient, converge_by_step_size, converge_at_corner'
-   write(output_unit, *) converge_by_gradient, converge_by_step_size, converge_at_corner
+   write(output_unit, '(a)') 'converge_by_gradient, converge_by_step_size, converge_at_corner, converge_by_iter_limit'
+   write(output_unit, *) converge_by_gradient, converge_by_step_size, converge_at_corner, converge_by_iter_limit
    write(output_unit, '(a)') 'fixed'
    write(output_unit, *) esi%fixed
    write(output_unit, '(a)') 'on_lower'

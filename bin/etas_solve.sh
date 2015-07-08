@@ -60,6 +60,9 @@ log(c), log(K) and log(mu) are searched instead of c, K and mu since their value
 The default setting seems to reduces number of iterations needed to converge.
 You can disable the search-by-log feature by --by-log=f,f,f,f,f
 Order is c,p,alpha,K,mu.
+
+iter_limit[=1000]:
+Maximum number of iterations.
 EOF
    } >&2
    exit "${1:-1}"
@@ -71,7 +74,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit: \
       --name="$program_name" \
       -- \
       "$@"
@@ -89,6 +92,7 @@ lower=1d-8,-1,-1,0,1d-8
 upper=1.5,2.5,2.5,1d308,1d308
 m_fit_min=-1d308
 gtol=1d-6
+iter_limit=1000
 while true
 do
    case "${1}" in
@@ -163,6 +167,10 @@ do
          gtol="$2"
          shift
          ;;
+      --iter_limit)
+         iter_limit="$2"
+         shift
+         ;;
       --)
          shift
          break
@@ -185,6 +193,7 @@ done
 
 echo "$fixed"
 echo "$by_log"
+echo "$iter_limit"
 echo "$c" "$p" "$alpha" "$K" "$mu"
 echo "$lower"
 echo "$upper"
