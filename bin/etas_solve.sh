@@ -45,7 +45,7 @@ lower[=1d-8,-1,-1,0,1d-8]:
 Lower bounds of the ETAS parameters.
 Order is c,p,alpha,K,mu.
 
-upper[=1.5,2.5,2.5,1d308,1d308]:
+upper[=1.5,2.5,3.5,1d308,1d308]:
 Upper bounds of the ETAS parameters.
 Order is c,p,alpha,K,mu.
 Setting a reasonably tight bound reduces number of iterations needed to converge.
@@ -93,7 +93,7 @@ mu=1
 fixed=f,f,f,f,f
 by_log=t,f,f,t,t
 lower=1d-8,-1,-1,0,1d-8
-upper=1.5,2.5,2.5,1d308,1d308
+upper=1.5,2.5,3.5,1d308,1d308
 m_fit_min=-1d308
 gtol=1d-6
 iter_limit=1000
