@@ -154,7 +154,6 @@ program main
    else
       initial_step_size = min(1d0, minval(esi%upper - esi%lower)/8)
    end if
-   PRINT_VARIABLE(initial_step_size)
 
    call init(s, c_p_alpha_K_mu_best, initial_step_size, esi%lower, esi%upper)
    on_lower_best = s%on_lower
