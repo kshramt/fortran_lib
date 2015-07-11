@@ -247,7 +247,7 @@ program main
    fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
    g_best = jaco(fgh)
    H_best = hess(fgh)
-   write(output_unit, '(a)') 'c, p, alpha, K, mu, K_for_other_programs, mu_for_other_programs'
+   write(output_unit, '(a)') 'c, p, alpha, K, mu, K_of_SAPP, mu_for_SAPP'
    write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, *) -g_best
