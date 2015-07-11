@@ -11,9 +11,18 @@ set -o noclobber
 readonly program_name="${0##*/}"
 usage_and_exit(){
    {
-      echo "seq 0 0.01 7 | $program_name" '--t_normalize_len=1 --m_for_K=7 --c=1 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_intensity.exe'
+      echo "seq 0 0.01 7 | $program_name" '--t_normalize_len=1 --m_for_K=6 --c=1 --p=1 --alpha=1 --K=1 --mu=1 --data_file=path/to/data_file | path/to/etas_intensity.exe'
    } >&2
    exit "${1:-1}"
+}
+
+option_missing(){
+   {
+      cat <<EOF
+${program_name}: $@ was not specified
+EOF
+   } >&2
+   exit 1
 }
 
 readonly dir="${0%/*}"
@@ -79,14 +88,14 @@ do
 done
 
 
-[[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
-[[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
-[[ -z "${c:-}" ]] && { echo 'c not specified' >&2 ; usage_and_exit ; }
-[[ -z "${p:-}" ]] && { echo 'p not specified' >&2 ; usage_and_exit ; }
-[[ -z "${alpha:-}" ]] && { echo 'alpha not specified' >&2 ; usage_and_exit ; }
-[[ -z "${K:-}" ]] && { echo 'K not specified' >&2 ; usage_and_exit ; }
-[[ -z "${mu:-}" ]] && { echo 'mu not specified' >&2 ; usage_and_exit ; }
-[[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_normalize_len:-}" ]] && option_missing --t_normalize_len
+[[ -z "${m_for_K:-}" ]] && option_missing --m_for_K
+[[ -z "${c:-}" ]] && option_missing --c
+[[ -z "${p:-}" ]] && option_missing --p
+[[ -z "${alpha:-}" ]] && option_missing --alpha
+[[ -z "${K:-}" ]] && option_missing --K
+[[ -z "${mu:-}" ]] && option_missing --mu
+[[ -z "${data_file:-}" ]] && option_missing --data_file
 
 
 echo "$t_normalize_len"

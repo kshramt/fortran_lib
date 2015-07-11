@@ -12,16 +12,25 @@ readonly program_name="${0##*/}"
 usage_and_exit(){
    {
       cat <<EOF
-$program_name --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file < path/to/etas_parameters | path/to/etas_log_likelihood.exe
+$program_name --t_normalize_len=1 --m_for_K=6 --t_pre=0 --t_end=60 --data_file=path/to/data_file < path/to/etas_parameters | path/to/etas_log_likelihood.exe
 
 If you want to interact with data as a neural network based optimizer, rlwrap may be useful:
-rlwrap $program_name --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_end=60 --data_file=path/to/data_file | path/to/etas_log_likelihood.exe
+rlwrap $program_name --t_normalize_len=1 --m_for_K=6 --t_pre=0 --t_end=60 --data_file=path/to/data_file | path/to/etas_log_likelihood.exe
 
 etas_parameters should contain following 8 columns:
 m_fit_min t_begin t_end c p α K μ
 EOF
    } >&2
    exit "${1:-1}"
+}
+
+option_missing(){
+   {
+      cat <<EOF
+${program_name}: $@ was not specified
+EOF
+   } >&2
+   exit 1
 }
 
 readonly dir="${0%/*}"
@@ -75,11 +84,11 @@ do
 done
 
 
-[[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
-[[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_pre:-}" ]] && { echo 't_pre not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
-[[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_normalize_len:-}" ]] && option_missing --t_normalize_len
+[[ -z "${m_for_K:-}" ]] && option_missing --m_for_K
+[[ -z "${t_pre:-}" ]] && option_missing --t_pre
+[[ -z "${t_end:-}" ]] && option_missing --t_end
+[[ -z "${data_file:-}" ]] && option_missing --data_file
 
 
 echo "$m_for_K"

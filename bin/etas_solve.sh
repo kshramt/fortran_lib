@@ -15,61 +15,70 @@ usage_and_exit(){
 This program makes input data for etas_solve.exe
 
 Example:
-$program_name [options] --t_normalize_len=1 --m_for_K=7 --t_pre=0 --t_begin=10 --t_end=60 --data_file=path/to/data_file | path/to/etas_solve.exe
+$program_name [options] --t_normalize_len=1 --m_for_K=6 --t_pre=0 --t_begin=10 --t_end=60 --data_file=path/to/data_file | path/to/etas_solve.exe
 
-t_pre, t_begin, t_end:
+--t_pre, --t_begin, --t_end:
 t_pre <= t_begin <= t_end.
 Earthquakes in [t_begin, t_end] are fitted by etas_solve.exe.
 Earthquakes in [t_pre, t_begin) are not fitted although intensities from them to earthquakes in [t_begin, t_end] are considered.
 
-data_file:
+--data_file:
 The first column should be time, and the second column should be magnitude.
 Time should be sorted in ascending order.
 
-m_for_K:
+--m_for_K:
 Reference magnitude.
 
-t_normalize_len:
+--t_normalize_len:
 Normalization time interval.
 Background intensity produces mu earthquakes per t_normalize_len on average.
 A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on average.
 
 [options]:
 
-c[=0.01], p[=1.1], alpha[=0.5], K[=1], mu[=1]:
+--c[=0.01], --p[=1.1], --alpha[=0.5], --K[=1], --mu[=1]:
 Initial values.
 Using a good initial value may reduce number of iterations needed to converge.
 Initial value should satisfy lower <= initial value <= upper.
 
-lower[=1d-8,-1,-1,0,1d-8]:
+--lower[=1d-8,-1,-1,0,1d-8]:
 Lower bounds of the ETAS parameters.
 Order is c,p,alpha,K,mu.
 
-upper[=3,4,5,1d308,1d308]:
+--upper[=3,4,5,1d308,1d308]:
 Upper bounds of the ETAS parameters.
 Order is c,p,alpha,K,mu.
 Setting a reasonably tight bound reduces number of iterations needed to converge.
 I set these upper bounds assuming that a time unit is day.
 
-fixed[=f,f,f,f,f]:
+--fixed[=f,f,f,f,f]:
 If you want to fix p by the initial value while performing optimization, please try --fixed=f,t,f,f,f
 Order is c,p,alpha,K,mu.
 
-by_log[=t,f,f,t,t]:
+--by_log[=t,f,f,t,t]:
 log(c), log(K) and log(mu) are searched instead of c, K and mu since their values can change several orders during optimization.
 The default setting seems to reduces number of iterations needed to converge.
 You can disable the search-by-log feature by --by-log=f,f,f,f,f
 Order is c,p,alpha,K,mu.
 
-iter_limit[=1000]:
+--iter_limit[=1000]:
 Maximum number of iterations.
 
-initial_step_size[=-1]:
+--initial_step_size[=-1]:
 Maximum initial step size (may be doubled or halved).
 If initial_step_size <= 0, it is reset by etas_solve.exe.
 EOF
    } >&2
    exit "${1:-1}"
+}
+
+option_missing(){
+   {
+      cat <<EOF
+${program_name}: $@ was not specified
+EOF
+   } >&2
+   exit 1
 }
 
 readonly dir="${0%/*}"
@@ -192,12 +201,12 @@ do
 done
 
 
-[[ -z "${t_normalize_len:-}" ]] && { echo 't_normalize_len not specified' >&2 ; usage_and_exit ; }
-[[ -z "${m_for_K:-}" ]] && { echo 'm_for_K not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_pre:-}" ]] && { echo 't_pre not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_begin:-}" ]] && { echo 't_begin not specified' >&2 ; usage_and_exit ; }
-[[ -z "${t_end:-}" ]] && { echo 't_end not specified' >&2 ; usage_and_exit ; }
-[[ -z "${data_file:-}" ]] && { echo 'data_file not specified' >&2 ; usage_and_exit ; }
+[[ -z "${t_normalize_len:-}" ]] && option_missing --t_normalize_len
+[[ -z "${m_for_K:-}" ]] && option_missing --m_for_K
+[[ -z "${t_pre:-}" ]] && option_missing --t_pre
+[[ -z "${t_begin:-}" ]] && option_missing --t_begin
+[[ -z "${t_end:-}" ]] && option_missing --t_end
+[[ -z "${data_file:-}" ]] && option_missing --data_file
 
 
 echo "$fixed"
