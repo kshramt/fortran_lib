@@ -68,7 +68,6 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 all:
 deps: $(DEPS:%=dep/%.updated)
 
-check: bin/etas_solve_to_json.py.tested
 
 # Functions
 sha256 = $(1:%=%.sha256)
