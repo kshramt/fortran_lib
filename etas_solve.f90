@@ -31,7 +31,7 @@ module etas_solve
       Logical:: fixed(n_params)
       Logical:: by_log(n_params)
       Integer(kind=int_kind):: iter_limit
-      Real(kind=real_kind):: initial(n_params) ! c, p, alpha, K, mu
+      Real(kind=real_kind):: initial(n_params) ! mu, K, c, alpha, p
       Real(kind=real_kind):: lower(n_params)
       Real(kind=real_kind):: upper(n_params)
       Logical, allocatable:: targets(:)
@@ -131,12 +131,12 @@ program main
 
    type(EtasSolveInputs):: esi
    type(BoundNewtonState64):: s
-   Real(kind=real_kind):: c_p_alpha_K_mu_best(n_params), c, p, alpha, K, mu
+   Real(kind=real_kind):: mu_K_c_alpha_p_best(n_params), mu, K, c, alpha, p
    Real(kind=real_kind):: f, g(n_params), H(n_params, n_params)
    Real(kind=real_kind):: f_best = huge(f_best), g_best(n_params), H_best(n_params, n_params)
    Real(kind=real_kind):: dx(n_params), r_dx
    Real(kind=kind(esi%initial_step_size)):: initial_step_size
-   type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, fgh
+   type(Dual64_2_5):: d_mu, d_K, d_c, d_alpha, d_p, fgh
    Integer(kind=int_kind):: i
    Integer(kind=kind(s%iter)):: iter_best
    Integer(kind=kind(esi%iter_limit)):: iter
@@ -148,14 +148,14 @@ program main
    Logical:: on_lower_best(n_params), on_upper_best(n_params)
 
    call load(esi, input_unit)
-   c_p_alpha_K_mu_best(:) = esi%initial
+   mu_K_c_alpha_p_best(:) = esi%initial
    if(esi%initial_step_size > 0)then
       initial_step_size = esi%initial_step_size
    else
       initial_step_size = min(1d0, minval(esi%upper - esi%lower)/8)
    end if
 
-   call init(s, c_p_alpha_K_mu_best, initial_step_size, esi%lower, esi%upper)
+   call init(s, mu_K_c_alpha_p_best, initial_step_size, esi%lower, esi%upper)
    on_lower_best = s%on_lower
    on_upper_best = s%on_upper
 
@@ -167,19 +167,19 @@ program main
       dx = s%x - s%x_prev
       r_dx = norm2(dx)
 
-      d_c = exp_if_true(Dual64_2_5(s%x(1), [1, 0, 0, 0, 0]), esi%by_log(1))
-      d_p = exp_if_true(Dual64_2_5(s%x(2), [0, 1, 0, 0, 0]), esi%by_log(2))
-      d_alpha = exp_if_true(Dual64_2_5(s%x(3), [0, 0, 1, 0, 0]), esi%by_log(3))
-      d_K = exp_if_true(Dual64_2_5(s%x(4), [0, 0, 0, 1, 0]), esi%by_log(4))
-      d_mu = exp_if_true(Dual64_2_5(s%x(5), [0, 0, 0, 0, 1]), esi%by_log(5))
-      fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
+      d_mu = exp_if_true(Dual64_2_5(s%x(1), [1, 0, 0, 0, 0]), esi%by_log(1))
+      d_K = exp_if_true(Dual64_2_5(s%x(2), [0, 1, 0, 0, 0]), esi%by_log(2))
+      d_c = exp_if_true(Dual64_2_5(s%x(3), [0, 0, 1, 0, 0]), esi%by_log(3))
+      d_alpha = exp_if_true(Dual64_2_5(s%x(4), [0, 0, 0, 1, 0]), esi%by_log(4))
+      d_p = exp_if_true(Dual64_2_5(s%x(5), [0, 0, 0, 0, 1]), esi%by_log(5))
+      fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_mu, d_K, d_c, d_alpha, d_p, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
       f = real(fgh)
       g = jaco(fgh)
       H = hess(fgh)
       write(output_unit, *) 'LOG: ', r_dx, s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_lower, s%on_upper
       if(f < f_best)then
          iter_best = s%iter
-         c_p_alpha_K_mu_best = s%x
+         mu_K_c_alpha_p_best = s%x
          f_best = f
          g_best = g
          H_best = H
@@ -219,13 +219,13 @@ program main
    write(output_unit, *) -f_best
 
    ! transformed parameters
-   write(output_unit, '(a)') 'by_log: c, p, alpha, K, mu'
-   c = c_p_alpha_K_mu_best(1)
-   p = c_p_alpha_K_mu_best(2)
-   alpha = c_p_alpha_K_mu_best(3)
-   K = c_p_alpha_K_mu_best(4)
-   mu = c_p_alpha_K_mu_best(5)
-   write(output_unit, *) c, p, alpha, K, mu
+   write(output_unit, '(a)') 'by_log: mu, K, c, alpha, p'
+   mu = mu_K_c_alpha_p_best(1)
+   K = mu_K_c_alpha_p_best(2)
+   c = mu_K_c_alpha_p_best(3)
+   alpha = mu_K_c_alpha_p_best(4)
+   p = mu_K_c_alpha_p_best(5)
+   write(output_unit, *) mu, K, c, alpha, p
    write(output_unit, '(a)') 'by_log: Jacobian'
    write(output_unit, *) -g_best
    write(output_unit, '(a)') 'by_log: Hessian'
@@ -234,21 +234,21 @@ program main
    end do
 
    ! non-transformed parameters
-   c = exp_if_true(c_p_alpha_K_mu_best(1), esi%by_log(1))
-   p = exp_if_true(c_p_alpha_K_mu_best(2), esi%by_log(2))
-   alpha = exp_if_true(c_p_alpha_K_mu_best(3), esi%by_log(3))
-   K = exp_if_true(c_p_alpha_K_mu_best(4), esi%by_log(4))
-   mu = exp_if_true(c_p_alpha_K_mu_best(5), esi%by_log(5))
-   d_c = Dual64_2_5(c, [1, 0, 0, 0, 0])
-   d_p = Dual64_2_5(p, [0, 1, 0, 0, 0])
-   d_alpha = Dual64_2_5(alpha, [0, 0, 1, 0, 0])
-   d_K = Dual64_2_5(K, [0, 0, 0, 1, 0])
-   d_mu = Dual64_2_5(mu, [0, 0, 0, 0, 1])
-   fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
+   mu = exp_if_true(mu_K_c_alpha_p_best(1), esi%by_log(1))
+   K = exp_if_true(mu_K_c_alpha_p_best(2), esi%by_log(2))
+   c = exp_if_true(mu_K_c_alpha_p_best(3), esi%by_log(3))
+   alpha = exp_if_true(mu_K_c_alpha_p_best(4), esi%by_log(4))
+   p = exp_if_true(mu_K_c_alpha_p_best(5), esi%by_log(5))
+   d_mu = Dual64_2_5(mu, [1, 0, 0, 0, 0])
+   d_K = Dual64_2_5(K, [0, 1, 0, 0, 0])
+   d_c = Dual64_2_5(c, [0, 0, 1, 0, 0])
+   d_alpha = Dual64_2_5(alpha, [0, 0, 0, 1, 0])
+   d_p = Dual64_2_5(p, [0, 0, 0, 0, 1])
+   fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_mu, d_K, d_c, d_alpha, d_p, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
    g_best = jaco(fgh)
    H_best = hess(fgh)
-   write(output_unit, '(a)') 'c, p, alpha, K, mu, K_of_SAPP, mu_for_SAPP'
-   write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
+   write(output_unit, '(a)') 'mu, K, c, alpha, p, mu_for_SAPP, K_of_SAPP'
+   write(output_unit, *) mu, K, c, alpha, p, mu/esi%ei%t_normalize_len, K/omori_integrate(esi%ei%t_normalize_len, c, p)
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, *) -g_best
    write(output_unit, '(a)') 'Hessian'

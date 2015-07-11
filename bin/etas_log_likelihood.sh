@@ -18,7 +18,7 @@ If you want to interact with data as a neural network based optimizer, rlwrap ma
 rlwrap $program_name --t_normalize_len=1 --m_for_K=6 --t_pre=0 --t_end=60 --data_file=path/to/data_file | path/to/etas_log_likelihood.exe
 
 etas_parameters should contain following 8 columns:
-m_fit_min t_begin t_end c p alpha K mu
+m_fit_min t_begin t_end mu K c alpha p
 EOF
    } >&2
    exit "${1:-1}"

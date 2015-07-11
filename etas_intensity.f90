@@ -8,7 +8,7 @@ program main
    implicit none
 
    Real(kind=real64), allocatable:: ts(:), ms(:)
-   Real(kind=real64):: c, p, alpha, K, mu
+   Real(kind=real64):: mu, K, c, alpha, p
    Real(kind=real64):: normalize_interval, m_for_K
    Real(kind=real64):: t
    Integer(kind=int64):: i, n
@@ -16,7 +16,7 @@ program main
 
    read(input_unit, *) normalize_interval
    read(input_unit, *) m_for_K
-   read(input_unit, *) c, p, alpha, K, mu
+   read(input_unit, *) mu, K, c, alpha, p
    read(input_unit, *) n
    allocate(ts(n))
    allocate(ms(n))
@@ -28,7 +28,7 @@ program main
    do
       read(input_unit, *, iostat=ios) t
       if(ios /= 0) exit
-      write(output_unit, '(g0, " ", g0)') t, intensity_etas(t, normalize_interval, c, p, alpha, K, mu, ts, ms)
+      write(output_unit, '(g0, " ", g0)') t, intensity_etas(t, normalize_interval, mu, K, c, alpha, p, ts, ms)
    end do
 
    stop

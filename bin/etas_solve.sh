@@ -36,30 +36,30 @@ A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on 
 
 [options]:
 
---c[=0.01], --p[=1.1], --alpha[=0.5], --K[=1], --mu[=1]:
+--mu[=1], --K[=1], --c[=0.01], --alpha[=0.5], --p[=1.1]:
 Initial values.
 Using a good initial value may reduce number of iterations needed to converge.
 Initial value should satisfy lower <= initial value <= upper.
 
---lower[=1d-8,-1,-1,0,1d-8]:
+--lower[=1d-8,0,1d-8,-1,-1]:
 Lower bounds of the ETAS parameters.
-Order is c,p,alpha,K,mu.
+Order is mu,K,c,alpha,p
 
---upper[=3,4,5,1d308,1d308]:
+--upper[=1e308,1e308,3,5,4]:
 Upper bounds of the ETAS parameters.
-Order is c,p,alpha,K,mu.
+Order is mu,K,c,alpha,p
 Setting a reasonably tight bound reduces number of iterations needed to converge.
 I set these upper bounds assuming that a time unit is day.
 
 --fixed[=f,f,f,f,f]:
 If you want to fix p by the initial value while performing optimization, please try --fixed=f,t,f,f,f
-Order is c,p,alpha,K,mu.
+Order is mu,K,c,alpha,p
 
---by_log[=t,f,f,t,t]:
+--by_log[=t,t,t,f,f]:
 log(c), log(K) and log(mu) are searched instead of c, K and mu since their values can change several orders during optimization.
 The default setting seems to reduces number of iterations needed to converge.
 You can disable the search-by-log feature by --by-log=f,f,f,f,f
-Order is c,p,alpha,K,mu.
+Order is mu,K,c,alpha,p
 
 --iter_limit[=1000]:
 Maximum number of iterations.
@@ -87,22 +87,22 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,c:,p:,alpha:,K:,mu:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,mu:,K:,c:,alpha:,p:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
       --name="$program_name" \
       -- \
       "$@"
 )"
 eval set -- "$opts"
 
-c=0.01
-p=1.1
-alpha=0.5
-K=1
 mu=1
+K=1
+c=0.01
+alpha=0.5
+p=1.1
 fixed=f,f,f,f,f
-by_log=t,f,f,t,t
-lower=1d-8,-1,-1,0,1d-8
-upper=3,4,5,1d308,1d308
+by_log=t,t,t,f,f
+lower=1d-8,0,1d-8,-1,-1
+upper=1e308,1e308,3,5,4
 m_fit_min=-1d308
 gtol=1d-6
 iter_limit=1000
@@ -137,26 +137,26 @@ do
          m_for_K="$2"
          shift
          ;;
-      --c)
-         c="$2"
+      --mu)
+         mu="$2"
+         shift
+            ;;
+      --K)
+         K="$2"
          shift
          ;;
-      --p)
-         p="$2"
+      --c)
+         c="$2"
          shift
          ;;
       --alpha)
          alpha="$2"
          shift
          ;;
-      --K)
-         K="$2"
+      --p)
+         p="$2"
          shift
          ;;
-      --mu)
-         mu="$2"
-         shift
-            ;;
       --data_file)
          data_file="$2"
          shift
@@ -212,7 +212,7 @@ done
 echo "$fixed"
 echo "$by_log"
 echo "$iter_limit"
-echo "$c" "$p" "$alpha" "$K" "$mu"
+echo "$mu" "$K" "$c" "$alpha" "$p"
 echo "$lower"
 echo "$upper"
 echo "$m_fit_min"

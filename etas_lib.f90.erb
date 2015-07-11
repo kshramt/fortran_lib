@@ -105,32 +105,32 @@ contains
    <%- RD_KS.each{|t, k| -%>
       <%- decl = _decl(t, k) -%>
       <%- suffix = _suffix(t, k) -%>
-      function intensity_etas<%= suffix %>(t, t_normalize_len, c, p, alpha, K, mu, ts, dms) result(ret)
+      function intensity_etas<%= suffix %>(t, t_normalize_len, mu, K, c, alpha, p, ts, dms) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, t_normalize_len, ts(:), dms(size64(ts))
-         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         <%= decl %>, intent(in):: mu, K, c, alpha, p
          <%= decl %>:: coeffs(size64(dms))
          <%= decl %>:: mu_normalized
 
-         coeffs = kernel_coeff(dms, c, p, alpha, K, t_normalize_len)
+         coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
          ret = lambda_neg_p(t, c, -p, mu_normalized, ts, coeffs)
       end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, dms, i_begin, targets) result(ret)
+      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts, dms, i_begin, targets) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), dms(size64(ts))
          Integer(kind=int64), intent(in):: i_begin
          Logical, intent(in):: targets(size64(ts))
-         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         <%= decl %>, intent(in):: mu, K, c, alpha, p
          <%= decl %>:: coeffs(size64(dms))
          <%= decl %>:: mu_normalized
          Integer(kind=kind(i_begin)):: n
 
          n = size(ts, kind=kind(n))
          ASSERT(t_begin <= ts(i_begin) .and. ts(i_begin) <= ts(n) .and. ts(n) <= t_end)
-         coeffs = kernel_coeff(dms, c, p, alpha, K, t_normalize_len)
+         coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
          ! PRINT_VARIABLE(real(sum_log_lambda_neg_p(i_begin, size(ts, kind=kind(i_begin)), c, -p, mu_normalized, ts, coeffs)))
          ! PRINT_VARIABLE(real(lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_begin)))
@@ -142,11 +142,11 @@ contains
       end function log_likelihood_etas<%= suffix %>
 
 
-      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts, dms, targets) result(ret)
+      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts, dms, targets) result(ret)
          Integer(kind=int64), parameter:: one = 1
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), dms(size64(ts))
-         <%= decl %>, intent(in):: c, p, alpha, K, mu
+         <%= decl %>, intent(in):: mu, K, c, alpha, p
          Integer(kind=kind(one)):: n, i_begin, i_end
          Logical, intent(in):: targets(size64(ts))
 
@@ -156,7 +156,7 @@ contains
          ASSERT(1 <= i_begin)
          ASSERT(i_begin <= i_end)
          ASSERT(i_end <= n)
-         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, c, p, alpha, K, mu, ts(:i_end), dms(:i_end), i_begin, targets(:i_end))
+         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts(:i_end), dms(:i_end), i_begin, targets(:i_end))
       end function log_likelihood_etas_range<%= suffix %>
 
 
@@ -246,10 +246,10 @@ contains
       end function kernel_integrate<%= suffix %>
 
 
-      elemental function kernel_coeff<%= suffix %>(dm, c, p, alpha, K, t_normalize_len) result(ret)
+      elemental function kernel_coeff<%= suffix %>(dm, K, c, alpha, p, t_normalize_len) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: dm, t_normalize_len
-         <%= decl %>, intent(in):: c, p, alpha, K
+         <%= decl %>, intent(in):: K, c, alpha, p
 
          ! normalization by `omori_integrate` reduces correlation of objective function and improves convergence rate.
          ret = K*utsu_seki(dm, alpha)/omori_integrate(t_normalize_len, c, p)
