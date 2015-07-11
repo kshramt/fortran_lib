@@ -219,7 +219,7 @@ program main
    write(output_unit, *) -f_best
 
    ! transformed parameters
-   write(output_unit, '(a)') 'by_log: c, p, α, K, μ'
+   write(output_unit, '(a)') 'by_log: c, p, alpha, K, mu'
    c = c_p_alpha_K_mu_best(1)
    p = c_p_alpha_K_mu_best(2)
    alpha = c_p_alpha_K_mu_best(3)
@@ -247,7 +247,7 @@ program main
    fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_c, d_p, d_alpha, d_K, d_mu, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
    g_best = jaco(fgh)
    H_best = hess(fgh)
-   write(output_unit, '(a)') 'c, p, α, K, μ, K_for_other_programs, μ_for_other_programs'
+   write(output_unit, '(a)') 'c, p, alpha, K, mu, K_for_other_programs, mu_for_other_programs'
    write(output_unit, *) c, p, alpha, K, mu, K/omori_integrate(esi%ei%t_normalize_len, c, p), mu/esi%ei%t_normalize_len
    write(output_unit, '(a)') 'Jacobian'
    write(output_unit, *) -g_best
