@@ -72,7 +72,7 @@ program main
    d_p = Dual64_2_5(p, [0, 0, 0, 0, 1])
    d_k = Dual64_2_5(K, [0, 1, 0, 0, 0])
    TEST(almost_equal(real(log_likelihood_etas(0d0, t_end, normalize_interval, d_mu, d_K, d_c, d_alpha, d_p, ts, dms, one, dms > -huge(0d0))), -232.04236722101803d0))
-   TEST(all(almost_equal(jaco(log_likelihood_etas(0d0, t_end, normalize_interval, d_mu, d_K, d_c, d_alpha, d_p, ts, dms, one, dms > -huge(0d0))), [-1.4229686278967888d0, -1.2014840427587559d0, -66.823472324117404d0, 50.443481642939808d0,  38.410272133423234d0])))
+   TEST(all(almost_equal(jaco(log_likelihood_etas(0d0, t_end, normalize_interval, d_mu, d_K, d_c, d_alpha, d_p, ts, dms, one, dms > -huge(0d0))), [-1.4229686278967888d0, -1.2014840427587559d0, -66.823472324117404d0, 50.443481642939808d0,  38.410272133423234d0], relative=4*epsilon(0d0))))
 
 
    ASSERT(index_ge(ts, 0d0 - 0.01, int(1, kind=int64), size64(ts)) == 1)
