@@ -58,6 +58,7 @@ EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_TEMPLATE_NAMES)
 # Configurations
 .SUFFIXES:
 .DELETE_ON_ERROR:
+.SECONDARY:
 .ONESHELL:
 export SHELL := /bin/bash
 export SHELLOPTS := pipefail:errexit:nounset:noclobber
@@ -182,8 +183,6 @@ $(1)/src/%.f90.sha256.new: $(1)/src/%.f90
 $(1)/src/%.f90: %.f90 fortran_lib.h
 	mkdir -p $$(@D)
 	$(CPP) $$(CPP_FLAGS_$(1)) $$< $$@
-
-.SECONDARY: $(1)/src/%.f90.sha256.new $(1)/src/%.f90.sha256
 endef
 $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
