@@ -252,7 +252,7 @@ contains
             ! this redundant form should not be simplified by using p == 1.
             ! If I wrote the above code like:
             ! ret = log((t + c)/c)
-            ! ∂omori_integrate/∂p will be 0, which is inappropriate, if p == 1.
+            ! ∂omori_integrate/∂p will erroneously be 0.
          else
             ret = ((t + c)**(1 - p) - c**(1 - p))/(1 - p)
          end if
