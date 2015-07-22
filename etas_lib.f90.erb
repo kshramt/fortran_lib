@@ -133,11 +133,15 @@ contains
          coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
          neg_p = -p
+         <%- if t == :Real -%>
+            log_lambdas = 0
+         <%- else -%>
+            ! log_lambdas::Dual is already initialized to 0
+         <%- end -%>
          ! schedule(guided) is superior to schedule(static, 1), schedule(dynamic) or schedule(auto)
          ! reversing the loop order degrades performance and result in 2-fold slowdown.
          !$omp parallel do schedule(guided)
          do i = i_begin, n
-            ! Dual is already initialized to 0
             if(targets(i))then
                log_lambdas(i) = log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
             end if
