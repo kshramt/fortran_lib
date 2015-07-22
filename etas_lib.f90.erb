@@ -47,7 +47,6 @@ module etas_lib
       <%-
         [
           :intensity_etas,
-          :sum_log_lambda_neg_p,
           :lambda_integrate,
           :kernel_coeff,
           :kernel_integrate,
@@ -125,18 +124,26 @@ contains
          Logical, intent(in):: targets(size64(ts))
          <%= decl %>, intent(in):: mu, K, c, alpha, p
          <%= decl %>:: coeffs(size64(dms))
-         <%= decl %>:: mu_normalized
-         Integer(kind=kind(i_begin)):: n
+         <%= decl %>:: mu_normalized, neg_p
+         <%= decl %>:: log_lambdas(size64(ts) - i_begin + 1)
+         Integer(kind=kind(i_begin)):: i, n
 
          n = size(ts, kind=kind(n))
          ASSERT(t_begin <= ts(i_begin) .and. ts(i_begin) <= ts(n) .and. ts(n) <= t_end)
          coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
-         !$omp parallel
-         !$omp single
-         ret = sum_log_lambda_neg_p(i_begin, n, c, -p, mu_normalized, ts, coeffs, targets) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
-         !$omp end single
-         !$omp end parallel
+         neg_p = -p
+         ! schedule(guided) is superior to schedule(static, 1), schedule(dynamic) or schedule(auto)
+         ! reversing the loop order degrades performance and result in 2-fold slowdown.
+         !$omp parallel do schedule(guided)
+         do i = i_begin, n
+            ! Dual is already initialized to 0
+            if(targets(i))then
+               log_lambdas(i) = log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
+            end if
+         end do
+         ! Use pairwise summation instead of omp reduction(+:ret1)
+         ret = sum(log_lambdas) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
       end function log_likelihood_etas<%= suffix %>
 
 
@@ -156,38 +163,6 @@ contains
          ASSERT(i_end <= n)
          ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts(:i_end), dms(:i_end), i_begin, targets(:i_end))
       end function log_likelihood_etas_range<%= suffix %>
-
-
-      recursive function sum_log_lambda_neg_p<%= suffix %>(i1, i2, c, neg_p, mu_normalized, ts, coeffs, targets) result(ret)
-         Integer(kind=int64), parameter:: blocksize = 2**4
-         <%= decl %>:: ret, ret1, ret2
-         Integer(kind=kind(blocksize)), intent(in):: i1, i2
-         Real(kind=real<%= k %>), intent(in):: ts(:)
-         <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size64(ts))
-         Logical, intent(in):: targets(size64(ts))
-         Integer(kind=int64):: i, i_mid
-
-         if(i1 + blocksize > i2)then
-            <%- if t == :Real -%>
-               ret = 0
-            <%- else -%>
-               ! Dual is initialized to 0
-            <%- end -%>
-            do i = i1, i2
-               if(targets(i))then
-                  ret = ret + log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
-               end if
-            end do
-         else
-            i_mid = (i1 + i2)/2
-            !$omp task shared(ret2) untied
-            ret2 = sum_log_lambda_neg_p(i_mid + 1, i2, c, neg_p, mu_normalized, ts, coeffs, targets)
-            !$omp end task
-            ret1 = sum_log_lambda_neg_p(i1, i_mid, c, neg_p, mu_normalized, ts, coeffs, targets)
-            !$omp taskwait
-            ret = ret1 + ret2
-         end if
-      end function sum_log_lambda_neg_p<%= suffix %>
 
 
       pure function lambda_neg_p_i<%= suffix %>(i, c, neg_p, mu_normalized, ts, coeffs) result(ret)
