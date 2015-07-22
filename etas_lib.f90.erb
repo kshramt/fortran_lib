@@ -132,8 +132,6 @@ contains
          ASSERT(t_begin <= ts(i_begin) .and. ts(i_begin) <= ts(n) .and. ts(n) <= t_end)
          coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
-         ! PRINT_VARIABLE(real(sum_log_lambda_neg_p(i_begin, size(ts, kind=kind(i_begin)), c, -p, mu_normalized, ts, coeffs)))
-         ! PRINT_VARIABLE(real(lambda_integrate(t_len, c, p, mu_normalized, ts, coeffs, i_begin)))
          !$omp parallel
          !$omp single
          ret = sum_log_lambda_neg_p(i_begin, n, c, -p, mu_normalized, ts, coeffs, targets) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
