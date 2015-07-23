@@ -3,7 +3,9 @@
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
   REAL1S = ::Fort::Type::Real.multi_provide(dim: 1)
+  REAL2S = ::Fort::Type::Real.multi_provide(dim: 2)
   COMPLEX1S = ::Fort::Type::Complex.multi_provide(dim: 1)
+  COMPLEX2S = ::Fort::Type::Complex.multi_provide(dim: 2)
   ARRAYS =
   COMPLEX1S +
   ::Fort::Type::Logical.multi_provide(dim: 1) +
@@ -34,9 +36,9 @@ module array_lib
    public:: l2_norm
    public:: iota
 
-   <%- (REAL1S + COMPLEX1S).product((REAL1S + COMPLEX1S)).each{|t1, t2| -%>
+   <%- (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| -%>
       interface mul_diag
-         module procedure mul_diag_Ad<%= t1 %><%= t2 %>
+         module procedure mul_diag_Ad<%= t2 %><%= t1 %>
          module procedure mul_diag_dA<%= t1 %><%= t2 %>
       end interface mul_diag
    <%- } -%>
@@ -92,27 +94,27 @@ module array_lib
 
 contains
 
-   <%- (REAL1S + COMPLEX1S).product((REAL1S + COMPLEX1S)).each{|t1, t2| -%>
+   <%- (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| -%>
       <%-
          t_ret = (t1.type == :Complex or t2.type == :Complex) ? :Complex : :Real
-         k_ret = "REAL#{kind_max(t1, t2)}".to_sym
+         k_ret = "real#{kind_max(t1, t2)}".to_sym
       -%>
-      function mul_diag_Ad<%= t1 %><%= t2 %>(A, d) result(ret)
+      function mul_diag_Ad<%= t2 %><%= t1 %>(A, d) result(ret)
          Integer(kind=int64):: i
-         <%= t1.declare %>, intent(in):: A(:, :)
-         <%= t2.declare %>, intent(in):: d(size(A, 2, kind=kind(i)))
+         <%= t2.declare %>, intent(in):: A
+         <%= t1.declare %>, intent(in):: d(size(A, 2, kind=kind(i)))
          <%= t_ret %>(kind=<%= k_ret %>):: ret(size(A, 1, kind=kind(i)), size(A, 2, kind=kind(i)))
 
          do i = 1, size(A, 2, kind=kind(i))
             ret(:, i) = A(:, i)*d(i)
          end do
-      end function mul_diag_Ad<%= t1 %><%= t2 %>
+      end function mul_diag_Ad<%= t2 %><%= t1 %>
 
       ! `d` is named `d_` to avoid ambiguity
       function mul_diag_dA<%= t1 %><%= t2 %>(d_, A) result(ret)
          Integer(kind=int64):: i
-         <%= t1.declare %>, intent(in):: A(:, :)
-         <%= t2.declare %>, intent(in):: d_(size(A, 1, kind=kind(i)))
+         <%= t2.declare %>, intent(in):: A
+         <%= t1.declare %>, intent(in):: d_(size(A, 1, kind=kind(i)))
          <%= t_ret %>(kind=<%= k_ret %>):: ret(size(A, 1, kind=kind(i)), size(A, 2, kind=kind(i)))
 
          do i = 1, size(A, 1, kind=kind(i))
