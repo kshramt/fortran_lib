@@ -10,15 +10,23 @@ program main
 
    Real(kind=real64), parameter:: pi = 2*atan2(1d0, 0d0)
    Logical:: err
+   Integer(kind=int64):: n_eval
 
 
 
    TEST(almost_equal(romberg(my_sin, 0d0, pi), 2d0))
    TEST(almost_equal(romberg(my_sin, 0d0, pi, err=err), 2d0))
    TEST(.not.err)
+
    TEST(almost_equal(romberg(inv_x, 1d0/2, 2d0), log(4d0)))
    TEST(almost_equal(romberg(inv_x, 1d0/2, 2d0, err=err), log(4d0)))
    TEST(.not.err)
+
+   TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0), log(16d0), rtol=2*epsilon(0d0)))
+   TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0, err=err, n_eval=n_eval), log(16d0), rtol=2*epsilon(0d0)))
+   TEST(.not.err)
+   PRINT_VARIABLE(n_eval)
+
 
    write(output_unit, *) 'SUCCESS: ', __FILE__
 

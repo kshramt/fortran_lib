@@ -56,7 +56,46 @@ contains
 
 
    <%- PARAMS.each{|t, k, iter_max, o, n| -%>
-      function romberg<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err) result(ret)
+      function romberg<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err, n_eval) result(ret)
+         interface
+            function f(x) result(ret)
+               use, intrinsic:: iso_fortran_env, only: real<%= k %>
+               <%- if t == :Dual -%>
+                  use, non_intrinsic:: ad_lib
+               <%- end -%>
+
+               Real(kind=real<%= k %>), intent(in):: x
+               <%= declare(t, k, o, n) %>:: ret
+            end function f
+         end interface
+
+         <%= declare(t, k, o, n) %>:: ret
+         Real(kind=real<%= k %>), intent(in):: a, b
+         Real(kind=real<%= k %>), intent(in), optional:: rtol, atol
+         <%= declare(t, k, o, n) %>, intent(out), optional:: abs_err
+         Logical, intent(out), optional:: err
+         Integer(kind=int64), optional:: n_eval
+
+         Real(kind=kind(rtol)):: rtol_, atol_
+         <%= declare(t, k, o, n) %>:: abs_err_
+         Logical(kind=kind(err)):: err_
+         Integer(kind=kind(n_eval)):: n_eval_
+
+         rtol_ = epsilon(rtol_)
+         if(present(rtol)) rtol_ = rtol
+         atol_ = epsilon(atol_)
+         if(present(atol)) atol_ = atol
+         ASSERT(rtol_ >= 0 .or. atol_ >= 0)
+
+         ret = romberg_impl<%= suffix(t, k, o, n) %>(f, a, b, rtol_, atol_, abs_err_, err_, n_eval_)
+
+         if(present(abs_err)) abs_err = abs_err_
+         if(present(err)) err = err_
+         if(present(n_eval)) n_eval = n_eval_
+      end function romberg<%= suffix(t, k, o, n) %>
+
+
+      function romberg_impl<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err, n_eval) result(ret)
          ! integs:
          ! i\j 1   2   3   4
          !  1  o
@@ -83,29 +122,20 @@ contains
 
          <%= declare(t, k, o, n) %>:: ret
          Real(kind=real<%= k %>), intent(in):: a, b
-         Real(kind=real<%= k %>), intent(in), optional:: rtol, atol
-         <%= declare(t, k, o, n) %>, intent(out), optional:: abs_err
-         Logical, intent(out), optional:: err
-
-         Real(kind=kind(rtol)):: rtol_, atol_
-         <%= declare(t, k, o, n) %>:: abs_err_
-         Logical(kind=kind(err)):: err_
+         Real(kind=real<%= k %>), intent(in):: rtol, atol
+         <%= declare(t, k, o, n) %>, intent(out):: abs_err
+         Logical, intent(out):: err
+         Integer(kind=int64), intent(out):: n_eval
 
          Real(kind=kind(a)):: h, h_new
          <%= declare(t, k, o, n) %>:: integ_pre, integs(iter_max)
-         Integer(kind=int64):: n, i, j
-
-         rtol_ = epsilon(rtol_)
-         if(present(rtol)) rtol_ = rtol
-         atol_ = epsilon(atol_)
-         if(present(atol)) atol_ = atol
-         ASSERT(rtol_ >= 0 .or. atol_ >= 0)
+         Integer(kind=kind(n_eval)):: n, i, j
 
          h = b - a
          integs(1) = h*(f(a) + f(b))/2
          ret = integs(1)
          n = 1
-         err_ = .true.
+         err = .true.
          do i = 2, iter_max
             integ_pre = ret
             h_new = h/2
@@ -114,17 +144,16 @@ contains
                integs(j) = sub_err<%= suffix(t, k, o, n) %>(integs(j + 1), integs(j), i - j)
             end do
             ret = integs(1)
-            abs_err_ = abs(ret - integ_pre)
-            if(abs_err_ <= atol_ .or. abs_err_ <= rtol_*ret)then
-               err_ = .false.
+            abs_err = abs(ret - integ_pre)
+            if(abs_err <= atol .or. abs_err <= rtol*ret)then
+               err = .false.
                exit
             end if
             n = 2*n
             h = h_new
          end do
-         if(present(abs_err)) abs_err = abs_err_
-         if(present(err)) err = err_
-      end function romberg<%= suffix(t, k, o, n) %>
+         n_eval = 2*n + 1
+      end function romberg_impl<%= suffix(t, k, o, n) %>
 
 
       recursive function sum_f<%= suffix(t, k, o, n) %>(f, x1, h, i1, i2) result(ret)
