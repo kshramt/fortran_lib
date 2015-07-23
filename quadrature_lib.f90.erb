@@ -1,6 +1,8 @@
 <%-
    TS = [:Real, :Dual]
    KS = [32, 64, 128]
+   # Although `iter_max` for the extended precision (80 bits) should be 32.
+   # https://en.wikipedia.org/wiki/Floating_point#Internal_representation
    ITER_MAXES = [12, 26, 56]
    OS = [1, 2]
    NS = [1, 2, 5, 7]
@@ -9,8 +11,6 @@
    PARAMS \
    = K_ITER_MAXES.map{|k, iter_max| [:Real, k, iter_max, nil, nil]} \
    + K_ITER_MAXES.product(OS, NS).map{|(k, iter_max), o, n| [:Dual, k, iter_max, o, n]}
-   # Although `iter_max` for the extended precision (80 bits) should be 32.
-   # https://en.wikipedia.org/wiki/Floating_point#Internal_representation
 
    def suffix(t, k, o, n)
       if t == :Real
@@ -96,15 +96,6 @@ contains
 
 
       function romberg_impl<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err, n_eval) result(ret)
-         ! integs:
-         ! i\j 1   2   3   4
-         !  1  o
-         !     v
-         !  2  o < o
-         !     v   v
-         !  3  o < o < o
-         !     v   v   v
-         !  4  o < o < o < o
          interface
             function f(x) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
@@ -128,7 +119,17 @@ contains
          Integer(kind=int64), intent(out):: n_eval
 
          Real(kind=kind(a)):: h, h_new
-         <%= declare(t, k, o, n) %>:: integ_pre, integs(iter_max)
+         <%= declare(t, k, o, n) %>:: integ_pre
+         ! integs:
+         ! i\j 1   2   3   4
+         !  1  o
+         !     ↓
+         !  2  o ← o
+         !     ↓   ↓
+         !  3  o ← o ← o
+         !     ↓   ↓   ↓
+         !  4  o ← o ← o ← o
+         <%= declare(t, k, o, n) %>:: integs(iter_max)
          Integer(kind=kind(n_eval)):: n, i, j
 
          h = b - a
