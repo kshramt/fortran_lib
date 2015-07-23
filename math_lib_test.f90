@@ -27,14 +27,14 @@ program main
    call rosenbrock_fgh([2d0 - d, 1d0], f1, g1, h1)
    call rosenbrock_fgh([2d0, 1d0], f2, g2, h2)
    call rosenbrock_fgh([2d0 + d, 1d0], f3, g3, h3)
-   TEST(almost_equal(g2(1), (f3 - f1)/(2*d), relative=1d-4))
-   TEST(all(almost_equal(h2(:, 1), (g3 - g1)/(2*d), relative=1d-4)))
+   TEST(almost_equal(g2(1), (f3 - f1)/(2*d), rtol=1d-4))
+   TEST(all(almost_equal(h2(:, 1), (g3 - g1)/(2*d), rtol=1d-4)))
 
    call rosenbrock_fgh([2d0, 1d0 - d], f1, g1, h1)
    call rosenbrock_fgh([2d0, 1d0], f2, g2, h2)
    call rosenbrock_fgh([2d0, 1d0 + d], f3, g3, h3)
-   TEST(almost_equal(g2(2), (f3 - f1)/(2*d), relative=1d-4))
-   TEST(all(almost_equal(h2(:, 2), (g3 - g1)/(2*d), relative=1d-4)))
+   TEST(almost_equal(g2(2), (f3 - f1)/(2*d), rtol=1d-4))
+   TEST(all(almost_equal(h2(:, 2), (g3 - g1)/(2*d), rtol=1d-4)))
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
 

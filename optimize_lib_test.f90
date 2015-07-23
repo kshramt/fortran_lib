@@ -106,7 +106,7 @@ contains
          converge_x = all(abs(g) < 1e-5)
       end do
       write(output_unit, *) s%iter, x_best
-      ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
+      ret = all(almost_equal([1d0, 1d0], x_best, atol=abs(xtol)))
    end function test_newton
 
    function test_bound_newton_2(x0, r) result(ret)
@@ -134,7 +134,7 @@ contains
          converge_x = all(abs(g) < 1e-5)
       end do
       write(output_unit, *) s%iter, x_best
-      ret = all(almost_equal([1d0, 1d0], x_best, absolute=abs(xtol)))
+      ret = all(almost_equal([1d0, 1d0], x_best, atol=abs(xtol)))
    end function test_bound_newton_2
 
    function test_bound_newton(x_ini, lower, upper) result(ret)
@@ -174,7 +174,7 @@ contains
       write(output_unit, *) s%iter, x_best
       PRINT_VARIABLE(x0)
       PRINT_VARIABLE(x_best)
-      ret = all(almost_equal(x0, x_best, absolute=abs(xtol)))
+      ret = all(almost_equal(x0, x_best, atol=abs(xtol)))
    end function test_bound_newton
 
    function test_line_search0(x0, dx, x_theoretical) result(ret)
@@ -198,7 +198,7 @@ contains
             ! write(output_unit, *) xl, xr, x, f1(xl, x_theoretical), f1(xr, x_theoretical), f
          END if
          call update(s, f)
-         converge_x = almost_equal(x, x_best, absolute=abs(xtol)/100)
+         converge_x = almost_equal(x, x_best, atol=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -206,7 +206,7 @@ contains
          if(converge_x) exit
       end do
       write(output_unit, *) s%iter, x_best
-      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
+      ret = ret .and. almost_equal(x_theoretical, x_best, atol=abs(xtol))
 
       f_best = huge(f_best)
       x_best = huge(x_best)
@@ -220,7 +220,7 @@ contains
             ! write(output_unit, *) xl, xr, x, f2(xl, x_theoretical), f2(xr, x_theoretical), f
          end if
          call update(s, f)
-         converge_x = almost_equal(x, x_best, absolute=abs(xtol)/100)
+         converge_x = almost_equal(x, x_best, atol=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -228,7 +228,7 @@ contains
          if(converge_x) exit
       end do
       write(output_unit, *) s%iter, x_best
-      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
+      ret = ret .and. almost_equal(x_theoretical, x_best, atol=abs(xtol))
    end function test_line_search0
 
    function test_line_search1(x0, dx, x_theoretical) result(ret)
@@ -249,7 +249,7 @@ contains
          g = g1(x, x_theoretical)
          ! write(output_unit, *) x, s%x_best, s%x, s%f_best, f, s%g_best, g, s%is_convex, s%is_within
          call update(s, f, g)
-         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, absolute=abs(xtol)/100)
+         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, atol=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -259,7 +259,7 @@ contains
          if(converge) exit
       end do
       write(output_unit, *) s%iter, x_best
-      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
+      ret = ret .and. almost_equal(x_theoretical, x_best, atol=abs(xtol))
 
       f_best = huge(f_best)
       x_best = huge(x_best)
@@ -270,7 +270,7 @@ contains
          g = g2(x, x_theoretical)
          ! write(output_unit, *) x, s%x_best, s%x, s%f_best, f, s%g_best, g, s%is_convex, s%is_within
          call update(s, f, g)
-         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, absolute=abs(xtol)/100)
+         converge = abs(g) < 1e-2 .and. almost_equal(x, x_best, atol=abs(xtol)/100)
          if(f < f_best)then
             x_best = x
             f_best = f
@@ -279,7 +279,7 @@ contains
          if(converge) exit
       end do
       write(output_unit, *) s%iter, x_best
-      ret = ret .and. almost_equal(x_theoretical, x_best, absolute=abs(xtol))
+      ret = ret .and. almost_equal(x_theoretical, x_best, atol=abs(xtol))
    end function test_line_search1
 
    function f1(x, x_theoretical) result(y)

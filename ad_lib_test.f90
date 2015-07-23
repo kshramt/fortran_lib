@@ -45,9 +45,9 @@ program main
       xs(i) = exp(x*y + log(y))
    end do
    z = sum(xs)
-   TEST(almost_equal(real(z), nxs*real(xs(1)), relative=4*epsilon(z)))
-   TEST(all(almost_equal(jaco(z), nxs*jaco(xs(1)), relative=4*epsilon(z))))
-   TEST(all(almost_equal(hess(z), nxs*hess(xs(1)), relative=4*epsilon(z))))
+   TEST(almost_equal(real(z), nxs*real(xs(1)), rtol=4*epsilon(z)))
+   TEST(all(almost_equal(jaco(z), nxs*jaco(xs(1)), rtol=4*epsilon(z))))
+   TEST(all(almost_equal(hess(z), nxs*hess(xs(1)), rtol=4*epsilon(z))))
 
    z = x + y
    TEST(almost_equal(real(z), a + b))
@@ -199,7 +199,7 @@ program main
    z = log(exp(x + y))
    TEST(almost_equal(real(z), a + b))
    TEST(all(almost_equal(jaco(z), one)))
-   TEST(all(almost_equal(hess(z), zero, absolute=epsilon(z))))
+   TEST(all(almost_equal(hess(z), zero, atol=epsilon(z))))
 
    z = log(x*x/y + exp(y))
    TEST(almost_equal(real(z), log(a*a/b + exp(b))))

@@ -57,10 +57,10 @@ program geodetic_lib_test
       do j = -90, 90, 6
          do k = -10000, 10000, 5000
             lonLatH64(:) = wgs84_from_ecef(ecef_from_wgs84(real(i, kind=real64), real(j, kind=real64), real(k, kind=real64)))
-            TEST(all(almost_equal(lonLatH64, real([i, j, k], kind=real64), absolute=0.001_real64)))
+            TEST(all(almost_equal(lonLatH64, real([i, j, k], kind=real64), atol=0.001_real64)))
 
             xyz64(:) = ecef_from_wgs84(wgs84_from_ecef(real(i, kind=real64), real(j, kind=real64), real(k, kind=real64)))
-            TEST(all(almost_equal(xyz64, real([i, j, k], kind=real64), absolute=0.001_real64)))
+            TEST(all(almost_equal(xyz64, real([i, j, k], kind=real64), atol=0.001_real64)))
          end do
       end do
    end do

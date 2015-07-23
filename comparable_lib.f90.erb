@@ -87,12 +87,12 @@ contains
    <%- REAL_PAIRS.each{|t1, t2| -%>
       ! This function assumes gradual underflow is not flushed to zero.
       ! For example, -no-ftz option should be added when you compile this module by ifort.
-      elemental function almost_equal<%= t1 %><%= t2 %>(a, b, relative, absolute) result(answer)
+      elemental function almost_equal<%= t1 %><%= t2 %>(a, b, rtol, atol) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
          <%= t2.declare %>, intent(in):: b
-         real(max(kind(a), kind(b))), intent(in), optional:: relative
-         real(max(kind(a), kind(b))), intent(in), optional:: absolute
+         real(max(kind(a), kind(b))), intent(in), optional:: rtol
+         real(max(kind(a), kind(b))), intent(in), optional:: atol
 
          real(max(kind(a), kind(b))):: delta, deltaRelative, deltaAbsolute
          real(min(kind(a), kind(b))):: lowerPrecision
@@ -118,14 +118,14 @@ contains
             return
          end if
 
-         if(present(relative))then
-            deltaRelative = max(abs(a)*relative, abs(b)*relative)
+         if(present(rtol))then
+            deltaRelative = max(abs(a)*rtol, abs(b)*rtol)
          else
             deltaRelative = max(epsilon(a)*abs(a), epsilon(b)*abs(b))
          end if
 
-         if(present(absolute))then
-            deltaAbsolute = absolute
+         if(present(atol))then
+            deltaAbsolute = atol
          else
             deltaAbsolute = epsilon(lowerPrecision)*tiny(lowerPrecision)
          end if
