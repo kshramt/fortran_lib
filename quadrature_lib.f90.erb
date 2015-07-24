@@ -122,13 +122,13 @@ contains
          <%= declare(t, k, o, n) %>:: integ_pre
          ! integs:
          ! i\j 1   2   3   4
-         !  1  o
+         !  1  ⏢
          !     ↓
-         !  2  o ← o
+         !  2  o ← ⏢
          !     ↓   ↓
-         !  3  o ← o ← o
+         !  3  o ← o ← ⏢
          !     ↓   ↓   ↓
-         !  4  o ← o ← o ← o
+         !  4  o ← o ← o ← ⏢
          <%= declare(t, k, o, n) %>:: integs(iter_max)
          Integer(kind=kind(n_eval)):: n, i, j
 
