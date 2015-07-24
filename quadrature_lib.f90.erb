@@ -1,9 +1,8 @@
 <%-
    TS = [:Real, :Dual]
    KS = [32, 64, 128]
-   # Although `iter_max` for the extended precision (80 bits) should be 32.
-   # https://en.wikipedia.org/wiki/Floating_point#Internal_representation
-   ITER_MAXES = [12, 26, 56]
+   # These values may be large enough.
+   ITER_MAXES = [15, 30, 45]
    OS = [1, 2]
    NS = [1, 2, 5, 7]
    K_ITER_MAXES = KS.zip(ITER_MAXES)
@@ -108,6 +107,7 @@ contains
             end function f
          end interface
 
+         ! Maximum number of function evaluation is 2^(iter_max) + 1
          Integer(kind=int64), parameter:: iter_max = <%= iter_max %>
          Integer(kind=int64), parameter:: i_zero = 0
 
