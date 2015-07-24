@@ -1,0 +1,113 @@
+<%-
+   KS = [32, 64, 128]
+-%>
+
+#include "fortran_lib.h"
+module geometry_lib
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   <%- KS.each{|k| -%>
+      use, intrinsic:: iso_fortran_env, only: real<%= k %>
+   <%- } -%>
+
+   implicit none
+
+   private
+   public:: distance_and_angles_2d
+   public:: angle_2d
+   public:: perpendicular_2d
+   public:: distance_2d
+   public:: cross_2d
+
+   ! Interface
+
+   <%- KS.each{|k| -%>
+      interface distance_and_angles_2d
+         module procedure distance_and_angles_2d<%= k %>
+      end interface distance_and_angles_2d
+
+      interface angle_2d
+         module procedure angle_2d<%= k %>
+      end interface angle_2d
+
+      interface perpendicular_2d
+         module procedure perpendicular_2d_v<%= k %>
+         module procedure perpendicular_2d_uv<%= k %>
+      end interface perpendicular_2d
+
+      interface distance_2d
+         module procedure distance_2d<%= k %>
+      end interface distance_2d
+
+      interface cross_2d
+         module procedure cross_2d<%= k %>
+      end interface cross_2d
+   <%- } -%>
+
+
+contains
+
+   <%- KS.each{|k| -%>
+      pure subroutine distance_and_angles_2d<%= k %>(u, v, d, th_u, th_v)
+         Real(kind=real<%= k %>), intent(in):: u(2), v(2)
+         Real(kind=real<%= k %>), intent(out):: d ! distance between the origin and line u->v
+         Real(kind=real<%= k %>), intent(out):: th_u ! angle from intersection vector to u
+         Real(kind=real<%= k %>), intent(out):: th_v ! angle from intersection vector to v
+
+         Real(kind=real<%= k %>):: intersection(2)
+
+         d = distance_2d(u, v) ! todo: norm2(intersection)
+         intersection = perpendicular_2d(u, v)
+         th_u = angle_2d(intersection, u)
+         th_v = angle_2d(intersection, v)
+      end subroutine distance_and_angles_2d<%= k %>
+
+
+      pure function angle_2d<%= k %>(u, v) result(ret)
+         ! Return an angle from u to v
+         Real(kind=real<%= k %>):: ret
+         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+
+         ret = atan2(cross_2d(u, v), dot_product(u, v))
+      end function angle_2d<%= k %>
+
+
+      pure function perpendicular_2d_uv<%= k %>(u, v) result(ret)
+         ! Return a intersection point of line u->v and a line ⟂ u->v and passes the origin
+         Real(kind=real<%= k %>), parameter:: one = 1
+         Real(kind=real<%= k %>):: ret(2)
+         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+         Real(kind=kind(ret)):: p_uv(2)
+
+         p_uv = perpendicular_2d(v - u)
+         ret = sign(one, dot_product(u, p_uv))*distance_2d(u, v)/norm2(p_uv)*p_uv
+      end function perpendicular_2d_uv<%= k %>
+
+
+      pure function perpendicular_2d_v<%= k %>(v) result(ret)
+         ! Return a vector ⟂ to v
+         Real(kind=real<%= k %>):: ret(2)
+         Real(kind=kind(ret)), intent(in):: v(2)
+
+         ret(1) = -v(2)
+         ret(2) = v(1)
+      end function perpendicular_2d_v<%= k %>
+
+
+      pure function distance_2d<%= k %>(u, v) result(ret)
+         ! Return distance from the origin to a line u->v
+         Real(kind=real<%= k %>):: ret
+         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+
+         ret = abs(cross_2d(u, v))/norm2(v - u)
+      end function distance_2d<%= k %>
+
+
+      pure function cross_2d<%= k %>(u, v) result(ret)
+         ! Return L2 norm of cross product u × v
+         Real(kind=real<%= k %>):: ret
+         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+
+         ret = u(1)*v(2) - u(2)*v(1)
+      end function cross_2d<%= k %>
+   <%- } -%>
+end module geometry_lib
