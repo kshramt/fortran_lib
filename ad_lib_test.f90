@@ -23,22 +23,22 @@ program main
 
    z = dot_product([x, y, y], [x, x, y])
    TEST(almost_equal(real(z), a*a + b*a + b*b))
-   TEST(all(almost_equal(jaco(z), jaco(x*x + y*x + y*y))))
+   TEST(all(almost_equal(grad(z), grad(x*x + y*x + y*y))))
    TEST(all(almost_equal(hess(z), hess(x*x + y*x + y*y))))
 
    z = dot_product([x, y, y], [a, a, b])
    TEST(almost_equal(real(z), a*a + b*a + b*b))
-   TEST(all(almost_equal(jaco(z), jaco(x*a + y*a + y*b))))
+   TEST(all(almost_equal(grad(z), grad(x*a + y*a + y*b))))
    TEST(all(almost_equal(hess(z), hess(x*a + y*a + y*b))))
 
    z = dot_product([a, b, b], [x, x, y])
    TEST(almost_equal(real(z), a*a + b*a + b*b))
-   TEST(all(almost_equal(jaco(z), jaco(a*x + b*x + b*y))))
+   TEST(all(almost_equal(grad(z), grad(a*x + b*x + b*y))))
    TEST(all(almost_equal(hess(z), hess(a*x + b*x + b*y))))
 
    z = sum([x, y])
    TEST(almost_equal(real(z), a + b))
-   TEST(all(almost_equal(jaco(z), [one, one])))
+   TEST(all(almost_equal(grad(z), [one, one])))
    TEST(all(almost_equal(hess(z), zero)))
    nxs = size(xs)
    do i = 1, nxs
@@ -46,32 +46,32 @@ program main
    end do
    z = sum(xs)
    TEST(almost_equal(real(z), nxs*real(xs(1)), rtol=4*epsilon(z)))
-   TEST(all(almost_equal(jaco(z), nxs*jaco(xs(1)), rtol=4*epsilon(z))))
+   TEST(all(almost_equal(grad(z), nxs*grad(xs(1)), rtol=4*epsilon(z))))
    TEST(all(almost_equal(hess(z), nxs*hess(xs(1)), rtol=4*epsilon(z))))
 
    z = x + y
    TEST(almost_equal(real(z), a + b))
-   TEST(all(almost_equal(jaco(z), [one, one])))
+   TEST(all(almost_equal(grad(z), [one, one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = x + x
    TEST(almost_equal(real(z), a + a))
-   TEST(all(almost_equal(jaco(z), [two, zero])))
+   TEST(all(almost_equal(grad(z), [two, zero])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = x - y
    TEST(almost_equal(real(z), a - b))
-   TEST(all(almost_equal(jaco(z), [one, -one])))
+   TEST(all(almost_equal(grad(z), [one, -one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = x - x
    TEST(almost_equal(real(z), zero))
-   TEST(all(almost_equal(jaco(z), zero)))
+   TEST(all(almost_equal(grad(z), zero)))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = x*y
    TEST(almost_equal(real(z), a*b))
-   TEST(all(almost_equal(jaco(z), [b, a])))
+   TEST(all(almost_equal(grad(z), [b, a])))
    h = hess(z)
    TEST(almost_equal(h(1, 1), zero))
    TEST(almost_equal(h(1, 2), one))
@@ -80,7 +80,7 @@ program main
 
    z = x*x
    TEST(almost_equal(real(z), a*a))
-   TEST(all(almost_equal(jaco(z), [2*a, zero])))
+   TEST(all(almost_equal(grad(z), [2*a, zero])))
    h = hess(z)
    TEST(almost_equal(h(1, 1), two))
    TEST(almost_equal(h(1, 2), zero))
@@ -89,7 +89,7 @@ program main
 
    z = x/y
    TEST(almost_equal(real(z), a/b))
-   TEST(all(almost_equal(jaco(z), [1/b, -a/b**2])))
+   TEST(all(almost_equal(grad(z), [1/b, -a/b**2])))
    h = hess(z)
    TEST(almost_equal(h(1, 1), zero))
    TEST(almost_equal(h(1, 2), -1/b**2))
@@ -98,7 +98,7 @@ program main
 
    z = x/y**2
    TEST(almost_equal(real(z), a/b**2))
-   TEST(all(almost_equal(jaco(z), [1/b**2, -2*a/b**3])))
+   TEST(all(almost_equal(grad(z), [1/b**2, -2*a/b**3])))
    h = hess(z)
    TEST(almost_equal(h(1, 1), zero))
    TEST(almost_equal(h(1, 2), -2/b**3))
@@ -107,12 +107,12 @@ program main
 
    z = x/x
    TEST(almost_equal(real(z), one))
-   TEST(all(almost_equal(jaco(z), zero)))
+   TEST(all(almost_equal(grad(z), zero)))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = x**y
    TEST(almost_equal(real(z), a**b))
-   TEST(all(almost_equal(jaco(z), [b*a**(b - 1), log(a)*a**b])))
+   TEST(all(almost_equal(grad(z), [b*a**(b - 1), log(a)*a**b])))
    h = hess(z)
    TEST(almost_equal(h(1, 1), b*(b - 1)*a**(b - 2)))
    TEST(almost_equal(h(1, 2), a**(b - 1) + b*log(a)*a**(b - 1)))
@@ -121,7 +121,7 @@ program main
 
    z = x**x
    TEST(almost_equal(real(z), a**a))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), (log(a) + 1)*a**a))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -133,7 +133,7 @@ program main
    ! exp
    z = exp(x)
    TEST(almost_equal(real(z), exp(a)))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), exp(a)))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -144,7 +144,7 @@ program main
 
    z = exp(y)
    TEST(almost_equal(real(z), exp(b)))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), exp(b)))
    h = hess(z)
@@ -156,7 +156,7 @@ program main
    ! log
    z = log(x)
    TEST(almost_equal(real(z), log(a)))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), 1/a))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -167,7 +167,7 @@ program main
 
    z = log(y)
    TEST(almost_equal(real(z), log(b)))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), 1/b))
    h = hess(z)
@@ -179,31 +179,31 @@ program main
    ! abs
    z = abs(Dual64_2_2(+zero, [1, 0]))
    TEST(almost_equal(real(z), zero))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), one))
    TEST(almost_equal(j(2), zero))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = abs(Dual64_2_2(-zero, [0, 1]))
    TEST(almost_equal(real(z), zero))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), -one))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = exp(log(x + y))
    TEST(almost_equal(real(z), a + b))
-   TEST(all(almost_equal(jaco(z), one)))
+   TEST(all(almost_equal(grad(z), one)))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = log(exp(x + y))
    TEST(almost_equal(real(z), a + b))
-   TEST(all(almost_equal(jaco(z), one)))
+   TEST(all(almost_equal(grad(z), one)))
    TEST(all(almost_equal(hess(z), zero, atol=epsilon(z))))
 
    z = log(x*x/y + exp(y))
    TEST(almost_equal(real(z), log(a*a/b + exp(b))))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), 2*a/(b*(a**2/b + exp(b)))))
    TEST(almost_equal(j(2), (-a**2/b**2 + exp(b))/(a**2/b + exp(b))))
    h = hess(z)
@@ -214,7 +214,7 @@ program main
 
    ! -x
    TEST(almost_equal(real(-z), -real(z)))
-   TEST(all(almost_equal(jaco(-z), -jaco(z))))
+   TEST(all(almost_equal(grad(-z), -grad(z))))
    TEST(all(almost_equal(hess(-z), -hess(z))))
 
    TEST(x == a)
@@ -234,77 +234,77 @@ program main
    ! +
    z = x + 3
    TEST(almost_equal(real(z), a + 3))
-   TEST(all(almost_equal(jaco(z), [one, zero])))
+   TEST(all(almost_equal(grad(z), [one, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = y + 3
    TEST(almost_equal(real(z), b + 3))
-   TEST(all(almost_equal(jaco(z), [zero, one])))
+   TEST(all(almost_equal(grad(z), [zero, one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = 3 + x
    TEST(almost_equal(real(z), a + 3))
-   TEST(all(almost_equal(jaco(z), [one, zero])))
+   TEST(all(almost_equal(grad(z), [one, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = 3 + y
    TEST(almost_equal(real(z), b + 3))
-   TEST(all(almost_equal(jaco(z), [zero, one])))
+   TEST(all(almost_equal(grad(z), [zero, one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    ! +
    z = x - 3
    TEST(almost_equal(real(z), a - 3))
-   TEST(all(almost_equal(jaco(z), [one, zero])))
+   TEST(all(almost_equal(grad(z), [one, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = y - 3
    TEST(almost_equal(real(z), b - 3))
-   TEST(all(almost_equal(jaco(z), [zero, one])))
+   TEST(all(almost_equal(grad(z), [zero, one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = 3 - x
    TEST(almost_equal(real(z), 3 - a))
-   TEST(all(almost_equal(jaco(z), [-one, zero])))
+   TEST(all(almost_equal(grad(z), [-one, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = 3 - y
    TEST(almost_equal(real(z), 3 - b))
-   TEST(all(almost_equal(jaco(z), [zero, -one])))
+   TEST(all(almost_equal(grad(z), [zero, -one])))
    TEST(all(almost_equal(hess(z), zero)))
 
    ! *
    z = x*3
    TEST(almost_equal(real(z), a*3))
-   TEST(all(almost_equal(jaco(z), [three, zero])))
+   TEST(all(almost_equal(grad(z), [three, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = y*3
    TEST(almost_equal(real(z), b*3))
-   TEST(all(almost_equal(jaco(z), [zero, three])))
+   TEST(all(almost_equal(grad(z), [zero, three])))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = 3*x
    TEST(almost_equal(real(z), a*3))
-   TEST(all(almost_equal(jaco(z), [three, zero])))
+   TEST(all(almost_equal(grad(z), [three, zero])))
    TEST(all(almost_equal(hess(z), zero)))
    z = 3*y
    TEST(almost_equal(real(z), b*3))
-   TEST(all(almost_equal(jaco(z), [zero, three])))
+   TEST(all(almost_equal(grad(z), [zero, three])))
    TEST(all(almost_equal(hess(z), zero)))
 
    ! /
    z = x/3
    TEST(almost_equal(real(z), a/3))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), one/3))
    TEST(almost_equal(j(2), zero))
    TEST(all(almost_equal(hess(z), zero)))
    z = y/3
    TEST(almost_equal(real(z), b/3))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), one/3))
    TEST(all(almost_equal(hess(z), zero)))
 
    z = 3/x
    TEST(almost_equal(real(z), 3/a))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), -3/a**2))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -314,7 +314,7 @@ program main
    TEST(almost_equal(h(2, 2), zero))
    z = 3/y
    TEST(almost_equal(real(z), 3/b))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), -3/b**2))
    h = hess(z)
@@ -326,7 +326,7 @@ program main
    ! **
    z = x**3
    TEST(almost_equal(real(z), a**3))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), 3*a**2))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -336,7 +336,7 @@ program main
    TEST(almost_equal(h(2, 2), zero))
    z = y**3
    TEST(almost_equal(real(z), b**3))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), 3*b**2))
    h = hess(z)
@@ -347,7 +347,7 @@ program main
 
    z = 3**x
    TEST(almost_equal(real(z), 3**a))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), log(three)*3**a))
    TEST(almost_equal(j(2), zero))
    h = hess(z)
@@ -357,7 +357,7 @@ program main
    TEST(almost_equal(h(2, 2), zero))
    z = 3**y
    TEST(almost_equal(real(z), 3**b))
-   j = jaco(z)
+   j = grad(z)
    TEST(almost_equal(j(1), zero))
    TEST(almost_equal(j(2), log(three)*3**b))
    h = hess(z)

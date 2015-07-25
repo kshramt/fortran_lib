@@ -162,14 +162,14 @@ contains
       converge = .false.
       do
          z = fb1(Dual64_2_2(s%x(1), [1, 0]), Dual64_2_2(s%x(2), [0, 1]))
-         write(output_unit, *) s%is_convex, s%x, real(z), s%f_prev, jaco(z)
+         write(output_unit, *) s%is_convex, s%x, real(z), s%f_prev, grad(z)
          if(real(z) < f_best)then
             x_best(:) = s%x
             f_best = real(z)
          end if
          if(converge) exit
-         call update(s, real(z), jaco(z), hess(z), 'u')
-         converge = s%is_at_corner .or. (all(abs(pack(jaco(z), .not.(s%on_lower .or. s%on_upper))) < 1e-5) .and. all(pack(jaco(z), s%on_lower) >= 0) .and. all(pack(jaco(z), s%on_upper) <= 0))
+         call update(s, real(z), grad(z), hess(z), 'u')
+         converge = s%is_at_corner .or. (all(abs(pack(grad(z), .not.(s%on_lower .or. s%on_upper))) < 1e-5) .and. all(pack(grad(z), s%on_lower) >= 0) .and. all(pack(grad(z), s%on_upper) <= 0))
       end do
       write(output_unit, *) s%iter, x_best
       PRINT_VARIABLE(x0)

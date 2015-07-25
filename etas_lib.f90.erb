@@ -248,7 +248,7 @@ contains
 
          if(p == 1)then
             ret = log(t + c)*(t + c)**(1 - p) - log(c)*c**(1 - p)
-            ! To correctly calculate Jacobian and Hessian by automatic differentiation,
+            ! To correctly calculate gradient and Hessian by automatic differentiation,
             ! this redundant form should not be simplified by using p == 1.
             ! If I wrote the above code like:
             ! ret = log((t + c)/c)

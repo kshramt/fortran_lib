@@ -63,7 +63,7 @@ module ad_lib
 
    private
    ! accessors
-   public:: kind, real, jaco, hess
+   public:: kind, real, grad, hess
    public:: epsilon, tiny, huge
    ! functions
    public:: dot_product
@@ -99,9 +99,9 @@ module ad_lib
          module procedure real_<%= kd %>_<%= o %>_<%= n %>
       end interface real
 
-      interface jaco
-         module procedure jaco_<%= kd %>_<%= o %>_<%= n %>
-      end interface jaco
+      interface grad
+         module procedure grad_<%= kd %>_<%= o %>_<%= n %>
+      end interface grad
 
       <%- [:epsilon, :tiny, :huge].each{|fn1| -%>
          interface <%= fn1 %>
@@ -182,12 +182,12 @@ contains
          ret = x%f
       end function real_<%= kd %>_<%= o %>_<%= n %>
 
-      pure function jaco_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+      pure function grad_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
          Real(kind=real<%= kd %>):: ret(<%= n %>)
 
          ret = x%g
-      end function jaco_<%= kd %>_<%= o %>_<%= n %>
+      end function grad_<%= kd %>_<%= o %>_<%= n %>
 
       <%- if o > 1 -%>
          pure function hess_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)

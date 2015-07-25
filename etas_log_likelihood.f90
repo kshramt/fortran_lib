@@ -3,7 +3,7 @@ program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
    use, intrinsic:: iso_fortran_env, only: int64, real64
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, jaco, hess
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, grad, hess
    use, non_intrinsic:: etas_lib, only: EtasInputs64, load, log_likelihood_etas
 
    implicit none
@@ -34,7 +34,7 @@ program main
       log_likelihood = log_likelihood_etas(t_begin, t_end, ei%t_normalize_len, d_mu, d_K, d_c, d_alpha, d_p, ei%ts, ei%ms, ei%ms >= m_fit_min)
       hessian = hess(log_likelihood)
       write(output_unit, *) real(log_likelihood)
-      write(output_unit, *) jaco(log_likelihood)
+      write(output_unit, *) grad(log_likelihood)
       do i = 1, n_params
          write(output_unit, *) hessian(i, :)
       end do

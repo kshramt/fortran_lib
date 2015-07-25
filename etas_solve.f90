@@ -123,7 +123,7 @@ program main
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: optimize_lib, only: BoundNewtonState64, init, update
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, jaco, operator(-), exp
+   use, non_intrinsic:: ad_lib, only: Dual64_2_5, real, hess, grad, operator(-), exp
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas, omori_integrate, utsu_seki
    use, non_intrinsic:: etas_solve, only: n_params, EtasSolveInputs, load, exp_if_true, real_kind, int_kind
 
@@ -174,7 +174,7 @@ program main
       d_p = exp_if_true(Dual64_2_5(s%x(5), [0, 0, 0, 0, 1]), esi%by_log(5))
       fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_mu, d_K, d_c, d_alpha, d_p, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
       f = real(fgh)
-      g = jaco(fgh)
+      g = grad(fgh)
       H = hess(fgh)
       write(output_unit, *) 'LOG: ', r_dx, s%is_convex, s%is_within, s%is_line_search, f, s%x, g, s%on_lower, s%on_upper
       if(f < f_best)then
@@ -226,7 +226,7 @@ program main
    alpha = mu_K_c_alpha_p_best(4)
    p = mu_K_c_alpha_p_best(5)
    write(output_unit, *) mu, K, c, alpha, p
-   write(output_unit, '(a)') 'by_log: Jacobian'
+   write(output_unit, '(a)') 'by_log: gradient'
    write(output_unit, *) -g_best
    write(output_unit, '(a)') 'by_log: Hessian'
    do i = 1, 5
@@ -245,11 +245,11 @@ program main
    d_alpha = Dual64_2_5(alpha, [0, 0, 0, 1, 0])
    d_p = Dual64_2_5(p, [0, 0, 0, 0, 1])
    fgh = -log_likelihood_etas(esi%t_begin, esi%ei%t_end, esi%ei%t_normalize_len, d_mu, d_K, d_c, d_alpha, d_p, esi%ei%ts, esi%ei%ms, esi%i_begin, esi%targets)
-   g_best = jaco(fgh)
+   g_best = grad(fgh)
    H_best = hess(fgh)
    write(output_unit, '(a)') 'mu, K, c, alpha, p, mu_for_SAPP, K_for_SAPP'
    write(output_unit, *) mu, K, c, alpha, p, mu/esi%ei%t_normalize_len, K/omori_integrate(esi%ei%t_normalize_len, c, p)
-   write(output_unit, '(a)') 'Jacobian'
+   write(output_unit, '(a)') 'gradient'
    write(output_unit, *) -g_best
    write(output_unit, '(a)') 'Hessian'
    do i = 1, 5
