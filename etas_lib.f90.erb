@@ -246,17 +246,29 @@ contains
          Real(kind=real<%= k %>), intent(in):: t
          <%= decl %>, intent(in):: c, p
 
-         if(p == 1)then
-            ret = log(t + c)*(t + c)**(1 - p) - log(c)*c**(1 - p)
+         ret = integ_inv_x_pow_p<%= suffix %>(c, t + c, p)
+      end function omori_integrate<%= suffix %>
+
+
+      elemental function integ_inv_x_pow_p<%= suffix %>(a, b, p) result(ret)
+         ! $\int_{a}^{b} 1/x^{p} dx$
+         <%= decl %>:: ret
+         <%= decl %>, intent(in):: a, b
+         <%= decl %>, intent(in):: p
+         <%= decl %>:: one_sub_p
+
+         one_sub_p = 1 - p
+         if(one_sub_p == 0)then
             ! To correctly calculate gradient and Hessian by automatic differentiation,
             ! this redundant form should not be simplified by using p == 1.
             ! If I wrote the above code like:
-            ! ret = log((t + c)/c)
-            ! ∂omori_integrate/∂p will erroneously be 0.
+            ! ret = log(x)
+            ! ∂/∂p will erroneously be 0.
+            ret = log(b)*b**one_sub_p - log(a)*a**one_sub_p
          else
-            ret = ((t + c)**(1 - p) - c**(1 - p))/(1 - p)
+            ret = (b**one_sub_p - a**one_sub_p)/one_sub_p
          end if
-      end function omori_integrate<%= suffix %>
+      end function integ_inv_x_pow_p<%= suffix %>
 
 
       elemental function utsu_seki<%= suffix %>(dm, alpha) result(ret)
