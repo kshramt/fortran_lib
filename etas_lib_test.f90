@@ -116,7 +116,6 @@ program main
    ASSERT(index_le(ts, 1.39746527777778d0, int(1, kind=int64), size64(ts)) == size64(ts))
    ASSERT(index_le(ts, 1.39746527777778d0 + 0.01, int(1, kind=int64), size64(ts)) == size64(ts))
 
-   PRINT_VARIABLE(index_lt(ts, 0d0 - 0.01, int(1, kind=int64), size64(ts)))
    ASSERT(index_lt(ts, 0d0 - 0.01, int(1, kind=int64), size64(ts)) == 0)
    ASSERT(index_lt(ts, 0d0, int(1, kind=int64), size64(ts)) == 0)
    ASSERT(index_lt(ts, 0.0689465277779985d0 - 0.01, int(1, kind=int64), size64(ts)) == 1)
