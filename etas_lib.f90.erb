@@ -1,36 +1,26 @@
 <%-
-  KS = [
-    64,
-    128,
-  ]
-  RD = [
-    :Real,
-    :Dual,
-  ]
-  RD_KS = RD.product(KS)
-
-  def _decl(t, k)
-    if t == :Real
-      "#{t}(kind=real#{k})"
-    else
-      "type(#{t}#{k}_2_5)"
-    end
-  end
-
-  def _suffix(t, k)
-    "#{t}#{k}"
-  end
+   KS = [
+     64,
+     128,
+   ]
+   NS = [5, 7]
+   # [[suffix, decl, type, kind]...]
+   REALS = KS.map{|k| ["Real#{k}", "Real(kind=real#{k})", :Real, k]}
+   DUALS = KS.product(NS).map{|k, n| ["Dual#{k}_#{n}", "type(Dual#{k}_2_#{n})", :Dual, k]}
+   TYPES = REALS + DUALS
 -%>
+
 
 #include "fortran_lib.h"
 module etas_lib
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, real64, int64, real128
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5, Dual128_2_5
-   use, non_intrinsic:: ad_lib, only: operator(+), operator(*), operator(-), operator(/), operator(**), operator(==)
-   use, non_intrinsic:: ad_lib, only: exp, log, sum, dot_product
+   use, non_intrinsic:: ad_lib
+   use, non_intrinsic:: quadrature_lib, only: romberg
+
 
    implicit none
+
 
    private
    public:: intensity_etas
@@ -42,8 +32,7 @@ module etas_lib
    <%- } -%>
    public:: load
 
-   <%- RD_KS.each{|t, k| -%>
-      <%- suffix = _suffix(t, k) -%>
+   <%- TYPES.each{|suffix, decl, t, k| -%>
       <%-
         [
           :intensity_etas,
@@ -72,18 +61,18 @@ module etas_lib
          module procedure lambda_neg_p_t<%= suffix %>
          module procedure lambda_neg_p_j_t<%= suffix %>
       end interface lambda_neg_p
+   <%- } -%>
 
-      <%- if t == :Real -%>
-         <%- [:ge, :le, :lt].each{|name| -%>
-            interface index_<%= name %>
-               module procedure index_<%= name %><%= suffix %>
-            end interface index_<%= name %>
-         <%- } -%>
+   <%- REALS.each{|suffix, decl, t, k| -%>
+      <%- [:ge, :le, :lt].each{|name| -%>
+         interface index_<%= name %>
+            module procedure index_<%= name %><%= suffix %>
+         end interface index_<%= name %>
+      <%- } -%>
 
-         interface load
-            module procedure loadEtasInputs<%= k %>
-         end interface load
-      <%- end -%>
+      interface load
+         module procedure loadEtasInputs<%= suffix %>
+      end interface load
    <%- } -%>
 
    <%- KS.each{|k| -%>
@@ -98,11 +87,11 @@ module etas_lib
       end type EtasInputs<%= k %>
    <%- } -%>
 
+
 contains
 
-   <%- RD_KS.each{|t, k| -%>
-      <%- decl = _decl(t, k) -%>
-      <%- suffix = _suffix(t, k) -%>
+
+   <%- TYPES.each{|suffix, decl, t, k| -%>
       function intensity_etas<%= suffix %>(t, t_normalize_len, mu, K, c, alpha, p, ts, dms) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, t_normalize_len, ts(:), dms(size64(ts))
@@ -236,11 +225,45 @@ contains
          Real(kind=real<%= k %>), intent(in):: t
          <%= decl %>, intent(in):: c, p
 
-         ret = integ_inv_x_pow_p<%= suffix %>(c, t + c, p)
+         ret = integrate_inv_x_pow_p<%= suffix %>(c, t + c, p)
       end function omori_integrate<%= suffix %>
 
 
-      elemental function integ_inv_x_pow_p<%= suffix %>(a, b, p) result(ret)
+      elemental function utsu_seki<%= suffix %>(dm, alpha) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real<%= k %>), intent(in):: dm
+         <%= decl %>, intent(in):: alpha
+
+         ret = exp(alpha*dm)
+      end function utsu_seki<%= suffix %>
+
+
+      ! space-time ETAS
+
+
+      ! todo: do not create array every time
+      impure elemental function space_kernel_ogata_1998_2_4_integrate_theta<%= suffix %>(theta1, theta2, l_pow_2_div_exp_alpha_dm, d, q) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real<%= k %>), intent(in):: theta1, theta2
+         <%= decl %>, intent(in):: l_pow_2_div_exp_alpha_dm, d, q
+
+         ret = romberg(space_kernel_ogata_1998_2_4_theta<%= suffix %>, theta1, theta2, [l_pow_2_div_exp_alpha_dm, d, q])
+      end function space_kernel_ogata_1998_2_4_integrate_theta<%= suffix %>
+
+
+      pure function space_kernel_ogata_1998_2_4_theta<%= suffix %>(theta, args) result(ret)
+         <%= decl %>:: ret
+         Real(kind=real<%= k %>), intent(in):: theta
+         <%= decl %>, intent(in):: args(:) ! [l**2/exp(alpha*dm), d, q]
+
+         ret = integrate_inv_x_pow_p<%= suffix %>(args(2), args(1)/sin(theta)**2 + args(2), args(3))
+      end function space_kernel_ogata_1998_2_4_theta<%= suffix %>
+
+
+      ! IO/utility functions
+
+
+      elemental function integrate_inv_x_pow_p<%= suffix %>(a, b, p) result(ret)
          ! $\int_{a}^{b} 1/x^{p} dx$
          <%= decl %>:: ret
          <%= decl %>, intent(in):: a, b
@@ -258,132 +281,126 @@ contains
          else
             ret = (b**one_sub_p - a**one_sub_p)/one_sub_p
          end if
-      end function integ_inv_x_pow_p<%= suffix %>
+      end function integrate_inv_x_pow_p<%= suffix %>
+   <%- } -%>
 
 
-      elemental function utsu_seki<%= suffix %>(dm, alpha) result(ret)
-         <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: dm
-         <%= decl %>, intent(in):: alpha
+   <%- REALS.each{|suffix, decl, t, k| -%>
+      pure recursive function index_ge<%= suffix %>(ts, t, i1, i2) result(ret)
+         ! Return the smallest ret where ts(ret) >= t
+         ! Assumptions:
+         ! - ts is sorted in ascending order
+         Integer(kind=int64):: ret
+         <%= decl %>, intent(in):: ts(:), t
+         Integer(kind=int64), intent(in):: i1, i2
+         Integer(kind=kind(i1)):: i_mid
 
-         ret = exp(alpha*dm)
-      end function utsu_seki<%= suffix %>
-
-      <%- if t == :Real -%>
-         pure recursive function index_ge<%= suffix %>(ts, t, i1, i2) result(ret)
-            ! Return the smallest ret where ts(ret) >= t
-            ! Assumptions:
-            ! - ts is sorted in ascending order
-            Integer(kind=int64):: ret
-            <%= decl %>, intent(in):: ts(:), t
-            Integer(kind=int64), intent(in):: i1, i2
-            Integer(kind=kind(i1)):: i_mid
-
-            if(i1 == i2)then
-               if(ts(i1) < t)then
-                  ret = i1 + 1
-               else
-                  ret = i1
-               end if
+         if(i1 == i2)then
+            if(ts(i1) < t)then
+               ret = i1 + 1
             else
-               i_mid = (i1 + i2)/2 ! this will not overflow in practice
-               if(ts(i_mid) < t)then
-                  ret = index_ge(ts, t, i_mid + 1, i2)
-               else
-                  ret = index_ge(ts, t, i1, i_mid)
+               ret = i1
+            end if
+         else
+            i_mid = (i1 + i2)/2 ! this will not overflow in practice
+            if(ts(i_mid) < t)then
+               ret = index_ge(ts, t, i_mid + 1, i2)
+            else
+               ret = index_ge(ts, t, i1, i_mid)
+            end if
+         end if
+      end function index_ge<%= suffix %>
+
+      pure recursive function index_le<%= suffix %>(ts, t, i1, i2) result(ret)
+         ! Return the largest ret where ts(ret) <= t
+         ! Assumptions:
+         ! - ts is sorted in ascending order
+         Integer(kind=int64):: ret
+         <%= decl %>, intent(in):: ts(:), t
+         Integer(kind=int64), intent(in):: i1, i2
+         Integer(kind=kind(i1)):: i_mid
+
+         if(i1 == i2)then
+            if(t < ts(i1))then
+               ret = i1 - 1
+            else
+               ret = i1
+            end if
+         else
+            i_mid = (i1 + i2)/2 + 1 ! this will not overflow in practice
+            if(t < ts(i_mid))then
+               ret = index_le(ts, t, i1, i_mid - 1)
+            else
+               ret = index_le(ts, t, i_mid, i2)
+            end if
+         end if
+      end function index_le<%= suffix %>
+
+
+      pure recursive function index_lt<%= suffix %>(ts, t, i1, i2) result(ret)
+         ! Return the largest ret where ts(ret) < t
+         ! Assumptions:
+         ! - ts is sorted in ascending order
+         Integer(kind=int64):: ret
+         <%= decl %>, intent(in):: ts(:), t
+         Integer(kind=int64), intent(in):: i1, i2
+         Integer(kind=kind(i1)):: i_mid
+
+         if(i1 == i2)then
+            if(ts(i1) < t)then
+               ret = i1
+            else
+               ret = i1 - 1
+            end if
+         else
+            i_mid = (i1 + i2)/2 ! this will not overflow in practice
+            if(ts(i_mid) < t)then
+               ret = index_lt(ts, t, i_mid + 1, i2)
+            else
+               ret = index_lt(ts, t, i1, i_mid)
+            end if
+         end if
+      end function index_lt<%= suffix %>
+
+
+      subroutine loadEtasInputs<%= suffix %>(self, unit)
+         Integer(kind=int64), parameter:: one = 1
+         type(EtasInputs<%= k %>), intent(out):: self
+         Integer(kind=kind(input_unit)), intent(in):: unit
+         Real(kind=kind(self%ts)), allocatable:: ts(:), ms(:)
+         Integer(kind=kind(self%n)):: i, n, i_pre, i_end
+
+         read(unit, *) self%m_for_K
+         read(unit, *) self%t_normalize_len
+         ASSERT(self%t_normalize_len > 0)
+         read(unit, *) self%t_pre
+         read(unit, *) self%t_end
+         ASSERT(self%t_pre <= self%t_end)
+         read(unit, *) n
+         ASSERT(n > 0)
+         allocate(ts(n))
+         allocate(ms(n))
+         i_end = n
+         do i = 1, n
+            read(unit, *) ts(i), ms(i)
+            if(i > 1)then
+               ASSERT(ts(i) >= ts(i - 1))
+               if(ts(i) > self%t_end)then
+                  i_end = i
+                  exit
                end if
             end if
-         end function index_ge<%= suffix %>
+         end do
+         i_pre = index_ge(ts, self%t_pre, one, i_end)
+         ! todo: search from tail should be much faster
+         i_end = index_le(ts, self%t_end, i_pre, i_end)
+         ASSERT(i_pre <= i_end)
 
-         pure recursive function index_le<%= suffix %>(ts, t, i1, i2) result(ret)
-            ! Return the largest ret where ts(ret) <= t
-            ! Assumptions:
-            ! - ts is sorted in ascending order
-            Integer(kind=int64):: ret
-            <%= decl %>, intent(in):: ts(:), t
-            Integer(kind=int64), intent(in):: i1, i2
-            Integer(kind=kind(i1)):: i_mid
-
-            if(i1 == i2)then
-               if(t < ts(i1))then
-                  ret = i1 - 1
-               else
-                  ret = i1
-               end if
-            else
-               i_mid = (i1 + i2)/2 + 1 ! this will not overflow in practice
-               if(t < ts(i_mid))then
-                  ret = index_le(ts, t, i1, i_mid - 1)
-               else
-                  ret = index_le(ts, t, i_mid, i2)
-               end if
-            end if
-         end function index_le<%= suffix %>
-
-         pure recursive function index_lt<%= suffix %>(ts, t, i1, i2) result(ret)
-            ! Return the largest ret where ts(ret) < t
-            ! Assumptions:
-            ! - ts is sorted in ascending order
-            Integer(kind=int64):: ret
-            <%= decl %>, intent(in):: ts(:), t
-            Integer(kind=int64), intent(in):: i1, i2
-            Integer(kind=kind(i1)):: i_mid
-
-            if(i1 == i2)then
-               if(ts(i1) < t)then
-                  ret = i1
-               else
-                  ret = i1 - 1
-               end if
-            else
-               i_mid = (i1 + i2)/2 ! this will not overflow in practice
-               if(ts(i_mid) < t)then
-                  ret = index_lt(ts, t, i_mid + 1, i2)
-               else
-                  ret = index_lt(ts, t, i1, i_mid)
-               end if
-            end if
-         end function index_lt<%= suffix %>
-
-         subroutine loadEtasInputs<%= k %>(self, unit)
-            Integer(kind=int64), parameter:: one = 1
-            type(EtasInputs<%= k %>), intent(out):: self
-            Integer(kind=kind(input_unit)), intent(in):: unit
-            Real(kind=kind(self%ts)), allocatable:: ts(:), ms(:)
-            Integer(kind=kind(self%n)):: i, n, i_pre, i_end
-
-            read(unit, *) self%m_for_K
-            read(unit, *) self%t_normalize_len
-            ASSERT(self%t_normalize_len > 0)
-            read(unit, *) self%t_pre
-            read(unit, *) self%t_end
-            ASSERT(self%t_pre <= self%t_end)
-            read(unit, *) n
-            ASSERT(n > 0)
-            allocate(ts(n))
-            allocate(ms(n))
-            i_end = n
-            do i = 1, n
-               read(unit, *) ts(i), ms(i)
-               if(i > 1)then
-                  ASSERT(ts(i) >= ts(i - 1))
-                  if(ts(i) > self%t_end)then
-                     i_end = i
-                     exit
-                  end if
-               end if
-            end do
-            i_pre = index_ge(ts, self%t_pre, one, i_end)
-            ! todo: search from tail should be much faster
-            i_end = index_le(ts, self%t_end, i_pre, i_end)
-            ASSERT(i_pre <= i_end)
-
-            self%n = i_end - i_pre + 1
-            ENSURE_DEALLOCATED(self%ts)
-            ENSURE_DEALLOCATED(self%ms)
-            allocate(self%ts(self%n), source=ts(i_pre:i_end))
-            allocate(self%ms(self%n), source=ms(i_pre:i_end))
-         end subroutine loadEtasInputs<%= k %>
-      <%- end -%>
+         self%n = i_end - i_pre + 1
+         ENSURE_DEALLOCATED(self%ts)
+         ENSURE_DEALLOCATED(self%ms)
+         allocate(self%ts(self%n), source=ts(i_pre:i_end))
+         allocate(self%ms(self%n), source=ms(i_pre:i_end))
+      end subroutine loadEtasInputs<%= suffix %>
    <%- } -%>
 end module etas_lib
