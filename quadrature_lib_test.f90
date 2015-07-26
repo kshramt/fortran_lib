@@ -22,6 +22,10 @@ program main
    TEST(almost_equal(romberg(inv_x, 1d0/2, 2d0, err=err), log(4d0)))
    TEST(.not.err)
 
+   TEST(almost_equal(romberg(inv_x_args, 1d0/2, 2d0, [3d0]), 3*log(4d0), rtol=2*epsilon(0d0)))
+   TEST(almost_equal(romberg(inv_x_args, 1d0/2, 2d0, [3d0], err=err, n_eval=n_eval), 3*log(4d0), rtol=2*epsilon(0d0)))
+   TEST(.not.err)
+
    TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0), log(16d0), rtol=2*epsilon(0d0)))
    TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0, err=err, n_eval=n_eval), log(16d0), rtol=2*epsilon(0d0)))
    TEST(.not.err)
@@ -47,5 +51,13 @@ contains
 
       ret = 1/x
    end function inv_x
+
+   pure function inv_x_args(x, args) result(ret)
+      Real(kind=real64), intent(in):: x
+      Real(kind=real64), intent(in):: args(:) ! args(1) does not work
+      Real(kind=kind(x)):: ret
+
+      ret = args(1)/x
+   end function inv_x_args
 
 end program main

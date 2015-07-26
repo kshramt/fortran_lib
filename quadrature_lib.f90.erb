@@ -11,20 +11,34 @@
    = K_ITER_MAXES.map{|k, iter_max| [:Real, k, iter_max, nil, nil]} \
    + K_ITER_MAXES.product(OS, NS).map{|(k, iter_max), o, n| [:Dual, k, iter_max, o, n]}
 
-   def suffix(t, k, o, n)
-      if t == :Real
+   ARGS_OR_NONE = [", args", nil]
+
+   def _suffix(t, k, o, n, args)
+      ret = if t == :Real
          "#{t}#{k}"
       else
          "#{t}#{k}_#{o}_#{n}"
       end
+      if !(args.nil?)
+         ret = ret + '_args'
+      end
+      ret
    end
 
-   def declare(t, k, o, n)
+   def _declare(t, k, o, n)
       if t == :Real
          "#{t}(kind=real#{k})"
       else
          "type(#{t}#{k}_#{o}_#{n})"
       end
+   end
+
+   def _declare_args(t, k, o, n, args)
+      ret = _declare(t, k, o, n)
+      if args.nil?
+         ret = '! ' + ret
+      end
+      ret
    end
 -%>
 
@@ -44,9 +58,11 @@ module quadrature_lib
    public:: romberg
 
    ! Interface
-   <%- PARAMS.each{|t, k, _, o, n| -%>
+
+   <%- PARAMS.product(ARGS_OR_NONE).each{|(t, k, _, o, n), args| -%>
+      <%- suffix = _suffix(t, k, o, n, args) -%>
       interface romberg
-         module procedure romberg<%= suffix(t, k, o, n) %>
+         module procedure romberg<%= suffix %>
       end interface romberg
    <%- } -%>
 
@@ -54,29 +70,34 @@ module quadrature_lib
 contains
 
 
-   <%- PARAMS.each{|t, k, iter_max, o, n| -%>
-      function romberg<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err, n_eval) result(ret)
+   <%- PARAMS.product(ARGS_OR_NONE).each{|(t, k, iter_max, o, n), args| -%>
+      <%- suffix = _suffix(t, k, o, n, args) -%>
+      <%- decl = _declare(t, k, o, n) -%>
+      <%- decl_args = _declare_args(t, k, o, n, args) -%>
+      function romberg<%= suffix %>(f, a, b <%= args %>, rtol, atol, abs_err, err, n_eval) result(ret)
          interface
-            function f(x) result(ret)
+            function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
                <%- if t == :Dual -%>
                   use, non_intrinsic:: ad_lib
                <%- end -%>
 
+               <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
-               <%= declare(t, k, o, n) %>:: ret
+               <%= decl_args %>, intent(in):: args(:)
             end function f
          end interface
 
-         <%= declare(t, k, o, n) %>:: ret
+         <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: a, b
+         <%= decl_args %>, intent(in):: args(:)
          Real(kind=real<%= k %>), intent(in), optional:: rtol, atol
-         <%= declare(t, k, o, n) %>, intent(out), optional:: abs_err
+         <%= decl %>, intent(out), optional:: abs_err
          Logical, intent(out), optional:: err
          Integer(kind=int64), optional:: n_eval
 
          Real(kind=kind(rtol)):: rtol_, atol_
-         <%= declare(t, k, o, n) %>:: abs_err_
+         <%= decl %>:: abs_err_
          Logical(kind=kind(err)):: err_
          Integer(kind=kind(n_eval)):: n_eval_
 
@@ -86,24 +107,25 @@ contains
          if(present(atol)) atol_ = atol
          ASSERT(rtol_ >= 0 .or. atol_ >= 0)
 
-         ret = romberg_impl<%= suffix(t, k, o, n) %>(f, a, b, rtol_, atol_, abs_err_, err_, n_eval_)
+         ret = romberg_impl<%= suffix %>(f, a, b <%= args %>, rtol_, atol_, abs_err_, err_, n_eval_)
 
          if(present(abs_err)) abs_err = abs_err_
          if(present(err)) err = err_
          if(present(n_eval)) n_eval = n_eval_
-      end function romberg<%= suffix(t, k, o, n) %>
+      end function romberg<%= suffix %>
 
 
-      function romberg_impl<%= suffix(t, k, o, n) %>(f, a, b, rtol, atol, abs_err, err, n_eval) result(ret)
+      function romberg_impl<%= suffix %>(f, a, b <%= args %>, rtol, atol, abs_err, err, n_eval) result(ret)
          interface
-            function f(x) result(ret)
+            function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
                <%- if t == :Dual -%>
                   use, non_intrinsic:: ad_lib
                <%- end -%>
 
+               <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
-               <%= declare(t, k, o, n) %>:: ret
+               <%= decl_args %>, intent(in):: args(:)
             end function f
          end interface
 
@@ -111,15 +133,16 @@ contains
          Integer(kind=int64), parameter:: iter_max = <%= iter_max %>
          Integer(kind=int64), parameter:: i_zero = 0
 
-         <%= declare(t, k, o, n) %>:: ret
+         <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: a, b
+         <%= decl_args %>, intent(in):: args(:)
          Real(kind=real<%= k %>), intent(in):: rtol, atol
-         <%= declare(t, k, o, n) %>, intent(out):: abs_err
+         <%= decl %>, intent(out):: abs_err
          Logical, intent(out):: err
          Integer(kind=int64), intent(out):: n_eval
 
          Real(kind=kind(a)):: h, h_new
-         <%= declare(t, k, o, n) %>:: integ_pre
+         <%= decl %>:: integ_pre
          ! integs:
          ! i\j 1   2   3   4
          !  1  ⏢
@@ -129,20 +152,20 @@ contains
          !  3  o ← o ← ⏢
          !     ↓   ↓   ↓
          !  4  o ← o ← o ← ⏢
-         <%= declare(t, k, o, n) %>:: integs(iter_max)
+         <%= decl %>:: integs(iter_max)
          Integer(kind=kind(n_eval)):: n, i, j
 
          h = b - a
-         integs(1) = h*(f(a) + f(b))/2
+         integs(1) = h*(f(a <%= args %>) + f(b <%= args %>))/2
          ret = integs(1)
          n = 1
          err = .true.
          do i = 2, iter_max
             integ_pre = ret
             h_new = h/2
-            integs(i) = (integs(i - 1) + h*sum_f<%= suffix(t, k, o, n) %>(f, a + h_new, h, i_zero, n - 1))/2
+            integs(i) = (integs(i - 1) + h*sum_f<%= suffix %>(f, a + h_new, h, i_zero, n - 1 <%= args %>))/2
             do j = i - 1, 1, -1
-               integs(j) = sub_err<%= suffix(t, k, o, n) %>(integs(j + 1), integs(j), i - j)
+               integs(j) = sub_err<%= _suffix(t, k, o, n, nil) %>(integs(j + 1), integs(j), i - j)
             end do
             ret = integs(1)
             abs_err = abs(ret - integ_pre)
@@ -154,26 +177,28 @@ contains
             h = h_new
          end do
          n_eval = 2*n + 1
-      end function romberg_impl<%= suffix(t, k, o, n) %>
+      end function romberg_impl<%= suffix %>
 
 
-      recursive function sum_f<%= suffix(t, k, o, n) %>(f, x1, h, i1, i2) result(ret)
+      recursive function sum_f<%= suffix %>(f, x1, h, i1, i2 <%= args %>) result(ret)
          interface
-            function f(x) result(ret)
+            function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
                <%- if t == :Dual -%>
                   use, non_intrinsic:: ad_lib
                <%- end -%>
 
+               <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
-               <%= declare(t, k, o, n) %>:: ret
+               <%= decl_args %>, intent(in):: args(:)
             end function f
          end interface
 
          Integer, parameter:: block_size = 2**5
 
-         <%= declare(t, k, o, n) %>:: ret
+         <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: x1, h
+         <%= decl_args %>, intent(in):: args(:)
          Integer(kind=int64), intent(in):: i1, i2
 
          Integer(kind=kind(i1)):: i, i_mid
@@ -185,27 +210,29 @@ contains
                ! Dual is initialized to 0
             <%- end -%>
             do i = i1, i2
-               ret = ret + f(x1 + h*i)
+               ret = ret + f(x1 + h*i <%= args %>)
             end do
          else
             i_mid = (i1 + i2)/2
-            ret = sum_f<%= suffix(t, k, o, n) %>(f, x1, h, i1, i_mid) + sum_f<%= suffix(t, k, o, n) %>(f, x1, h, i_mid + 1, i2)
+            ret = sum_f<%= suffix %>(f, x1, h, i1, i_mid <%= args %>) + sum_f<%= suffix %>(f, x1, h, i_mid + 1, i2 <%= args %>)
          end if
-      end function sum_f<%= suffix(t, k, o, n) %>
+      end function sum_f<%= suffix %>
 
 
-      function sub_err<%= suffix(t, k, o, n) %>(integ_right, integ_above, k) result(ret)
-         Real(kind=real<%= k %>), parameter:: four = 4
+      <%- if args.nil? -%>
+         function sub_err<%= suffix %>(integ_right, integ_above, k) result(ret)
+            Real(kind=real<%= k %>), parameter:: four = 4
 
-         <%= declare(t, k, o, n) %>:: ret
-         <%= declare(t, k, o, n) %>, intent(in):: integ_right, integ_above
-         Integer(kind=int64), intent(in):: k
+            <%= decl %>:: ret
+            <%= decl %>, intent(in):: integ_right, integ_above
+            Integer(kind=int64), intent(in):: k
 
-         Real(kind=kind(four)):: four_pow_k
+            Real(kind=kind(four)):: four_pow_k
 
-         DEBUG_ASSERT(k > 0)
-         four_pow_k = four**k
-         ret = (four_pow_k*integ_right - integ_above)/(four_pow_k - 1)
-      end function sub_err<%= suffix(t, k, o, n) %>
+            DEBUG_ASSERT(k > 0)
+            four_pow_k = four**k
+            ret = (four_pow_k*integ_right - integ_above)/(four_pow_k - 1)
+         end function sub_err<%= suffix %>
+      <%- end -%>
    <%- } -%>
 end module quadrature_lib
