@@ -49,7 +49,6 @@ module etas_lib
           :intensity_etas,
           :lambda_integrate,
           :kernel_coeff,
-          :kernel_integrate,
           :omori_integrate,
           :utsu_seki,
         ].each{|fn|
@@ -210,17 +209,8 @@ contains
          Integer(kind=int64), intent(in):: i_begin
          <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size64(ts))
 
-         ret = (t_end - t_begin)*mu_normalized + sum(kernel_integrate(t_end - ts, coeffs, c, p)) - sum(kernel_integrate(t_begin - ts(:(i_begin - 1)), coeffs(:(i_begin - 1)), c, p))
+         ret = (t_end - t_begin)*mu_normalized + sum(coeffs*omori_integrate(t_end - ts, c, p)) - sum(coeffs(:(i_begin - 1))*omori_integrate(t_begin - ts(:(i_begin - 1)), c, p))
       end function lambda_integrate<%= suffix %>
-
-
-      elemental function kernel_integrate<%= suffix %>(t, K, c, p) result(ret)
-         <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: t
-         <%= decl %>, intent(in)::  K, c, p
-
-         ret = K*omori_integrate(t, c, p)
-      end function kernel_integrate<%= suffix %>
 
 
       elemental function kernel_coeff<%= suffix %>(dm, K, c, alpha, p, t_normalize_len) result(ret)
