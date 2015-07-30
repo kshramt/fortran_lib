@@ -4,6 +4,8 @@
   REALS_DIM1 = ::Fort::Type::Real.multi_provide(dim: 1)
   INTEGERS_DIM1 = ::Fort::Type::Integer.multi_provide(dim: 1)
   COMPLEXS_DIM1 = ::Fort::Type::Complex.multi_provide(dim: 1)
+
+  I_KS = [8, 16, 32, 64]
 -%>
 # include "fortran_lib.h"
 module math_lib
@@ -13,10 +15,17 @@ module math_lib
    implicit none
 
    private
+   public:: mod1
    public:: linear_transform
    public:: rosenbrock
    public:: rosenbrock_fgh
    public:: convolution ! time domain
+
+   <%- I_KS.each{|k| -%>
+      interface mod1
+         module procedure mod1_<%= k %>
+      end interface mod1
+   <%- } -%>
 
    <%- REALS_DIM0.each{|t| -%>
       interface linear_transform
@@ -39,6 +48,24 @@ module math_lib
    <%- } -%>
 
 contains
+
+
+   <%- I_KS.each{|k| -%>
+      elemental function mod1_<%= k %>(i, n) result(ret)
+         Integer(kind=int<%= k %>):: ret
+         Integer(kind=kind(ret)), intent(in):: i, n
+
+         Integer(kind=kind(ret)):: m
+
+         m = mod(i, n)
+         if(m == 0)then
+            ret = n
+         else
+            ret = m
+         end if
+      end function mod1_<%= k %>
+   <%- } -%>
+
 
    <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
       ! zs = xs*ys (* is a convolution operator)
