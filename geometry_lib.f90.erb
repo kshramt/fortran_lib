@@ -15,6 +15,7 @@ module geometry_lib
    implicit none
 
    private
+   public:: load
    public:: shape_of
    public:: distance_and_angles_2d
    public:: angle_2d
@@ -25,6 +26,10 @@ module geometry_lib
    ! Interface
 
    <%- KS.each{|k| -%>
+      interface load
+         module procedure load_LeftConvexPolygon<%= k %>
+      end interface load
+
       interface shape_of
          module procedure shape_of<%= k %>
       end interface shape_of
@@ -53,6 +58,14 @@ module geometry_lib
    <%- } -%>
 
 
+   <%- KS.each{|k| -%>
+      type, public:: LeftConvexPolygon<%= k %>
+         Real(kind=real<%= k %>), allocatable:: xs(:)
+         Real(kind=real<%= k %>), allocatable:: ys(:)
+      end type LeftConvexPolygon<%= k %>
+   <%- } -%>
+
+
    Integer, parameter, public:: point = 0
    Integer(kind=kind(point)), parameter, public:: line = 1
    Integer(kind=kind(point)), parameter, public:: left_convex_polygon = 2
@@ -64,6 +77,30 @@ contains
 
 
    <%- KS.each{|k| -%>
+      subroutine load_LeftConvexPolygon<%= k %>(self, unit)
+         type(LeftConvexPolygon<%= k %>), intent(out):: self
+         Integer(kind=kind(input_unit)), intent(in):: unit
+
+         Integer(kind=int64):: i, n
+         Integer(kind=kind(left_convex_polygon)):: shape
+
+         read(unit) n
+         ASSERT(n >= 3)
+         allocate(self%xs(n))
+         allocate(self%ys(n))
+         do i = 1, n
+            read(unit, *) self%xs(i), self%ys(i)
+         end do
+
+         shape = shape_of(self%xs, self%ys)
+         ASSERT(shape == left_convex_polygon .or. shape == right_convex_polygon)
+         if(shape == right_convex_polygon)then
+            self%xs(:) = self%xs(n:1:-1)
+            self%ys(:) = self%ys(n:1:-1)
+         end if
+      end subroutine load_LeftConvexPolygon<%= k %>
+
+
       function shape_of<%= k %>(xs, ys) result(ret)
          Integer(kind=kind(left_convex_polygon)):: ret
          Real(kind=real<%= k %>), intent(in):: xs(:), ys(size64(xs))
