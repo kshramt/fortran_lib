@@ -15,6 +15,10 @@ program main
    Real(kind=real64):: f3, g3(2), h3(2, 2)
 
 
+   TEST(mod1(-4, 3) == 2)
+   TEST(mod1(-3, 3) == 3)
+   TEST(mod1(-2, 3) == 1)
+   TEST(mod1(-1, 3) == 2)
    TEST(mod1(0, 3) == 3)
    TEST(mod1(1, 3) == 1)
    TEST(mod1(2, 3) == 2)

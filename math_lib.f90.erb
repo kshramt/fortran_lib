@@ -58,10 +58,10 @@ contains
          Integer(kind=kind(ret)):: m
 
          m = mod(i, n)
-         if(m == 0)then
-            ret = n
-         else
+         if(m > 0)then
             ret = m
+         else
+            ret = n + m
          end if
       end function mod1_<%= k %>
    <%- } -%>
