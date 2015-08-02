@@ -15,6 +15,8 @@ module geometry_lib
    implicit none
 
    private
+   public:: is_in
+   public:: size
    public:: load
    public:: shape_of
    public:: distance_and_angles_2d
@@ -26,6 +28,14 @@ module geometry_lib
    ! Interface
 
    <%- KS.each{|k| -%>
+      interface is_in
+         module procedure is_in_LeftConvexPolygon<%= k %>
+      end interface is_in
+
+      interface size
+         module procedure size_LeftConvexPolygon<%= k %>
+      end interface size
+
       interface load
          module procedure load_LeftConvexPolygon<%= k %>
       end interface load
@@ -77,6 +87,32 @@ contains
 
 
    <%- KS.each{|k| -%>
+      elemental function is_in_LeftConvexPolygon<%= k %>(self, x, y) result(ret)
+         Logical:: ret
+         type(LeftConvexPolygon<%= k %>), intent(in):: self
+         Real(kind=real<%= k %>), intent(in):: x, y
+
+         Integer(kind=int64):: i, n
+
+         n = size(self)
+         ret = .true.
+         do i = 1, n
+            if(cross_2d(self%xs(i), self%ys(i), self%xs(mod1(i + 1, n)), self%ys(mod1(i + 1, n))) < 0)then
+               ret = .false.
+               return
+            end if
+         end do
+      end function is_in_LeftConvexPolygon<%= k %>
+
+
+      elemental function size_LeftConvexPolygon<%= k %>(self) result(ret)
+         Integer(kind=int64):: ret
+         type(LeftConvexPolygon<%= k %>), intent(in):: self
+
+         ret = size(self%xs, kind=kind(ret))
+      end function size_LeftConvexPolygon<%= k %>
+
+
       subroutine load_LeftConvexPolygon<%= k %>(self, unit)
          type(LeftConvexPolygon<%= k %>), intent(out):: self
          Integer(kind=kind(input_unit)), intent(in):: unit
