@@ -71,7 +71,7 @@ module etas_lib
       <%- } -%>
 
       interface load
-         module procedure loadEtasInputs<%= suffix %>
+         module procedure load_EtasInputs<%= suffix %>
       end interface load
    <%- } -%>
 
@@ -363,7 +363,7 @@ contains
       end function index_lt<%= suffix %>
 
 
-      subroutine loadEtasInputs<%= suffix %>(self, unit)
+      subroutine load_EtasInputs<%= suffix %>(self, unit)
          Integer(kind=int64), parameter:: one = 1
          type(EtasInputs<%= k %>), intent(out):: self
          Integer(kind=kind(input_unit)), intent(in):: unit
@@ -397,10 +397,8 @@ contains
          ASSERT(i_pre <= i_end)
 
          self%n = i_end - i_pre + 1
-         ENSURE_DEALLOCATED(self%ts)
-         ENSURE_DEALLOCATED(self%ms)
          allocate(self%ts(self%n), source=ts(i_pre:i_end))
          allocate(self%ms(self%n), source=ms(i_pre:i_end))
-      end subroutine loadEtasInputs<%= suffix %>
+      end subroutine load_EtasInputs<%= suffix %>
    <%- } -%>
 end module etas_lib
