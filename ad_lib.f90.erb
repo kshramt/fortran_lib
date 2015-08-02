@@ -26,6 +26,7 @@
     :exp,
     :log,
     :abs,
+    :sqrt,
     :sin,
   ]
   OPS = {
@@ -51,6 +52,8 @@
 #define log_p1(x) (1/(x))
 #define log_p2(x) (-1/(x)**2)
 #define abs_p1(x) (sign(real(1, kind=kind(x)), x))
+#define sqrt_p1(x) (1/(2*sqrt(x)))
+#define sqrt_p2(x) (-1/(4*x*sqrt(x)))
 #define sin_p1(x) (cos(x))
 #define sin_p2(x) (-sin(x))
 
