@@ -12,6 +12,18 @@ program main
    Real(kind=real64):: th, th1, th2
    Integer(kind=int64):: i, j
 
+
+   TEST(shape_of([(real(i), i = 1, 0)], [(real(i), i = 1, 0)]) == other)
+   TEST(shape_of([0.0], [0.0]) == point)
+   TEST(shape_of([0.0, 1.0], [0.0, 1.0]) == line)
+   TEST(shape_of([0.0, 1.0, 2.0], [0.0, 1.0, 2.0]) == line)
+   TEST(shape_of([2.0, 0.0, 1.0], [2.0, 0.0, 1.0]) == line)
+   TEST(shape_of([0.0, 1.0, 0.5], [0.0, 0.0, 1.0]) == left_convex_polygon)
+   TEST(shape_of([0.0, 0.5, 1.0], [0.0, 1.0, 0.0]) == right_convex_polygon)
+   TEST(shape_of([0.0, 1.0, 2.0, 0.5], [0.0, 0.0, 0.0, 1.0]) == left_convex_polygon)
+   TEST(shape_of([0.0, 0.5, 2.0, 1.0], [0.0, 1.0, 0.0, 0.0]) == right_convex_polygon)
+
+
    TEST(almost_equal(distance_2d([4d0, 3d0], [0d0, 25d0/3]), 5d0))
    TEST(almost_equal(distance_2d([4d0, 3d0], [-3d0, 25d0/3 + 4]), 5d0))
    TEST(almost_equal(distance_2d(-[4d0, 3d0], -[0d0, 25d0/3]), 5d0))

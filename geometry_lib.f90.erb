@@ -4,14 +4,18 @@
 
 #include "fortran_lib.h"
 module geometry_lib
+   USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   use, intrinsic:: iso_fortran_env, only: int64
    <%- KS.each{|k| -%>
       use, intrinsic:: iso_fortran_env, only: real<%= k %>
    <%- } -%>
+   use, non_intrinsic:: math_lib, only: mod1
 
    implicit none
 
    private
+   public:: shape_of
    public:: distance_and_angles_2d
    public:: angle_2d
    public:: perpendicular_2d
@@ -21,6 +25,10 @@ module geometry_lib
    ! Interface
 
    <%- KS.each{|k| -%>
+      interface shape_of
+         module procedure shape_of<%= k %>
+      end interface shape_of
+
       interface distance_and_angles_2d
          module procedure distance_and_angles_2d<%= k %>
       end interface distance_and_angles_2d
@@ -45,9 +53,61 @@ module geometry_lib
    <%- } -%>
 
 
+   Integer, parameter, public:: point = 0
+   Integer(kind=kind(point)), parameter, public:: line = 1
+   Integer(kind=kind(point)), parameter, public:: left_convex_polygon = 2
+   Integer(kind=kind(point)), parameter, public:: right_convex_polygon = 3
+   Integer(kind=kind(point)), parameter, public:: other = 4
+
+
 contains
 
+
    <%- KS.each{|k| -%>
+      function shape_of<%= k %>(xs, ys) result(ret)
+         Integer(kind=kind(left_convex_polygon)):: ret
+         Real(kind=real<%= k %>), intent(in):: xs(:), ys(size64(xs))
+
+         Real(kind=real<%= k %>):: sig
+         Integer(kind=int64):: i, n
+
+         n = size(xs, kind=kind(n))
+         select case(n)
+         case(:0)
+            ret = other
+         case(1)
+            ret = point
+         case(2)
+            ret = line
+         case(3:)
+            ret = line
+            do i = 1, n
+               sig = cross_2d(xs(i) - xs(mod1(i - 1, n)), ys(i) - ys(mod1(i - 1, n)), xs(mod1(i + 1, n)) - xs(i), ys(mod1(i + 1, n)) - ys(i))
+               select case(ret)
+               case(line)
+                  if(sig > 0)then
+                     ret = left_convex_polygon
+                  else if(sig < 0)then
+                     ret = right_convex_polygon
+                  end if
+               case(left_convex_polygon)
+                  if(sig < 0)then
+                     ret = other
+                     return
+                  end if
+               case(right_convex_polygon)
+                  if(sig > 0)then
+                     ret = other
+                     return
+                  end if
+               case default
+                  RAISE("Must not happen")
+               end select
+            end do
+         end select
+      end function shape_of<%= k %>
+
+
       pure subroutine distance_and_angles_2d<%= k %>(u, v, d, th_u, th_v)
          Real(kind=real<%= k %>), intent(in):: u(2), v(2)
          Real(kind=real<%= k %>), intent(out):: d ! distance between the origin and line u->v
