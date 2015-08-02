@@ -39,7 +39,8 @@ module geometry_lib
       end interface distance_2d
 
       interface cross_2d
-         module procedure cross_2d<%= k %>
+         module procedure cross_2d_u_v<%= k %>
+         module procedure cross_2d_u1_u2_v1_v2<%= k %>
       end interface cross_2d
    <%- } -%>
 
@@ -102,12 +103,21 @@ contains
       end function distance_2d<%= k %>
 
 
-      pure function cross_2d<%= k %>(u, v) result(ret)
-         ! Return L2 norm of cross product u × v
+      pure function cross_2d_u_v<%= k %>(u, v) result(ret)
+         ! Return z component of cross product u × v
          Real(kind=real<%= k %>):: ret
          Real(kind=kind(ret)), intent(in):: u(2), v(2)
 
-         ret = u(1)*v(2) - u(2)*v(1)
-      end function cross_2d<%= k %>
+         ret = cross_2d(u(1), u(2), v(1), v(2))
+      end function cross_2d_u_v<%= k %>
+
+
+      pure function cross_2d_u1_u2_v1_v2<%= k %>(u1, u2, v1, v2) result(ret)
+         ! Return component of cross product (u1, u2) × (v1, v2)
+         Real(kind=real<%= k %>):: ret
+         Real(kind=kind(ret)), intent(in):: u1, u2, v1, v2
+
+         ret = u1*v2 - u2*v1
+      end function cross_2d_u1_u2_v1_v2<%= k %>
    <%- } -%>
 end module geometry_lib
