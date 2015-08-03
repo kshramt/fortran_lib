@@ -19,11 +19,12 @@ module geometry_lib
    public:: size
    public:: load
    public:: shape_of
-   public:: distance_and_angles_2d
-   public:: angle_2d
-   public:: perpendicular_2d
-   public:: distance_2d
-   public:: cross_2d
+   public:: is_right_side
+   public:: distance_and_angles
+   public:: angle
+   public:: perpendicular
+   public:: distance
+   public:: cross
 
    ! Interface
 
@@ -44,27 +45,30 @@ module geometry_lib
          module procedure shape_of<%= k %>
       end interface shape_of
 
-      interface distance_and_angles_2d
-         module procedure distance_and_angles_2d<%= k %>
-      end interface distance_and_angles_2d
+      interface is_right_side
+         module procedure is_right_side<%= k %>
+      end interface is_right_side
 
-      interface angle_2d
-         module procedure angle_2d<%= k %>
-      end interface angle_2d
+      interface distance_and_angles
+         module procedure distance_and_angles<%= k %>
+      end interface distance_and_angles
 
-      interface perpendicular_2d
-         module procedure perpendicular_2d_v<%= k %>
-         module procedure perpendicular_2d_uv<%= k %>
-      end interface perpendicular_2d
+      interface angle
+         module procedure angle<%= k %>
+      end interface angle
 
-      interface distance_2d
-         module procedure distance_2d<%= k %>
-      end interface distance_2d
+      interface perpendicular
+         module procedure perpendicular_1_<%= k %>
+         module procedure perpendicular_2_<%= k %>
+      end interface perpendicular
 
-      interface cross_2d
-         module procedure cross_2d_u_v<%= k %>
-         module procedure cross_2d_u1_u2_v1_v2<%= k %>
-      end interface cross_2d
+      interface distance
+         module procedure distance<%= k %>
+      end interface distance
+
+      interface cross
+         module procedure cross<%= k %>
+      end interface cross
    <%- } -%>
 
 
@@ -97,7 +101,7 @@ contains
          n = size(self)
          ret = .true.
          do i = 1, n
-            if(cross_2d(self%xs(i), self%ys(i), self%xs(mod1(i + 1, n)), self%ys(mod1(i + 1, n))) < 0)then
+            if(cross(self%xs(i) - x, self%ys(i) - y, self%xs(mod1(i + 1, n)) - x, self%ys(mod1(i + 1, n)) - y) < 0)then
                ret = .false.
                return
             end if
@@ -155,7 +159,7 @@ contains
          case(3:)
             ret = line
             do i = 1, n
-               sig = cross_2d(xs(i) - xs(mod1(i - 1, n)), ys(i) - ys(mod1(i - 1, n)), xs(mod1(i + 1, n)) - xs(i), ys(mod1(i + 1, n)) - ys(i))
+               sig = cross(xs(i) - xs(mod1(i - 1, n)), ys(i) - ys(mod1(i - 1, n)), xs(mod1(i + 1, n)) - xs(i), ys(mod1(i + 1, n)) - ys(i))
                select case(ret)
                case(line)
                   if(sig > 0)then
@@ -181,76 +185,78 @@ contains
       end function shape_of<%= k %>
 
 
-      pure subroutine distance_and_angles_2d<%= k %>(u, v, d, th_u, th_v)
-         Real(kind=real<%= k %>), intent(in):: u(2), v(2)
+      elemental function is_right_side<%= k %>(px, py, ax, ay, bx, by) result(ret)
+         ! p is at the right side of edge a->b
+         Logical:: ret
+         Real(kind=real<%= k %>), intent(in):: px, py, ax, ay, bx, by
+
+         ret = cross(bx - ax, by - ay, px - ax, py - ay) > 0
+      end function is_right_side<%= k %>
+
+
+      elemental subroutine distance_and_angles<%= k %>(u1, u2, v1, v2, d, th_u, th_v)
+         Real(kind=real<%= k %>), intent(in):: u1, u2, v1, v2
          Real(kind=real<%= k %>), intent(out):: d ! distance between the origin and line u->v
          Real(kind=real<%= k %>), intent(out):: th_u ! angle from intersection vector to u
          Real(kind=real<%= k %>), intent(out):: th_v ! angle from intersection vector to v
 
-         Real(kind=real<%= k %>):: intersection(2)
+         Real(kind=real<%= k %>):: intersection1, intersection2
 
-         d = distance_2d(u, v) ! todo: norm2(intersection)
-         intersection = perpendicular_2d(u, v)
-         th_u = angle_2d(intersection, u)
-         th_v = angle_2d(intersection, v)
-      end subroutine distance_and_angles_2d<%= k %>
+         d = distance(u1, u2, v1, v2) ! todo: norm2(intersection)
+         call perpendicular(u1, u2, v1, v2, intersection1, intersection2)
+         th_u = angle(intersection1, intersection2, u1, u2)
+         th_v = angle(intersection1, intersection2, v1, v2)
+      end subroutine distance_and_angles<%= k %>
 
 
-      pure function angle_2d<%= k %>(u, v) result(ret)
+      elemental function angle<%= k %>(u1, u2, v1, v2) result(ret)
          ! Return an angle from u to v
          Real(kind=real<%= k %>):: ret
-         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+         Real(kind=kind(ret)), intent(in):: u1, u2, v1, v2
 
-         ret = atan2(cross_2d(u, v), dot_product(u, v))
-      end function angle_2d<%= k %>
+         ret = atan2(cross(u1, u2, v1, v2), u1*v1 + u2*v2)
+      end function angle<%= k %>
 
 
-      pure function perpendicular_2d_uv<%= k %>(u, v) result(ret)
+      elemental subroutine perpendicular_2_<%= k %>(u1, u2, v1, v2, w1, w2)
          ! Return a intersection point of line u->v and a line ⟂ u->v and passes the origin
          Real(kind=real<%= k %>), parameter:: one = 1
-         Real(kind=real<%= k %>):: ret(2)
-         Real(kind=kind(ret)), intent(in):: u(2), v(2)
-         Real(kind=kind(ret)):: p_uv(2)
+         Real(kind=kind(one)), intent(in):: u1, u2, v1, v2
+         Real(kind=kind(one)), intent(out):: w1, w2
+         Real(kind=kind(one)):: p_uv1, p_uv2, c
 
-         p_uv = perpendicular_2d(v - u)
-         ret = sign(one, dot_product(u, p_uv))*distance_2d(u, v)/norm2(p_uv)*p_uv
-      end function perpendicular_2d_uv<%= k %>
-
-
-      pure function perpendicular_2d_v<%= k %>(v) result(ret)
-         ! Return a vector ⟂ to v
-         Real(kind=real<%= k %>):: ret(2)
-         Real(kind=kind(ret)), intent(in):: v(2)
-
-         ret(1) = -v(2)
-         ret(2) = v(1)
-      end function perpendicular_2d_v<%= k %>
+         call perpendicular(v1 - u1, v2 - u2, p_uv1, p_uv2)
+         c = sign(one, u1*p_uv1 + u2*p_uv2)*distance(u1, u2, v1, v2)/hypot(p_uv1, p_uv2)
+         w1 = c*p_uv1
+         w2 = c*p_uv2
+      end subroutine perpendicular_2_<%= k %>
 
 
-      pure function distance_2d<%= k %>(u, v) result(ret)
+      elemental subroutine perpendicular_1_<%= k %>(u1, u2, v1, v2)
+         ! Return a vector ⟂ to u
+         Real(kind=real<%= k %>), intent(in):: u1, u2
+         Real(kind=real<%= k %>), intent(out):: v1, v2
+
+         v1 = -u2
+         v2 = u1
+      end subroutine perpendicular_1_<%= k %>
+
+
+      elemental function distance<%= k %>(u1, u2, v1, v2) result(ret)
          ! Return distance from the origin to a line u->v
          Real(kind=real<%= k %>):: ret
-         Real(kind=kind(ret)), intent(in):: u(2), v(2)
+         Real(kind=kind(ret)), intent(in):: u1, u2, v1, v2
 
-         ret = abs(cross_2d(u, v))/norm2(v - u)
-      end function distance_2d<%= k %>
-
-
-      pure function cross_2d_u_v<%= k %>(u, v) result(ret)
-         ! Return z component of cross product u × v
-         Real(kind=real<%= k %>):: ret
-         Real(kind=kind(ret)), intent(in):: u(2), v(2)
-
-         ret = cross_2d(u(1), u(2), v(1), v(2))
-      end function cross_2d_u_v<%= k %>
+         ret = abs(cross(u1, u2, v1, v2))/hypot(v1 - u1, v2 - u2)
+      end function distance<%= k %>
 
 
-      pure function cross_2d_u1_u2_v1_v2<%= k %>(u1, u2, v1, v2) result(ret)
-         ! Return component of cross product (u1, u2) × (v1, v2)
+      elemental function cross<%= k %>(u1, u2, v1, v2) result(ret)
+         ! Return component of cross product u×v
          Real(kind=real<%= k %>):: ret
          Real(kind=kind(ret)), intent(in):: u1, u2, v1, v2
 
          ret = u1*v2 - u2*v1
-      end function cross_2d_u1_u2_v1_v2<%= k %>
+      end function cross<%= k %>
    <%- } -%>
 end module geometry_lib
