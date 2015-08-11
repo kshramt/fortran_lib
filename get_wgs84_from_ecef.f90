@@ -34,13 +34,13 @@ program runner
       read(INPUT_UNIT, *, iostat = ios) x, y, z
       select case(ios)
       case(:-2)
-         RAISE('Must not happen')
+         ERROR('Must not happen')
       case(-1) ! EOF
          exit
       case(0)
          write(OUTPUT_UNIT, s(format)) wgs84_from_ecef(x, y, z)
       case(1:)
-         RAISE('Bad input')
+         ERROR('Bad input')
       end select
    end do
 

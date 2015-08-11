@@ -360,7 +360,7 @@ contains
 
          read(io) self%data%ixyz
       case default
-         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+         ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
 
       close(io)
@@ -397,7 +397,7 @@ contains
       case('ixyz')
          write(io) get_data_ixyz(self)
       case default
-         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+         ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
 
       close(io)
@@ -503,7 +503,7 @@ contains
          write(io, *, delim='none') ixyz(uX, uY)
          write(io, *, delim='none') ']'
       case default
-         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+         ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
 
       write(io, '(a)') '         ]'
@@ -666,7 +666,7 @@ contains
             call set_data_<%= t %>(self, value)
       <%- } -%>
       case default
-         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+         ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
    end subroutine set_data_ixy_or_iamph_or_ixyz
 
@@ -681,7 +681,7 @@ contains
             value = get_data_<%= t %>(self)
       <%- } -%>
       case default
-         RAISE('Unknown iftype: ' + s(get_iftype(self)))
+         ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
    end subroutine get_data_ixy_or_iamph_or_ixyz_
 
@@ -820,7 +820,7 @@ contains
             end if
          end do
 
-         RAISE('Unknown <%= name %>: ' + s(value))
+         ERROR('Unknown <%= name %>: ' + s(value))
       end subroutine set_<%= name %>
    <%- } -%>
 

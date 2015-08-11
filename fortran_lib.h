@@ -8,7 +8,7 @@
 #    define quote(x) "x"
 #  endif
 #  define WARN(message) write(error_unit, *) "WARN: ", WHERE_AM_I, (message)
-#  define RAISE(message) write(error_unit, *) "RAISE: ", WHERE_AM_I, (message); error stop
+#  define ERROR(message) write(error_unit, *) "ERROR: ", WHERE_AM_I, (message); error stop
 #  define ALL_OF(index, array, dim_) index = lbound(array, dim=dim_, kind=kind(index)), ubound(array, dim=dim_, kind=kind(index))
 #  define ENSURE_DEALLOCATED(arr) if(allocated(arr)) deallocate(arr)
 #  define CONCURRENT_ALL_OF(index, array, dim_) concurrent (index = lbound(array, dim=dim_, kind=kind(index)):ubound(array, dim=dim_, kind=kind(index)))
@@ -24,11 +24,11 @@
        WARN(quote(isBad)); \
      end if
 
-#  define RAISE_IF(isBad) \
+#  define ERROR_IF(isBad) \
      if(isBad)then; \
-       RAISE(quote(isBad)); \
+       ERROR(quote(isBad)); \
      end if
-#  define ASSERT(isOk) RAISE_IF(.not.(isOk))
+#  define ASSERT(isOk) ERROR_IF(.not.(isOk))
 #  define TEST(isOk) \
      ASSERT(isOk); \
      write(output_unit, '(a)', advance='no') '.'
@@ -38,14 +38,14 @@
 
 #  ifdef DEBUG
 #    define DEBUG_WARN(message) WARN(message)
-#    define DEBUG_RAISE_IF(isBad) RAISE_IF(isBad)
+#    define DEBUG_ERROR_IF(isBad) ERROR_IF(isBad)
 #    define DEBUG_PRINT(x) write(error_unit, *) "DEBUG: ", WHERE_AM_I, (x)
 #    define DEBUG_PRINT_VARIABLE(x) write(error_unit, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
 #  else
 #    define DEBUG_WARN(message)
-#    define DEBUG_RAISE_IF(isBad)
+#    define DEBUG_ERROR_IF(isBad)
 #    define DEBUG_PRINT(x)
 #    define DEBUG_PRINT_VARIABLE(x)
 #  endif
-#  define DEBUG_ASSERT(isOk) DEBUG_RAISE_IF(.not.(isOk))
+#  define DEBUG_ASSERT(isOk) DEBUG_ERROR_IF(.not.(isOk))
 #endif

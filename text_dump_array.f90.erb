@@ -64,10 +64,10 @@ program main
             <%- end -%>
       <%- } -%>
       else
-         RAISE('Unsupported data type: ' + str(meta_v_3%type_) + ' ' + str(meta_v_3%kind_) + ' ' + str(meta_v_3%dim))
+         ERROR('Unsupported data type: ' + str(meta_v_3%type_) + ' ' + str(meta_v_3%kind_) + ' ' + str(meta_v_3%dim))
       end if
    case default
-      RAISE('Unsupported version: ' + str(version))
+      ERROR('Unsupported version: ' + str(version))
    end select
 
    stop

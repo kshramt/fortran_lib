@@ -185,7 +185,7 @@ contains
          end if
       end do
 
-      RAISE('Could not create temp file')
+      ERROR('Could not create temp file')
    end subroutine mktemp
 
    function file_shape(file, n_headers) result(ret)
@@ -354,7 +354,7 @@ contains
          case(3)
             call load_array_v_3<%= t %>(self, dir)
          case default
-            RAISE('Unsupported version ' + str(version_) + ' for ' + trim(dir))
+            ERROR('Unsupported version ' + str(version_) + ' for ' + trim(dir))
          end select
       end subroutine load_array<%= t %>
 

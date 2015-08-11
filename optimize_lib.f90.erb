@@ -177,7 +177,7 @@ contains
 
 
          if(s%iter < 1)then
-            RAISE('`NewtonState<%= k %>` should be `init`ialized before `update`d')
+            ERROR('`NewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
 
@@ -240,7 +240,7 @@ contains
          ASSERT(all(pack(almost_equal(s%x, s%lower), s%on_lower)))
          ASSERT(all(pack(almost_equal(s%x, s%upper), s%on_upper)))
          if(s%iter < 1)then
-            RAISE('`BoundNewtonState<%= k %>` should be `init`ialized before `update`d')
+            ERROR('`BoundNewtonState<%= k %>` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
 
@@ -658,7 +658,7 @@ contains
          Real(kind=real<%= k %>), parameter:: enlarge = real(5, kind=kind(enlarge))/4
 
          if(s%iter < 1)then
-            RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
+            ERROR('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 2)then
@@ -830,7 +830,7 @@ contains
          Real(kind=real<%= k %>), parameter:: enlarge = 2
 
          if(s%iter < 1)then
-            RAISE('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
+            ERROR('`LineSearchState<%= k %>_0` should be `init`ialized before `update`d')
          end if
          s%iter = s%iter + 1
          if(s%iter == 2)then
