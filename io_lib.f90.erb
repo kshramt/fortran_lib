@@ -92,7 +92,31 @@ module io_lib
       end interface load
    <%- } -%>
 
+
 contains
+
+
+   function seek(unit, s) result(found)
+      Logical:: found
+      Integer(kind=kind(input_unit)), intent(in):: unit
+      Character(len=*), intent(in):: s
+
+      Character(len=100 + 2*len(s)):: buf
+      Integer(kind=kind(iostat_eor)):: ios
+
+      found = .false.
+      rewind(unit)
+      do
+         read(unit, '(a)', iostat=ios) buf
+         if(ios == iostat_end) return
+         if(ios == iostat_eor) cycle
+         if(buf == s)then
+            found = .true.
+            return
+         end if
+      end do
+   end function seek
+
 
    <%- INTEGER_DIM_0S.each{|tn| -%>
       <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| -%>
