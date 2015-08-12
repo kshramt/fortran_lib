@@ -24,6 +24,7 @@
 module io_lib
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: error_unit, input_unit, output_unit
+   use, intrinsic:: iso_fortran_env, only: iostat_eor, iostat_end
    use, intrinsic:: iso_fortran_env, only: int64
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
 # ifdef __INTEL_COMPILER
@@ -150,14 +151,14 @@ contains
    subroutine mktemp(unit, suffixMin, form, file, suffix)
       Character(len=*), parameter:: PREFIX = '/tmp/io_lib_mktemp.'
 
-      Integer, intent(out):: unit
+      Integer(kind=kind(input_unit)), intent(out):: unit
       Integer(kind=int64), intent(in), optional:: suffixMin
       Character(len=*), intent(in), optional:: form
       Character(len=*), intent(out), optional:: file
       Integer(kind=kind(suffixMin)), intent(out), optional:: suffix
 
       Integer(kind=kind(suffixMin)):: suffix_, suffixMin_
-      Integer:: ios
+      Integer(kind=kind(iostat_eor)):: ios
       Character(len=len(PREFIX) + ceiling(log10(real(huge(suffix_))))):: file_
       Character(len=max(len('unformatted'), len('formatted'))):: form_
 
@@ -206,7 +207,8 @@ contains
       Integer(kind=int64):: ret
       Character(len=*), intent(in):: file
 
-      Integer:: unit, ios
+      Integer(kind=kind(input_unit)):: unit
+      Integer(kind=kind(iostat_eor)):: ios
       Character:: trash
 
       open(newunit=unit, file=file, status='old', action='read')
@@ -234,7 +236,9 @@ contains
       end enum
       Character, parameter:: separators(1:2) = [' ', '	'] ! space and TAB
 
-      Integer:: unit, ios, mode
+      Integer(kind=kind(input_unit)):: unit
+      Integer(kind=kind(iostat_eor)):: ios
+      Integer:: mode
       Character:: c
 
       Integer(kind=kind(n_headers)):: n_headers_, i
@@ -270,7 +274,7 @@ contains
    function load_array_version(dir) result(version_)
       Character(len=*), intent(in):: dir
       Integer:: version_
-      Integer:: unit
+      Integer(kind=kind(input_unit)):: unit
 
       open(newunit=unit, file=trim(dir) + '/' + array_version_file, status='old', action='read')
       read(unit, *) version_
@@ -281,7 +285,7 @@ contains
       type(ArrayMetaV3), intent(inout):: self
       Character(len=*), intent(in):: dir
 
-      Integer:: unit
+      Integer(kind=kind(input_unit)):: unit
       Integer(kind=kind(self%dim)):: i
 
       open(newunit=unit, file=trim(dir) + '/' + array_meta_file_v_3, status='old', action='read')
@@ -310,7 +314,7 @@ contains
 
          Integer(kind=int64):: sizes(dim)
          Integer(kind=kind(dim)):: i
-         Integer:: unit
+         Integer(kind=kind(input_unit)):: unit
 
          ASSERT(sh('mkdir -p ' + trim(dir)))
 
@@ -367,7 +371,7 @@ contains
          Character(len=*), intent(in):: dir
 
          type(ArrayMetaV3):: meta
-         Integer:: unit
+         Integer(kind=kind(input_unit)):: unit
 
          call load_array_meta_v_3(meta, trim(dir))
 
