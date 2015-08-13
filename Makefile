@@ -41,15 +41,38 @@ export MY_SED ?= sed
 export MY_PYTHON ?= python3
 PYTHON := $(MY_PYTHON)
 
-FILES := $(shell git ls-files)
-F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
-ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
-F90_NAMES += $(ERB_F90_NAMES)
-LIB_NAMES := $(filter %_lib,$(F90_NAMES))
-COMPONENT_NAMES := $(filter %_component,$(F90_NAMES))
-TEST_NAMES := $(filter %_test,$(F90_NAMES))
-ERRORTEST_NAMES := $(filter %_errortest,$(F90_NAMES))
-EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_NAMES) $(COMPONENT_NAMES),$(F90_NAMES))
+
+all_files := $(shell git ls-files)
+files := $(all_files)
+
+
+parse_stem = $(subst @, ,$(subst ~,=,$(1)))
+get = $(wordlist 2,2,$(subst =, ,$(filter $(1)=%,$(call parse_stem,$(2)))))
+
+
+define names_template =
+$(call get,name,$(1))_files := $$(filter $(call get,file_pattern,$(1)),$$(files))
+$(call get,name,$(1))_names := $$($(call get,name,$(1))_files:$(call get,name_pattern,$(1))=%)
+files := $$(filter-out $$($(call get,name,$(1))_files),$$(files))
+endef
+$(foreach params,name~param@file_pattern~%.f90.params@name_pattern~%.f90.params \
+                 name~template@file_pattern~%_template.f90.erb@name_pattern~%.f90.erb \
+                 name~component@file_pattern~%_component.f90.erb@name_pattern~%.f90.erb \
+                 name~test_erb@file_pattern~%_test.f90.erb@name_pattern~%.f90.erb \
+                 name~test_f90@file_pattern~%_test.f90@name_pattern~%.f90 \
+                 name~errortest_erb@file_pattern~%_errortest.f90.erb@name_pattern~%.f90.erb \
+                 name~errortest_f90@file_pattern~%_errortest.f90@name_pattern~%.f90 \
+                 name~lib_erb@file_pattern~%_lib.f90.erb@name_pattern~%.f90.erb \
+                 name~lib_f90@file_pattern~%_lib.f90@name_pattern~%.f90 \
+                 name~exe_erb@file_pattern~%.f90.erb@name_pattern~%.f90.erb \
+                 name~exe_f90@file_pattern~%.f90@name_pattern~%.f90 \
+   ,$(eval $(call names_template,$(params))))
+
+
+lib_names := $(lib_erb_names) $(lib_f90_names) $(param_names)
+exe_names := $(exe_erb_names) $(exe_f90_names)
+test_names := $(test_erb_names) $(test_f90_names) $(errortest_erb_names) $(errortest_f90_names)
+names := $(lib_names) $(exe_names) $(test_names)
 
 
 # Configurations
@@ -78,12 +101,20 @@ o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
 
 .PHONY: all-$(1) check-$(1) clean-$(1)
 
+
 all: all-$(1)
-all-$(1): deps $(addprefix $(1)/,$(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_NAMES) $(COMPONENT_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe))
+all-$(1): \
+   deps \
+   $$(addprefix $(1)/, \
+      $(names:%=src/%.f90) \
+      $(exe_names:%=bin/%.exe))
 
 
 check: check-$(1)
-check-$(1): deps $(addprefix $(1)/,$(TEST_NAMES:%=test/%.exe.tested) $(ERRORTEST_NAMES:%=test/%.exe.tested))
+check-$(1): \
+   deps \
+   $$(addprefix $(1)/, \
+      $(test_names:%=test/%.exe.tested))
 
 
 clean: clean-$(1)
@@ -93,7 +124,7 @@ clean-$(1):
 
 
 # Tasks
--include $(addprefix $(1)/,$(LIB_NAMES:%=src/%.f90.make) $(EXE_NAMES:%=src/%.f90.make) $(TEST_NAMES:%=src/%.f90.make) $(ERRORTEST_NAMES:%=src/%.f90.make))
+-include $$(names:%=$(1)/src/%.f90.make)
 
 ## Executables
 $(1)/bin/sac_to_json.exe: $$(call o_mod_$(1),character_lib sac_lib sac_to_json)
