@@ -1,8 +1,8 @@
 require 'erb'
 
 class ContextBase
-  def render(template)
-    ERB.new(template).result(binding)
+  def render(component)
+    ERB.new(component).result(binding)
   end
 end
 

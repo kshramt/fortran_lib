@@ -1,6 +1,6 @@
 <%
 require 'fort'
-require './template.rb'
+require './component.rb'
 
 class Context < ContextBase
   def initialize(tree_type_declare, tree_type_id, node_type_declare, node_type_id, key_in_type_declare, key_in_type_id)
@@ -246,6 +246,6 @@ contains
       end subroutine delete<%= node_type_id %>
 
 
-      <%= Context.new(tree_type_declare, tree_type_id, node_type_declare, node_type_id, key_in_type_declare, key_in_type_id).render(memoized_read("binary_tree_template.f90.erb")) %>
+      <%= Context.new(tree_type_declare, tree_type_id, node_type_declare, node_type_id, key_in_type_declare, key_in_type_id).render(memoized_read("binary_tree_component.f90.erb")) %>
    <% } %>
 end module binary_tree_map_lib

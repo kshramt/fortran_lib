@@ -46,10 +46,10 @@ F90_NAMES := $(patsubst %.f90,%,$(filter %.f90,$(FILES)))
 ERB_F90_NAMES := $(patsubst %.f90.erb,%,$(filter %.f90.erb,$(FILES)))
 F90_NAMES += $(ERB_F90_NAMES)
 LIB_NAMES := $(filter %_lib,$(F90_NAMES))
-TEMPLATE_NAMES := $(filter %_template,$(F90_NAMES))
+COMPONENT_NAMES := $(filter %_component,$(F90_NAMES))
 TEST_NAMES := $(filter %_test,$(F90_NAMES))
 ERRORTEST_NAMES := $(filter %_errortest,$(F90_NAMES))
-EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))
+EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_NAMES) $(COMPONENT_NAMES),$(F90_NAMES))
 
 
 # Configurations
@@ -79,7 +79,7 @@ o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
 .PHONY: all-$(1) check-$(1) clean-$(1)
 
 all: all-$(1)
-all-$(1): deps $(addprefix $(1)/,$(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe))
+all-$(1): deps $(addprefix $(1)/,$(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_NAMES) $(COMPONENT_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe))
 
 
 check: check-$(1)
