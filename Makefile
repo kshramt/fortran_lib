@@ -48,11 +48,8 @@ F90_NAMES += $(ERB_F90_NAMES)
 LIB_NAMES := $(filter %_lib,$(F90_NAMES))
 TEMPLATE_NAMES := $(filter %_template,$(F90_NAMES))
 TEST_NAMES := $(filter %_test,$(F90_NAMES))
-ERRORTEST_TEMPLATE_NAMES := $(filter %_errortest,$(F90_NAMES))
-ERRORTEST_STEMS := $(patsubst %_errortest,%,$(ERRORTEST_TEMPLATE_NAMES))
-ERRORTEST_IMPL_NAMES := $(foreach name,$(ERRORTEST_TEMPLATE_NAMES),$(filter $(name)/%,$(F90_NAMES)))
-ERRORTEST_NAMES := $(addsuffix _errortest,$(subst _errortest/,_,$(ERRORTEST_IMPL_NAMES)))
-EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))
+ERRORTEST_NAMES := $(filter %_errortest,$(F90_NAMES))
+EXE_NAMES := $(filter-out $(LIB_NAMES) $(TEST_NAMES) $(ERRORTEST_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))
 
 
 # Configurations
@@ -82,7 +79,7 @@ o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
 .PHONY: all-$(1) check-$(1) clean-$(1)
 
 all: all-$(1)
-all-$(1): deps $(addprefix $(1)/,$(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_TEMPLATE_NAMES) $(ERRORTEST_IMPL_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe))
+all-$(1): deps $(addprefix $(1)/,$(patsubst %,src/%.f90,$(filter-out $(ERRORTEST_NAMES) $(TEMPLATE_NAMES),$(F90_NAMES))) $(patsubst %,src/%.f90,$(ERRORTEST_NAMES)) $(EXE_NAMES:%=bin/%.exe))
 
 
 check: check-$(1)
@@ -132,22 +129,20 @@ $(1)/test/geometry_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib geom
 $(1)/test/quadrature_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib quadrature_lib_test)
 
 
-$(1)/test/io_lib_illegal_form_argument_errortest.exe: $$(call o_mod_$(1),character_lib io_lib io_lib_illegal_form_argument_errortest)
-$(1)/test/sac_lib_get_iftype_for_undefined_value_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_get_iftype_for_undefined_value_errortest)
-$(1)/test/sac_lib_get_imagsrc_for_undefined_value_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_get_imagsrc_for_undefined_value_errortest)
-$(1)/test/sac_lib_set_iftype_with_invalid_argument_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_set_iftype_with_invalid_argument_errortest)
-$(1)/test/sac_lib_set_kevnm_with_too_long_argument_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_set_kevnm_with_too_long_argument_errortest)
-$(1)/test/sac_lib_set_kstnm_with_too_long_argument_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_set_kstnm_with_too_long_argument_errortest)
-
+$(1)/test/io_lib_errortest.exe: $$(call o_mod_$(1),character_lib io_lib io_lib_errortest)
+$(1)/test/sac_lib_errortest.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_errortest)
 
 # Rules
 $(1)/src/%.f90.make: script/make_include_make.sh $(1)/src/%.f90.sha256 script/fort_deps.sh
 	$$< $(1)/src/$$*.f90 $(1) >| $$@
 
 
-$(1)/test/%_errortest.exe.tested: $(1)/test/%_errortest.exe
+$(1)/test/%_errortest.exe.tested: script/run_errortest.sh $(1)/test/%_errortest.exe
 	cd $$(@D)
-	! ./$$(<F) && touch $$(@F)
+	$$(addprefix $$(CURDIR)/,$$^)
+	touch $$(CURDIR)/$$@
+
+
 $(1)/test/%_test.exe.tested: $(1)/test/%_test.exe
 	cd $$(@D)
 	./$$(<F)
@@ -189,15 +184,6 @@ endef
 $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
 
-define ERRORTEST_F90_TEMPLATE =
-$(1)_$(2)_errortest.f90: $(1)_errortest.f90 $(1)_errortest/$(2).f90
-	{
-	   cat $$^
-	   echo '   stop'
-	   echo 'end program main'
-	} >| $$@
-endef
-$(foreach stem,$(ERRORTEST_STEMS),$(foreach branch,$(patsubst $(stem)_%_errortest,%,$(filter $(stem)_%,$(ERRORTEST_NAMES))),$(eval $(call ERRORTEST_F90_TEMPLATE,$(stem),$(branch)))))
 
 bin/%.py.tested: bin/%.py
 	$(MY_PYTHON) $< --test
