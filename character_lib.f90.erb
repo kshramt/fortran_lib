@@ -46,17 +46,17 @@ module character_lib
       module procedure s
    end interface s
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface str
          module procedure str<%= t %>
       end interface str
-   <%- } -%>
+   <% } %>
 
    Integer(kind=int8), parameter, public:: inc_upper_to_lower = iachar('a') - iachar('A')
 
 contains
 
-   <%- [[:upper, :a, :z, :-], [:lower, :A, :Z, :+]].each{|ul, a, z, op| -%>
+   <% [[:upper, :a, :z, :-], [:lower, :A, :Z, :+]].each{|ul, a, z, op| %>
       elemental function <%= ul %>(s) result(ret)
          Integer(kind=kind(inc_upper_to_lower)), parameter:: i<%= a %> = iachar('<%= a %>')
          Integer(kind=kind(inc_upper_to_lower)), parameter:: i<%= z %> = iachar('<%= z %>')
@@ -76,7 +76,7 @@ contains
             end if
          end do
       end function <%= ul %>
-   <%- } -%>
+   <% } %>
 
    pure function replace(s, from, to) result(ret)
       Character(len=*), intent(in):: s, from, to
@@ -146,7 +146,7 @@ contains
       answer = str1 // str2
    end function add
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       pure function str<%= t %>(x) result(ret)
          <%= t.declare %>, intent(in):: x
          character(len=:), allocatable:: buf
@@ -167,5 +167,5 @@ contains
          end do
          ret = s(buf)
       end function str<%= t %>
-   <%- } -%>
+   <% } %>
 end module character_lib

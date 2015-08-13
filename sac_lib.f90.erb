@@ -1,4 +1,4 @@
-<%-
+<%
   FLOATS = %w[
     delta
     depmin
@@ -151,7 +151,7 @@
   ALL_METAS = FLOATS + INTEGERS + ENUMERATED_VALUES + LOGICALS + STRINGS
 
   BODIES = %w[itime ixy iamph irlim ixyz]
--%>
+%>
 
 # include "fortran_lib.h"
 ! LICENSE: GPL Ver. 3
@@ -178,12 +178,12 @@ module sac_lib
 
    public:: load, dump, dump_json
    public:: set_data, get_data
-   <%- BODIES.each{|name| -%>
+   <% BODIES.each{|name| %>
       public:: set_data_<%= name %>, get_data_<%= name %>
-   <%- } -%>
-   <%- ALL_METAS.each{|name, _| -%>
+   <% } %>
+   <% ALL_METAS.each{|name, _| %>
       public:: set_<%= name %>, is_<%= name %>_defined, get_<%= name %>
-   <%- } -%>
+   <% } %>
 
    interface load
       module procedure load
@@ -225,27 +225,27 @@ module sac_lib
    type, extends(Object), public:: SacMeta
       private
 
-      <%- (FLOATS - %w[b]).each{|name| -%>
+      <% (FLOATS - %w[b]).each{|name| %>
          Real(kind=SAC_REAL_KIND):: <%= name %> = FLOAT_UNDEFINED
-      <%- } -%>
+      <% } %>
       Real(kind=SAC_REAL_KIND):: b = 0
 
-      <%- (INTEGERS - %w[nvhdr]).each{|name| -%>
+      <% (INTEGERS - %w[nvhdr]).each{|name| %>
          Integer(kind=SAC_INTEGER_KIND):: <%= name %> = INTEGER_UNDEFINED
-      <%- } -%>
+      <% } %>
       Integer(kind=SAC_INTEGER_KIND):: nvhdr = NVHDR_DEFAULT
 
-      <%- ENUMERATED_VALUES.each{|name| -%>
+      <% ENUMERATED_VALUES.each{|name| %>
          Integer(kind=SAC_INTEGER_KIND):: <%= name %> = ENUMERATED_VALUE_UNDEFINED
-      <%- } -%>
+      <% } %>
 
-      <%- LOGICALS.each{|name| -%>
+      <% LOGICALS.each{|name| %>
          Integer(kind=SAC_INTEGER_KIND):: <%= name %> = SAC_FALSE
-      <%- } -%>
+      <% } %>
 
-      <%- STRINGS.each{|name, length| -%>
+      <% STRINGS.each{|name, length| %>
          Character(len=LEN_<%= length %>_STRING):: <%= name %> = STRING_UNDEFINED
-      <%- } -%>
+      <% } %>
    end type SacMeta
 
    type, extends(Object), public:: SacData
@@ -277,20 +277,20 @@ module sac_lib
       module procedure get_data_ixy_or_iamph_or_ixyz_
    end interface get_data
 
-   <%- (ALL_METAS - LOGICALS).each{|name, _| -%>
+   <% (ALL_METAS - LOGICALS).each{|name, _| %>
       interface get_<%= name %>
          module procedure get_<%= name %>_i_v
          module procedure get_<%= name %>_v_i
          module procedure get_<%= name %>_v
       end interface get_<%= name %>
-   <%- } -%>
+   <% } %>
 
-   <%- LOGICALS.each{|name, _| -%>
+   <% LOGICALS.each{|name, _| %>
       interface get_<%= name %>
          module procedure get_<%= name %>_i_v
          module procedure get_<%= name %>_v
       end interface get_<%= name %>
-   <%- } -%>
+   <% } %>
 
 
 contains
@@ -308,9 +308,9 @@ contains
 
       open(newunit = io, file = trim(fileName), status = 'old', action = 'read', form = 'unformatted', access = 'stream')
 
-      <%- ALL_METAS.each{|name, _| -%>
+      <% ALL_METAS.each{|name, _| %>
          read(io) self%meta%<%= name %>
-      <%- } -%>
+      <% } %>
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
@@ -376,9 +376,9 @@ contains
 
       open(newunit = io, file = trim(fileName), status = 'replace', action = 'write', form = 'unformatted', access = 'stream')
 
-      <%- ALL_METAS.each{|name, _| -%>
+      <% ALL_METAS.each{|name, _| %>
          write(io) self%meta%<%= name %>
-      <%- } -%>
+      <% } %>
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
@@ -412,21 +412,21 @@ contains
       Complex(kind=SAC_REAL_KIND), allocatable:: irlim(:)
 
       write(io, '(a)') '{"meta": {'
-      <%- (FLOATS + INTEGERS).each{|name, _| -%>
+      <% (FLOATS + INTEGERS).each{|name, _| %>
          if(is_<%= name %>_defined(self))then
             write(io, *, delim='none') '"<%= name %>": ', get_<%= name %>(self), ','
          else
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
-      <%- } -%>
-      <%- ENUMERATED_VALUES.each{|name, _| -%>
+      <% } %>
+      <% ENUMERATED_VALUES.each{|name, _| %>
          if(is_<%= name %>_defined(self))then
             write(io, *, delim='none') '"<%= name %>": ', '"' + trim(get_<%= name %>(self)) + '"', ','
          else
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
-      <%- } -%>
-      <%- LOGICALS.each{|name, _| -%>
+      <% } %>
+      <% LOGICALS.each{|name, _| %>
          if(is_<%= name %>_defined(self))then
             if(get_<%= name %>(self))then
                write(io, *, delim='none') '"<%= name %>": true,'
@@ -436,15 +436,15 @@ contains
          else
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
-      <%- } -%>
-      <%- (last_name, _), *strings = STRINGS -%>
-      <%- strings.each{|name, _| -%>
+      <% } %>
+      <% (last_name, _), *strings = STRINGS %>
+      <% strings.each{|name, _| %>
          if(is_<%= name %>_defined(self))then
             write(io, *, delim='none') '"<%= name %>": ', '"' + replace(trim(get_<%= name %>(self)), '"', '\"') + '"', ','
          else
             write(io, *, delim='none') '"<%= name %>": null,'
          end if
-      <%- } -%>
+      <% } %>
       if(is_<%= last_name %>_defined(self))then
          write(io, *, delim='none') '"<%= last_name %>": ', '"' + replace(trim(get_<%= last_name %>(self)), '"', '\"') + '"'
       else
@@ -555,7 +555,7 @@ contains
       value = get_data_itime(self)
    end subroutine get_data_itime_
 
-   <%- %w[ixy iamph].each{|t| -%>
+   <% %w[ixy iamph].each{|t| %>
       subroutine set_data_<%= t %>(self, value)
          type(Sac), intent(inout):: self
          Real(kind=SAC_REAL_KIND):: value(:, :)
@@ -576,7 +576,7 @@ contains
          self%data%<%= t %> = value
 
          ENSURE_DEALLOCATED(self%data%itime)
-         <%- another = {'ixy' => 'iamph', 'iamph' => 'ixy'} -%>
+         <% another = {'ixy' => 'iamph', 'iamph' => 'ixy'} %>
          ENSURE_DEALLOCATED(self%data%<%= another[t] %>)
          ENSURE_DEALLOCATED(self%data%irlim)
          ENSURE_DEALLOCATED(self%data%ixyz)
@@ -592,7 +592,7 @@ contains
          value = self%data%<%= t %>
          ASSERT(size(value, 1) == get_npts(self))
       end function get_data_<%= t %>
-   <%- } -%>
+   <% } %>
 
    subroutine set_data_irlim(self, value)
       type(Sac), intent(inout):: self
@@ -661,10 +661,10 @@ contains
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
-      <%- %w[ixy iamph ixyz].each{|t| -%>
+      <% %w[ixy iamph ixyz].each{|t| %>
          case('<%= t %>')
             call set_data_<%= t %>(self, value)
-      <%- } -%>
+      <% } %>
       case default
          ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
@@ -676,16 +676,16 @@ contains
 
       ASSERT(is_iftype_defined(self))
       select case(get_iftype(self))
-      <%- %w[ixy iamph ixyz].each{|t| -%>
+      <% %w[ixy iamph ixyz].each{|t| %>
          case('<%= t %>')
             value = get_data_<%= t %>(self)
-      <%- } -%>
+      <% } %>
       case default
          ERROR('Unknown iftype: ' + s(get_iftype(self)))
       end select
    end subroutine get_data_ixy_or_iamph_or_ixyz_
 
-   <%- FLOATS.each{|name| -%>
+   <% FLOATS.each{|name| %>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
          Real(kind=SAC_REAL_KIND), intent(out):: value
@@ -724,9 +724,9 @@ contains
 
          self%meta%<%= name %> = value
       end subroutine set_<%= name %>
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|name| -%>
+   <% INTEGERS.each{|name| %>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
          Integer(kind=SAC_INTEGER_KIND), intent(out):: value
@@ -765,9 +765,9 @@ contains
 
          self%meta%<%= name %> = value
       end subroutine set_<%= name %>
-   <%- } -%>
+   <% } %>
 
-   <%- ENUMERATED_VALUES.each{|name| -%>
+   <% ENUMERATED_VALUES.each{|name| %>
       function get_<%= name %>_v_i(self, isDefined) result(value)
          type(Sac), intent(in):: self
          Logical, intent(out):: isDefined
@@ -822,9 +822,9 @@ contains
 
          ERROR('Unknown <%= name %>: ' + s(value))
       end subroutine set_<%= name %>
-   <%- } -%>
+   <% } %>
 
-   <%- LOGICALS.each{|name| -%>
+   <% LOGICALS.each{|name| %>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
          Logical, intent(out):: value
@@ -861,9 +861,9 @@ contains
             self%meta%<%= name %> = 0
          end if
       end subroutine set_<%= name %>
-   <%- } -%>
+   <% } %>
 
-   <%- STRINGS.each{|name, length| -%>
+   <% STRINGS.each{|name, length| %>
       function get_<%= name %>_i_v(self, value) result(isDefined)
          type(Sac), intent(in):: self
          Character(len=LEN_<%= length %>_STRING), intent(out):: value
@@ -903,5 +903,5 @@ contains
          ASSERT(len_trim(value) <= LEN_<%= length %>_STRING)
          self%meta%<%= name %> = value
       end subroutine set_<%= name %>
-   <%- } -%>
+   <% } %>
 end module sac_lib

@@ -1,4 +1,4 @@
-<%-
+<%
   require 'fort'
   LOG_2_CHAR_LEN_MAX = 10
   REALS = ::Fort::Type::Real.multi_provide
@@ -16,7 +16,7 @@
 def alloc?(t)
    t.dim > 0 || t.type == :Character
 end
--%>
+%>
 
 # include "fortran_lib.h"
 module stack_lib
@@ -29,7 +29,7 @@ module stack_lib
    public:: push
    public:: pop
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface push
          module procedure push<%= t %>Stack
       end interface push
@@ -41,7 +41,7 @@ module stack_lib
       interface is_empty
          module procedure is_empty<%= t %>Stack
       end interface is_empty
-   <%- } -%>
+   <% } %>
 
    type, public:: Stack
    end type Stack
@@ -49,7 +49,7 @@ module stack_lib
    type:: StackNode
    end type StackNode
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       type, extends(Stack), public:: <%= t %>Stack
          type(<%= t %>StackNode), pointer:: head => null()
       end type <%= t %>Stack
@@ -58,18 +58,18 @@ module stack_lib
          <%= t.declare %><%= alloc?(t) ? ', allocatable' : '' %>:: val
          type(<%= t %>StackNode), pointer:: prev => null()
       end type <%= t %>StackNode
-   <%- } -%>
+   <% } %>
 
 contains
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       subroutine push<%= t %>Stack(self, val)
          type(<%= t %>Stack), intent(inout):: self
-         <%- if t.type == :Character -%>
+         <% if t.type == :Character %>
             Character(len=*), intent(in):: val
-         <%- else -%>
+         <% else %>
             <%= t.declare %>, intent(in):: val
-         <%- end -%>
+         <% end %>
          type(<%= t %>StackNode), pointer:: newNode
 
          allocate(newNode)
@@ -102,5 +102,5 @@ contains
 
          answer = .not.associated(self%head)
       end function is_empty<%= t %>Stack
-   <%- } -%>
+   <% } %>
 end module stack_lib

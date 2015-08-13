@@ -1,4 +1,4 @@
-<%-
+<%
   require 'fort'
   LOG_2_CHAR_LEN_MAX = 10
 
@@ -13,7 +13,7 @@
   + LOGICALS\
   + COMPLEXES\
   + CHARACTERS
--%>
+%>
 
 # include "fortran_lib.h"
 module queue_lib
@@ -26,7 +26,7 @@ module queue_lib
    public:: push
    public:: shift
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface push
          module procedure push<%= t %>Queue
       end interface push
@@ -38,7 +38,7 @@ module queue_lib
       interface is_empty
          module procedure is_empty<%= t %>Queue
       end interface is_empty
-   <%- } -%>
+   <% } %>
 
    type, public:: Queue
    end type Queue
@@ -46,7 +46,7 @@ module queue_lib
    type:: QueueNode
    end type QueueNode
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       type, extends(Queue), public:: <%= t %>Queue
          type(<%= t %>QueueNode), pointer:: tail => null()
          type(<%= t %>QueueNode), pointer:: head => null()
@@ -56,11 +56,11 @@ module queue_lib
          <%= t.declare %><%= (t.dim > 0) ? ', allocatable' : '' %>:: value
          type(<%= t %>QueueNode), pointer:: next => null()
       end type <%= t %>QueueNode
-   <%- } -%>
+   <% } %>
 
 contains
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       subroutine push<%= t %>Queue(self, value)
          type(<%= t %>Queue), intent(inout):: self
          <%= t.declare %>, intent(in):: value
@@ -109,5 +109,5 @@ contains
 
          answer = .not.associated(self%head)
       end function is_empty<%= t %>Queue
-   <%- } -%>
+   <% } %>
 end module queue_lib

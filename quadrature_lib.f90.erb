@@ -1,4 +1,4 @@
-<%-
+<%
    TS = [:Real, :Dual]
    KS = [32, 64, 128]
    # These values may be large enough.
@@ -40,15 +40,15 @@
       end
       ret
    end
--%>
+%>
 
 #include "fortran_lib.h"
 module quadrature_lib
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
    use, intrinsic:: iso_fortran_env, only: int64
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       use, intrinsic:: iso_fortran_env, only: real<%= k %>
-   <%- } -%>
+   <% } %>
    USE_FORTRAN_LIB_H
    use, non_intrinsic:: ad_lib
 
@@ -59,28 +59,28 @@ module quadrature_lib
 
    ! Interface
 
-   <%- PARAMS.product(ARGS_OR_NONE).each{|(t, k, _, o, n), args| -%>
-      <%- suffix = _suffix(t, k, o, n, args) -%>
+   <% PARAMS.product(ARGS_OR_NONE).each{|(t, k, _, o, n), args| %>
+      <% suffix = _suffix(t, k, o, n, args) %>
       interface romberg
          module procedure romberg<%= suffix %>
       end interface romberg
-   <%- } -%>
+   <% } %>
 
 
 contains
 
 
-   <%- PARAMS.product(ARGS_OR_NONE).each{|(t, k, iter_max, o, n), args| -%>
-      <%- suffix = _suffix(t, k, o, n, args) -%>
-      <%- decl = _declare(t, k, o, n) -%>
-      <%- decl_args = _declare_args(t, k, o, n, args) -%>
+   <% PARAMS.product(ARGS_OR_NONE).each{|(t, k, iter_max, o, n), args| %>
+      <% suffix = _suffix(t, k, o, n, args) %>
+      <% decl = _declare(t, k, o, n) %>
+      <% decl_args = _declare_args(t, k, o, n, args) %>
       function romberg<%= suffix %>(f, a, b <%= args %>, rtol, atol, abs_err, err, n_eval) result(ret)
          interface
             function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
-               <%- if t == :Dual -%>
+               <% if t == :Dual %>
                   use, non_intrinsic:: ad_lib
-               <%- end -%>
+               <% end %>
 
                <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
@@ -119,9 +119,9 @@ contains
          interface
             function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
-               <%- if t == :Dual -%>
+               <% if t == :Dual %>
                   use, non_intrinsic:: ad_lib
-               <%- end -%>
+               <% end %>
 
                <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
@@ -184,9 +184,9 @@ contains
          interface
             function f(x <%= args %>) result(ret)
                use, intrinsic:: iso_fortran_env, only: real<%= k %>
-               <%- if t == :Dual -%>
+               <% if t == :Dual %>
                   use, non_intrinsic:: ad_lib
-               <%- end -%>
+               <% end %>
 
                <%= decl %>:: ret
                Real(kind=real<%= k %>), intent(in):: x
@@ -204,11 +204,11 @@ contains
          Integer(kind=kind(i1)):: i, i_mid
 
          if(i1 + block_size > i2)then
-            <%- if t == :Real -%>
+            <% if t == :Real %>
                ret = 0
-            <%- else -%>
+            <% else %>
                ! Dual is initialized to 0
-            <%- end -%>
+            <% end %>
             do i = i1, i2
                ret = ret + f(x1 + h*i <%= args %>)
             end do
@@ -219,7 +219,7 @@ contains
       end function sum_f<%= suffix %>
 
 
-      <%- if args.nil? -%>
+      <% if args.nil? %>
          function sub_err<%= suffix %>(integ_right, integ_above, k) result(ret)
             Real(kind=real<%= k %>), parameter:: four = 4
 
@@ -233,6 +233,6 @@ contains
             four_pow_k = four**k
             ret = (four_pow_k*integ_right - integ_above)/(four_pow_k - 1)
          end function sub_err<%= suffix %>
-      <%- end -%>
-   <%- } -%>
+      <% end %>
+   <% } %>
 end module quadrature_lib

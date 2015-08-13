@@ -3,7 +3,7 @@ DEPS := fort
 
 MY_ERB ?= erb
 ERB := ${MY_ERB}
-ERB_FLAGS := -T '-' -P
+ERB_FLAGS :=
 
 MY_FC ?= gfortran
 FC := $(MY_FC)

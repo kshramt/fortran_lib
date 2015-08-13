@@ -60,11 +60,11 @@ module io_lib
       Integer(kind=int64), allocatable:: sizes(:)
    end type ArrayMetaV3
 
-   <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S + COMPLEX_DIM_0S).product(INTEGER_DIM_0S).each{|t, tn| -%>
+   <% (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S + COMPLEX_DIM_0S).product(INTEGER_DIM_0S).each{|t, tn| %>
       interface get_column_format_string
          module procedure get_column_format_string<%= t.id %><%= tn.id %>
       end interface get_column_format_string
-   <%- } -%>
+   <% } %>
 
    interface lines_of
       module procedure lines_of
@@ -82,7 +82,7 @@ module io_lib
       module procedure load_array_version
    end interface load_version
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface dump
          module procedure dump_array<%= t %>
       end interface dump
@@ -90,7 +90,7 @@ module io_lib
       interface load
          module procedure load_array<%= t %>
       end interface load
-   <%- } -%>
+   <% } %>
 
 
 contains
@@ -118,8 +118,8 @@ contains
    end function seek
 
 
-   <%- INTEGER_DIM_0S.each{|tn| -%>
-      <%- (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| -%>
+   <% INTEGER_DIM_0S.each{|tn| %>
+      <% (LOGICAL_DIM_0S + INTEGER_DIM_0S + REAL_DIM_0S).each{|t| %>
          function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
             Character(len=*), parameter:: multi_args = '(g0, *(" ", g0))'
             <%= t.declare %>, intent(in):: x
@@ -135,11 +135,11 @@ contains
                ret = multi_args
             end select
          end function get_column_format_string<%= t.id %><%= tn.id %>
-      <%- } -%>
+      <% } %>
 
       ! `get_column_format_string` is used to produce re-readable complex output.
       ! number of columns should explicitly be given since unlimited format gives an extra parenthesis ` (` at the end.
-      <%- COMPLEX_DIM_0S.each{|t| -%>
+      <% COMPLEX_DIM_0S.each{|t| %>
          function get_column_format_string<%= t.id %><%= tn.id %>(x, n) result(ret)
             Character(len=*), parameter:: multi_args = '("(", g0, ", ", g0, ")", *(" ", "(", g0, ", ", g0, ")"))'
             <%= t.declare %>, intent(in):: x
@@ -155,8 +155,8 @@ contains
                ret = multi_args
             end select
          end function get_column_format_string<%= t.id %><%= tn.id %>
-      <%- } -%>
-   <%- } -%>
+      <% } %>
+   <% } %>
 
    function sh(cmd) result(isSuccess)
       Character(len=*), intent(in):: cmd
@@ -324,7 +324,7 @@ contains
       close(unit)
    end subroutine load_array_meta_v_3
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       subroutine dump_array<%= t %>(self, dir<%= list(NUM_DESC_MAX, ''){|i| ", desc#{i}"} %>)
          Character(len=*), parameter:: type_ = '<%= t.type %>'
          Integer(kind=int8), parameter:: kind_ = <%= t.kind %>
@@ -332,9 +332,9 @@ contains
 
          <%= t.declare %>, intent(in):: self
          Character(len=*), intent(in):: dir
-         <%- if NUM_DESC_MAX >= 1 -%>
+         <% if NUM_DESC_MAX >= 1 %>
             Character(len=*), intent(in), optional:: <%= list(NUM_DESC_MAX){|i| "desc#{i}"} %>
-         <%- end -%>
+         <% end %>
 
          Integer(kind=int64):: sizes(dim)
          Integer(kind=kind(dim)):: i
@@ -365,9 +365,9 @@ contains
 
          ! descriptions
          open(newunit=unit, file=trim(dir) + '/' + array_description_file, status='replace', action='write')
-         <%- (1..NUM_DESC_MAX).each{|i| -%>
+         <% (1..NUM_DESC_MAX).each{|i| %>
             if(present(desc<%= i %>)) write(unit, '(a)') desc<%= i %>
-         <%- } -%>
+         <% } %>
          close(unit)
       end subroutine dump_array<%= t %>
 
@@ -410,5 +410,5 @@ contains
          read(unit) self
          close(unit)
       end subroutine load_array_v_3<%= t %>
-   <%- } -%>
+   <% } %>
 end module io_lib

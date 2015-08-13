@@ -28,7 +28,7 @@ module comparable_lib
    public:: is_nan
    public:: is_infinity
 
-   <%- (REALS + INTEGERS).each{|t| -%>
+   <% (REALS + INTEGERS).each{|t| %>
       interface is_nan
          module procedure is_nan<%= t %>
       end interface is_nan
@@ -36,23 +36,23 @@ module comparable_lib
       interface is_infinity
          module procedure is_infinity<%= t %>
       end interface is_infinity
-   <%- } -%>
+   <% } %>
 
    interface almost_equal
-      <%- (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| -%>
+      <% (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| %>
          module procedure almost_equal<%= t1 %><%= t2 %>
-      <%- } -%>
+      <% } %>
    end interface almost_equal
 
    interface operator(==)
-      <%- LOGICAL_PAIRS.each{|t1, t2| -%>
+      <% LOGICAL_PAIRS.each{|t1, t2| %>
          module procedure almost_equal<%= t1 %><%= t2 %>
-      <%- } -%>
+      <% } %>
    end interface operator(==)
 
 contains
 
-   <%- REALS.each{|t| -%>
+   <% REALS.each{|t| %>
       elemental function is_nan<%= t %>(x) result(answer)
          logical:: answer
          <%= t.declare %>, intent(in):: x
@@ -66,9 +66,9 @@ contains
 
          answer = x > huge(x)
       end function is_infinity<%= t %>
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|t| -%>
+   <% INTEGERS.each{|t| %>
       elemental function is_nan<%= t %>(n) result(answer)
          logical:: answer
          <%= t.declare %>, intent(in):: n
@@ -82,9 +82,9 @@ contains
 
          answer = .false.
       end function is_infinity<%= t %>
-   <%- } -%>
+   <% } %>
 
-   <%- REAL_PAIRS.each{|t1, t2| -%>
+   <% REAL_PAIRS.each{|t1, t2| %>
       ! This function assumes gradual underflow is not flushed to zero.
       ! For example, -no-ftz option should be added when you compile this module by ifort.
       elemental function almost_equal<%= t1 %><%= t2 %>(a, b, rtol, atol) result(answer)
@@ -133,9 +133,9 @@ contains
          delta = max(deltaRelative, deltaAbsolute)
          answer = (abs(a - b) <= delta)
       end function almost_equal<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 
-   <%- COMPLEX_PAIRS.each{|t1, t2| -%>
+   <% COMPLEX_PAIRS.each{|t1, t2| %>
       elemental function almost_equal<%= t1 %><%= t2 %>(a, b, delta) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
@@ -148,9 +148,9 @@ contains
             answer = almost_equal(real(a), real(b)) .and. almost_equal(aimag(a), aimag(b))
          end if
       end function almost_equal<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGER_PAIRS.each{|t1, t2| -%>
+   <% INTEGER_PAIRS.each{|t1, t2| %>
       elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
@@ -158,9 +158,9 @@ contains
 
          answer = (a == b)
       end function almost_equal<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 
-   <%- LOGICAL_PAIRS.each{|t1, t2| -%>
+   <% LOGICAL_PAIRS.each{|t1, t2| %>
       elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
@@ -168,9 +168,9 @@ contains
 
          answer = a .eqv. b
       end function almost_equal<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 
-   <%- CHARACTER_PAIRS.each{|t1, t2| -%>
+   <% CHARACTER_PAIRS.each{|t1, t2| %>
       elemental function almost_equal<%= t1 %><%= t2 %>(a, b) result(answer)
          logical:: answer
          <%= t1.declare %>, intent(in):: a
@@ -178,5 +178,5 @@ contains
 
          answer = (a == b)
       end function almost_equal<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 end module comparable_lib

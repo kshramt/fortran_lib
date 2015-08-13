@@ -1,7 +1,7 @@
-<%-
+<%
   require 'fort'
   pairs = ('a'..'z').map{|c| [c, c.ord]}
--%>
+%>
 # include "fortran_lib.h"
 program main
    USE_FORTRAN_LIB_H
@@ -14,24 +14,24 @@ program main
    Logical:: found
 
    <% [1, 2].each{|_| %>
-      <%- pairs.shuffle.each{|c, i| -%>
+      <% pairs.shuffle.each{|c, i| %>
          call put(t, '<%= c %>', <%= i %>)
-      <%- } -%>
-      <%- pairs.shuffle.each{|c, i| -%>
+      <% } %>
+      <% pairs.shuffle.each{|c, i| %>
          TEST(get(t, '<%= c %>') == <%= i %>)
-      <%- } -%>
+      <% } %>
 
       n = get(t, 'not in t', found)
       TEST(.not.found)
 
-      <%- pairs.shuffle.each{|c, i| -%>
+      <% pairs.shuffle.each{|c, i| %>
          call delete(t, '<%= c %>')
-      <%- } -%>
+      <% } %>
 
-      <%- pairs.shuffle.each{|c, i| -%>
+      <% pairs.shuffle.each{|c, i| %>
          n = get(t, '<%= c %>', found)
          TEST(.not.found)
-      <%- } -%>
+      <% } %>
    <% } %>
 
    write(OUTPUT_UNIT, *) "SUCCESS: ", __FILE__

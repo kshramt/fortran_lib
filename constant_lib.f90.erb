@@ -1,8 +1,8 @@
-<%-
+<%
   require 'fort'
 
   REALS = ::Fort::Type::Real.multi_provide(dim: 0)
--%>
+%>
 
 module constant_lib
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
@@ -17,13 +17,13 @@ module constant_lib
    public:: rad_from_deg, deg_from_rad
 
    character, parameter, public:: TAB = char(9)
-   <%- REALS.each{|t| -%>
+   <% REALS.each{|t| %>
       <%= t.declare %>, parameter, public:: PI<%= t %> = 4*atan(1.0_<%= t.kind %>)
       <%= t.declare %>, parameter, public:: PI_<%= t.kind %> = PI<%= t %>
-   <%- } -%>
+   <% } %>
    Integer, parameter, public:: ZERO = 0_INT8, ONE = 1_INT8
 
-   <%- REALS.each{|t| -%>
+   <% REALS.each{|t| %>
       interface deg_from_rad
          module procedure deg_from_rad<%= t %>
       end interface deg_from_rad
@@ -31,7 +31,7 @@ module constant_lib
       interface rad_from_deg
          module procedure rad_from_deg<%= t %>
       end interface rad_from_deg
-   <%- } -%>
+   <% } %>
 
 contains
 
@@ -53,7 +53,7 @@ contains
       read(buf, *) answer
    end function get_infinity
 
-   <%- REALS.each{|t| -%>
+   <% REALS.each{|t| %>
       elemental function rad_from_deg<%= t %>(deg) result(rad)
          <%= t.declare %>, parameter:: PI = PI<%= t %>
          <%= t.declare %>, intent(in):: deg
@@ -69,5 +69,5 @@ contains
 
          deg = 180*rad/PI
       end function deg_from_rad<%= t %>
-   <%- } -%>
+   <% } %>
 end module constant_lib

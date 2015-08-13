@@ -1,4 +1,4 @@
-<%-
+<%
   require 'fort'
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
@@ -19,7 +19,7 @@
   def kind(t)
     t.kind.to_s.sub(/\Areal/, '').to_i
  end
--%>
+%>
 
 # include "fortran_lib.h"
 module array_lib
@@ -36,33 +36,33 @@ module array_lib
    public:: l2_norm
    public:: iota
 
-   <%- (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| -%>
+   <% (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| %>
       interface mul_diag
          module procedure mul_diag_Ad<%= t2 %><%= t1 %>
          module procedure mul_diag_dA<%= t1 %><%= t2 %>
       end interface mul_diag
-   <%- } -%>
+   <% } %>
 
-   <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
+   <% ARRAYS.product(INTEGERS).each{|t, ti| %>
       interface get
          module procedure get<%= t %><%= ti %>
       end interface get
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|t| -%>
+   <% INTEGERS.each{|t| %>
       interface eye
          module procedure eye_mn<%= t %>
          module procedure eye_n<%= t %>
       end interface eye
-   <%- } -%>
+   <% } %>
 
-   <%- REAL1S.each{|t| -%>
+   <% REAL1S.each{|t| %>
       interface l2_norm
          module procedure l2_norm<%= t %>
       end interface l2_norm
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|t1| -%>
+   <% INTEGERS.each{|t1| %>
       interface iota
          module procedure iota_1<%= t1.id %>
       end interface iota
@@ -71,7 +71,7 @@ module array_lib
          module procedure get_iota_size_1<%= t1.id %>
       end interface get_iota_size
 
-      <%- INTEGERS.each{|t2| -%>
+      <% INTEGERS.each{|t2| %>
          interface iota
             module procedure iota_2<%= t1.id %><%= t2.id %>
          end interface iota
@@ -80,7 +80,7 @@ module array_lib
             module procedure get_iota_size_2<%= t1.id %><%= t2.id %>
          end interface get_iota_size
 
-         <%- INTEGERS.each{|t3| -%>
+         <% INTEGERS.each{|t3| %>
             interface iota
                module procedure iota_3<%= t1.id %><%= t2.id %><%= t3.id %>
             end interface iota
@@ -88,17 +88,17 @@ module array_lib
             interface get_iota_size
                module procedure get_iota_size_3<%= t1.id %><%= t2.id %><%= t3.id %>
             end interface get_iota_size
-         <%- } -%>
-      <%- } -%>
-   <%- } -%>
+         <% } %>
+      <% } %>
+   <% } %>
 
 contains
 
-   <%- (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| -%>
-      <%-
+   <% (REAL1S + COMPLEX1S).product((REAL2S + COMPLEX2S)).each{|t1, t2| %>
+      <%
          t_ret = (t1.type == :Complex or t2.type == :Complex) ? :Complex : :Real
          k_ret = "real#{kind_max(t1, t2)}".to_sym
-      -%>
+      %>
       function mul_diag_Ad<%= t2 %><%= t1 %>(A, d) result(ret)
          Integer(kind=int64):: i
          <%= t2.declare %>, intent(in):: A
@@ -121,9 +121,9 @@ contains
             ret(i, :) = d_(i)*A(i, :)
          end do
       end function mul_diag_dA<%= t1 %><%= t2 %>
-   <%- } -%>
+   <% } %>
 
-   <%- ARRAYS.product(INTEGERS).each{|t, ti| -%>
+   <% ARRAYS.product(INTEGERS).each{|t, ti| %>
       function get<%= t %><%= ti %>(xs, i) result(ret)
          <%= t.declare %>, intent(in):: xs
          <%= ti.declare %>, intent(in):: i
@@ -131,9 +131,9 @@ contains
 
          ret = xs(i)
       end function get<%= t %><%= ti %>
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|t| -%>
+   <% INTEGERS.each{|t| %>
       function eye_n<%= t %>(n) result(ret)
          <%= t.declare %>, intent(in):: n
          Integer(kind=INT8):: ret(n, n)
@@ -151,18 +151,18 @@ contains
             ret(i, i) = 1
          end do
       end function eye_mn<%= t %>
-   <%- } -%>
+   <% } %>
 
-   <%- REAL1S.each{|t| -%>
+   <% REAL1S.each{|t| %>
       pure function l2_norm<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(in):: xs
          Real(kind=kind(xs)):: ret
 
          ret = norm2(xs)**2
       end function l2_norm<%= t %>
-   <%- } -%>
+   <% } %>
 
-   <%- INTEGERS.each{|t1| -%>
+   <% INTEGERS.each{|t1| %>
       pure function iota_1<%= t1.id %>(end) result(ret)
          <%= t1.declare %>, intent(in):: end
          Integer(kind=kind(end)):: ret(get_iota_size(end))
@@ -177,7 +177,7 @@ contains
          ret = get_iota_size(int(1, kind=INT8), end)
       end function get_iota_size_1<%= t1.id %>
 
-      <%- INTEGERS.each{|t2| -%>
+      <% INTEGERS.each{|t2| %>
          pure function iota_2<%= t1.id %><%= t2.id %>(first, end) result(ret)
             <%= t1.declare %>, intent(in):: first
             <%= t2.declare %>, intent(in):: end
@@ -194,7 +194,7 @@ contains
             ret = get_iota_size(first, end, int(int(1, kind=INT8), kind=INT8))
          end function get_iota_size_2<%= t1.id %><%= t2.id %>
 
-         <%- INTEGERS.each{|t3| -%>
+         <% INTEGERS.each{|t3| %>
             pure function iota_3<%= t1.id %><%= t2.id %><%= t3.id %>(first, end, step) result(ret)
                <%= t1.declare %>, intent(in):: first
                <%= t2.declare %>, intent(in):: end
@@ -213,7 +213,7 @@ contains
 
                ret = max((end - first + step)/step, int(0, kind=kind(ret)))
             end function get_iota_size_3<%= t1.id %><%= t2.id %><%= t3.id %>
-         <%- } -%>
-      <%- } -%>
-   <%- } -%>
+         <% } %>
+      <% } %>
+   <% } %>
 end module array_lib

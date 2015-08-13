@@ -1,10 +1,10 @@
-<%-
+<%
   require 'fort'
 
   INTEGERS = ::Fort::Type::Integer.multi_provide(dim: 0)
   REALS = ::Fort::Type::Real.multi_provide(dim: 0)
   TYPES = INTEGERS + REALS
--%>
+%>
 
 #include "fortran_lib.h"
 module sort_lib
@@ -27,7 +27,7 @@ module sort_lib
    public:: select
    public:: partitioning
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface median
          module procedure median<%= t %>
       end interface median
@@ -40,7 +40,7 @@ module sort_lib
          module procedure median_of_medianing<%= t %>
       end interface median_of_medianing
 
-      <%- INTEGERS.each{|ti| -%>
+      <% INTEGERS.each{|ti| %>
          interface select
             module procedure select<%= t %><%= ti %>
          end interface select
@@ -48,7 +48,7 @@ module sort_lib
          interface selecting
             module procedure selecting<%= t %><%= ti %>
          end interface selecting
-      <%- } -%>
+      <% } %>
 
       interface partitioning
          module procedure partitioning<%= t %>
@@ -101,11 +101,11 @@ module sort_lib
       interface swapping
          module procedure swapping<%= t %>
       end interface swapping
-   <%- } -%>
+   <% } %>
 
 contains
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       function median<%= t %>(xs) result(ret)
          <%= t.declare %>, intent(in):: xs(:)
          <%= t.declare %>:: xsCopy(size(xs, dim=1, kind=INT64))
@@ -139,7 +139,7 @@ contains
          ret = select([(selecting(xs((5*(i - 1) + 1):(5*i)), 3), i = 1, nXs/5)], nXs/10 + 1)
       end function median_of_medianing<%= t %>
 
-      <%- INTEGERS.each{|ti| -%>
+      <% INTEGERS.each{|ti| %>
          recursive function select<%= t %><%= ti %>(xs, k) result(ret)
             <%= t.declare %>, intent(in):: xs(:)
             <%= ti.declare %>, intent(in):: k
@@ -169,7 +169,7 @@ contains
                ret = get(merge_sort(xs), k)
             end if
          end function selecting<%= t %><%= ti %>
-      <%- } -%>
+      <% } %>
 
       subroutine partitioning<%= t %>(xs, pivot, iPivot)
          <%= t.declare %>, intent(inout):: xs(:)
@@ -402,5 +402,5 @@ contains
          b = a
          a = swap
       end subroutine swapping<%= t %>
-   <%- } -%>
+   <% } %>
 end module sort_lib

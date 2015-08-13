@@ -1,4 +1,4 @@
-<%-
+<%
 def enlarge(sml_n, scale)
   sml_n\
     .map{|array| array\
@@ -19,7 +19,7 @@ SML_SETS = [
 ]
 
 SORTS = [:quick, :merge, :insertion]
--%>
+%>
 
 #include "fortran_lib.h"
 program sort_lib_test
@@ -67,62 +67,62 @@ program sort_lib_test
    end do
 
    ! size 0
-   <%- SORTS.each{|name| -%>
+   <% SORTS.each{|name| %>
       TEST(size(<%= name %>_sort([(i, i = 1, 0)])) == 0)
       TEST(size(<%= name %>_sort([(dble(i), i = 1, 0)])) == 0)
-   <%- } -%>
+   <% } %>
 
    ! size 1
-   <%- SORTS.each{|name| -%>
+   <% SORTS.each{|name| %>
       TEST(all(<%= name %>_sort([0]) == [0]))
       TEST(all(almost_equal(<%= name %>_sort([0.0]), [0.0])))
-   <%- } -%>
+   <% } %>
 
-   <%- SORTS.each{|name| -%>
-      <%- [SML_SETS.last].each{|sml_set| -%>
-         <%- enlarge(sml_set, SCALE_UNI).each{|input, sorted| -%>
+   <% SORTS.each{|name| %>
+      <% [SML_SETS.last].each{|sml_set| %>
+         <% enlarge(sml_set, SCALE_UNI).each{|input, sorted| %>
             TEST(all(<%= name %>_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-         <%- } -%>
+         <% } %>
 
-         <%- enlarge(sml_set, SCALE_I).each{|input, sorted| -%>
+         <% enlarge(sml_set, SCALE_I).each{|input, sorted| %>
             TEST(all(<%= name %>_sort(<%= input.inspect %>) == <%= sorted.inspect %>))
-         <%- } -%>
+         <% } %>
 
-         <%- enlarge(sml_set, SCALE_F).each{|input, sorted| -%>
+         <% enlarge(sml_set, SCALE_F).each{|input, sorted| %>
             TEST(all(almost_equal(<%= name %>_sort(<%= input.inspect %>), <%= sorted.inspect %>)))
-         <%- } -%>
-      <%- } -%>
-   <%- } -%>
+         <% } %>
+      <% } %>
+   <% } %>
 
    do nDArray = 1, 2049
       allocate(dArray(nDArray))
       call random_number(dArray)
       dArray = dArray*0.01 - 0.005
-      <%- SORTS.each{|name| -%>
+      <% SORTS.each{|name| %>
          sortedDArray = <%= name %>_sort(dArray)
          ASSERT(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
-      <%- } -%>
+      <% } %>
       deallocate(dArray)
    end do
    nDArray = 10000
    allocate(dArray(nDArray))
    call random_number(dArray)
    dArray = dArray*0.01 - 0.005
-   <%- SORTS.each{|name| -%>
+   <% SORTS.each{|name| %>
       sortedDArray = <%= name %>_sort(dArray)
       TEST(all(sortedDArray(1:nDArray - 1) <= sortedDArray(2:nDArray)))
-   <%- } -%>
+   <% } %>
    deallocate(dArray)
 
    ! Infinity
-   <%- SORTS.each{|name| -%>
+   <% SORTS.each{|name| %>
       TEST(all(almost_equal(<%= name %>_sort([0.0, get_infinity(), -get_infinity()]), [-get_infinity(), 0.0, get_infinity()])))
-   <%- } -%>
+   <% } %>
 
    ! Bug check
-   <%- SORTS.each{|name| -%>
+   <% SORTS.each{|name| %>
       TEST(all(almost_equal(<%= name %>_sort([0.992602646, 0.992602706]), [0.992602646, 0.992602706])))
-   <%- } -%>
+   <% } %>
 
    write(OUTPUT_UNIT, *) 'SUCCESS: ', __FILE__
    stop

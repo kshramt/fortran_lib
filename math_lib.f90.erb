@@ -1,4 +1,4 @@
-<%-
+<%
   require 'fort'
   REALS_DIM0 = ::Fort::Type::Real.multi_provide(dim: 0)
   REALS_DIM1 = ::Fort::Type::Real.multi_provide(dim: 1)
@@ -6,7 +6,7 @@
   COMPLEXS_DIM1 = ::Fort::Type::Complex.multi_provide(dim: 1)
 
   I_KS = [8, 16, 32, 64]
--%>
+%>
 # include "fortran_lib.h"
 module math_lib
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
@@ -21,13 +21,13 @@ module math_lib
    public:: rosenbrock_fgh
    public:: convolution ! time domain
 
-   <%- I_KS.each{|k| -%>
+   <% I_KS.each{|k| %>
       interface mod1
          module procedure mod1_<%= k %>
       end interface mod1
-   <%- } -%>
+   <% } %>
 
-   <%- REALS_DIM0.each{|t| -%>
+   <% REALS_DIM0.each{|t| %>
       interface linear_transform
          module procedure linear_transform<%= t %>
       end interface linear_transform
@@ -39,18 +39,18 @@ module math_lib
       interface rosenbrock_fgh
          module procedure rosenbrock_fgh<%= t %>
       end interface rosenbrock_fgh
-   <%- } -%>
+   <% } %>
 
-   <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
+   <% (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| %>
       interface convolution
          module procedure convolution<%= t %>
       end interface convolution
-   <%- } -%>
+   <% } %>
 
 contains
 
 
-   <%- I_KS.each{|k| -%>
+   <% I_KS.each{|k| %>
       elemental function mod1_<%= k %>(i, n) result(ret)
          Integer(kind=int<%= k %>):: ret
          Integer(kind=kind(ret)), intent(in):: i, n
@@ -64,10 +64,10 @@ contains
             ret = n + m
          end if
       end function mod1_<%= k %>
-   <%- } -%>
+   <% } %>
 
 
-   <%- (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| -%>
+   <% (REALS_DIM1 + INTEGERS_DIM1 + COMPLEXS_DIM1).each{|t| %>
       ! zs = xs*ys (* is a convolution operator)
       ! ASSUMPTIONS:
       ! - dX = dY = dZ
@@ -124,9 +124,9 @@ contains
             zs(i) = dot_product(ys(i-nXs+1:nYs), xs(nXs:i-nYs+1:-1))
          end do
       end subroutine convolution_short_with_long<%= t %>
-   <%- } -%>
+   <% } %>
 
-   <%- REALS_DIM0.each{|t| -%>
+   <% REALS_DIM0.each{|t| %>
       elemental function rosenbrock<%= t %>(x, y) result(ret)
          <%= t.declare %>, intent(in):: x, y
          <%= t.declare %>:: ret
@@ -157,5 +157,5 @@ contains
 
          y = (x - x0)/(x1 - x0)*(y1 - y0) + y0
       end function linear_transform<%= t %>
-   <%- } -%>
+   <% } %>
 end module math_lib

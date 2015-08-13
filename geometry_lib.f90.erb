@@ -1,15 +1,15 @@
-<%-
+<%
    KS = [32, 64, 128]
--%>
+%>
 
 #include "fortran_lib.h"
 module geometry_lib
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
    use, intrinsic:: iso_fortran_env, only: int64
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       use, intrinsic:: iso_fortran_env, only: real<%= k %>
-   <%- } -%>
+   <% } %>
    use, non_intrinsic:: math_lib, only: mod1
 
    implicit none
@@ -28,7 +28,7 @@ module geometry_lib
 
    ! Interface
 
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       interface is_in
          module procedure is_in_LeftConvexPolygon<%= k %>
       end interface is_in
@@ -69,15 +69,15 @@ module geometry_lib
       interface cross
          module procedure cross<%= k %>
       end interface cross
-   <%- } -%>
+   <% } %>
 
 
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       type, public:: LeftConvexPolygon<%= k %>
          Real(kind=real<%= k %>), allocatable:: xs(:)
          Real(kind=real<%= k %>), allocatable:: ys(:)
       end type LeftConvexPolygon<%= k %>
-   <%- } -%>
+   <% } %>
 
 
    Integer, parameter, public:: point = 0
@@ -90,7 +90,7 @@ module geometry_lib
 contains
 
 
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       elemental function is_in_LeftConvexPolygon<%= k %>(self, x, y) result(ret)
          Logical:: ret
          type(LeftConvexPolygon<%= k %>), intent(in):: self
@@ -258,5 +258,5 @@ contains
 
          ret = u1*v2 - u2*v1
       end function cross<%= k %>
-   <%- } -%>
+   <% } %>
 end module geometry_lib

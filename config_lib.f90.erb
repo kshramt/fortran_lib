@@ -21,14 +21,14 @@ module config_lib
    public:: get_config_value
 
    interface get_config_value
-      <%- TYPES.each{|t| -%>
+      <% TYPES.each{|t| %>
           module procedure get_config_value<%= t %>
-      <%- } -%>
+      <% } %>
    end interface get_config_value
 
 contains
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       function get_config_value<%= t %>(io, key, value) result(isKeyExist)
          Integer:: io
          Character(len=*), intent(in):: key
@@ -51,5 +51,5 @@ contains
             if(ios /= 0) exit
          end do
       end function get_config_value<%= t %>
-   <%- } -%>
+   <% } %>
 end module config_lib

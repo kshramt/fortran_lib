@@ -1,4 +1,4 @@
-<%-
+<%
   RKINDS = [
     32,
     64,
@@ -43,7 +43,7 @@
     ge: :>=,
     gt: :>,
   }
--%>
+%>
 #include "fortran_lib.h"
 
 ! todo: optimize when necessary
@@ -58,12 +58,12 @@
 #define sin_p2(x) (-sin(x))
 
 module ad_lib
-   <%- RKINDS.each{|k|-%>
+   <% RKINDS.each{|k|%>
       use, intrinsic:: iso_fortran_env, only: real<%= k %>
-   <%- } -%>
-   <%- IKINDS.each{|k|-%>
+   <% } %>
+   <% IKINDS.each{|k|%>
       use, intrinsic:: iso_fortran_env, only: int<%= k %>
-   <%- } -%>
+   <% } %>
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
 
@@ -76,29 +76,29 @@ module ad_lib
    ! functions
    public:: dot_product
    public:: sum
-   <%- FN1S.each{|fn| -%>
+   <% FN1S.each{|fn| %>
       public:: <%= fn %>
-   <%- } -%>
+   <% } %>
    ! operators
-   <%- (OPS.merge(COMPS)).each{|_, op| -%>
+   <% (OPS.merge(COMPS)).each{|_, op| %>
       public:: operator(<%= op %>)
-   <%- } -%>
+   <% } %>
 
    type, public:: DualNumber
    end type DualNumber
 
-   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+   <% RKINDS_ORDERS_NS.each{|kd, o, n| %>
       type, extends(DualNumber), public:: Dual<%= kd %>_<%= o %>_<%= n %>
          Real(kind=real<%= kd %>):: f = 0
          Real(kind=real<%= kd %>):: g(<%= n %>) = 0
-         <%- if o > 1 -%>
+         <% if o > 1 %>
             Real(kind=real<%= kd %>):: h(<%= n %>, <%= n %>) = 0
-         <%- end -%>
+         <% end %>
       end type Dual<%= kd %>_<%= o %>_<%= n %>
-   <%- } -%>
+   <% } %>
 
    ! Interface
-   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+   <% RKINDS_ORDERS_NS.each{|kd, o, n| %>
       interface kind
          module procedure kind_<%= kd %>_<%= o %>_<%= n %>
       end interface kind
@@ -111,17 +111,17 @@ module ad_lib
          module procedure grad_<%= kd %>_<%= o %>_<%= n %>
       end interface grad
 
-      <%- [:epsilon, :tiny, :huge].each{|fn1| -%>
+      <% [:epsilon, :tiny, :huge].each{|fn1| %>
          interface <%= fn1 %>
             module procedure <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
          end interface <%= fn1 %>
-      <%- } -%>
+      <% } %>
 
-      <%- if o > 1 -%>
+      <% if o > 1 %>
          interface hess
             module procedure hess_<%= kd %>_<%= o %>_<%= n %>
          end interface hess
-      <%- end -%>
+      <% end %>
 
       <% RKINDS.each{|kd2| %>
          interface dot_product
@@ -135,38 +135,38 @@ module ad_lib
          module procedure sum_<%= kd %>_<%= o %>_<%= n %>_1
       end interface sum
 
-      <%- FN1S.each{|fn1| -%>
+      <% FN1S.each{|fn1| %>
          interface <%= fn1 %>
             module procedure <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
          end interface <%= fn1 %>
-      <%- } -%>
+      <% } %>
 
       interface operator(-)
          module procedure neg_<%= kd %>_<%= o %>_<%= n %>
       end interface operator(-)
 
-      <%- (OPS.merge(COMPS)).each{|fn2, op| -%>
-         <%- RKINDS.each{|kdr| -%>
+      <% (OPS.merge(COMPS)).each{|fn2, op| %>
+         <% RKINDS.each{|kdr| %>
             interface operator(<%= op %>)
                module procedure <%= fn2 %>_dd_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
 
                module procedure <%= fn2 %>_dr_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
                module procedure <%= fn2 %>_rd_<%= kdr %>_<%= kd %>_<%= o %>_<%= n %>
             end interface operator(<%= op %>)
-         <%- } -%>
+         <% } %>
 
-         <%- IKINDS.each{|ki| -%>
+         <% IKINDS.each{|ki| %>
             interface operator(<%= op %>)
                module procedure <%= fn2 %>_di_<%= kd %>_<%= ki %>_<%= o %>_<%= n %>
                module procedure <%= fn2 %>_id_<%= ki %>_<%= kd %>_<%= o %>_<%= n %>
             end interface operator(<%= op %>)
-         <%- } -%>
-      <%- } -%>
-   <%- } -%>
+         <% } %>
+      <% } %>
+   <% } %>
 
 contains
 
-   <%- RKINDS_ORDERS_NS.each{|kd, o, n| -%>
+   <% RKINDS_ORDERS_NS.each{|kd, o, n| %>
       elemental function kind_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
          Integer:: ret
@@ -174,14 +174,14 @@ contains
          ret = <%= kd %>
       end function kind_<%= kd %>_<%= o %>_<%= n %>
 
-      <%- [:epsilon, :tiny, :huge].each{|fn1| -%>
+      <% [:epsilon, :tiny, :huge].each{|fn1| %>
          elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             Real(kind=real<%= kd %>):: ret
 
             ret = <%= fn1 %>(ret)
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
-      <%- } -%>
+      <% } %>
 
       elemental function real_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -197,7 +197,7 @@ contains
          ret = x%g
       end function grad_<%= kd %>_<%= o %>_<%= n %>
 
-      <%- if o > 1 -%>
+      <% if o > 1 %>
          pure function hess_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             Real(kind=real<%= kd %>):: ret(<%= n %>, <%= n %>)
@@ -211,9 +211,9 @@ contains
                end do
             end do
          end function hess_<%= kd %>_<%= o %>_<%= n %>
-      <%- end -%>
+      <% end %>
 
-      <%- RKINDS.each{|kd2| -%>
+      <% RKINDS.each{|kd2| %>
          pure function dot_product_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y(size(x))
@@ -221,16 +221,16 @@ contains
 
             z = sum(x*y)
          end function dot_product_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
-      <%- } -%>
+      <% } %>
 
-      <%- RKINDS.each{|kr| -%>
-         <%-
+      <% RKINDS.each{|kr| %>
+         <%
             t = :r
             t_decl = "Real(kind=real#{kr})"
             k_ret = [kd, kr].max
             d_r = "dot_product_d#{t}_#{kd}_#{kr}_#{o}_#{n}"
             r_d = "dot_product_#{t}d_#{kr}_#{kd}_#{o}_#{n}"
-         -%>
+         %>
          pure function <%= d_r %>(x, y) result(z)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x(:)
             <%= t_decl %>, intent(in):: y(size(x))
@@ -246,7 +246,7 @@ contains
 
             z = sum(x*y)
          end function <%= r_d %>
-      <%- } -%>
+      <% } %>
 
       pure function sum_<%= kd %>_<%= o %>_<%= n %>_1(x) result(y)
          Integer(kind=int64), parameter:: one = 1
@@ -284,25 +284,25 @@ contains
          end do
       end function sum_seq_<%= kd %>_<%= o %>_<%= n %>_1
 
-      <%- FN1S.each{|fn1| -%>
+      <% FN1S.each{|fn1| %>
          elemental function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>(x) result(y)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
             Real(kind=real<%= kd %>):: xf, fn_p1
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                Integer:: i, j
-               <%- unless fn1 == :abs -%>
+               <% unless fn1 == :abs %>
                   Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
-               <%- end -%>
-            <%- end -%>
+               <% end %>
+            <% end %>
 
             xf = x%f
             y%f = <%= fn1 %>(xf)
             fn_p1 = <%= fn1 %>_p1(xf)
             y%g = fn_p1*x%g
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                y%h = fn_p1*x%h
-               <%- unless fn1 == :abs -%>
+               <% unless fn1 == :abs %>
                   fn_p2 = <%= fn1 %>_p2(xf)
                   do, concurrent(j = 1:<%= n %>)
                      fn_p2_xj = fn_p2*x%g(j)
@@ -310,10 +310,10 @@ contains
                         y%h(i, j) = y%h(i, j) + fn_p2_xj*x%g(i)
                      end do
                   end do
-               <%- end -%>
-            <%- end -%>
+               <% end %>
+            <% end %>
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
-      <%- } -%>
+      <% } %>
 
       elemental function neg_<%= kd %>_<%= o %>_<%= n %>(x) result(y)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -321,16 +321,16 @@ contains
 
          y%f = -x%f
          y%g = -x%g
-         <%- if o > 1 -%>
+         <% if o > 1 %>
             y%h = -x%h
-         <%- end -%>
+         <% end %>
       end function neg_<%= kd %>_<%= o %>_<%= n %>
 
-      <%- RKINDS.each{|kd2| -%>
-         <%- suffix = "_dd_#{kd}_#{kd2}_#{o}_#{n}"-%>
+      <% RKINDS.each{|kd2| %>
+         <% suffix = "_dd_#{kd}_#{kd2}_#{o}_#{n}"%>
 
-         <%- [:add, :sub].each{|fn2| -%>
-            <%- op = OPS[fn2] -%>
+         <% [:add, :sub].each{|fn2| %>
+            <% op = OPS[fn2] %>
             elemental function <%= fn2 %><%= suffix %>(x, y) result(z)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
                type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
@@ -338,28 +338,28 @@ contains
 
                z%f = x%f <%= op %> y%f
                z%g = x%g <%= op %> y%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x%h <%= op %> y%h
-               <%- end -%>
+               <% end %>
             end function <%= fn2 %><%= suffix %>
-         <%- } -%>
+         <% } %>
 
          elemental function mul_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
             type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                Integer:: i, j
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj
-            <%- end -%>
+            <% end %>
 
             xf = x%f
             yf = y%f
             z%f = xf*yf
 
             z%g = x%g*yf + y%g*xf
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                do, concurrent(j = 1:<%= n %>)
                   xj = x%g(j)
                   yj = y%g(j)
@@ -367,7 +367,7 @@ contains
                      z%h(i, j) = x%h(i, j)*yf + y%h(i, j)*xf + x%g(i)*yj + y%g(i)*xj
                   end do
                end do
-            <%- end -%>
+            <% end %>
          end function mul_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
 
          elemental function div_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
@@ -375,10 +375,10 @@ contains
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf, div_y, div_y2, x_div_y2, fn_py
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                Integer:: i, j
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
-            <%- end -%>
+            <% end %>
 
             xf = x%f
             yf = y%f
@@ -390,7 +390,7 @@ contains
             x_div_y2 = xf*div_y2
             fn_py = -x_div_y2
             z%g = x%g*div_y + y%g*fn_py
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                ! fn_pxx = 0
                fn_pxy = -div_y2
                fn_pyy = 2*x_div_y2*div_y
@@ -403,7 +403,7 @@ contains
                      z%h(i, j) = x%h(i, j)*div_y + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
-            <%- end -%>
+            <% end %>
          end function div_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
 
          elemental function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(z)
@@ -411,10 +411,10 @@ contains
             type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf, fn_px, fn_py, x_pow_y, x_pow_y_sub_1, log_x
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                Integer:: i, j
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxx, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
-            <%- end -%>
+            <% end %>
 
             xf = x%f
             yf = y%f
@@ -429,7 +429,7 @@ contains
             log_x = log(xf)
             fn_py = log_x*x_pow_y
             z%g = x%g*fn_px + y%g*fn_py
-            <%- if o > 1 -%>
+            <% if o > 1 %>
                fn_pxx = yf*(yf - 1)*xf**(yf - 2)
                fn_pxy = (1 + yf*log_x)*x_pow_y_sub_1
                fn_pyy = log_x*fn_py ! = log_x**2*x_pow_y
@@ -442,19 +442,19 @@ contains
                      z%h(i, j) = x%h(i, j)*fn_px + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
                   end do
                end do
-            <%- end -%>
+            <% end %>
          end function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
-      <%- } -%>
+      <% } %>
 
-      <%- [:r, :i].each{|t| -%>
-         <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
-            <%-
+      <% [:r, :i].each{|t| %>
+         <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
+            <%
               t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
               # this promotion rule emulates Fortran
               k_ret = t == :r ? [kd, kri].max : kd
               d_ri = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
               ri_d = "_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
-            -%>
+            %>
             elemental function add<%= d_ri %>(x, y) result(z)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
                <%= t_decl %>, intent(in):: y
@@ -462,9 +462,9 @@ contains
 
                z%f = x%f + y
                z%g = x%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x%h
-               <%- end -%>
+               <% end %>
             end function add<%= d_ri %>
 
             elemental function add<%= ri_d %>(x, y) result(z)
@@ -474,9 +474,9 @@ contains
 
                z%f = x + y%f
                z%g = y%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = y%h
-               <%- end -%>
+               <% end %>
             end function add<%= ri_d %>
 
             elemental function sub<%= d_ri %>(x, y) result(z)
@@ -486,9 +486,9 @@ contains
 
                z%f = x%f - y
                z%g = x%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x%h
-               <%- end -%>
+               <% end %>
             end function sub<%= d_ri %>
 
             elemental function sub<%= ri_d %>(x, y) result(z)
@@ -498,9 +498,9 @@ contains
 
                z%f = x - y%f
                z%g = -y%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = -y%h
-               <%- end -%>
+               <% end %>
             end function sub<%= ri_d %>
 
             elemental function mul<%= d_ri %>(x, y) result(z)
@@ -510,9 +510,9 @@ contains
 
                z%f = x%f*y
                z%g = x%g*y
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x%h*y
-               <%- end -%>
+               <% end %>
             end function mul<%= d_ri %>
 
             elemental function mul<%= ri_d %>(x, y) result(z)
@@ -522,9 +522,9 @@ contains
 
                z%f = x*y%f
                z%g = x*y%g
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x*y%h
-               <%- end -%>
+               <% end %>
             end function mul<%= ri_d %>
 
             elemental function div<%= d_ri %>(x, y) result(z)
@@ -534,9 +534,9 @@ contains
 
                z%f = x%f/y
                z%g = x%g/y
-               <%- if o > 1 -%>
+               <% if o > 1 %>
                   z%h = x%h/y
-               <%- end -%>
+               <% end %>
             end function div<%= d_ri %>
 
             elemental function div<%= ri_d %>(x, y) result(z)
@@ -565,11 +565,11 @@ contains
                ! todo: optimize
                z = Dual<%= k_ret %>_<%= o %>_<%= n %>(x)**y
             end function pow<%= ri_d %>
-         <%- } -%>
-      <%- } -%>
+         <% } %>
+      <% } %>
 
-      <%- COMPS.each{|fn2, op| -%>
-         <%- RKINDS.each{|kd2| -%>
+      <% COMPS.each{|fn2, op| %>
+         <% RKINDS.each{|kd2| %>
             elemental function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(ret)
                type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
                type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
@@ -577,16 +577,16 @@ contains
 
                ret = x%f <%= op %> y%f
             end function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
-         <%- } -%>
+         <% } %>
 
-         <%- [:r, :i].each{|t| -%>
-            <%- (t == :r ? RKINDS : IKINDS).each{|kri| -%>
-               <%-
+         <% [:r, :i].each{|t| %>
+            <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
+               <%
                  t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
                  # this promotion rule emulates Fortran
                  d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
                  ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
-               -%>
+               %>
                elemental function <%= d_ri %>(x, y) result(ret)
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
                   <%= t_decl %>, intent(in):: y
@@ -602,8 +602,8 @@ contains
 
                   ret = x <%= op %> y%f
                end function <%= ri_d %>
-            <%- } -%>
-         <%- } -%>
-      <%- } -%>
-   <%- } -%>
+            <% } %>
+         <% } %>
+      <% } %>
+   <% } %>
 end module ad_lib

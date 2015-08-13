@@ -1,4 +1,4 @@
-<%-
+<%
 def array_from_str(str)
   str\
     .split(/\n+/)\
@@ -54,7 +54,7 @@ cmplx(1.0, 1.0 - 2*epsilon(0.0));	cmplx(1.0, 1.0)
 # cancellation of significant digits
 4.7 - 2.3*2;	0.1
 EOS
--%>
+%>
 
 #include "fortran_lib.h"
 program comparable_lib_test
@@ -89,13 +89,13 @@ program comparable_lib_test
    TEST(.not.almost_equal(get_infinity(), -get_infinity()))
    TEST(almost_equal(get_infinity(), get_infinity()))
 
-   <%- TRUE_PAIRS.each{|i1, i2| -%>
+   <% TRUE_PAIRS.each{|i1, i2| %>
       TEST(almost_equal(<%= i1 %>, <%= i2 %>))
-   <%- } -%>
+   <% } %>
 
-   <%- FALSE_PAIRS.each{|i1, i2| -%>
+   <% FALSE_PAIRS.each{|i1, i2| %>
       TEST(.not.almost_equal(<%= i1 %>, <%= i2 %>))
-   <%- } -%>
+   <% } %>
 
    ! rtol
    TEST(.not.almost_equal(1.0, 0.9, rtol=0.1))

@@ -28,9 +28,9 @@ program main
 
    implicit none
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
      <%= t.declare %>, allocatable:: array<%= t %>
-   <%- } -%>
+   <% } %>
    Character(len=2**10):: dir
    type(ArrayMetaV3):: meta_v_3
    Integer(kind=int64):: version
@@ -49,20 +49,20 @@ program main
    case(3)
       call load_meta_v_3(meta_v_3, trim(dir))
       if(.false.)then
-      <%- (TYPES_1 + TYPES_2).each{|t| -%>
+      <% (TYPES_1 + TYPES_2).each{|t| %>
          else if(meta_v_3%type_ == '<%= t.type %>' .and. meta_v_3%kind_ == <%= t.kind %> .and. meta_v_3%dim == <%= t.dim %>)then
             call load(array<%= t %>, trim(dir))
-            <%- if t.dim == 1 -%>
+            <% if t.dim == 1 %>
                do ALL_OF(i, array<%= t %>, 1)
                   write(output_unit, '(g0)') array<%= t %>(i)
                end do
-            <%- else -%>
+            <% else %>
                form = get_column_format_string(array<%= t %>(1, 1), size(array<%= t %>, 2, kind=int64))
                do ALL_OF(i, array<%= t %>, 1)
                   write(output_unit, form) array<%= t %>(i, :)
                end do
-            <%- end -%>
-      <%- } -%>
+            <% end %>
+      <% } %>
       else
          ERROR('Unsupported data type: ' + str(meta_v_3%type_) + ' ' + str(meta_v_3%kind_) + ' ' + str(meta_v_3%dim))
       end if

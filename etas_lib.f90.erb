@@ -1,4 +1,4 @@
-<%-
+<%
    KS = [
      64,
      128,
@@ -8,7 +8,7 @@
    REALS = KS.map{|k| ["Real#{k}", "Real(kind=real#{k})", :Real, k]}
    DUALS = KS.product(NS).map{|k, n| ["Dual#{k}_#{n}", "type(Dual#{k}_2_#{n})", :Dual, k]}
    TYPES = REALS + DUALS
--%>
+%>
 
 
 #include "fortran_lib.h"
@@ -27,13 +27,13 @@ module etas_lib
    public:: log_likelihood_etas
    public:: omori_integrate
    public:: utsu_seki
-   <%- [:ge, :le, :lt].each{|name| -%>
+   <% [:ge, :le, :lt].each{|name| %>
       public:: index_<%= name %>
-   <%- } -%>
+   <% } %>
    public:: load
 
-   <%- TYPES.each{|suffix, decl, t, k| -%>
-      <%-
+   <% TYPES.each{|suffix, decl, t, k| %>
+      <%
         [
           :intensity_etas,
           :lambda_integrate,
@@ -41,11 +41,11 @@ module etas_lib
           :omori_integrate,
           :utsu_seki,
         ].each{|fn|
-      -%>
+      %>
          interface <%= fn %>
             module procedure <%= fn %><%= suffix %>
          end interface <%= fn %>
-      <%- } -%>
+      <% } %>
 
       interface log_likelihood_etas
          module procedure log_likelihood_etas<%= suffix %>
@@ -61,21 +61,21 @@ module etas_lib
          module procedure lambda_neg_p_t<%= suffix %>
          module procedure lambda_neg_p_j_t<%= suffix %>
       end interface lambda_neg_p
-   <%- } -%>
+   <% } %>
 
-   <%- REALS.each{|suffix, decl, t, k| -%>
-      <%- [:ge, :le, :lt].each{|name| -%>
+   <% REALS.each{|suffix, decl, t, k| %>
+      <% [:ge, :le, :lt].each{|name| %>
          interface index_<%= name %>
             module procedure index_<%= name %><%= suffix %>
          end interface index_<%= name %>
-      <%- } -%>
+      <% } %>
 
       interface load
          module procedure load_EtasInputs<%= suffix %>
       end interface load
-   <%- } -%>
+   <% } %>
 
-   <%- KS.each{|k| -%>
+   <% KS.each{|k| %>
       type, public:: EtasInputs<%= k %>
          Real(kind=real<%= k %>):: m_for_K
          Real(kind=real<%= k %>):: t_normalize_len
@@ -85,13 +85,13 @@ module etas_lib
          Real(kind=real<%= k %>), allocatable:: ms(:)
          Integer(kind=int64):: n
       end type EtasInputs<%= k %>
-   <%- } -%>
+   <% } %>
 
 
 contains
 
 
-   <%- TYPES.each{|suffix, decl, t, k| -%>
+   <% TYPES.each{|suffix, decl, t, k| %>
       function intensity_etas<%= suffix %>(t, t_normalize_len, mu, K, c, alpha, p, ts, dms) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, t_normalize_len, ts(:), dms(size64(ts))
@@ -121,11 +121,11 @@ contains
          coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
          mu_normalized = mu/t_normalize_len
          neg_p = -p
-         <%- if t == :Real -%>
+         <% if t == :Real %>
             log_lambdas = 0
-         <%- else -%>
+         <% else %>
             ! log_lambdas::Dual is already initialized to 0
-         <%- end -%>
+         <% end %>
          ! schedule(guided) is superior to schedule(static, 1), schedule(dynamic) or schedule(auto)
          ! reversing the loop order degrades performance and result in 2-fold slowdown.
          !$omp parallel do schedule(guided)
@@ -282,10 +282,10 @@ contains
             ret = (b**one_sub_p - a**one_sub_p)/one_sub_p
          end if
       end function integrate_inv_x_pow_p<%= suffix %>
-   <%- } -%>
+   <% } %>
 
 
-   <%- REALS.each{|suffix, decl, t, k| -%>
+   <% REALS.each{|suffix, decl, t, k| %>
       pure recursive function index_ge<%= suffix %>(ts, t, i1, i2) result(ret)
          ! Return the smallest ret where ts(ret) >= t
          ! Assumptions:
@@ -400,5 +400,5 @@ contains
          allocate(self%ts(self%n), source=ts(i_pre:i_end))
          allocate(self%ms(self%n), source=ms(i_pre:i_end))
       end subroutine load_EtasInputs<%= suffix %>
-   <%- } -%>
+   <% } %>
 end module etas_lib

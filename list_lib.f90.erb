@@ -40,9 +40,9 @@ module list_lib
    USE_FORTRAN_LIB_H
    <%= ::Fort::Type::USE_ISO_FORTRAN_ENV %>
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   <%- USERS_MODULES_AND_TYPES.each{|m, t| -%>
+   <% USERS_MODULES_AND_TYPES.each{|m, t| %>
       use, non_intrinsic:: <%= m %>, only: <%= (["assignment(=)"] + t).join(', ') %>
-   <%- } -%>
+   <% } %>
 
    implicit none
 
@@ -75,7 +75,7 @@ module list_lib
    type, public:: List
    end type List
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       type, extends(ListNode):: <%= t %>ListNode
          <%= t.declare %>:: val
          type(<%= t %>ListNode), pointer:: prev => null()
@@ -86,9 +86,9 @@ module list_lib
          type(<%= t %>ListNode), pointer:: entry => null()
          Integer:: size            ! Currently, integer is enough since max size of a dimension of an array is huge(0).
       end type <%= t %>List
-   <%- } -%>
+   <% } %>
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       interface size
          module procedure size<%= t %>
       end interface size
@@ -168,11 +168,11 @@ module list_lib
       interface copy
          module procedure copy<%= t %>
       end interface copy
-   <%- } -%>
+   <% } %>
 
 contains
 
-   <%- TYPES.each{|t| -%>
+   <% TYPES.each{|t| %>
       subroutine swap<%= t %>(self, pos1, pos2)
          type(<%= t %>List), intent(inout):: self
          integer, intent(in):: pos1, pos2
@@ -464,5 +464,5 @@ contains
 
          new = array_from_list(original)
       end subroutine copy<%= t %>
-   <%- } -%>
+   <% } %>
 end module list_lib

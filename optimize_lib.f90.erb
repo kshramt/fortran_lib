@@ -1,4 +1,4 @@
-<%-
+<%
    RKINDS = [32, 64]
    ORDERS = [0, 1]
 
@@ -11,7 +11,7 @@
          raise "Unsupported kind: #{k}"
       end
    end
--%>
+%>
 #include "fortran_lib.h"
 module optimize_lib
    USE_FORTRAN_LIB_H
@@ -31,7 +31,7 @@ module optimize_lib
    public:: combinations
 
 
-   <%- RKINDS.each{|k| -%>
+   <% RKINDS.each{|k| %>
       type, public:: BoundNewtonState<%= k %>
          Logical:: is_convex = .false.
          Logical:: is_within = .false.
@@ -86,10 +86,10 @@ module optimize_lib
          Real(kind=real<%= k %>):: f_best
          Real(kind=real<%= k %>):: g_best
       end type LineSearchState<%= k %>_1
-   <%- } -%>
+   <% } %>
 
 
-   <%- RKINDS.each{|k| -%>
+   <% RKINDS.each{|k| %>
       interface update
          module procedure updateNewtonState<%= k %>
          module procedure updateNewtonState_<%= k %>
@@ -123,7 +123,7 @@ module optimize_lib
          module procedure syevd<%= k %>
       end interface syevd
 
-      <%- ORDERS.each{|order| -%>
+      <% ORDERS.each{|order| %>
          interface update
             module procedure updateLineSearchState<%= k %>_<%= order %>
          end interface update
@@ -139,17 +139,17 @@ module optimize_lib
          interface line_search_interpolate
             module procedure line_search_interpolate<%= k %>_<%= order %>
          end interface line_search_interpolate
-      <%- } -%>
+      <% } %>
 
       interface nnls
          module procedure nnls<%= k %>
       end interface nnls
-   <%- } -%>
+   <% } %>
 
 contains
 
-   <%- RKINDS.each{|k| -%>
-      <%- sd = s_or_d(k) -%>
+   <% RKINDS.each{|k| %>
+      <% sd = s_or_d(k) %>
 
       ! Newton
 
@@ -996,7 +996,7 @@ contains
             x(:) = x + min(l2_norm(g)/l2_Ag, alpha)*g
          end do
       end function nnls<%= k %>
-   <%- } -%>
+   <% } %>
 
 
    function combinations(is, n) result(ret)
