@@ -1,6 +1,8 @@
 <%
    def parse_line(l)
-      use_stmt, suffix, key_decl, val_decl = l.chomp.split("\t")
+      args = l.chomp.split("\t")
+      raise unless args.size == 4
+      use_stmt, suffix, key_decl, val_decl = args
       {
          use_stmt: use_stmt.gsub(';', "\n"),
          suffix: suffix,
