@@ -57,7 +57,6 @@ files := $$(filter-out $$($(call get,name,$(1))_files),$$(files))
 endef
 $(foreach params,name~param@file_pattern~%.f90.params@name_pattern~%.f90.params \
                  name~template@file_pattern~%_template.f90.erb@name_pattern~%.f90.erb \
-                 name~component@file_pattern~%_component.f90.erb@name_pattern~%.f90.erb \
                  name~test_erb@file_pattern~%_test.f90.erb@name_pattern~%.f90.erb \
                  name~test_f90@file_pattern~%_test.f90@name_pattern~%.f90 \
                  name~errortest_erb@file_pattern~%_errortest.f90.erb@name_pattern~%.f90.erb \
@@ -146,7 +145,6 @@ $(1)/test/stack_lib_test.exe: $$(call o_mod_$(1),stack_lib stack_lib_test)
 $(1)/test/queue_lib_test.exe: $$(call o_mod_$(1),queue_lib queue_lib_test)
 $(1)/test/io_lib_test.exe: $$(call o_mod_$(1),character_lib comparable_lib io_lib io_lib_test)
 $(1)/test/config_lib_test.exe: $$(call o_mod_$(1),config_lib config_lib_test)
-$(1)/test/binary_tree_map_lib_test.exe: $$(call o_mod_$(1),binary_tree_map_lib binary_tree_map_lib_test)
 $(1)/test/sac_lib_test.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_test)
 $(1)/test/path_lib_test.exe: $$(call o_mod_$(1),path_lib path_lib_test)
 $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib geodetic_lib geodetic_lib_test)
