@@ -158,6 +158,7 @@ $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib ad_lib_test)
 $(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe.in
 $(1)/test/geometry_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib geometry_lib geometry_lib_test)
 $(1)/test/quadrature_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib quadrature_lib_test)
+$(1)/test/i_r_dict_lib_test.exe: $$(call o_mod_$(1),comparable_lib i_r_pair_lib i_r_dict_lib i_r_dict_lib_test)
 
 
 $(1)/test/io_lib_errortest.exe: $$(call o_mod_$(1),character_lib io_lib io_lib_errortest)
@@ -215,10 +216,19 @@ endef
 $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
 
+i_r_pair_lib.f90: pair_template.f90.erb
+i_r_dict_lib.f90: rbtree_template.f90.erb
+
 
 bin/%.py.tested: bin/%.py
 	$(MY_PYTHON) $< --test
 	touch $@
+
+
+%.f90: script/expand_template.sh %.f90.params
+	mkdir -p $(@D)
+	ERB="$(ERB)" ERB_FLAGS="$(ERB_FLAGS)" $^ $* >| $@
+
 
 %.f90: %.f90.erb dep/fort.updated
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"

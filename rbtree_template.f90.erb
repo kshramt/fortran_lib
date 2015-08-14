@@ -1,0 +1,491 @@
+<%
+   def parse_line(l)
+      use_stmt, suffix, key_decl, val_decl, data_decl = l.chomp.split("\t")
+      {
+         use_stmt: use_stmt.gsub(';', "\n"),
+         suffix: suffix,
+         key_decl: key_decl,
+         val_decl: val_decl,
+         data_decl: data_decl,
+      }
+   end
+
+   module_name = $stdin.gets.chomp
+   params = $stdin.readlines.map{|l| parse_line(l)}
+%>
+
+
+#include "fortran_lib.h"
+module <%= module_name %>
+   USE_FORTRAN_LIB_H
+   use, intrinsic:: iso_fortran_env, only: int8
+
+   <% params.each{|param| %>
+      <%= param[:use_stmt] %>
+   <% } %>
+
+   implicit none
+
+   private
+   public:: init
+   public:: add
+   public:: get
+   public:: has
+   public:: del
+
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      type:: RBTreeNode<%= suffix %>
+         Logical(kind=int8):: red
+         <%= param[:data_decl] %>:: data
+         type(RBTreeNode<%= suffix %>), pointer:: left
+         type(RBTreeNode<%= suffix %>), pointer:: right
+         type(RBTreeNode<%= suffix %>), pointer:: p
+      end type RBTreeNode<%= suffix %>
+
+
+      type, public:: RBTree<%= suffix %>
+         type(RBTreeNode<%= suffix %>), pointer:: nil
+         type(RBTreeNode<%= suffix %>), pointer:: root
+      end type RBTree<%= suffix %>
+
+
+      interface init
+         module procedure init<%= suffix %>
+      end interface init
+
+      interface add
+         module procedure add<%= suffix %>
+      end interface add
+
+      interface get
+         module procedure get_2<%= suffix %>
+         module procedure get_3<%= suffix %>
+      end interface get
+
+      interface has
+         module procedure has<%= suffix %>
+      end interface has
+
+      interface del
+         module procedure del<%= suffix %>
+      end interface del
+
+      ! internal
+
+      interface key
+         module procedure key_RBTreeNode<%= suffix %>
+      end interface key
+
+      interface val
+         module procedure val_RBTreeNode<%= suffix %>
+      end interface val
+
+      <% [
+            :tree_minimum,
+            :left_rotate,
+            :right_rotate,
+            :add_fixup,
+            :del_fixup,
+            :del_node,
+            :get_node,
+            :transplant,
+         ].each{|name| %>
+         interface <%= name %>
+            module procedure <%= name %><%= suffix %>
+         end interface <%= name %>
+      <% } %>
+   <% } %>
+
+
+contains
+
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      <% key_decl = param[:key_decl] %>
+      <% val_decl = param[:val_decl] %>
+      <% data_decl = param[:data_decl] %>
+      subroutine init<%= suffix %>(t)
+         type(RBTree<%= suffix %>), intent(out):: t
+
+         allocate(t%nil)
+         t%nil%red = .false.
+         t%root => t%nil
+      end subroutine init<%= suffix %>
+
+
+      subroutine add<%= suffix %>(t, d)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         <%= data_decl %>, intent(in):: d
+
+         type(RBTreeNode<%= suffix %>), pointer:: y, x, z
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         DEBUG_ASSERT(.not.t%nil%red)
+         y => t%nil
+         x => t%root
+         do while(.not.associated(x, t%nil))
+            y => x
+            if(key(d) < key(x))then
+               x => x%left
+            else if(key(d) > key(x))then
+               x => x%right
+            else ! overwrite
+               x%data = d
+               return
+            end if
+         end do
+
+         allocate(z)
+         z%data = d
+         z%p => y
+         if(associated(y, t%nil))then
+            t%root => z
+         else if(key(z) < key(y))then
+            y%left => z
+         else
+            y%right => z
+         end if
+         z%left => t%nil
+         z%right => t%nil
+         z%red = .true.
+         call add_fixup(t, z)
+      end subroutine add<%= suffix %>
+
+
+      subroutine add_fixup<%= suffix %>(t, z)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), pointer, intent(inout):: z
+
+         type(RBTreeNode<%= suffix %>), pointer:: y
+
+         DEBUG_ASSERT(z%red)
+         DEBUG_ASSERT(.not.t%nil%red)
+         do while(z%p%red)
+            DEBUG_ASSERT(.not.z%p%p%red)
+            if(associated(z%p, z%p%p%left))then
+               y => z%p%p%right
+               if(y%red)then
+                  z%p%red = .false.
+                  y%red = .false.
+                  z%p%p%red = .true.
+                  z => z%p%p
+               else
+                  if(associated(z, z%p%right))then
+                     z => z%p
+                     call left_rotate(t, z)
+                  end if
+                  z%p%red = .false.
+                  z%p%p%red = .true.
+                  call right_rotate(t, z%p%p)
+               end if
+            else
+               y => z%p%p%left
+               if(y%red)then
+                  z%p%red = .false.
+                  y%red = .false.
+                  z%p%p%red = .true.
+                  z => z%p%p
+               else
+                  if(associated(z, z%p%left))then
+                     z => z%p
+                     call right_rotate(t, z)
+                  end if
+                  z%p%red = .false.
+                  z%p%p%red = .true.
+                  call left_rotate(t, z%p%p)
+               end if
+            end if
+         end do
+         t%root%red = .false.
+      end subroutine add_fixup<%= suffix %>
+
+
+      function get_2<%= suffix %>(t, k) result(v)
+         <%= val_decl %>:: v
+         type(RBTree<%= suffix %>), intent(in):: t
+         <%= key_decl %>, intent(in):: k
+
+         Logical:: found
+
+         v = get(t, k, found)
+      end function get_2<%= suffix %>
+
+
+      function get_3<%= suffix %>(t, k, found) result(v)
+         <%= val_decl %>:: v
+         type(RBTree<%= suffix %>), intent(in):: t
+         <%= key_decl %>, intent(in):: k
+         Logical, intent(out):: found
+
+         type(RBTreeNode<%= suffix %>), pointer:: n
+
+         call get_node(t, k, n, found)
+         if(found)then
+            v = val(n)
+         end if
+      end function get_3<%= suffix %>
+
+
+      subroutine get_node<%= suffix %>(t, k, n, found)
+         type(RBTree<%= suffix %>), intent(in):: t
+         <%= key_decl %>, intent(in):: k
+         type(RBTreeNode<%= suffix %>), pointer, intent(out):: n
+         Logical, intent(out):: found
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         found = .true.
+         n => t%root
+         do while(.not.associated(n, t%nil))
+            if(k < key(n))then
+               n => n%left
+            else if(k > key(n))then
+               n => n%right
+            else
+               return
+            end if
+         end do
+         found = .false.
+      end subroutine get_node<%= suffix %>
+
+
+      function has<%= suffix %>(t, k) result(ret)
+         Logical:: ret
+         type(RBTree<%= suffix %>), intent(in):: t
+         <%= key_decl %>, intent(in):: k
+
+         type(RBTreeNode<%= suffix %>), pointer:: tmp
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         call get_node(t, k, tmp, ret)
+      end function has<%= suffix %>
+
+
+      subroutine del<%= suffix %>(t, k)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         <%= key_decl %>, intent(in):: k
+
+         type(RBTreeNode<%= suffix %>), pointer:: z
+         Logical:: found
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         call get_node(t, k, z, found)
+         if(found)then
+            call del_node(t, z)
+         end if
+      end subroutine del<%= suffix %>
+
+
+      subroutine del_node<%= suffix %>(t, z)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), pointer, intent(inout):: z
+
+         type(RBTreeNode<%= suffix %>), pointer:: x, y
+         Logical(kind=kind(y%red)):: y_original_red
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         y => z
+         y_original_red = y%red
+         if(associated(z%left, t%nil))then
+            x => z%right
+            call transplant(t, z, z%right)
+         else if(associated(z%right, t%nil))then
+            x => z%left
+            call transplant(t, z, z%left)
+         else
+            y => tree_minimum(t, z%right)
+            y_original_red = y%red
+            x => y%right
+            if(associated(y%p, z))then
+               x%p => y
+            else
+               call transplant(t, y, y%right)
+               y%right => z%right
+               y%right%p => y
+            end if
+            call transplant(t, z, y)
+            y%left => z%left
+            y%left%p => y
+            y%red = z%red
+         end if
+         if(.not.y_original_red)then
+            call del_fixup(t, x)
+         end if
+         deallocate(z)
+      end subroutine del_node<%= suffix %>
+
+
+      subroutine del_fixup<%= suffix %>(t, x)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), pointer, intent(inout):: x
+
+         type(RBTreeNode<%= suffix %>), pointer:: w
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         do while((.not.associated(x, t%root)).and.(.not.x%red))
+            if(associated(x, x%p%left))then
+               w => x%p%right
+               if(w%red)then
+                  w%red = .false.
+                  x%p%red = .true.
+                  call left_rotate(t, x%p)
+                  w => x%p%right
+               end if
+               if((.not.w%left%red).and.(.not.w%right%red))then
+                  w%red = .true.
+                  x => x%p
+               else
+                  if(.not.w%right%red)then
+                     w%left%red = .false.
+                     w%red = .true.
+                     call right_rotate(t, w)
+                     w => x%p%right
+                  end if
+                  w%red = x%p%red
+                  x%p%red = .false.
+                  w%right%red = .false.
+                  call left_rotate(t, x%p)
+                  x => t%root
+               end if
+            else
+               w => x%p%left
+               if(w%red)then
+                  w%red = .false.
+                  x%p%red = .true.
+                  call right_rotate(t, x%p)
+                  w => x%p%left
+               end if
+               if((.not.w%right%red).and.(.not.w%left%red))then
+                  w%red = .true.
+                  x => x%p
+               else
+                  if(.not.w%left%red)then
+                     w%right%red = .false.
+                     w%red = .true.
+                     call left_rotate(t, w)
+                     w => x%p%left
+                  end if
+                  w%red = x%p%red
+                  x%p%red = .false.
+                  w%left%red = .false.
+                  call right_rotate(t, x%p)
+                  x => t%root
+               end if
+            end if
+         end do
+         x%red = .false.
+      end subroutine del_fixup<%= suffix %>
+
+
+      ! internal node functions
+
+
+      function key_RBTreeNode<%= suffix %>(n) result(k)
+         <%= key_decl %>:: k
+         type(RBTreeNode<%= suffix %>), intent(in):: n
+
+         k = key(n%data)
+      end function key_RBTreeNode<%= suffix %>
+
+
+      function val_RBTreeNode<%= suffix %>(n) result(v)
+         <%= val_decl %>:: v
+         type(RBTreeNode<%= suffix %>), intent(in):: n
+
+         v = val(n%data)
+      end function val_RBTreeNode<%= suffix %>
+
+
+      ! internal tree manipulation functions
+
+
+      subroutine transplant<%= suffix %>(t, u, v)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), target, intent(inout):: u, v
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         if(associated(u%p, t%nil))then
+            t%root => v
+         else if(associated(u%p%left, u))then
+            u%p%left => v
+         else
+            u%p%right => v
+         end if
+         v%p => u%p
+      end subroutine transplant<%= suffix %>
+
+
+      function tree_minimum<%= suffix %>(t, x) result(ret)
+         type(RBTreeNode<%= suffix %>), pointer:: ret
+
+         type(RBTree<%= suffix %>), intent(in):: t
+         type(RBTreeNode<%= suffix %>), target, intent(in):: x
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         ret => x
+         do while(.not.associated(ret%left, t%nil))
+            ret => ret%left
+         end do
+      end function tree_minimum<%= suffix %>
+
+
+      subroutine left_rotate<%= suffix %>(t, x)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), target, intent(inout):: x
+
+         type(RBTreeNode<%= suffix %>), pointer:: y
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         DEBUG_ASSERT(associated(x%right))
+         DEBUG_ASSERT(.not.associated(x%right, t%nil))
+         y => x%right
+         x%right => y%left
+         if(.not.associated(y%left, t%nil))then
+            y%left%p => x
+         end if
+         ! if x is declared as pointer, y%p => x%p is concidered to be x => x%p.
+         ! to make y%p as a p of y (not x), x should be declared as target.
+         y%p => x%p
+         if(associated(x%p, t%nil))then
+            t%root => y
+         else if(associated(x%p%left, x))then
+            x%p%left => y
+         else
+            x%p%right => y
+         end if
+         y%left => x
+         x%p => y
+      end subroutine left_rotate<%= suffix %>
+
+
+      subroutine right_rotate<%= suffix %>(t, x)
+         type(RBTree<%= suffix %>), intent(inout):: t
+         type(RBTreeNode<%= suffix %>), target, intent(inout):: x
+
+         type(RBTreeNode<%= suffix %>), pointer:: y
+
+         DEBUG_ASSERT(.not.t%nil%red)
+         DEBUG_ASSERT(associated(x%left))
+         DEBUG_ASSERT(.not.associated(x%left, t%nil))
+         y => x%left
+         x%left => y%right
+         if(.not.associated(y%right, t%nil))then
+            y%right%p => x
+         end if
+         ! if x is declared as pointer, y%p => x%p is concidered to be x => x%p.
+         ! to make y%p as a p of y (not x), x should be declared as target.
+         y%p => x%p
+         if(associated(x%p, t%nil))then
+            t%root => y
+         else if(associated(x%p%left, x))then
+            x%p%left => y
+         else
+            x%p%right => y
+         end if
+         y%right => x
+         x%p => y
+      end subroutine right_rotate<%= suffix %>
+   <% } %>
+end module <%= module_name %>

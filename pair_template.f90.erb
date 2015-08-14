@@ -1,0 +1,79 @@
+<%
+   def parse_line(l)
+      use_stmt, suffix, key_decl, val_decl = l.chomp.split("\t")
+      {
+         use_stmt: use_stmt.gsub(';', "\n"),
+         suffix: suffix,
+         key_decl: key_decl,
+         val_decl: val_decl,
+      }
+   end
+
+   module_name = $stdin.gets.chomp
+   params = $stdin.readlines.map{|l| parse_line(l)}
+%>
+
+
+module <%= module_name %>
+   <% params.each{|param| %>
+      <%= param[:use_stmt] %>
+   <% } %>
+
+   implicit none
+
+   private
+   public:: key
+   public:: val
+   public:: pair
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      type, public:: Pair<%= suffix %>
+         <%= param[:key_decl] %>:: key
+         <%= param[:val_decl] %>:: val
+      end type Pair<%= suffix %>
+
+      interface key
+         module procedure key_<%= suffix %>
+      end interface key
+
+      interface val
+         module procedure val_<%= suffix %>
+      end interface val
+
+      interface pair
+         module procedure pair_<%= suffix %>
+      end interface pair
+   <% } %>
+
+
+contains
+
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      function key_<%= suffix %>(p) result(k)
+         <%= param[:key_decl ] %>:: k
+         type(Pair<%= suffix %>), intent(in):: p
+
+         k = p%key
+      end function key_<%= suffix %>
+
+
+      function val_<%= suffix %>(p) result(v)
+         <%= param[:val_decl ] %>:: v
+         type(Pair<%= suffix %>), intent(in):: p
+
+         v = p%val
+      end function val_<%= suffix %>
+
+
+      function pair_<%= suffix %>(k, v) result(p)
+         type(Pair<%= suffix %>):: p
+         <%= param[:key_decl ] %>, intent(in):: k
+         <%= param[:val_decl ] %>, intent(in):: v
+
+         p = Pair<%= suffix %>(k, v)
+      end function pair_<%= suffix %>
+   <% } %>
+end module <%= module_name %>

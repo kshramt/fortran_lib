@@ -1,0 +1,2 @@
+use, intrinsic:: iso_fortran_env, only: int32, real32; use, non_intrinsic:: i_r_pair_lib, only: PairInt32Real32, key, val	Int32Real32	Integer(kind=int32)	Real(kind=real32)	type(PairInt32Real32)
+use, intrinsic:: iso_fortran_env, only: int64, real64; use, non_intrinsic:: i_r_pair_lib, only: PairInt64Real64, key, val	Int64Real64	Integer(kind=int64)	Real(kind=real64)	type(PairInt64Real64)

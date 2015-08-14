@@ -1,0 +1,51 @@
+<%
+   n = 30
+   xss = [
+      [*2000..(2000 + n)],
+      [*2000..(2000 + n)].reverse,
+      n.times.map{|_| rand(1000)},
+   ]
+%>
+
+#include "fortran_lib.h"
+program main
+   USE_FORTRAN_LIB_H
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   use, intrinsic:: iso_fortran_env, only: int32, real32, int64, real64
+   use, non_intrinsic:: comparable_lib, only: almost_equal
+   use, non_intrinsic:: i_r_pair_lib
+   use, non_intrinsic:: i_r_dict_lib
+
+   implicit none
+
+   type(RBTreeInt32Real32):: d32
+   type(RBTreeInt64Real64):: d64
+
+   <% [32, 64].each{|k| %>
+      ! get
+      <% xss.each{|xs| %>
+         call init(d<%= k %>)
+         <% xs.each{|x| %>
+            call add(d<%= k %>, pair(int(<%= x %>, kind=int<%= k %>), real(<%= x %>, kind=real<%= k %>)))
+         <% } %>
+         <% xs.each{|x| %>
+            TEST(get(d<%= k %>, int(<%= x %>, kind=int<%= k %>)) == real(<%= x %>, kind=real<%= k %>))
+         <% } %>
+      <% } %>
+
+      ! del
+      <% xss.product(xss).each{|adds, dels| %>
+         call init(d<%= k %>)
+         <% adds.each{|x| %>
+            call add(d<%= k %>, pair(int(<%= x %>, kind=int<%= k %>), real(<%= x %>, kind=real<%= k %>)))
+         <% } %>
+         <% dels.each{|x| %>
+            call del(d<%= k %>, int(<%= x %>, kind=int<%= k %>))
+         <% } %>
+      <% } %>
+   <% } %>
+
+   write(output_unit, *) 'SUCCESS: ', __FILE__
+
+   stop
+end program main
