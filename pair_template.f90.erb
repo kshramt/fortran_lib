@@ -54,7 +54,7 @@ contains
 
    <% params.each{|param| %>
       <% suffix = param[:suffix] %>
-      function key_<%= suffix %>(p) result(k)
+      elemental function key_<%= suffix %>(p) result(k)
          <%= param[:key_decl ] %>:: k
          type(Pair<%= suffix %>), intent(in):: p
 
@@ -62,7 +62,7 @@ contains
       end function key_<%= suffix %>
 
 
-      function val_<%= suffix %>(p) result(v)
+      elemental function val_<%= suffix %>(p) result(v)
          <%= param[:val_decl ] %>:: v
          type(Pair<%= suffix %>), intent(in):: p
 
@@ -70,7 +70,7 @@ contains
       end function val_<%= suffix %>
 
 
-      function pair_<%= suffix %>(k, v) result(p)
+      elemental function pair_<%= suffix %>(k, v) result(p)
          type(Pair<%= suffix %>):: p
          <%= param[:key_decl ] %>, intent(in):: k
          <%= param[:val_decl ] %>, intent(in):: v

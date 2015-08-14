@@ -1,6 +1,6 @@
 <%
    n = 30
-   ys = [*2001..(2000 + n)]
+   ys = [*1..n]
    xss = [
       ys,
       ys.reverse,
@@ -13,7 +13,6 @@ program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
    use, intrinsic:: iso_fortran_env, only: int32, real32, int64, real64
-   use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: i_r_pair_lib
    use, non_intrinsic:: i_r_dict_lib
 
@@ -33,6 +32,7 @@ program main
          <% xs.each{|x| %>
             TEST(get(d<%= k %>, int(<%= x %>, kind=int<%= k %>)) == real(<%= x %>, kind=real<%= k %>))
          <% } %>
+         TEST(all(key(array_of(d<%= k %>)) == [<%= ys.join(', ') %>]))
       <% } %>
 
       ! del

@@ -35,6 +35,7 @@ module <%= module_name %>
    public:: has
    public:: del
    public:: size
+   public:: array_of
 
 
    <% params.each{|param| %>
@@ -79,6 +80,10 @@ module <%= module_name %>
          module procedure size<%= suffix %>
          module procedure size_node<%= suffix %>
       end interface size
+
+      interface array_of
+         module procedure array_of<%= suffix %>
+      end interface array_of
 
       ! internal
 
@@ -408,6 +413,31 @@ contains
             ret = 1 + size(n%left, nil) + size(n%right, nil)
          end if
       end function size_node<%= suffix %>
+
+
+      function array_of<%= suffix %>(t) result(ret)
+         type(RBTree<%= suffix %>), intent(in):: t
+         <%= data_decl %>:: ret(size(t))
+
+         Integer(kind=int64):: i
+
+         i = 1
+         call array_of_impl<%= suffix %>(t%root, t%nil, i, ret)
+      end function array_of<%= suffix %>
+
+
+      recursive subroutine array_of_impl<%= suffix %>(n, nil, i, ret)
+         type(RBTreeNode<%= suffix %>), pointer, intent(in):: n
+         type(RBTreeNode<%= suffix %>), target, intent(in):: nil
+         Integer(kind=int64), intent(inout):: i
+         <%= data_decl %>, intent(inout):: ret(:)
+
+         if(associated(n, nil)) return
+         call array_of_impl<%= suffix %>(n%left, nil, i, ret)
+         ret(i) = n%data
+         i = i + 1
+         call array_of_impl<%= suffix %>(n%right, nil, i, ret)
+      end subroutine array_of_impl<%= suffix %>
 
 
       ! internal node functions
