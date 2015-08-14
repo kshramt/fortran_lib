@@ -37,21 +37,22 @@ module <%= module_name %>
    public:: size
    public:: array_of
 
-
    <% params.each{|param| %>
       <% suffix = param[:suffix] %>
       type:: RBTreeNode<%= suffix %>
          Logical(kind=int8):: red
          <%= param[:data_decl] %>:: data
-         type(RBTreeNode<%= suffix %>), pointer:: left
-         type(RBTreeNode<%= suffix %>), pointer:: right
-         type(RBTreeNode<%= suffix %>), pointer:: p
+         type(RBTreeNode<%= suffix %>), pointer:: left => null()
+         type(RBTreeNode<%= suffix %>), pointer:: right => null()
+         type(RBTreeNode<%= suffix %>), pointer:: p => null()
       end type RBTreeNode<%= suffix %>
 
 
       type, public:: RBTree<%= suffix %>
-         type(RBTreeNode<%= suffix %>), pointer:: nil
-         type(RBTreeNode<%= suffix %>), pointer:: root
+         type(RBTreeNode<%= suffix %>), pointer:: nil => null()
+         type(RBTreeNode<%= suffix %>), pointer:: root => null()
+      contains
+         final:: finalize<%= suffix %>
       end type RBTree<%= suffix %>
 
 
@@ -390,6 +391,30 @@ contains
          end do
          x%red = .false.
       end subroutine del_fixup<%= suffix %>
+
+
+      impure elemental subroutine finalize<%= suffix %>(t)
+         type(RBTree<%= suffix %>), intent(inout):: t
+
+         if(associated(t%nil))then
+            call finalize_node<%= suffix %>(t%root, t%nil)
+            deallocate(t%nil)
+         else ! the first init(t) will try to finalize uninitialized RBTree
+            ! t%nil and t%root is nullified
+            ASSERT(.not.associated(t%root))
+         end if
+      end subroutine finalize<%= suffix %>
+
+
+      recursive subroutine finalize_node<%= suffix %>(n, nil)
+         type(RBTreeNode<%= suffix %>), pointer, intent(inout):: n
+         type(RBTreeNode<%= suffix %>), target, intent(in):: nil
+
+         if(associated(n, nil)) return
+         call finalize_node<%= suffix %>(n%left, nil)
+         call finalize_node<%= suffix %>(n%right, nil)
+         deallocate(n)
+      end subroutine finalize_node<%= suffix %>
 
 
       ! todo: purify
