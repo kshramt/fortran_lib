@@ -431,61 +431,34 @@ contains
       end function tree_minimum<%= suffix %>
 
 
-      subroutine left_rotate<%= suffix %>(t, x)
-         type(RBTree<%= suffix %>), intent(inout):: t
-         type(RBTreeNode<%= suffix %>), target, intent(inout):: x
+      <% [[:left, :right], [:right, :left]].each{|left, right| %>
+         subroutine <%= left %>_rotate<%= suffix %>(t, x)
+            type(RBTree<%= suffix %>), intent(inout):: t
+            type(RBTreeNode<%= suffix %>), target, intent(inout):: x
 
-         type(RBTreeNode<%= suffix %>), pointer:: y
+            type(RBTreeNode<%= suffix %>), pointer:: y
 
-         DEBUG_ASSERT(.not.t%nil%red)
-         DEBUG_ASSERT(associated(x%right))
-         DEBUG_ASSERT(.not.associated(x%right, t%nil))
-         y => x%right
-         x%right => y%left
-         if(.not.associated(y%left, t%nil))then
-            y%left%p => x
-         end if
-         ! if x is declared as pointer, y%p => x%p is concidered to be x => x%p.
-         ! to make y%p as a p of y (not x), x should be declared as target.
-         y%p => x%p
-         if(associated(x%p, t%nil))then
-            t%root => y
-         else if(associated(x%p%left, x))then
-            x%p%left => y
-         else
-            x%p%right => y
-         end if
-         y%left => x
-         x%p => y
-      end subroutine left_rotate<%= suffix %>
-
-
-      subroutine right_rotate<%= suffix %>(t, x)
-         type(RBTree<%= suffix %>), intent(inout):: t
-         type(RBTreeNode<%= suffix %>), target, intent(inout):: x
-
-         type(RBTreeNode<%= suffix %>), pointer:: y
-
-         DEBUG_ASSERT(.not.t%nil%red)
-         DEBUG_ASSERT(associated(x%left))
-         DEBUG_ASSERT(.not.associated(x%left, t%nil))
-         y => x%left
-         x%left => y%right
-         if(.not.associated(y%right, t%nil))then
-            y%right%p => x
-         end if
-         ! if x is declared as pointer, y%p => x%p is concidered to be x => x%p.
-         ! to make y%p as a p of y (not x), x should be declared as target.
-         y%p => x%p
-         if(associated(x%p, t%nil))then
-            t%root => y
-         else if(associated(x%p%left, x))then
-            x%p%left => y
-         else
-            x%p%right => y
-         end if
-         y%right => x
-         x%p => y
-      end subroutine right_rotate<%= suffix %>
+            DEBUG_ASSERT(.not.t%nil%red)
+            DEBUG_ASSERT(associated(x%<%= right %>))
+            DEBUG_ASSERT(.not.associated(x%<%= right %>, t%nil))
+            y => x%<%= right %>
+            x%<%= right %> => y%<%= left %>
+            if(.not.associated(y%<%= left %>, t%nil))then
+               y%<%= left %>%p => x
+            end if
+            ! if x is declared as pointer, y%p => x%p is concidered to be x => x%p.
+            ! to make y%p as a p of y (not x), x should be declared as target.
+            y%p => x%p
+            if(associated(x%p, t%nil))then
+               t%root => y
+            else if(associated(x%p%<%= left %>, x))then
+               x%p%<%= left %> => y
+            else
+               x%p%<%= right %> => y
+            end if
+            y%<%= left %> => x
+            x%p => y
+         end subroutine <%= left %>_rotate<%= suffix %>
+      <% } %>
    <% } %>
 end module <%= module_name %>
