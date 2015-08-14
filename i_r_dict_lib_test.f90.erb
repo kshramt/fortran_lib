@@ -1,9 +1,10 @@
 <%
    n = 30
+   ys = [*2001..(2000 + n)]
    xss = [
-      [*2000..(2000 + n)],
-      [*2000..(2000 + n)].reverse,
-      n.times.map{|_| rand(1000)},
+      ys,
+      ys.reverse,
+      ys.shuffle,
    ]
 %>
 
@@ -28,6 +29,7 @@ program main
          <% xs.each{|x| %>
             call add(d<%= k %>, pair(int(<%= x %>, kind=int<%= k %>), real(<%= x %>, kind=real<%= k %>)))
          <% } %>
+         TEST(size(d<%= k %>) == <%= n %>)
          <% xs.each{|x| %>
             TEST(get(d<%= k %>, int(<%= x %>, kind=int<%= k %>)) == real(<%= x %>, kind=real<%= k %>))
          <% } %>
@@ -42,6 +44,7 @@ program main
          <% dels.each{|x| %>
             call del(d<%= k %>, int(<%= x %>, kind=int<%= k %>))
          <% } %>
+         TEST(size(d<%= k %>) == 0)
       <% } %>
    <% } %>
 

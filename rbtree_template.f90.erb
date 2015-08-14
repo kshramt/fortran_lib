@@ -18,7 +18,7 @@
 #include "fortran_lib.h"
 module <%= module_name %>
    USE_FORTRAN_LIB_H
-   use, intrinsic:: iso_fortran_env, only: int8
+   use, intrinsic:: iso_fortran_env, only: int8, int64
 
    <% params.each{|param| %>
       <%= param[:use_stmt] %>
@@ -32,6 +32,7 @@ module <%= module_name %>
    public:: get
    public:: has
    public:: del
+   public:: size
 
 
    <% params.each{|param| %>
@@ -71,6 +72,11 @@ module <%= module_name %>
       interface del
          module procedure del<%= suffix %>
       end interface del
+
+      interface size
+         module procedure size<%= suffix %>
+         module procedure size_node<%= suffix %>
+      end interface size
 
       ! internal
 
@@ -377,6 +383,29 @@ contains
          end do
          x%red = .false.
       end subroutine del_fixup<%= suffix %>
+
+
+      ! todo: purify
+      impure elemental function size<%= suffix %>(t) result(ret)
+         Integer(kind=int64):: ret
+         type(RBTree<%= suffix %>), intent(in):: t
+
+         ret = size(t%root, t%nil)
+      end function size<%= suffix %>
+
+
+      ! todo: purify
+      recursive function size_node<%= suffix %>(n, nil) result(ret)
+         Integer(kind=int64):: ret
+         type(RBTreeNode<%= suffix %>), pointer, intent(in):: n
+         type(RBTreeNode<%= suffix %>), target, intent(in):: nil
+
+         if(associated(n, nil))then
+            ret = 0
+         else
+            ret = 1 + size(n%left, nil) + size(n%right, nil)
+         end if
+      end function size_node<%= suffix %>
 
 
       ! internal node functions
