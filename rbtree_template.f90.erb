@@ -40,10 +40,10 @@ module <%= module_name %>
       <% suffix = param[:suffix] %>
       type:: RBTreeNode<%= suffix %>
          Logical(kind=int8):: red
-         <%= param[:data_decl] %>:: data
          type(RBTreeNode<%= suffix %>), pointer:: left => null()
          type(RBTreeNode<%= suffix %>), pointer:: right => null()
          type(RBTreeNode<%= suffix %>), pointer:: p => null()
+         <%= param[:data_decl] %>:: data
       end type RBTreeNode<%= suffix %>
 
 
