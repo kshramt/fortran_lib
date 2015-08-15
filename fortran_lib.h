@@ -41,11 +41,13 @@
 #    define DEBUG_ERROR_IF(isBad) ERROR_IF(isBad)
 #    define DEBUG_PRINT(x) write(error_unit, *) "DEBUG: ", WHERE_AM_I, (x)
 #    define DEBUG_PRINT_VARIABLE(x) write(error_unit, *) "DEBUG: ", WHERE_AM_I, quote(x), ": ", (x)
+#    define PURE impure
 #  else
 #    define DEBUG_WARN(message)
 #    define DEBUG_ERROR_IF(isBad)
 #    define DEBUG_PRINT(x)
 #    define DEBUG_PRINT_VARIABLE(x)
+#    define PURE pure
 #  endif
 #  define DEBUG_ASSERT(isOk) DEBUG_ERROR_IF(.not.(isOk))
 #endif

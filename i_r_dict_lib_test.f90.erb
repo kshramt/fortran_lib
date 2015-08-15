@@ -30,7 +30,7 @@ program main
          <% } %>
          TEST(size(d<%= k %>) == <%= n %>)
          <% xs.each{|x| %>
-            TEST(get(d<%= k %>, int(<%= x %>, kind=int<%= k %>)) == real(<%= x %>, kind=real<%= k %>))
+            TEST(val(get(d<%= k %>, int(<%= x %>, kind=int<%= k %>))) == real(<%= x %>, kind=real<%= k %>))
          <% } %>
          TEST(all(key(array_of(d<%= k %>)) == [<%= ys.join(', ') %>]))
       <% } %>

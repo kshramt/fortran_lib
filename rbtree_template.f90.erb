@@ -1,13 +1,12 @@
 <%
    def parse_line(l)
       args = l.chomp.split("\t")
-      raise unless args.size == 5
-      use_stmt, suffix, key_decl, val_decl, data_decl = args
+      raise unless args.size == 4
+      use_stmt, suffix, key_decl, data_decl = args
       {
          use_stmt: use_stmt.gsub(';', "\n"),
          suffix: suffix,
          key_decl: key_decl,
-         val_decl: val_decl,
          data_decl: data_decl,
       }
    end
@@ -92,10 +91,6 @@ module <%= module_name %>
          module procedure key_RBTreeNode<%= suffix %>
       end interface key
 
-      interface val
-         module procedure val_RBTreeNode<%= suffix %>
-      end interface val
-
       <% [
             :tree_minimum,
             :left_rotate,
@@ -119,9 +114,8 @@ contains
    <% params.each{|param| %>
       <% suffix = param[:suffix] %>
       <% key_decl = param[:key_decl] %>
-      <% val_decl = param[:val_decl] %>
       <% data_decl = param[:data_decl] %>
-      subroutine init<%= suffix %>(t)
+      elemental subroutine init<%= suffix %>(t)
          type(RBTree<%= suffix %>), intent(out):: t
 
          allocate(t%nil)
@@ -130,7 +124,7 @@ contains
       end subroutine init<%= suffix %>
 
 
-      subroutine add<%= suffix %>(t, d)
+      PURE elemental subroutine add<%= suffix %>(t, d)
          type(RBTree<%= suffix %>), intent(inout):: t
          <%= data_decl %>, intent(in):: d
 
@@ -169,7 +163,7 @@ contains
       end subroutine add<%= suffix %>
 
 
-      subroutine add_fixup<%= suffix %>(t, z)
+      PURE subroutine add_fixup<%= suffix %>(t, z)
          type(RBTree<%= suffix %>), intent(inout):: t
          type(RBTreeNode<%= suffix %>), pointer, intent(inout):: z
 
@@ -217,19 +211,19 @@ contains
       end subroutine add_fixup<%= suffix %>
 
 
-      function get_2<%= suffix %>(t, k) result(v)
-         <%= val_decl %>:: v
+      impure elemental function get_2<%= suffix %>(t, k) result(data)
+         <%= data_decl %>:: data
          type(RBTree<%= suffix %>), intent(in):: t
          <%= key_decl %>, intent(in):: k
 
          Logical:: found
 
-         v = get(t, k, found)
+         data = get(t, k, found)
       end function get_2<%= suffix %>
 
 
-      function get_3<%= suffix %>(t, k, found) result(v)
-         <%= val_decl %>:: v
+      impure elemental function get_3<%= suffix %>(t, k, found) result(data)
+         <%= data_decl %>:: data
          type(RBTree<%= suffix %>), intent(in):: t
          <%= key_decl %>, intent(in):: k
          Logical, intent(out):: found
@@ -238,7 +232,7 @@ contains
 
          call get_node(t, k, n, found)
          if(found)then
-            v = val(n)
+            data = n%data
          end if
       end function get_3<%= suffix %>
 
@@ -265,7 +259,7 @@ contains
       end subroutine get_node<%= suffix %>
 
 
-      function has<%= suffix %>(t, k) result(ret)
+      impure elemental function has<%= suffix %>(t, k) result(ret)
          Logical:: ret
          type(RBTree<%= suffix %>), intent(in):: t
          <%= key_decl %>, intent(in):: k
@@ -277,7 +271,7 @@ contains
       end function has<%= suffix %>
 
 
-      subroutine del<%= suffix %>(t, k)
+      impure elemental subroutine del<%= suffix %>(t, k)
          type(RBTree<%= suffix %>), intent(inout):: t
          <%= key_decl %>, intent(in):: k
 
@@ -417,7 +411,6 @@ contains
       end subroutine finalize_node<%= suffix %>
 
 
-      ! todo: purify
       impure elemental function size<%= suffix %>(t) result(ret)
          Integer(kind=int64):: ret
          type(RBTree<%= suffix %>), intent(in):: t
@@ -426,7 +419,6 @@ contains
       end function size<%= suffix %>
 
 
-      ! todo: purify
       recursive function size_node<%= suffix %>(n, nil) result(ret)
          Integer(kind=int64):: ret
          type(RBTreeNode<%= suffix %>), pointer, intent(in):: n
@@ -468,7 +460,7 @@ contains
       ! internal node functions
 
 
-      function key_RBTreeNode<%= suffix %>(n) result(k)
+      elemental function key_RBTreeNode<%= suffix %>(n) result(k)
          <%= key_decl %>:: k
          type(RBTreeNode<%= suffix %>), intent(in):: n
 
@@ -476,18 +468,10 @@ contains
       end function key_RBTreeNode<%= suffix %>
 
 
-      function val_RBTreeNode<%= suffix %>(n) result(v)
-         <%= val_decl %>:: v
-         type(RBTreeNode<%= suffix %>), intent(in):: n
-
-         v = val(n%data)
-      end function val_RBTreeNode<%= suffix %>
-
-
       ! internal tree manipulation functions
 
 
-      subroutine transplant<%= suffix %>(t, u, v)
+      PURE subroutine transplant<%= suffix %>(t, u, v)
          type(RBTree<%= suffix %>), intent(inout):: t
          type(RBTreeNode<%= suffix %>), target, intent(inout):: u, v
 
@@ -518,7 +502,7 @@ contains
 
 
       <% [[:left, :right], [:right, :left]].each{|left, right| %>
-         subroutine <%= left %>_rotate<%= suffix %>(t, x)
+         PURE subroutine <%= left %>_rotate<%= suffix %>(t, x)
             type(RBTree<%= suffix %>), intent(inout):: t
             type(RBTreeNode<%= suffix %>), target, intent(inout):: x
 
