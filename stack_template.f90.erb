@@ -1,13 +1,14 @@
 <%
    def parse_line(l)
       args = l.chomp.split("\t")
-      raise unless args.size == 4
-      use_stmt, suffix, data_in_decl, data_out_decl = args
+      raise unless args.size == 5
+      use_stmt, suffix, data_in_decl, data_out_decl, scalar = args
       {
          use_stmt: use_stmt.gsub(';', "\n"),
          suffix: suffix,
          data_in_decl: data_in_decl,
          data_out_decl: data_out_decl,
+         scalar: scalar == 'true',
       }
    end
 
@@ -28,6 +29,9 @@ module stack_lib
    public:: add
    public:: pop
    public:: size
+   <% if params.map{|p| p[:scalar]}.any? %>
+      public:: array_of
+   <% end %>
 
 
    <% params.each{|param| %>
@@ -56,6 +60,12 @@ module stack_lib
       interface size
          module procedure size<%= suffix %>
       end interface size
+
+      <% if param[:scalar] %>
+         interface array_of
+            module procedure array_of<%= suffix %>
+         end interface array_of
+      <% end %>
    <% } %>
 
 
@@ -120,6 +130,23 @@ contains
             ret = ret + 1
          end do
       end function size<%= suffix %>
+
+
+      <% if param[:scalar] %>
+         function array_of<%= suffix %>(self) result(ret)
+            type(Stack<%= suffix %>), intent(in):: self
+            <%= data_out_decl %>:: ret(size(self))
+
+            type(StackNode<%= suffix %>), pointer:: tmp
+            Integer(kind=int64):: i
+
+            tmp => self%root
+            do i = 1, size(ret, kind=kind(i))
+               ret(i) = tmp%data
+               tmp => tmp%prev
+            end do
+         end function array_of<%= suffix %>
+      <% end %>
 
 
       impure elemental subroutine finalize<%= suffix %>(self)

@@ -2,8 +2,7 @@
 program stack_lib_test
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only:OUTPUT_UNIT
-   use, non_intrinsic:: stack_lib, only: StackIntegerDim0KindINT32, StackIntegerDim1KindINT32, StackIntegerDim2KindINT32
-   use, non_intrinsic:: stack_lib, only: add, pop, size
+   use, non_intrinsic:: stack_lib
 
    implicit none
 
@@ -27,6 +26,7 @@ program stack_lib_test
    call add(stack0, 4)
    call add(stack0, 5)
    TEST(size(stack0) == 5)
+   TEST(all(array_of(stack0) == [5, 4, 3, 2, 1]))
    isSuccess = pop(stack0, val0)
    TEST(isSuccess)
    TEST(size(stack0) == 4)
