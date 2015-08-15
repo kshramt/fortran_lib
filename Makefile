@@ -5,6 +5,9 @@ MY_ERB ?= erb
 ERB := ${MY_ERB}
 ERB_FLAGS :=
 
+MY_RUBY ?= ruby
+RUBY := ${MY_RUBY}
+
 MY_FC ?= gfortran
 FC := $(MY_FC)
 ifeq ($(FC),ifort)
@@ -216,6 +219,7 @@ $(foreach b,debug release,$(eval $(call MAIN_TEMPLATE,$(b))))
 
 i_r_pair_lib.f90: pair_template.f90.erb
 i_r_dict_lib.f90: rbtree_template.f90.erb
+stack_lib.f90: stack_template.f90.erb
 
 
 bin/%.py.tested: bin/%.py
@@ -226,6 +230,12 @@ bin/%.py.tested: bin/%.py
 %.f90: script/expand_template.sh %.f90.params
 	mkdir -p $(@D)
 	ERB="$(ERB)" ERB_FLAGS="$(ERB_FLAGS)" $^ $* >| $@
+
+
+%.f90.params: %.f90.params.rb dep/fort.updated
+	mkdir -p $(@D)
+	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
+	$(RUBY) $< >| $@
 
 
 %.f90: %.f90.erb dep/fort.updated

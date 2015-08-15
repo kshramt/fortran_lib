@@ -2,14 +2,14 @@
 program stack_lib_test
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only:OUTPUT_UNIT
-   use, non_intrinsic:: stack_lib, only: IntegerDim0KindINT32Stack, IntegerDim1KindINT32Stack, IntegerDim2KindINT32Stack
-   use, non_intrinsic:: stack_lib, only: push, pop
+   use, non_intrinsic:: stack_lib, only: StackIntegerDim0KindINT32, StackIntegerDim1KindINT32, StackIntegerDim2KindINT32
+   use, non_intrinsic:: stack_lib, only: add, pop, size
 
    implicit none
 
-   type(IntegerDim0KindINT32Stack):: stack0
-   type(IntegerDim1KindINT32Stack):: stack1
-   type(IntegerDim2KindINT32Stack):: stack2
+   type(StackIntegerDim0KindINT32):: stack0
+   type(StackIntegerDim1KindINT32):: stack1
+   type(StackIntegerDim2KindINT32):: stack2
    Integer:: val0
    Integer, allocatable:: val1(:)
    Integer, allocatable:: val2(:, :)
@@ -18,15 +18,18 @@ program stack_lib_test
    Integer, parameter:: N = 1000000
 
    ! dim = 0
+   TEST(size(stack0) == 0)
    isSuccess = pop(stack0, val0)
    TEST(.not.isSuccess)
-   call push(stack0, 1)
-   call push(stack0, 2)
-   call push(stack0, 3)
-   call push(stack0, 4)
-   call push(stack0, 5)
+   call add(stack0, 1)
+   call add(stack0, 2)
+   call add(stack0, 3)
+   call add(stack0, 4)
+   call add(stack0, 5)
+   TEST(size(stack0) == 5)
    isSuccess = pop(stack0, val0)
    TEST(isSuccess)
+   TEST(size(stack0) == 4)
    TEST(val0 == 5)
    isSuccess = pop(stack0, val0)
    TEST(isSuccess)
@@ -44,16 +47,20 @@ program stack_lib_test
    TEST(.not.isSuccess)
    isSuccess = pop(stack0, val0)
    TEST(.not.isSuccess)
+   TEST(size(stack0) == 0)
 
    ! dim = 0
+   TEST(size(stack1) == 0)
    isSuccess = pop(stack1, val1)
    TEST(.not.isSuccess)
-   call push(stack1, [1])
-   call push(stack1, [2])
-   call push(stack1, [3, 0, -3])
-   call push(stack1, [4])
-   call push(stack1, [5])
+   call add(stack1, [1])
+   call add(stack1, [2])
+   call add(stack1, [3, 0, -3])
+   call add(stack1, [4])
+   call add(stack1, [5])
+   TEST(size(stack1) == 5)
    isSuccess = pop(stack1, val1)
+   TEST(size(stack1) == 4)
    TEST(isSuccess)
    TEST(all(val1 == [5]))
    isSuccess = pop(stack1, val1)
@@ -72,10 +79,11 @@ program stack_lib_test
    TEST(.not.isSuccess)
    isSuccess = pop(stack1, val1)
    TEST(.not.isSuccess)
+   TEST(size(stack0) == 0)
 
    ! dim 2
-   call push(stack2, reshape([1, 2, 3, 4, 5, 6], [2, 3]))
-   call push(stack2, reshape([1, 2, 3, 4, 5, 6, 7, 8], [4, 2]))
+   call add(stack2, reshape([1, 2, 3, 4, 5, 6], [2, 3]))
+   call add(stack2, reshape([1, 2, 3, 4, 5, 6, 7, 8], [4, 2]))
    isSuccess = pop(stack2, val2)
    TEST(isSuccess)
    TEST(all(shape(val2) == [4, 2]))
@@ -85,7 +93,7 @@ program stack_lib_test
 
    ! Many times
    do i = 1, N
-      call push(stack0, i)
+      call add(stack0, i)
    end do
    do i = 1, N - 1
       isSuccess = pop(stack0, val0)

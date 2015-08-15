@@ -12,8 +12,8 @@ module sort_lib
    USE_FORTRAN_LIB_H
    use, non_intrinsic:: comparable_lib, only: is_nan, is_infinity
 
-   use, non_intrinsic:: stack_lib, only: push, pop
-   use, non_intrinsic:: stack_lib, only: IntegerDim0KindINT64Stack
+   use, non_intrinsic:: stack_lib, only: add, pop
+   use, non_intrinsic:: stack_lib, only: StackIntegerDim0KindINT64
    use, non_intrinsic:: array_lib, only: get
 
    implicit none
@@ -251,14 +251,14 @@ contains
       subroutine quick_sorting<%= t %>(xs)
          <%= t.declare %>, intent(inout):: xs(:)
          <%= t.declare %>:: pivot
-         type(IntegerDim0KindINT64Stack):: iLs, iRs
+         type(StackIntegerDim0KindINT64):: iLs, iRs
          Integer(kind = INT64):: iL, iR, iPivot
          Logical:: isUniform
 
          ASSERT(.not.any(is_nan(xs)))
 
-         call push(iLs, 1_INT64)
-         call push(iRs, size(xs, dim = 1, kind = kind(iR)))
+         call add(iLs, 1_INT64)
+         call add(iRs, size(xs, dim = 1, kind = kind(iR)))
 
          do while(pop(iRs, iR)) ! Loop for all segments on the stacks.
             ASSERT(pop(iLs, iL)) ! Left most index of the current segment.
@@ -269,9 +269,9 @@ contains
                   if(isUniform) exit
 
                   call partitioning_impl(xs(iL:iR), pivot, iPivot)
-                  call push(iRs, iR)
+                  call add(iRs, iR)
                   iR = iPivot + iL - 1 ! Right most index of the current segment
-                  call push(iLs, iR + 1)
+                  call add(iLs, iR + 1)
                else
                   call insertion_sorting_impl(xs)
                   return

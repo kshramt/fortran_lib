@@ -1,0 +1,138 @@
+<%
+   def parse_line(l)
+      args = l.chomp.split("\t")
+      raise unless args.size == 4
+      use_stmt, suffix, data_in_decl, data_out_decl = args
+      {
+         use_stmt: use_stmt.gsub(';', "\n"),
+         suffix: suffix,
+         data_in_decl: data_in_decl,
+         data_out_decl: data_out_decl,
+      }
+   end
+
+   module_name = $stdin.gets.chomp
+   params = $stdin.readlines.map{|l| parse_line(l)}
+%>
+
+
+module stack_lib
+   use, intrinsic:: iso_fortran_env, only: int64
+   <% params.each{|param| %>
+      <%= param[:use_stmt] %>
+   <% } %>
+
+   implicit none
+
+   private
+   public:: add
+   public:: pop
+   public:: size
+
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      type:: StackNode<%= suffix %>
+         type(StackNode<%= suffix %>), pointer:: prev => null()
+         <%= param[:data_out_decl] %>:: data
+      end type StackNode<%= suffix %>
+
+      type, public:: Stack<%= suffix %>
+         type(StackNode<%= suffix %>), pointer:: root => null()
+      contains
+         final:: finalize<%= suffix %>
+      end type Stack<%= suffix %>
+
+
+      interface add
+         module procedure add<%= suffix %>
+      end interface add
+
+      interface pop
+         module procedure pop1<%= suffix %>
+         module procedure pop2<%= suffix %>
+      end interface pop
+
+      interface size
+         module procedure size<%= suffix %>
+      end interface size
+   <% } %>
+
+
+contains
+
+
+   <% params.each{|param| %>
+      <% suffix = param[:suffix] %>
+      <% data_in_decl = param[:data_in_decl] %>
+      <% data_out_decl = param[:data_out_decl] %>
+      pure subroutine add<%= suffix %>(self, data)
+         type(Stack<%= suffix %>), intent(inout):: self
+         <%= data_in_decl %>, intent(in):: data
+
+         type(StackNode<%= suffix %>), pointer:: node
+
+
+         allocate(node)
+         node%data = data
+         node%prev => self%root
+         self%root => node
+      end subroutine add<%= suffix %>
+
+
+      function pop1<%= suffix %>(self) result(data)
+         <%= data_out_decl %>:: data
+         type(Stack<%= suffix %>), intent(inout):: self
+
+         Logical:: found
+
+         found = pop(self, data)
+      end function pop1<%= suffix %>
+
+
+      function pop2<%= suffix %>(self, data) result(found)
+         Logical:: found
+         type(Stack<%= suffix %>), intent(inout):: self
+         <%= data_out_decl %>, intent(out):: data
+
+         type(StackNode<%= suffix %>), pointer:: tmp
+
+         found = associated(self%root)
+         if(found)then
+            data = self%root%data
+            tmp => self%root
+            self%root => self%root%prev
+            deallocate(tmp)
+         end if
+      end function pop2<%= suffix %>
+
+
+      impure elemental function size<%= suffix %>(self) result(ret)
+         Integer(kind=int64):: ret
+         type(Stack<%= suffix %>), intent(in):: self
+
+         type(StackNode<%= suffix %>), pointer:: tmp
+
+         ret = 0
+         tmp => self%root
+         do while(associated(tmp))
+            tmp => tmp%prev
+            ret = ret + 1
+         end do
+      end function size<%= suffix %>
+
+
+      impure elemental subroutine finalize<%= suffix %>(self)
+         type(Stack<%= suffix %>), intent(inout):: self
+
+         type(StackNode<%= suffix %>), pointer:: current, prev
+
+         current => self%root
+         do while(associated(current))
+            prev => current%prev
+            deallocate(current)
+            current => prev
+         end do
+      end subroutine finalize<%= suffix %>
+   <% } %>
+end module stack_lib
