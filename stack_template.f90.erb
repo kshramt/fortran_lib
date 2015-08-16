@@ -17,7 +17,7 @@
 %>
 
 
-module stack_lib
+module <%= module_name %>
    use, intrinsic:: iso_fortran_env, only: int64
    <% params.each{|param| %>
       <%= param[:use_stmt] %>
@@ -162,4 +162,4 @@ contains
          end do
       end subroutine finalize<%= suffix %>
    <% } %>
-end module stack_lib
+end module <%= module_name %>
