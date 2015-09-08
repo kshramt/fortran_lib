@@ -3,6 +3,7 @@ rvm:
   - 1.9.3
   - 2.1.0
 script:
+  - make --version
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get -qq update
   - sudo apt-get -qq build-dep make
