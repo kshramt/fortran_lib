@@ -1,15 +1,18 @@
-language: Fortran
+language: fortran
+sudo: false
 rvm:
   - 1.9.3
   - 2.1.0
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gfortran-4.9
+      - gfortran-5
+      - make
+      - liblapack-dev
 script:
-  - make --version
-  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-  - sudo apt-get -qq update
-  - sudo apt-get -qq build-dep make
-  - sudo apt-get -qq install gfortran-$MY_FC_V liblapack-dev &
-  - export MY_ERB=erb
-  - export MY_FC=gfortran-$MY_FC_V
   - readonly ext_dir=_tmp_
   - mkdir -p $ext_dir
   - pushd $ext_dir
@@ -22,14 +25,16 @@ script:
   - popd
   - popd
   - wait
-  - $MY_FC --version
   - readonly make=$ext_dir/$MAKE_V/make
-  - nproc
+  - make --version
   - $make --version
+  - export MY_ERB=erb
+  - export MY_FC=gfortran-$MY_FC_V
+  - $MY_FC --version
   - nproc
   - $make -j1 check all
 env:
   - MY_FC_V=4.9 MAKE_V=make-3.82
-  - MY_FC_V=4.9 MAKE_V=make-4.1
   - MY_FC_V=5 MAKE_V=make-3.82
+  - MY_FC_V=4.9 MAKE_V=make-4.1
   - MY_FC_V=5 MAKE_V=make-4.1
