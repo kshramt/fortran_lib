@@ -2,6 +2,8 @@
 
 This Fortran library provides basic data structures, algorithms and some handy utilities, which are applicable for almost all of intrinsic types.
 
+[![Build Status](https://travis-ci.org/kshramt/fortran_lib.svg?branch=master)](https://travis-ci.org/kshramt/fortran_lib)
+
 ## Modules
 
 ### `release/src/ad_lib.f90`
