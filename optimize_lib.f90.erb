@@ -40,6 +40,7 @@ module optimize_lib
          Logical:: is_line_search = .false.
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = 0
+         Real(kind=real<%= k %>):: base_step_size = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
          Real(kind=real<%= k %>), allocatable:: x_prev(:)
          Real(kind=real<%= k %>):: f_prev
@@ -56,8 +57,10 @@ module optimize_lib
          Logical:: is_convex = .false.
          Logical:: is_within = .false.
          Logical:: is_saddle_or_peak = .false.
+         Logical:: is_line_search = .false.
          Integer(kind=int64):: dim
          Integer(kind=int64):: iter = 0
+         Real(kind=real<%= k %>):: base_step_size = -1
          Real(kind=real<%= k %>), allocatable:: x(:)
          Real(kind=real<%= k %>), allocatable:: x_prev(:)
          Real(kind=real<%= k %>):: f_prev
@@ -164,6 +167,7 @@ contains
          Character(len=1), intent(in):: uplo
 
 
+         DEBUG_ASSERT(s%base_step_size >= 0)
          call update(s, f, g, H, uplo, max_scale)
       end subroutine updateNewtonState<%= k %>
 
@@ -182,7 +186,8 @@ contains
          s%iter = s%iter + 1
 
          dx(:) = s%x - s%x_prev
-         if(f >= s%f_prev)then ! decreasing condition
+         s%is_line_search = f >= s%f_prev ! decreasing condition
+         if(s%is_line_search)then
             DEBUG_PRINT('Line Search')
             r = norm2(dx)
             call line_search_interpolate(zero, s%f_prev, dot_product(dx, s%g_prev)/r, r, f, r_new, s%is_convex)
@@ -191,13 +196,16 @@ contains
             DEBUG_PRINT_VARIABLE(r)
             DEBUG_PRINT_VARIABLE(r_new)
             s%is_within = .true.
+            call update_base_step_size<%= k %>(s%base_step_size, r_new, max_scale)
             s%x(:) = s%x_prev + r_new/r*dx
             return
          end if
 
          call update_adaptive_steepest_descent<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
          ! call update_newton<%= k %>(g, H, uplo, s%is_convex, s%is_saddle_or_peak, s%is_within, dx_new)
-         call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+         ! restrict step size based on s%base_step_size
+         call restrict_step_size(dx_new, s%base_step_size/norm2(dx)*dx, max_scale, s%is_within)
+         call update_base_step_size<%= k %>(s%base_step_size, norm2(dx_new), max_scale)
          call update_(s, dx_new, f, g)
       end subroutine updateNewtonState_<%= k %>
 
@@ -212,6 +220,7 @@ contains
          Real(kind=real<%= k %>), intent(in):: f, g(s%dim), H(s%dim, s%dim)
          Character(len=1), intent(in):: uplo
 
+         DEBUG_ASSERT(s%base_step_size >= 0)
          call update(s, f, g, H, uplo, max_scale)
       end subroutine updateBoundNewtonState<%= k %>
 
@@ -259,6 +268,7 @@ contains
             s%on_lower = s%on_lower .and. s%on_lower_prev
             s%on_upper = s%on_upper .and. s%on_upper_prev
             s%x(:) = s%x_prev + c*dx
+            call update_base_step_size<%= k %>(s%base_step_size, r_new, max_scale)
             call adjust_active_bounds<%= k %>(s)
             return
          end if
@@ -296,10 +306,12 @@ contains
                end do
             end do n_active_bounds_loop
          end if
-         call restrict_step_size(dx_new, dx, max_scale, s%is_within)
+         ! restrict step size based on s%base_step_size
+         call restrict_step_size(dx_new, s%base_step_size/norm2(dx)*dx, max_scale, s%is_within)
          s%on_lower_prev = s%on_lower
          s%on_upper_prev = s%on_upper
          call bound_constraint<%= k %>(dx_new, s%x, s%lower, s%upper, s%on_lower, s%on_upper, active_bounds)
+         call update_base_step_size<%= k %>(s%base_step_size, norm2(dx_new), max_scale)
          call update_(s, dx_new, f, g)
       end subroutine updateBoundNewtonState_<%= k %>
 
@@ -472,6 +484,13 @@ contains
          s%g_prev(:) = g
       end subroutine update_BoundNewtonState<%= k %>
 
+      subroutine update_base_step_size<%= k %>(base_step_size, r_new, max_scale)
+         Real(kind=real<%= k %>), intent(inout):: base_step_size
+         Real(kind=real<%= k %>), intent(in):: r_new, max_scale
+
+         base_step_size = max(base_step_size/(2*max_scale), r_new)
+      end subroutine update_base_step_size<%= k %>
+
       subroutine adjust_active_bounds<%= k %>(s)
          type(BoundNewtonState<%= k %>), intent(inout):: s
 
@@ -511,6 +530,7 @@ contains
          ASSERT(r > 0)
          s%iter = 1
          s%dim = size(x0, kind=kind(s%dim))
+         s%base_step_size = r
          s%x = x0
          s%x_prev = s%x - sqrt(r/s%dim)
          s%f_prev = get_infinity()
@@ -531,6 +551,7 @@ contains
          ASSERT(all(lower <= x0) .and. all(x0 <= upper))
          s%iter = 1
          s%dim = size(x0, kind=kind(s%dim))
+         s%base_step_size = r
          s%x = x0
          s%x_prev = s%x - r/sqrt(real(s%dim, kind=kind(r)))
          s%lower = lower

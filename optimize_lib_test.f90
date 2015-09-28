@@ -124,7 +124,7 @@ contains
       converge_x = .false.
       do
          call rosenbrock_fgh(s%x, f, g, H)
-         ! write(output_unit, *) s%is_convex, s%x, f, s%f_prev, g, H
+         ! write(output_unit, *) s%is_convex, s%x, norm2(s%x - s%x_prev), s%base_step_size, f, g, H
          if(f < f_best)then
             x_best(:) = s%x
             f_best = f
