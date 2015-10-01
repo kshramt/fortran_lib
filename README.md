@@ -4,17 +4,13 @@ This Fortran library provides basic data structures, algorithms and some handy u
 
 [![Build Status](https://travis-ci.org/kshramt/fortran_lib.svg?branch=master)](https://travis-ci.org/kshramt/fortran_lib)
 
-## Modules
+## Compilation
 
-### `release/src/ad_lib.f90`
+```bash
+make
+```
 
-This module contains types and routines for automatic differentiation up to second-order derivatives with 1, 2 and 5 independent variables.
-
-### `release/src/comparable_lib.f90`
-
-This module contains `almost_equal`.
-
-## Command line programs
+## Useful Codes
 
 ### `bin/etas_solve.sh` and `release/bin/etas_solve.exe`
 
@@ -49,15 +45,13 @@ bin/etas_log_likelihood.sh --help
 
 for the details.
 
-### `release/bin/sac_to_json.exe`
+### `release/src/ad_lib.f90`
 
-This program converts binary SAC file to JSON format.
+This module contains types and routines for automatic differentiation up to second-order derivatives with 1, 2 and 5 independent variables.
 
-## Compilation
+### `release/src/comparable_lib.f90`
 
-```bash
-make
-```
+This module contains `almost_equal`.
 
 ## Dependencies
 
