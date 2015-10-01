@@ -205,7 +205,7 @@ program main
          call random_number(s%x)
          s%x = (2*s%x - 1)*r_dx
       end if
-      converge_by_gradient = all(abs(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol) .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0)
+      converge_by_gradient = norm2(pack(g, .not.(s%on_lower .or. s%on_upper))) <= esi%gtol .and. all(pack(g, s%on_lower) >= 0) .and. all(pack(g, s%on_upper) <= 0)
       converge_by_step_size = r_dx <= 0
       converge_at_corner = s%is_at_corner
       converge = converge_by_gradient .or. converge_by_step_size .or. converge_at_corner
