@@ -1,3 +1,17 @@
+module quadpack_lib
+   use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+
+   implicit none
+
+   private
+   public:: qags
+
+   interface qags
+      module procedure dqags
+   end interface qags
+
+contains
+
       subroutine dqags(f,a,b,epsabs,epsrel,result,abserr,neval,ier,   limit,lenw,last,iwork,work)
 !***begin prologue  dqags
 !***date written   800101   (yymmdd)
@@ -1102,3 +1116,5 @@
       ermax = elist(maxerr)
       return
       end
+
+end module quadpack_lib
