@@ -83,6 +83,7 @@ module ad_lib
    <% (OPS.merge(COMPS)).each{|_, op| %>
       public:: operator(<%= op %>)
    <% } %>
+   public:: assignment(=)
 
    type, public:: DualNumber
    end type DualNumber
@@ -160,6 +161,17 @@ module ad_lib
                module procedure <%= fn2 %>_di_<%= kd %>_<%= ki %>_<%= o %>_<%= n %>
                module procedure <%= fn2 %>_id_<%= ki %>_<%= kd %>_<%= o %>_<%= n %>
             end interface operator(<%= op %>)
+         <% } %>
+      <% } %>
+
+      <% [:r, :i].each{|t| %>
+         <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
+            <%
+              suff = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
+            %>
+            interface assignment(=)
+               module procedure assign<%= suff %>
+            end interface assignment(=)
          <% } %>
       <% } %>
    <% } %>
@@ -602,6 +614,22 @@ contains
                   ret = x <%= op %> y%f
                end function <%= ri_d %>
             <% } %>
+         <% } %>
+      <% } %>
+
+      <% [:r, :i].each{|t| %>
+         <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
+            <%
+              t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
+              suff = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
+            %>
+            subroutine assign<%= suff %>(to, from)
+               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(out):: to
+               <%= t_decl %>, intent(in):: from
+
+               ! to%g and to%h are automatically initialized to 0
+               to%f = from
+            end subroutine assign<%= suff %>
          <% } %>
       <% } %>
    <% } %>

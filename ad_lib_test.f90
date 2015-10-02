@@ -12,6 +12,13 @@ program main
    Real(kind=real64):: h(2, 2), j(2)
    Integer:: i, nxs
 
+   x%g = -9
+   x%h = -99
+   x = 1 ! g and h is celared by 0
+   TEST(almost_equal(real(x), one))
+   TEST(all(almost_equal(grad(x), zero)))
+   TEST(all(almost_equal(hess(x), zero)))
+
    x%f = a
    x%g(1) = 1
    y%f = b
