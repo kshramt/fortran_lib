@@ -290,8 +290,8 @@ contains
             type(Dual<%= kd %>_<%= o %>_<%= n %>):: y
             Real(kind=real<%= kd %>):: xf, fn_p1
             <% if o > 1 %>
-               Integer:: i, j
                <% unless fn1 == :abs %>
+                  Integer:: i, j
                   Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
                <% end %>
             <% end %>
@@ -583,7 +583,6 @@ contains
             <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
                <%
                  t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
-                 # this promotion rule emulates Fortran
                  d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
                  ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
                %>
