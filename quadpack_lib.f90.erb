@@ -1,5 +1,4 @@
-      subroutine dqags(f,a,b,epsabs,epsrel,result,abserr,neval,ier,
-     *   limit,lenw,last,iwork,work)
+      subroutine dqags(f,a,b,epsabs,epsrel,result,abserr,neval,ier,   limit,lenw,last,iwork,work)
 !***begin prologue  dqags
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -176,8 +175,7 @@
       l2 = limit+l1
       l3 = limit+l2
 !
-      call dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,
-     *  ier,work(1),work(l1),work(l2),work(l3),iwork,last)
+      call dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,  ier,work(1),work(l1),work(l2),work(l3),iwork,last)
 !
 !         call error handler if necessary.
 !
@@ -186,8 +184,7 @@
       if(ier.ne.0) call xerror(26habnormal return from dqags,26,ier,lvl)
       return
       end
-      subroutine dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,
-     *   ier,alist,blist,rlist,elist,iord,last)
+      subroutine dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,   ier,alist,blist,rlist,elist,iord,last)
 !***begin prologue  dqagse
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -334,17 +331,11 @@
 !***routines called  d1mach,dqelg,dqk21,dqpsrt
 !***end prologue  dqagse
 !
-      double precision a,abseps,abserr,alist,area,area1,area12,area2,a1,
-     *  a2,b,blist,b1,b2,correc,dabs,defabs,defab1,defab2,d1mach,dmax1,
-     *  dres,elist,epmach,epsabs,epsrel,erlarg,erlast,errbnd,errmax,
-     *  error1,error2,erro12,errsum,ertest,f,oflow,resabs,reseps,result,
-     *  res3la,rlist,rlist2,small,uflow
-      integer id,ier,ierro,iord,iroff1,iroff2,iroff3,jupbnd,k,ksgn,
-     *  ktmin,last,limit,maxerr,neval,nres,nrmax,numrl2
+      double precision a,abseps,abserr,alist,area,area1,area12,area2,a1,  a2,b,blist,b1,b2,correc,dabs,defabs,defab1,defab2,d1mach,dmax1,  dres,elist,epmach,epsabs,epsrel,erlarg,erlast,errbnd,errmax,  error1,error2,erro12,errsum,ertest,f,oflow,resabs,reseps,result,  res3la,rlist,rlist2,small,uflow
+      integer id,ier,ierro,iord,iroff1,iroff2,iroff3,jupbnd,k,ksgn,  ktmin,last,limit,maxerr,neval,nres,nrmax,numrl2
       logical extrap,noext
 !
-      dimension alist(limit),blist(limit),elist(limit),iord(limit),
-     * res3la(3),rlist(limit),rlist2(52)
+      dimension alist(limit),blist(limit),elist(limit),iord(limit), res3la(3),rlist(limit),rlist2(52)
 !
       external f
 !
@@ -415,8 +406,7 @@
       blist(1) = b
       rlist(1) = 0.0d+00
       elist(1) = 0.0d+00
-      if(epsabs.le.0.0d+00.and.epsrel.lt.dmax1(0.5d+02*epmach,0.5d-28))
-     *   ier = 6
+      if(epsabs.le.0.0d+00.and.epsrel.lt.dmax1(0.5d+02*epmach,0.5d-28))   ier = 6
       if(ier.eq.6) go to 999
 !
 !           first approximation to the integral
@@ -437,8 +427,7 @@
       iord(1) = 1
       if(abserr.le.1.0d+02*epmach*defabs.and.abserr.gt.errbnd) ier = 2
       if(limit.eq.1) ier = 1
-      if(ier.ne.0.or.(abserr.le.errbnd.and.abserr.ne.resabs).or.
-     *  abserr.eq.0.0d+00) go to 140
+      if(ier.ne.0.or.(abserr.le.errbnd.and.abserr.ne.resabs).or.  abserr.eq.0.0d+00) go to 140
 !
 !           initialization
 !           --------------
@@ -485,8 +474,7 @@
         errsum = errsum+erro12-errmax
         area = area+area12-rlist(maxerr)
         if(defab1.eq.error1.or.defab2.eq.error2) go to 15
-        if(dabs(rlist(maxerr)-area12).gt.0.1d-04*dabs(area12)
-     *  .or.erro12.lt.0.99d+00*errmax) go to 10
+        if(dabs(rlist(maxerr)-area12).gt.0.1d-04*dabs(area12)  .or.erro12.lt.0.99d+00*errmax) go to 10
         if(extrap) iroff2 = iroff2+1
         if(.not.extrap) iroff1 = iroff1+1
    10   if(last.gt.10.and.erro12.gt.errmax) iroff3 = iroff3+1
@@ -507,8 +495,7 @@
 !           set error flag in the case of bad integrand behaviour
 !           at a point of the integration range.
 !
-        if(dmax1(dabs(a1),dabs(b2)).le.(0.1d+01+0.1d+03*epmach)*
-     *  (dabs(a2)+0.1d+04*uflow)) ier = 4
+        if(dmax1(dabs(a1),dabs(b2)).le.(0.1d+01+0.1d+03*epmach)*  (dabs(a2)+0.1d+04*uflow)) ier = 4
 !
 !           append the newly-created intervals to the list.
 !
@@ -613,10 +600,8 @@
 !
 !           test on divergence.
 !
-  110 if(ksgn.eq.(-1).and.dmax1(dabs(result),dabs(area)).le.
-     * defabs*0.1d-01) go to 130
-      if(0.1d-01.gt.(result/area).or.(result/area).gt.0.1d+03
-     * .or.errsum.gt.dabs(area)) ier = 6
+  110 if(ksgn.eq.(-1).and.dmax1(dabs(result),dabs(area)).le. defabs*0.1d-01) go to 130
+      if(0.1d-01.gt.(result/area).or.(result/area).gt.0.1d+03 .or.errsum.gt.dabs(area)) ier = 6
       go to 130
 !
 !           compute global integral sum.
@@ -680,9 +665,7 @@
 !
 !***end prologue  dqelg
 !
-      double precision abserr,dabs,delta1,delta2,delta3,dmax1,d1mach,
-     *  epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3,
-     *  oflow,res,result,res3la,ss,tol1,tol2,tol3
+      double precision abserr,dabs,delta1,delta2,delta3,dmax1,d1mach,  epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3,  oflow,res,result,res3la,ss,tol1,tol2,tol3
       integer i,ib,ib2,ie,indx,k1,k2,k3,limexp,n,newelm,nres,num
       dimension epstab(52),res3la(3)
 !
@@ -806,8 +789,7 @@
 !
 !           compute error estimate
 !
-   90 abserr = dabs(result-res3la(3))+dabs(result-res3la(2))
-     *  +dabs(result-res3la(1))
+   90 abserr = dabs(result-res3la(3))+dabs(result-res3la(2))  +dabs(result-res3la(1))
       res3la(1) = res3la(2)
       res3la(2) = res3la(3)
       res3la(3) = result
@@ -866,9 +848,7 @@
 !***routines called  d1mach
 !***end prologue  dqk21
 !
-      double precision a,absc,abserr,b,centr,dabs,dhlgth,dmax1,dmin1,
-     *  d1mach,epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc,
-     *  resg,resk,reskh,result,uflow,wg,wgk,xgk
+      double precision a,absc,abserr,b,centr,dabs,dhlgth,dmax1,dmin1,  d1mach,epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc,  resg,resk,reskh,result,uflow,wg,wgk,xgk
       integer j,jtw,jtwm1
       external f
 !
@@ -990,10 +970,8 @@
       resabs = resabs*dhlgth
       resasc = resasc*dhlgth
       abserr = dabs((resk-resg)*hlgth)
-      if(resasc.ne.0.0d+00.and.abserr.ne.0.0d+00)
-     *  abserr = resasc*dmin1(0.1d+01,(0.2d+03*abserr/resasc)**1.5d+00)
-      if(resabs.gt.uflow/(0.5d+02*epmach)) abserr = dmax1
-     *  ((epmach*0.5d+02)*resabs,abserr)
+      if(resasc.ne.0.0d+00.and.abserr.ne.0.0d+00)  abserr = resasc*dmin1(0.1d+01,(0.2d+03*abserr/resasc)**1.5d+00)
+      if(resabs.gt.uflow/(0.5d+02*epmach)) abserr = dmax1  ((epmach*0.5d+02)*resabs,abserr)
       return
       end
       subroutine dqpsrt(limit,last,maxerr,ermax,elist,iord,nrmax)
@@ -1051,8 +1029,7 @@
 !***end prologue  dqpsrt
 !
       double precision elist,ermax,errmax,errmin
-      integer i,ibeg,ido,iord,isucc,j,jbnd,jupbn,k,last,limit,maxerr,
-     *  nrmax
+      integer i,ibeg,ido,iord,isucc,j,jbnd,jupbn,k,last,limit,maxerr,  nrmax
       dimension elist(last),iord(last)
 !
 !           check whether the list contains more than
