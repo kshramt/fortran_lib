@@ -195,7 +195,7 @@ contains
 !
       lvl = 0
 10    if(ier.eq.6) lvl = 1
-      if(ier.ne.0) call xerror(26habnormal return from dqags,26,ier,lvl)
+      if(ier.ne.0) call xerror("abnormal return from dqags", ier, lvl)
       return
       end
       subroutine dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,   ier,alist,blist,rlist,elist,iord,last)
@@ -1116,5 +1116,12 @@ contains
       ermax = elist(maxerr)
       return
       end
+
+   subroutine xerror(messg, ier, lvl)
+      Character(len=*), intent(in):: messg
+      Integer, intent(in):: ier, lvl
+
+      write(error_unit, *) messg, " level: ", lvl, " error No.: ", ier
+   end subroutine xerror
 
 end module quadpack_lib
