@@ -342,10 +342,10 @@ contains
 !                     subdivision process
 !
 !***references  (none)
-!***routines called  d1mach,dqelg,dqk21,dqpsrt
+!***routines called  dqelg,dqk21,dqpsrt
 !***end prologue  dqagse
 !
-      double precision a,abseps,abserr,alist,area,area1,area12,area2,a1,  a2,b,blist,b1,b2,correc,dabs,defabs,defab1,defab2,d1mach,dmax1,  dres,elist,epmach,epsabs,epsrel,erlarg,erlast,errbnd,errmax,  error1,error2,erro12,errsum,ertest,f,oflow,resabs,reseps,result,  res3la,rlist,rlist2,small,uflow
+      double precision a,abseps,abserr,alist,area,area1,area12,area2,a1,  a2,b,blist,b1,b2,correc,dabs,defabs,defab1,defab2, dmax1,  dres,elist,epmach,epsabs,epsrel,erlarg,erlast,errbnd,errmax,  error1,error2,erro12,errsum,ertest,f,oflow,resabs,reseps,result,  res3la,rlist,rlist2,small,uflow
       integer id,ier,ierro,iord,iroff1,iroff2,iroff3,jupbnd,k,ksgn,  ktmin,last,limit,maxerr,neval,nres,nrmax,numrl2
       logical extrap,noext
 !
@@ -407,7 +407,7 @@ contains
 !           oflow is the largest positive magnitude.
 !
 !***first executable statement  dqagse
-      epmach = d1mach(4)
+      epmach = epsilon(epmach)
 !
 !            test on validity of parameters
 !            ------------------------------
@@ -426,8 +426,8 @@ contains
 !           first approximation to the integral
 !           -----------------------------------
 !
-      uflow = d1mach(1)
-      oflow = d1mach(2)
+      uflow = tiny(uflow)
+      oflow = huge(oflow)
       ierro = 0
       call dqk21(f,a,b,result,abserr,defabs,resabs)
 !
@@ -632,7 +632,7 @@ contains
       subroutine dqelg(n,epstab,result,abserr,res3la,nres)
 !***begin prologue  dqelg
 !***refer to  dqagie,dqagoe,dqagpe,dqagse
-!***routines called  d1mach
+!***routines called
 !***revision date  830518   (yymmdd)
 !***keywords  epsilon algorithm, convergence acceleration,
 !             extrapolation
@@ -679,7 +679,7 @@ contains
 !
 !***end prologue  dqelg
 !
-      double precision abserr,dabs,delta1,delta2,delta3,dmax1,d1mach,  epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3,  oflow,res,result,res3la,ss,tol1,tol2,tol3
+      double precision abserr,dabs,delta1,delta2,delta3,dmax1, epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3,  oflow,res,result,res3la,ss,tol1,tol2,tol3
       integer i,ib,ib2,ie,indx,k1,k2,k3,limexp,n,newelm,nres,num
       dimension epstab(52),res3la(3)
 !
@@ -708,8 +708,8 @@ contains
 !           diagonal of the epsilon table is deleted.
 !
 !***first executable statement  dqelg
-      epmach = d1mach(4)
-      oflow = d1mach(2)
+      epmach = epsilon(epmach)
+      oflow = huge(oflow)
       nres = nres+1
       abserr = oflow
       result = epstab(n)
@@ -859,10 +859,10 @@ contains
 !                       over (a,b)
 !
 !***references  (none)
-!***routines called  d1mach
+!***routines called
 !***end prologue  dqk21
 !
-      double precision a,absc,abserr,b,centr,dabs,dhlgth,dmax1,dmin1,  d1mach,epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc,  resg,resk,reskh,result,uflow,wg,wgk,xgk
+      double precision a,absc,abserr,b,centr,dabs,dhlgth,dmax1,dmin1, epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc,  resg,resk,reskh,result,uflow,wg,wgk,xgk
       integer j,jtw,jtwm1
       external f
 !
@@ -938,8 +938,8 @@ contains
 !           uflow is the smallest positive magnitude.
 !
 !***first executable statement  dqk21
-      epmach = d1mach(4)
-      uflow = d1mach(1)
+      epmach = epsilon(epmach)
+      uflow = tiny(uflow)
 !
       centr = 0.5d+00*(a+b)
       hlgth = 0.5d+00*(b-a)
