@@ -1,71 +1,92 @@
+<%
+   OS = [
+      1,
+      2,
+   ]
+   NS = [
+      1,
+      2,
+      5,
+      7,
+      8,
+   ]
+   TS = [[:r, "_r64", "Real(kind=real64)", "Real(kind=real64)"]]
+   OS.product(NS).each{|o, n|
+      TS.push([:d, "_d64_#{o}_#{n}", "type(Dual64_#{o}_#{n})", "Real(kind=real64)"])
+   }
+
+def make_interface_of_f(t, decl, rdecl)
+   use_ad_lib_if_dual = t == :d ? "use, non_intrinsic:: ad_lib" : ""
+   "
+   interface
+      function f(x) result(ret)
+         use, intrinsic:: iso_fortran_env, only: real64
+         #{use_ad_lib_if_dual}
+
+         #{decl}:: ret
+         #{rdecl}, intent(in):: x
+      end function f
+   end interface
+   "
+end
+%>
+
+
 module quadpack_lib
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   use, intrinsic:: iso_fortran_env, only: real64
+
+   use, non_intrinsic:: ad_lib
 
    implicit none
 
    private
    public:: qags
 
-   interface qags
-      module procedure dqags
-   end interface qags
+   <% TS.each{|_, suff, _, _| %>
+      interface qags
+         module procedure qags<%= suff %>
+      end interface qags
+
+      interface dqelg
+         module procedure dqelg<%= suff %>
+      end interface dqelg
+
+      interface dqk21
+         module procedure dqk21<%= suff %>
+      end interface dqk21
+
+      interface dqpsrt
+         module procedure dqpsrt<%= suff %>
+      end interface dqpsrt
+   <% } %>
 
 contains
 
-      subroutine dqags(f,a,b,epsabs,epsrel,result,abserr,neval,ier,   limit,lenw,last,iwork,work)
-!***begin prologue  dqags
-!***date written   800101   (yymmdd)
-!***revision date  830518   (yymmdd)
-!***category no.  h2a1a1
-!***keywords  automatic integrator, general-purpose,
-!             (end-point) singularities, extrapolation,
-!             globally adaptive
+   <% TS.each{|t, suff, decl, rdecl| %>
 !***author  piessens,robert,appl. math. & progr. div. - k.u.leuven
 !           de doncker,elise,appl. math. & prog. div. - k.u.leuven
 !***purpose  the routine calculates an approximation result to a given
 !            definite integral  i = integral of f over (a,b),
 !            hopefully satisfying following claim for accuracy
 !            abs(i-result).le.max(epsabs,epsrel*abs(i)).
-!***description
 !
-!        computation of a definite integral
-!        standard fortran subroutine
-!        double precision version
-!
-!
-!        parameters
-!         on entry
-!            f      - double precision
-!                     function subprogram defining the integrand
-!                     function f(x). the actual name for f needs to be
-!                     declared e x t e r n a l in the driver program.
-!
-!            a      - double precision
-!                     lower limit of integration
-!
-!            b      - double precision
-!                     upper limit of integration
-!
-!            epsabs - double precision
-!                     absolute accuracy requested
-!            epsrel - double precision
-!                     relative accuracy requested
+!            atol   - absolute accuracy requesteddouble precision
+!            rtol   - relative accuracy requested
 !                     if  epsabs.le.0
 !                     and epsrel.lt.max(50*rel.mach.acc.,0.5d-28),
 !                     the routine will end with ier = 6.
 !
 !         on return
-!            result - double precision
-!                     approximation to the integral
+!            ret    - approximation to the integral
 !
-!            abserr - double precision
-!                     estimate of the modulus of the absolute error,
+!            abserr - estimate of the modulus of the absolute error,
 !                     which should equal or exceed abs(i-result)
 !
-!            neval  - integer
+!            n_eval - integer
 !                     number of integrand evaluations
 !
-!            ier    - integer
+!            err    - integer
 !                     ier = 0 normal and reliable termination of the
 !                             routine. it is assumed that the requested
 !                             accuracy has been achieved.
@@ -74,7 +95,7 @@ contains
 !                             less reliable. it is assumed that the
 !                             requested accuracy has not been achieved.
 !            error messages
-!                     ier = 1 maximum number of subdivisions allowed
+!                     err = 1 maximum number of subdivisions allowed
 !                             has been achieved. one can allow more sub-
 !                             divisions by increasing the value of limit
 !                             (and taking the according dimension
@@ -126,12 +147,6 @@ contains
 !                    (a,b), limit.ge.1.
 !                    if limit.lt.1, the routine will end with ier = 6.
 !
-!            lenw  - integer
-!                    dimensioning parameter for work
-!                    lenw must be at least limit*4.
-!                    if lenw.lt.limit*4, the routine will end
-!                    with ier = 6.
-!
 !            last  - integer
 !                    on return, last equals the number of subintervals
 !                    produced in the subdivision process, detemines the
@@ -147,58 +162,55 @@ contains
 !                    work(limit*3+iwork(k)) form a decreasing
 !                    sequence, with k = last if last.le.(limit/2+2),
 !                    and k = limit+1-last otherwise
-!
-!            work  - double precision
-!                    vector of dimension at least lenw
-!                    on return
-!                    work(1), ..., work(last) contain the left
-!                     end-points of the subintervals in the
-!                     partition of (a,b),
-!                    work(limit+1), ..., work(limit+last) contain
-!                     the right end-points,
-!                    work(limit*2+1), ..., work(limit*2+last) contain
-!                     the integral approximations over the subintervals,
-!                    work(limit*3+1), ..., work(limit*3+last)
-!                     contain the error estimates.
-!
-!***references  (none)
-!***routines called  dqagse,xerror
-!***end prologue  dqags
-!
-!
-      double precision a,abserr,b,epsabs,epsrel,f,result,work
-      integer ier,iwork,last,lenw,limit,lvl,l1,l2,l3,neval
-!
-      dimension iwork(limit),work(lenw)
-!
-      external f
-!
-!         check validity of limit and lenw.
-!
-!***first executable statement  dqags
-      ier = 6
-      neval = 0
-      last = 0
-      result = 0.0d+00
-      abserr = 0.0d+00
-      if(limit.lt.1.or.lenw.lt.limit*4) go to 10
-!
-!         prepare call for dqagse.
-!
-      l1 = limit+1
-      l2 = limit+l1
-      l3 = limit+l2
-!
-      call dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,  ier,work(1),work(l1),work(l2),work(l3),iwork,last)
-!
-!         call error handler if necessary.
-!
-      lvl = 0
-10    if(ier.eq.6) lvl = 1
-      if(ier.ne.0) call xerror("abnormal return from dqags", ier, lvl)
-      return
-      end
-      subroutine dqagse(f,a,b,epsabs,epsrel,limit,result,abserr,neval,   ier,alist,blist,rlist,elist,iord,last)
+      subroutine qags<%= suff %>(f, a, b, atol, rtol, limit, ret, abs_err, n_eval, last, err)
+         ! todo: optional workspace arguments
+         <%= make_interface_of_f(t, decl, rdecl) %>
+
+         <%= rdecl %>, intent(in):: a, b
+         <%= rdecl %>, intent(in), optional:: atol, rtol
+         Integer, intent(in), optional:: limit
+         <%= decl %>, intent(out):: ret
+         <%= decl %>, intent(out), optional:: abs_err
+         Integer, intent(out), optional:: n_eval, last, err
+
+         <%= rdecl %>:: atol_, rtol_
+         Integer:: limit_
+         <%= decl %>:: abs_err_
+         Integer:: n_eval_, last_, err_
+
+         atol_ = epsilon(atol_)
+         rtol_ = epsilon(atol_)
+         limit_ = 50
+         if(present(atol)) atol_ = atol
+         if(present(rtol)) rtol_ = rtol
+         if(present(limit)) limit_ = limit
+
+         call qags_impl<%= suff %>(f, a, b, atol_, rtol_, limit_, ret, abs_err_, n_eval_, last_, err_)
+         if(present(abs_err)) abs_err = abs_err_
+         if(present(n_eval)) n_eval = n_eval_
+         if(present(last)) last = last_
+         if(present(err)) err = err_
+      end subroutine qags<%= suff %>
+
+      ! I made this wrapper routine to make working arrays automatic rather than allocated.
+      subroutine qags_impl<%= suff %>(f, a, b, atol, rtol, limit, ret, abs_err, n_eval, last, err)
+         <%= make_interface_of_f(t, decl, rdecl) %>
+
+         <%= rdecl %>, intent(in):: a, b
+         <%= rdecl %>, intent(in):: atol, rtol
+         Integer, intent(in):: limit
+         <%= decl %>, intent(out):: ret
+         <%= decl %>, intent(out):: abs_err
+         Integer, intent(out):: n_eval, last, err
+
+         <%= rdecl %>:: alist(limit), blist(limit)
+         <%= decl %>:: rlist(limit), elist(limit)
+         Integer:: iwork(limit)
+
+         call dqagse<%= suff %>(f, a, b, atol, rtol, limit, ret, abs_err, n_eval, err, alist, blist, rlist, elist, iwork, last)
+      end subroutine qags_impl<%= suff %>
+
+      subroutine dqagse<%= suff %>(f, a, b, epsabs, epsrel, limit, result, abserr, neval, ier, alist, blist, rlist, elist, iord, last)
 !***begin prologue  dqagse
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -345,13 +357,21 @@ contains
 !***routines called  dqelg,dqk21,dqpsrt
 !***end prologue  dqagse
 !
-      double precision a,abseps,abserr,alist,area,area1,area12,area2,a1,  a2,b,blist,b1,b2,correc,dabs,defabs,defab1,defab2, dmax1,  dres,elist,epmach,epsabs,epsrel,erlarg,erlast,errbnd,errmax,  error1,error2,erro12,errsum,ertest,f,oflow,resabs,reseps,result,  res3la,rlist,rlist2,small,uflow
-      integer id,ier,ierro,iord,iroff1,iroff2,iroff3,jupbnd,k,ksgn,  ktmin,last,limit,maxerr,neval,nres,nrmax,numrl2
+      <%= make_interface_of_f(t, decl, rdecl) %>
+
+      <%= rdecl %>, intent(in):: a, b, epsabs, epsrel
+      <%= decl %>, intent(out):: result, abserr
+      Integer, intent(in):: limit
+      Integer, intent(out):: last, neval, ier
+      <%= rdecl %>, intent(inout):: alist(limit), blist(limit)
+      <%= decl %>, intent(inout):: rlist(limit), elist(limit)
+      Integer, intent(inout):: iord(limit)
+
+      <%= decl %>:: abseps, area, area1, area12, area2, correc, dres, erlarg, erlast, errbnd, errmax, error1, error2, erro12, errsum, ertest, defabs, defab1, defab2, resabs, res3la(3), reseps, rlist2(52)
+      <%= rdecl %>:: a1, a2, b1, b2, epmach, oflow, small, uflow
+      integer id, ierro, iroff1, iroff2, iroff3, jupbnd, k, ksgn, ktmin, maxerr, nres, nrmax, numrl2
       logical extrap,noext
 !
-      dimension alist(limit),blist(limit),elist(limit),iord(limit), res3la(3),rlist(limit),rlist2(52)
-!
-      external f
 !
 !            the dimension of rlist2 is determined by the value of
 !            limexp in subroutine dqelg (rlist2 should be of dimension
@@ -420,7 +440,7 @@ contains
       blist(1) = b
       rlist(1) = 0.0d+00
       elist(1) = 0.0d+00
-      if(epsabs.le.0.0d+00.and.epsrel.lt.dmax1(0.5d+02*epmach,0.5d-28))   ier = 6
+      if(epsabs.le.0.0d+00.and.epsrel.lt.max(0.5d+02*epmach, 0.5d-28))   ier = 6
       if(ier.eq.6) go to 999
 !
 !           first approximation to the integral
@@ -433,8 +453,8 @@ contains
 !
 !           test on accuracy.
 !
-      dres = dabs(result)
-      errbnd = dmax1(epsabs,epsrel*dres)
+      dres = abs(result)
+      errbnd = max(epsabs,epsrel*dres)
       last = 1
       rlist(1) = result
       elist(1) = abserr
@@ -488,13 +508,13 @@ contains
         errsum = errsum+erro12-errmax
         area = area+area12-rlist(maxerr)
         if(defab1.eq.error1.or.defab2.eq.error2) go to 15
-        if(dabs(rlist(maxerr)-area12).gt.0.1d-04*dabs(area12)  .or.erro12.lt.0.99d+00*errmax) go to 10
+        if(abs(rlist(maxerr)-area12).gt.0.1d-04*abs(area12)  .or.erro12.lt.0.99d+00*errmax) go to 10
         if(extrap) iroff2 = iroff2+1
         if(.not.extrap) iroff1 = iroff1+1
    10   if(last.gt.10.and.erro12.gt.errmax) iroff3 = iroff3+1
    15   rlist(maxerr) = area1
         rlist(last) = area2
-        errbnd = dmax1(epsabs,epsrel*dabs(area))
+        errbnd = max(epsabs,epsrel*abs(area))
 !
 !           test for roundoff error and eventually set error flag.
 !
@@ -509,7 +529,7 @@ contains
 !           set error flag in the case of bad integrand behaviour
 !           at a point of the integration range.
 !
-        if(dmax1(dabs(a1),dabs(b2)).le.(0.1d+01+0.1d+03*epmach)*  (dabs(a2)+0.1d+04*uflow)) ier = 4
+        if(max(abs(a1), abs(b2)).le.(0.1d+01+0.1d+03*epmach)*(abs(a2)+0.1d+04*uflow)) ier = 4
 !
 !           append the newly-created intervals to the list.
 !
@@ -540,13 +560,13 @@ contains
         if(last.eq.2) go to 80
         if(noext) go to 90
         erlarg = erlarg-erlast
-        if(dabs(b1-a1).gt.small) erlarg = erlarg+erro12
+        if(abs(b1 - a1).gt.small) erlarg = erlarg + erro12
         if(extrap) go to 40
 !
 !           test whether the interval to be bisected next is the
 !           smallest interval.
 !
-        if(dabs(blist(maxerr)-alist(maxerr)).gt.small) go to 90
+        if(abs(blist(maxerr)-alist(maxerr)).gt.small) go to 90
         extrap = .true.
         nrmax = 2
    40   if(ierro.eq.3.or.erlarg.le.ertest) go to 60
@@ -562,7 +582,7 @@ contains
           maxerr = iord(nrmax)
           errmax = elist(maxerr)
 ! ***jump out of do-loop
-          if(dabs(blist(maxerr)-alist(maxerr)).gt.small) go to 90
+          if(abs(blist(maxerr)-alist(maxerr)).gt.small) go to 90
           nrmax = nrmax+1
    50   continue
 !
@@ -578,7 +598,7 @@ contains
         abserr = abseps
         result = reseps
         correc = erlarg
-        ertest = dmax1(epsabs,epsrel*dabs(reseps))
+        ertest = max(epsabs,epsrel*abs(reseps))
 ! ***jump out of do-loop
         if(abserr.le.ertest) go to 100
 !
@@ -593,7 +613,7 @@ contains
         small = small*0.5d+00
         erlarg = errsum
         go to 90
-   80   small = dabs(b-a)*0.375d+00
+   80   small = abs(b-a)*0.375d+00
         erlarg = errsum
         ertest = errbnd
         rlist2(2) = area
@@ -610,12 +630,12 @@ contains
       if(abserr.gt.errsum) go to 115
       if(area.eq.0.0d+00) go to 130
       go to 110
-  105 if(abserr/dabs(result).gt.errsum/dabs(area)) go to 115
+  105 if(abserr/abs(result).gt.errsum/abs(area)) go to 115
 !
 !           test on divergence.
 !
-  110 if(ksgn.eq.(-1).and.dmax1(dabs(result),dabs(area)).le. defabs*0.1d-01) go to 130
-      if(0.1d-01.gt.(result/area).or.(result/area).gt.0.1d+03 .or.errsum.gt.dabs(area)) ier = 6
+  110 if(ksgn.eq.(-1).and.max(abs(result),abs(area)).le. defabs*0.1d-01) go to 130
+      if(0.1d-01.gt.(result/area).or.(result/area).gt.0.1d+03 .or.errsum.gt.abs(area)) ier = 6
       go to 130
 !
 !           compute global integral sum.
@@ -629,7 +649,8 @@ contains
   140 neval = 42*last-21
   999 return
       end
-      subroutine dqelg(n,epstab,result,abserr,res3la,nres)
+
+      subroutine dqelg<%= suff %>(n, epstab, result, abserr, res3la, nres)
 !***begin prologue  dqelg
 !***refer to  dqagie,dqagoe,dqagpe,dqagse
 !***routines called
@@ -679,9 +700,12 @@ contains
 !
 !***end prologue  dqelg
 !
-      double precision abserr,dabs,delta1,delta2,delta3,dmax1, epmach,epsinf,epstab,error,err1,err2,err3,e0,e1,e1abs,e2,e3,  oflow,res,result,res3la,ss,tol1,tol2,tol3
-      integer i,ib,ib2,ie,indx,k1,k2,k3,limexp,n,newelm,nres,num
-      dimension epstab(52),res3la(3)
+      Integer, intent(inout):: n
+      <%= decl %>, intent(inout):: epstab(52), res3la(3)
+      <%= decl %>, intent(out):: result, abserr
+      <%= decl %>:: res, e0, e1, e2, e3, e1abs, epsinf, error, delta1, delta2, delta3, err1, err2, err3, tol1, tol2, tol3, ss
+      <%= rdecl %>:: epmach, oflow
+      integer i, ib, ib2, ie, indx, k1, k2, k3, limexp, newelm, nres, num
 !
 !           list of major variables
 !           -----------------------
@@ -727,13 +751,13 @@ contains
         e0 = epstab(k3)
         e1 = epstab(k2)
         e2 = res
-        e1abs = dabs(e1)
+        e1abs = abs(e1)
         delta2 = e2-e1
-        err2 = dabs(delta2)
-        tol2 = dmax1(dabs(e2),e1abs)*epmach
+        err2 = abs(delta2)
+        tol2 = max(abs(e2),e1abs)*epmach
         delta3 = e1-e0
-        err3 = dabs(delta3)
-        tol3 = dmax1(e1abs,dabs(e0))*epmach
+        err3 = abs(delta3)
+        tol3 = max(e1abs, abs(e0))*epmach
         if(err2.gt.tol2.or.err3.gt.tol3) go to 10
 !
 !           if e0, e1 and e2 are equal to within machine
@@ -748,15 +772,15 @@ contains
    10   e3 = epstab(k1)
         epstab(k1) = e1
         delta1 = e1-e3
-        err1 = dabs(delta1)
-        tol1 = dmax1(e1abs,dabs(e3))*epmach
+        err1 = abs(delta1)
+        tol1 = max(e1abs, abs(e3))*epmach
 !
 !           if two elements are very close to each other, omit
 !           a part of the table by adjusting the value of n
 !
         if(err1.le.tol1.or.err2.le.tol2.or.err3.le.tol3) go to 20
         ss = 0.1d+01/delta1+0.1d+01/delta2-0.1d+01/delta3
-        epsinf = dabs(ss*e1)
+        epsinf = abs(ss*e1)
 !
 !           test to detect irregular behaviour in the table, and
 !           eventually omit a part of the table adjusting the value
@@ -773,7 +797,7 @@ contains
    30   res = e1+0.1d+01/ss
         epstab(k1) = res
         k1 = k1-2
-        error = err2+dabs(res-e2)+err3
+        error = err2 + abs(res - e2) + err3
         if(error.gt.abserr) go to 40
         abserr = error
         result = res
@@ -803,14 +827,15 @@ contains
 !
 !           compute error estimate
 !
-   90 abserr = dabs(result-res3la(3))+dabs(result-res3la(2))  +dabs(result-res3la(1))
+   90 abserr = abs(result - res3la(3)) + abs(result - res3la(2)) + abs(result - res3la(1))
       res3la(1) = res3la(2)
       res3la(2) = res3la(3)
       res3la(3) = result
-  100 abserr = dmax1(abserr,0.5d+01*epmach*dabs(result))
+  100 abserr = max(abserr, 0.5d+01*epmach*abs(result))
       return
       end
-      subroutine dqk21(f,a,b,result,abserr,resabs,resasc)
+
+      subroutine dqk21<%= suff %>(f, a, b, result, abserr, resabs, resasc)
 !***begin prologue  dqk21
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -862,11 +887,14 @@ contains
 !***routines called
 !***end prologue  dqk21
 !
-      double precision a,absc,abserr,b,centr,dabs,dhlgth,dmax1,dmin1, epmach,f,fc,fsum,fval1,fval2,fv1,fv2,hlgth,resabs,resasc,  resg,resk,reskh,result,uflow,wg,wgk,xgk
+      <%= make_interface_of_f(t, decl, rdecl) %>
+      <%= rdecl %>, intent(in):: a, b
+      <%= decl %>, intent(out):: result, abserr, resabs, resasc
+      <%= decl %>:: dhlgth, fc, fsum, fv1(10), fv2(10), fval1, fval2, resg, resk, reskh
+      <%= rdecl %>:: absc, centr, epmach, hlgth, uflow, wg, wgk, xgk
       integer j,jtw,jtwm1
-      external f
 !
-      dimension fv1(10),fv2(10),wg(5),wgk(11),xgk(11)
+      dimension wg(5), wgk(11), xgk(11)
 !
 !           the abscissae and weights are given for the interval (-1,1).
 !           because of symmetry only the positive abscissae and their
@@ -943,7 +971,7 @@ contains
 !
       centr = 0.5d+00*(a+b)
       hlgth = 0.5d+00*(b-a)
-      dhlgth = dabs(hlgth)
+      dhlgth = abs(hlgth)
 !
 !           compute the 21-point kronrod approximation to
 !           the integral, and estimate the absolute error.
@@ -951,7 +979,7 @@ contains
       resg = 0.0d+00
       fc = f(centr)
       resk = wgk(11)*fc
-      resabs = dabs(resk)
+      resabs = abs(resk)
       do 10 j=1,5
         jtw = 2*j
         absc = hlgth*xgk(jtw)
@@ -962,7 +990,7 @@ contains
         fsum = fval1+fval2
         resg = resg+wg(j)*fsum
         resk = resk+wgk(jtw)*fsum
-        resabs = resabs+wgk(jtw)*(dabs(fval1)+dabs(fval2))
+        resabs = resabs + wgk(jtw)*(abs(fval1) + abs(fval2))
    10 continue
       do 15 j = 1,5
         jtwm1 = 2*j-1
@@ -973,22 +1001,23 @@ contains
         fv2(jtwm1) = fval2
         fsum = fval1+fval2
         resk = resk+wgk(jtwm1)*fsum
-        resabs = resabs+wgk(jtwm1)*(dabs(fval1)+dabs(fval2))
+        resabs = resabs + wgk(jtwm1)*(abs(fval1) + abs(fval2))
    15 continue
       reskh = resk*0.5d+00
-      resasc = wgk(11)*dabs(fc-reskh)
+      resasc = wgk(11)*abs(fc - reskh)
       do 20 j=1,10
-        resasc = resasc+wgk(j)*(dabs(fv1(j)-reskh)+dabs(fv2(j)-reskh))
+        resasc = resasc+wgk(j)*(abs(fv1(j) - reskh) + abs(fv2(j) - reskh))
    20 continue
       result = resk*hlgth
       resabs = resabs*dhlgth
       resasc = resasc*dhlgth
-      abserr = dabs((resk-resg)*hlgth)
-      if(resasc.ne.0.0d+00.and.abserr.ne.0.0d+00)  abserr = resasc*dmin1(0.1d+01,(0.2d+03*abserr/resasc)**1.5d+00)
-      if(resabs.gt.uflow/(0.5d+02*epmach)) abserr = dmax1  ((epmach*0.5d+02)*resabs,abserr)
+      abserr = abs((resk - resg)*hlgth)
+      if(resasc.ne.0.0d+00.and.abserr.ne.0.0d+00)  abserr = resasc*min(0.1d+01, (0.2d+03*abserr/resasc)**1.5d+00)
+      if(resabs.gt.uflow/(0.5d+02*epmach)) abserr = max((epmach*0.5d+02)*resabs,abserr)
       return
       end
-      subroutine dqpsrt(limit,last,maxerr,ermax,elist,iord,nrmax)
+
+      subroutine dqpsrt<%= suff %>(limit, last, maxerr, ermax, elist, iord, nrmax)
 !***begin prologue  dqpsrt
 !***refer to  dqage,dqagie,dqagpe,dqawse
 !***routines called  (none)
@@ -1042,9 +1071,11 @@ contains
 !
 !***end prologue  dqpsrt
 !
-      double precision elist,ermax,errmax,errmin
-      integer i,ibeg,ido,iord,isucc,j,jbnd,jupbn,k,last,limit,maxerr,  nrmax
-      dimension elist(last),iord(last)
+      <%= decl %>, intent(in):: elist(limit)
+      Integer, intent(inout):: iord(last)
+      <%= decl %>, intent(out):: ermax
+      <%= decl %>:: errmin, errmax
+      integer i, ibeg, ido, isucc, j, jbnd, jupbn, k, last, limit, maxerr, nrmax
 !
 !           check whether the list contains more than
 !           two error estimates.
@@ -1116,12 +1147,5 @@ contains
       ermax = elist(maxerr)
       return
       end
-
-   subroutine xerror(messg, ier, lvl)
-      Character(len=*), intent(in):: messg
-      Integer, intent(in):: ier, lvl
-
-      write(error_unit, *) messg, " level: ", lvl, " error No.: ", ier
-   end subroutine xerror
-
+   <% } %>
 end module quadpack_lib
