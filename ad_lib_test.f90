@@ -2,19 +2,20 @@
 program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: INPUT_UNIT, OUTPUT_UNIT, ERROR_UNIT, real64
+   use, non_intrinsic:: constant_lib, only: get_nan
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: ad_lib
 
    implicit none
 
-   type(Dual64_2_2):: x, y, z, xs(3213)
+   type(Dual64_2_2):: x, y, z, xs(3213), nan
    Real(kind=real64), parameter:: a = 6, b = 2, zero = 0, one = 1, two = 2, three = 3
    Real(kind=real64):: h(2, 2), j(2)
    Integer:: i, nxs
 
    x%g = -9
    x%h = -99
-   x = 1 ! g and h is celared by 0
+   x = 1 ! g and h is cleared by 0
    TEST(almost_equal(real(x), one))
    TEST(all(almost_equal(grad(x), zero)))
    TEST(all(almost_equal(hess(x), zero)))
@@ -23,6 +24,8 @@ program main
    x%g(1) = 1
    y%f = b
    y%g(2) = 1
+
+   nan = get_nan()
 
    TEST(almost_equal(epsilon(x), epsilon(a)))
    TEST(almost_equal(tiny(x), tiny(a)))
@@ -229,12 +232,24 @@ program main
    TEST(x >= a)
    TEST(x < 100)
    TEST(x > -100)
+   TEST(x /= 100)
 
-   TEST(a > b)
-   TEST(b < a)
-   TEST(a <= a)
-   TEST(a >= a)
-   TEST(a == a)
+   TEST(x > y)
+   TEST(y < x)
+   TEST(x <= x)
+   TEST(x >= x)
+   TEST(x == x)
+   TEST(x /= y)
+
+   TEST(max(x, y) == x)
+   TEST(min(x, y) == y)
+   TEST(max(x, nan) == x)
+   TEST(max(nan, x) == x)
+   TEST(min(x, nan) == x)
+   TEST(min(nan, x) == x)
+   TEST(is_nan(nan))
+   TEST(is_nan(min(nan, nan)))
+   TEST(is_nan(max(nan, nan)))
 
    ! scalar to dual operations
 

@@ -40,6 +40,7 @@
     lt: :<,
     le: :<=,
     eq: :==,
+    ne: :"/=",
     ge: :>=,
     gt: :>,
   }
@@ -64,8 +65,10 @@ module ad_lib
    <% IKINDS.each{|k|%>
       use, intrinsic:: iso_fortran_env, only: int<%= k %>
    <% } %>
+   use, intrinsic:: iso_fortran_env, only: int32, int64
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit
+   use, non_intrinsic:: comparable_lib, only: is_nan
 
    implicit none
 
@@ -73,14 +76,16 @@ module ad_lib
    ! accessors
    public:: kind, real, grad, hess
    public:: epsilon, tiny, huge
+   public:: is_nan
    ! functions
    public:: dot_product
    public:: sum
    <% FN1S.each{|fn| %>
       public:: <%= fn %>
    <% } %>
+   public:: min, max
    ! operators
-   <% (OPS.merge(COMPS)).each{|_, op| %>
+   <% OPS.merge(COMPS).each{|_, op| %>
       public:: operator(<%= op %>)
    <% } %>
    public:: assignment(=)
@@ -118,6 +123,11 @@ module ad_lib
          end interface <%= fn1 %>
       <% } %>
 
+      interface is_nan
+         module procedure is_nan_<%= kd %>_<%= o %>_<%= n %>
+      end interface is_nan
+
+
       <% if o > 1 %>
          interface hess
             module procedure hess_<%= kd %>_<%= o %>_<%= n %>
@@ -146,32 +156,34 @@ module ad_lib
          module procedure neg_<%= kd %>_<%= o %>_<%= n %>
       end interface operator(-)
 
-      <% (OPS.merge(COMPS)).each{|fn2, op| %>
-         <% RKINDS.each{|kdr| %>
-            interface operator(<%= op %>)
-               module procedure <%= fn2 %>_dd_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
+      interface max
+         module procedure max_dd_<%= kd %>_<%= o %>_<%= n %>
+         module procedure max_dr_<%= kd %>_<%= o %>_<%= n %>
+         module procedure max_rd_<%= kd %>_<%= o %>_<%= n %>
+      end interface max
 
-               module procedure <%= fn2 %>_dr_<%= kd %>_<%= kdr %>_<%= o %>_<%= n %>
-               module procedure <%= fn2 %>_rd_<%= kdr %>_<%= kd %>_<%= o %>_<%= n %>
-            end interface operator(<%= op %>)
-         <% } %>
+      interface min
+         module procedure min_dd_<%= kd %>_<%= o %>_<%= n %>
+         module procedure min_dr_<%= kd %>_<%= o %>_<%= n %>
+         module procedure min_rd_<%= kd %>_<%= o %>_<%= n %>
+      end interface min
 
-         <% IKINDS.each{|ki| %>
-            interface operator(<%= op %>)
-               module procedure <%= fn2 %>_di_<%= kd %>_<%= ki %>_<%= o %>_<%= n %>
-               module procedure <%= fn2 %>_id_<%= ki %>_<%= kd %>_<%= o %>_<%= n %>
-            end interface operator(<%= op %>)
-         <% } %>
-      <% } %>
+      <% [:d, :r, :i].each{|t| %>
+         <% {d: RKINDS, r: RKINDS, i: IKINDS}.fetch(t).each{|kx| # x ∈ (d, r, i) %>
+            <% OPS.merge(COMPS).each{|fn2, op| %>
+               interface operator(<%= op %>)
+                  module procedure <%= fn2 %>_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>
+                  <% unless t == :d %>
+                     module procedure <%= fn2 %>_<%= t %>d_<%= kx %>_<%= kd %>_<%= o %>_<%= n %>
+                  <% end %>
+               end interface operator(<%= op %>)
+            <% } %>
 
-      <% [:r, :i].each{|t| %>
-         <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
-            <%
-              suff = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
-            %>
-            interface assignment(=)
-               module procedure assign<%= suff %>
-            end interface assignment(=)
+            <% unless t == :d %>
+               interface assignment(=)
+                  module procedure assign_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>
+               end interface assignment(=)
+            <% end %>
          <% } %>
       <% } %>
    <% } %>
@@ -194,6 +206,13 @@ contains
             ret = <%= fn1 %>(ret)
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
       <% } %>
+
+      elemental function is_nan_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
+         type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
+         Logical:: ret
+
+         ret = is_nan(x%f)
+      end function is_nan_<%= kd %>_<%= o %>_<%= n %>
 
       elemental function real_<%= kd %>_<%= o %>_<%= n %>(x) result(ret)
          type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
@@ -580,56 +599,75 @@ contains
          <% } %>
       <% } %>
 
-      <% COMPS.each{|fn2, op| %>
-         <% RKINDS.each{|kd2| %>
-            elemental function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>(x, y) result(ret)
-               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
-               type(Dual<%= kd2 %>_<%= o %>_<%= n %>), intent(in):: y
-               Logical:: ret
+      <% [[:min, :>], [:max, :<]].each{|fn, comp| %>
+         <% [[:d, :d], [:d, :r], [:r, :d]].each{|t1, t2| %>
+            <%
+               decls = {
+                  d: "type(Dual#{kd}_#{o}_#{n})",
+                  r: "Real(kind=real#{kd})",
+               }
+            %>
+            elemental function <%= fn %>_<%= t1 %><%= t2 %>_<%= kd %>_<%= o %>_<%= n %>(x, y) result(ret)
+               <%= decls.fetch(t1) %>, intent(in):: x
+               <%= decls.fetch(t2) %>, intent(in):: y
+               type(Dual<%= kd %>_<%= o %>_<%= n %>):: ret
 
-               ret = x%f <%= op %> y%f
-            end function <%= fn2 %>_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
+               if(is_nan(x))then
+                  ret = y
+               else if(is_nan(y))then
+                  ret = x
+               else if(x <%= comp %> y)then
+                  ret = y
+               else
+                  ret = x
+               end if
+            end function <%= fn %>_<%= t1 %><%= t2 %>_<%= kd %>_<%= o %>_<%= n %>
          <% } %>
+      <% } %>
 
-         <% [:r, :i].each{|t| %>
-            <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
-               <%
-                 t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
-                 d_ri = "#{fn2}_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
-                 ri_d = "#{fn2}_#{t}d_#{kri}_#{kd}_#{o}_#{n}"
-               %>
-               elemental function <%= d_ri %>(x, y) result(ret)
+      <% [:d, :r, :i].each{|t| %>
+         <% {d: RKINDS, r: RKINDS, i: IKINDS}.fetch(t).each{|kx| # x ∈ (d, r, i) %>
+            <%
+               t_decl = {
+                  d: "type(Dual#{kx}_#{o}_#{n})",
+                  r: "Real(kind=real#{kx})",
+                  i: "Integer(kind=int#{kx})",
+               }.fetch(t)
+               y = if t == :d
+                  "y%f"
+               else
+                  "y"
+               end
+            %>
+            <% COMPS.each{|fn2, op| %>
+               elemental function <%= fn2 %>_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>(x, y) result(ret)
                   type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: x
                   <%= t_decl %>, intent(in):: y
                   Logical:: ret
 
-                  ret = x%f <%= op %> y
-               end function <%= d_ri %>
+                  ret = x%f <%= op %> <%= y %>
+               end function <%= fn2 %>_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>
 
-               elemental function <%= ri_d %>(x, y) result(ret)
-                  <%= t_decl %>, intent(in):: x
-                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
-                  Logical:: ret
+               <% unless t == :d %>
+                  elemental function <%= fn2 %>_<%= t %>d_<%= kx %>_<%= kd %>_<%= o %>_<%= n %>(x, y) result(ret)
+                     <%= t_decl %>, intent(in):: x
+                     type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(in):: y
+                     Logical:: ret
 
-                  ret = x <%= op %> y%f
-               end function <%= ri_d %>
+                     ret = x <%= op %> y%f
+                  end function <%= fn2 %>_<%= t %>d_<%= kx %>_<%= kd %>_<%= o %>_<%= n %>
+               <% end %>
             <% } %>
-         <% } %>
-      <% } %>
 
-      <% [:r, :i].each{|t| %>
-         <% (t == :r ? RKINDS : IKINDS).each{|kri| %>
-            <%
-              t_decl = t == :r ? "Real(kind=real#{kri})" : "Integer(kind=int#{kri})"
-              suff = "_d#{t}_#{kd}_#{kri}_#{o}_#{n}"
-            %>
-            subroutine assign<%= suff %>(to, from)
-               type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(out):: to
-               <%= t_decl %>, intent(in):: from
+            <% unless t == :d %>
+               elemental subroutine assign_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>(to, from)
+                  type(Dual<%= kd %>_<%= o %>_<%= n %>), intent(out):: to
+                  <%= t_decl %>, intent(in):: from
 
-               ! to%g and to%h are automatically initialized to 0
-               to%f = from
-            end subroutine assign<%= suff %>
+                  ! to%g and to%h are automatically initialized to 0
+                  to%f = from
+               end subroutine assign_d<%= t %>_<%= kd %>_<%= kx %>_<%= o %>_<%= n %>
+            <% end %>
          <% } %>
       <% } %>
    <% } %>
