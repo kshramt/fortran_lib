@@ -101,9 +101,9 @@ contains
          Logical(kind=kind(err)):: err_
          Integer(kind=kind(n_eval)):: n_eval_
 
-         rtol_ = epsilon(rtol_)
+         rtol_ = sqrt(epsilon(rtol_))
          if(present(rtol)) rtol_ = rtol
-         atol_ = epsilon(atol_)
+         atol_ = sqrt(epsilon(atol_))
          if(present(atol)) atol_ = atol
          ASSERT(rtol_ >= 0 .or. atol_ >= 0)
 
