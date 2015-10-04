@@ -14,12 +14,16 @@ program main
 
 
    call qags(my_sin, 0d0, pi, ret, n_eval=n_eval, err=err, abs_err=abs_err)
-   TEST(almost_equal(ret, 2d0, atol=abs_err))
    TEST(err == 0)
+   TEST(almost_equal(ret, 2d0, atol=abs_err))
 
    call qags(inv_x, 1d0/2, 2d0, ret, n_eval=n_eval, err=err, abs_err=abs_err)
-   TEST(almost_equal(ret, log(4d0), atol=abs_err))
    TEST(err == 0)
+   TEST(almost_equal(ret, log(4d0), atol=abs_err))
+
+   call qags(inv_x2, 1d0/1024, 1024d0, ret, n_eval=n_eval, err=err, abs_err=abs_err)
+   TEST(err == 0)
+   TEST(almost_equal(ret, (1048575d0/1024) - (10*sqrt(10d0)*atan2(476625*sqrt(5d0/2), 23296d0)), atol=abs_err))
 
    ! TEST(almost_equal(qags(inv_x_args, 1d0/2, 2d0, [3d0]), 3*log(4d0), rtol=2*epsilon(0d0)))
    ! TEST(almost_equal(qags(inv_x_args, 1d0/2, 2d0, [3d0], err=err, n_eval=n_eval), 3*log(4d0), rtol=2*epsilon(0d0)))
@@ -45,6 +49,13 @@ contains
 
       ret = 1/x
    end function inv_x
+
+   pure function inv_x2(x) result(ret)
+      Real(kind=real64), intent(in):: x
+      Real(kind=kind(x)):: ret
+
+      ret = (1 - 1/(x**2 + 1d-3))
+   end function inv_x2
 
    pure function inv_x_args(x, args) result(ret)
       Real(kind=real64), intent(in):: x
