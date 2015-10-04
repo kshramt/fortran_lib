@@ -9,26 +9,22 @@ program main
    implicit none
 
    Real(kind=real64), parameter:: pi = 2*atan2(1d0, 0d0)
+   Real(kind=real64):: ret, abs_err
    Logical:: err
    Integer(kind=int64):: n_eval
 
 
-
-   TEST(almost_equal(romberg(my_sin, 0d0, pi), 2d0))
-   TEST(almost_equal(romberg(my_sin, 0d0, pi, err=err), 2d0))
+   ret = romberg(my_sin, 0d0, pi, abs_err=abs_err, err=err)
    TEST(.not.err)
+   TEST(almost_equal(ret, 2d0, atol=abs_err))
 
-   TEST(almost_equal(romberg(inv_x, 1d0/2, 2d0), log(4d0)))
-   TEST(almost_equal(romberg(inv_x, 1d0/2, 2d0, err=err), log(4d0)))
+   ret = romberg(inv_x, 1d0/2, 2d0, abs_err=abs_err, err=err, n_eval=n_eval)
    TEST(.not.err)
+   TEST(almost_equal(ret, log(4d0), atol=abs_err))
 
-   TEST(almost_equal(romberg(inv_x_args, 1d0/2, 2d0, [3d0]), 3*log(4d0), rtol=2*epsilon(0d0)))
-   TEST(almost_equal(romberg(inv_x_args, 1d0/2, 2d0, [3d0], err=err, n_eval=n_eval), 3*log(4d0), rtol=2*epsilon(0d0)))
+   ret = romberg(inv_x, 1d0/2, 8d0, abs_err=abs_err, err=err, n_eval=n_eval)
    TEST(.not.err)
-
-   TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0), log(16d0), rtol=2*epsilon(0d0)))
-   TEST(almost_equal(romberg(inv_x, 1d0/2, 8d0, err=err, n_eval=n_eval), log(16d0), rtol=2*epsilon(0d0)))
-   TEST(.not.err)
+   TEST(almost_equal(ret, log(16d0), atol=abs_err))
    PRINT_VARIABLE(n_eval)
 
 
