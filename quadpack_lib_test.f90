@@ -31,10 +31,6 @@ program main
    TEST(err == 0)
    TEST(almost_equal(ret, (1048575d0/1024) - (10*sqrt(10d0)*atan2(476625*sqrt(5d0/2), 23296d0)), atol=abs_err))
 
-   ! TEST(almost_equal(qags(inv_x_args, 1d0/2, 2d0, [3d0]), 3*log(4d0), rtol=2*epsilon(0d0)))
-   ! TEST(almost_equal(qags(inv_x_args, 1d0/2, 2d0, [3d0], err=err, n_eval=n_eval), 3*log(4d0), rtol=2*epsilon(0d0)))
-   ! TEST(.not.err)
-
 
    write(output_unit, *) 'SUCCESS: ', __FILE__
 
