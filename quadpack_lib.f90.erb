@@ -15,16 +15,22 @@
       TS.push([:d, "_d64_#{o}_#{n}", "type(Dual64_#{o}_#{n})", "Real(kind=real64)"])
    }
 
-def make_interface_of_f(t, decl, rdecl)
+   ARGS_OR_NONE = [
+      [", args", "_args", ""],
+      [nil, nil, "!"],
+   ]
+
+def make_interface_of_f(t, decl, rdecl, args, args_decl_prefix)
    use_ad_lib_if_dual = t == :d ? "use, non_intrinsic:: ad_lib" : ""
    "
    interface
-      PURE function f(x) result(ret)
+      PURE function f(x #{args}) result(ret)
          use, intrinsic:: iso_fortran_env, only: real64
          #{use_ad_lib_if_dual}
 
          #{decl}:: ret
          #{rdecl}, intent(in):: x
+         #{args_decl_prefix} #{decl}, intent(in):: args(:)
       end function f
    end interface
    "
@@ -44,27 +50,37 @@ module quadpack_lib
    private
    public:: qags
 
-   <% TS.each{|_, suff, _, _| %>
+   <% TS.product(ARGS_OR_NONE).each{|(_, suff, _, _), (args, args_suff, args_decl_prefix)| %>
       interface qags
-         module procedure qags<%= suff %>
+         module procedure qags<%= suff %><%= args_suff %>
       end interface qags
 
-      interface dqelg
-         module procedure dqelg<%= suff %>
-      end interface dqelg
+      interface qags_impl
+         module procedure qags_impl<%= suff %><%= args_suff %>
+      end interface qags_impl
+
+      interface dqagse
+         module procedure dqagse<%= suff %><%= args_suff %>
+      end interface dqagse
 
       interface dqk21
-         module procedure dqk21<%= suff %>
+         module procedure dqk21<%= suff %><%= args_suff %>
       end interface dqk21
 
-      interface dqpsrt
-         module procedure dqpsrt<%= suff %>
-      end interface dqpsrt
+      <% if args.nil? %>
+         interface dqelg
+            module procedure dqelg<%= suff %><%= args_suff %>
+         end interface dqelg
+
+         interface dqpsrt
+            module procedure dqpsrt<%= suff %>
+         end interface dqpsrt
+      <% end %>
    <% } %>
 
 contains
 
-   <% TS.each{|t, suff, decl, rdecl| %>
+   <% TS.product(ARGS_OR_NONE).each{|(t, suff, decl, rdecl), (args, args_suff, args_decl_prefix)| %>
 !***author  piessens,robert,appl. math. & progr. div. - k.u.leuven
 !           de doncker,elise,appl. math. & prog. div. - k.u.leuven
 !***purpose  the routine calculates an approximation result to a given
@@ -163,11 +179,12 @@ contains
 !                    work(limit*3+iwork(k)) form a decreasing
 !                    sequence, with k = last if last.le.(limit/2+2),
 !                    and k = limit+1-last otherwise
-      PURE subroutine qags<%= suff %>(f, a, b, ret, abs_err, atol, rtol, limit, n_eval, last, err)
+      PURE subroutine qags<%= suff %><%= args_suff %>(f, a, b <%= args%>, ret, abs_err, atol, rtol, limit, n_eval, last, err)
          ! todo: optional workspace arguments
-         <%= make_interface_of_f(t, decl, rdecl) %>
+         <%= make_interface_of_f(t, decl, rdecl, args, args_decl_prefix) %>
 
          <%= rdecl %>, intent(in):: a, b
+         <%= args_decl_prefix %> <%= decl %>, intent(in):: args(:)
          <%= rdecl %>, intent(in), optional:: atol, rtol
          Integer, intent(in), optional:: limit
          <%= decl %>, intent(out):: ret
@@ -187,18 +204,19 @@ contains
          if(present(rtol)) rtol_ = rtol
          if(present(limit)) limit_ = limit
 
-         call qags_impl<%= suff %>(f, a, b, ret, abs_err_, atol_, rtol_, limit_, n_eval_, last_, err_)
+         call qags_impl(f, a, b <%= args %>, ret, abs_err_, atol_, rtol_, limit_, n_eval_, last_, err_)
          if(present(abs_err)) abs_err = abs_err_
          if(present(n_eval)) n_eval = n_eval_
          if(present(last)) last = last_
          if(present(err)) err = err_
-      end subroutine qags<%= suff %>
+      end subroutine qags<%= suff %><%= args_suff %>
 
       ! I made this wrapper routine to make working arrays automatic rather than allocated.
-      PURE subroutine qags_impl<%= suff %>(f, a, b, ret, abs_err, atol, rtol, limit, n_eval, last, err)
-         <%= make_interface_of_f(t, decl, rdecl) %>
+      PURE subroutine qags_impl<%= suff %><%= args_suff %>(f, a, b <%= args %>, ret, abs_err, atol, rtol, limit, n_eval, last, err)
+         <%= make_interface_of_f(t, decl, rdecl, args, args_decl_prefix) %>
 
          <%= rdecl %>, intent(in):: a, b
+         <%= args_decl_prefix %> <%= decl %>, intent(in):: args(:)
          <%= rdecl %>, intent(in):: atol, rtol
          Integer, intent(in):: limit
          <%= decl %>, intent(out):: ret, abs_err
@@ -208,10 +226,10 @@ contains
          <%= decl %>:: rlist(limit), elist(limit)
          Integer:: iwork(limit)
 
-         call dqagse<%= suff %>(f, a, b, atol, rtol, limit, ret, abs_err, n_eval, err, alist, blist, rlist, elist, iwork, last)
-      end subroutine qags_impl<%= suff %>
+         call dqagse(f, a, b <%= args %>, atol, rtol, limit, ret, abs_err, n_eval, err, alist, blist, rlist, elist, iwork, last)
+      end subroutine qags_impl<%= suff %><%= args_suff %>
 
-      PURE subroutine dqagse<%= suff %>(f, a, b, epsabs, epsrel, limit, result, abserr, neval, ier, alist, blist, rlist, elist, iord, last)
+      PURE subroutine dqagse<%= suff %><%= args_suff %>(f, a, b <%= args %>, epsabs, epsrel, limit, result, abserr, neval, ier, alist, blist, rlist, elist, iord, last)
 !***begin prologue  dqagse
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -358,9 +376,10 @@ contains
 !***routines called  dqelg,dqk21,dqpsrt
 !***end prologue  dqagse
 !
-      <%= make_interface_of_f(t, decl, rdecl) %>
+      <%= make_interface_of_f(t, decl, rdecl, args, args_decl_prefix) %>
 
       <%= rdecl %>, intent(in):: a, b, epsabs, epsrel
+         <%= args_decl_prefix %> <%= decl %>, intent(in):: args(:)
       <%= decl %>, intent(out):: result, abserr
       Integer, intent(in):: limit
       Integer, intent(out):: last, neval, ier
@@ -450,7 +469,7 @@ contains
       uflow = tiny(uflow)
       oflow = huge(oflow)
       ierro = 0
-      call dqk21(f,a,b,result,abserr,defabs,resabs)
+      call dqk21(f, a, b <%= args %>, result, abserr, defabs, resabs)
 !
 !           test on accuracy.
 !
@@ -498,8 +517,8 @@ contains
         a2 = b1
         b2 = blist(maxerr)
         erlast = errmax
-        call dqk21(f,a1,b1,area1,error1,resabs,defab1)
-        call dqk21(f,a2,b2,area2,error2,resabs,defab2)
+        call dqk21(f, a1, b1 <%= args %>, area1, error1, resabs, defab1)
+        call dqk21(f, a2, b2 <%= args %>, area2, error2, resabs, defab2)
 !
 !           improve previous approximations to integral
 !           and error and test for accuracy.
@@ -651,6 +670,7 @@ contains
   999 return
       end
 
+      <% if args.nil? %>
       PURE subroutine dqelg<%= suff %>(n, epstab, result, abserr, res3la, nres)
 !***begin prologue  dqelg
 !***refer to  dqagie,dqagoe,dqagpe,dqagse
@@ -836,8 +856,9 @@ contains
   100 abserr = max(abserr, 0.5d+01*epmach*abs(result))
       return
       end
+      <% end %>
 
-      PURE subroutine dqk21<%= suff %>(f, a, b, result, abserr, resabs, resasc)
+      PURE subroutine dqk21<%= suff %><%= args_suff %>(f, a, b <%= args %>, result, abserr, resabs, resasc)
 !***begin prologue  dqk21
 !***date written   800101   (yymmdd)
 !***revision date  830518   (yymmdd)
@@ -889,7 +910,7 @@ contains
 !***routines called
 !***end prologue  dqk21
 !
-      <%= make_interface_of_f(t, decl, rdecl) %>
+      <%= make_interface_of_f(t, decl, rdecl, args, args_decl_prefix) %>
       <%= rdecl %>, parameter:: wg(5) = [ &
          0.066671344308688137593568809893332d0, &
          0.149451349150580593145776339657697d0, &
@@ -921,6 +942,7 @@ contains
          0.147739104901338491374841515972068d0, &
          0.149445554002916905664936468389821d0]
       <%= rdecl %>, intent(in):: a, b
+      <%= args_decl_prefix %> <%= decl %>, intent(in):: args(:)
       <%= decl %>, intent(out):: result, abserr, resabs, resasc
       <%= decl %>:: dhlgth, fc, fsum, fv1(10), fv2(10), fval1, fval2, resg, resk, reskh
       <%= rdecl %>:: absc, centr, epmach, hlgth, uflow
@@ -977,14 +999,14 @@ contains
 !           the integral, and estimate the absolute error.
 !
       resg = 0.0d+00
-      fc = f(centr)
+      fc = f(centr <%= args %>)
       resk = wgk(11)*fc
       resabs = abs(resk)
       do 10 j=1,5
         jtw = 2*j
         absc = hlgth*xgk(jtw)
-        fval1 = f(centr-absc)
-        fval2 = f(centr+absc)
+        fval1 = f(centr - absc <%= args %>)
+        fval2 = f(centr + absc <%= args %>)
         fv1(jtw) = fval1
         fv2(jtw) = fval2
         fsum = fval1+fval2
@@ -995,8 +1017,8 @@ contains
       do 15 j = 1,5
         jtwm1 = 2*j-1
         absc = hlgth*xgk(jtwm1)
-        fval1 = f(centr-absc)
-        fval2 = f(centr+absc)
+        fval1 = f(centr - absc <%= args %>)
+        fval2 = f(centr + absc <%= args %>)
         fv1(jtwm1) = fval1
         fv2(jtwm1) = fval2
         fsum = fval1+fval2
@@ -1017,6 +1039,7 @@ contains
       return
       end
 
+      <% if args.nil? %>
       PURE subroutine dqpsrt<%= suff %>(limit, last, maxerr, ermax, elist, iord, nrmax)
 !***begin prologue  dqpsrt
 !***refer to  dqage,dqagie,dqagpe,dqawse
@@ -1150,5 +1173,6 @@ contains
       ermax = elist(maxerr)
       return
       end
+      <% end %>
    <% } %>
 end module quadpack_lib
