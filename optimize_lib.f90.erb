@@ -615,7 +615,14 @@ contains
          end do
          dx = dx_scale
          if(norm2(dx_0) > 0)then ! this branch will not happen in practice
-            dx = dx + norm2(dx_scale)/(2*norm2(dx_0))*dx_0 ! 2 is a heuristics
+            DEBUG_WARN("some eigen values of H are 0")
+            if(norm2(dx_scale) > 0)then
+               DEBUG_WARN("heuristically add gradient")
+               dx = dx + norm2(dx_scale)/(2*norm2(dx_0))*dx_0 ! 2 is a heuristics
+            else
+               DEBUG_WARN("dx is gradient descent, since H is 0")
+               dx = dx + dx_0
+            end if
          end if
       end subroutine adaptive_steepest_descent<%= k %>
 
