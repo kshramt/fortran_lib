@@ -10,6 +10,8 @@ This Fortran library provides basic data structures, algorithms and some handy u
 make
 ```
 
+You may get `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GCC).
+
 ## Useful Codes
 
 ### `bin/etas_solve.sh` and `release/bin/etas_solve.exe`
