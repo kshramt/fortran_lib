@@ -3,8 +3,7 @@ program main
    USE_FORTRAN_LIB_H
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, int64, real64
    use, non_intrinsic:: comparable_lib, only: almost_equal
-   use, non_intrinsic:: ad_lib, only: Dual64_2_5
-   use, non_intrinsic:: ad_lib, only: real, grad, hess
+   use, non_intrinsic:: ad_lib
    use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le, index_lt
 
    implicit none
@@ -43,8 +42,24 @@ program main
    Real(kind=real64), parameter:: ts9(9) = [1, 2, 3, 4, 5, 6, 7, 8, 9]
    Real(kind=real64), parameter:: dms9(9) = [9, 8, 7, 6, 5, 4, 3, 2, 1]
 
-   Real(kind=kind(ts)):: t_end, normalize_interval, mu, K, c, alpha, p
+   Real(kind=kind(ts)):: t_pre, t_begin, t_end, normalize_interval, mu, K, c, alpha, p, m_fit_min
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, ll
+
+
+   ! log_likelihood_etas_range
+   d_mu = Dual64_2_5(1, [1, 0, 0, 0, 0])
+   d_K = Dual64_2_5(2, [0, 1, 0, 0, 0])
+   d_c = Dual64_2_5(3, [0, 0, 1, 0, 0])
+   d_alpha = Dual64_2_5(4, [0, 0, 0, 1, 0])
+   d_p = Dual64_2_5(2, [0, 0, 0, 0, 1])
+   t_begin = 3.5d0
+   t_end = 10
+   m_fit_min = -1
+   ll = log_likelihood_etas(t_begin, t_end, 1d0, d_mu, d_K, d_c, d_alpha, d_p, ts9, dms9, dms9 >= m_fit_min)
+   TEST(almost_equal(real(ll), -10445626539012328.0d0, rtol=4*epsilon(ll)))
+   TEST(all(almost_equal(grad(ll), [-6.4999999999999956d0, -5222813269506262.0d0, -3310865553565691.0d0, -93748459800658272.d0, 8408987664434670.0d0], rtol=4*epsilon(ll))))
+   TEST(all(almost_equal(hess(ll), reshape([-3.4770300521364446d-030, -2.1284941990832770d-015, -1.5175164721806980d-015, -3.8211033970699237d-014, 4.0858129163152965d-015, -2.1284941990832770d-015, -1.4999999999999978d0, -1655432776782846.5d0, -46874229900329160.0d0, 4204493832217337.5d0, -1.5175164721806980d-015, -1655432776782846.5d0, 340818112649912.75d0, -29727941534711588.0d0, 1103266125861305.4d0, -3.8211033970699237d-014, -46874229900329160d0, -29727941534711588.0d0, -8.4165247574517811d+017, 75513243802721632.0d0, 4.0858129163152965d-015, 4204493832217337.5d0, 1103266125861305.4d0, 75513243802721632.0d0, -7222701336999888.0d0], [5, 5]), rtol=4*epsilon(ll))))
+
 
    t_end = 1.5d0
    normalize_interval = 1

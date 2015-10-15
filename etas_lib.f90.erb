@@ -130,7 +130,7 @@ contains
          !$omp parallel do schedule(guided)
          do i = i_begin, n
             if(targets(i))then
-               log_lambdas(i) = log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
+               log_lambdas(i - i_begin + 1) = log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
             end if
          end do
          ! Use pairwise summation instead of omp reduction(+:ret1)
