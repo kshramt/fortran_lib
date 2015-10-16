@@ -15,6 +15,8 @@
 
   characters = ::Fort::Type::Character.multi_provide(dim: 0)
   CHARACTER_PAIRS = characters.product(characters)
+
+  INTEGER_REAL_PAIRS = INTEGERS.product(REALS)
 %>
 
 module comparable_lib
@@ -41,6 +43,10 @@ module comparable_lib
    interface almost_equal
       <% (INTEGER_PAIRS + REAL_PAIRS + COMPLEX_PAIRS + LOGICAL_PAIRS + CHARACTER_PAIRS).each{|t1, t2| %>
          module procedure almost_equal<%= t1 %><%= t2 %>
+      <% } %>
+      <% INTEGER_REAL_PAIRS.each{|ti, tr| %>
+         module procedure almost_equal<%= ti %><%= tr %>
+         module procedure almost_equal<%= tr %><%= ti %>
       <% } %>
    end interface almost_equal
 
@@ -82,6 +88,52 @@ contains
 
          answer = .false.
       end function is_infinity<%= t %>
+   <% } %>
+
+   <% INTEGER_REAL_PAIRS.each{|ti, tr| %>
+      elemental function almost_equal<%= ti %><%= tr %>(a, b, rtol, atol) result(ret)
+         Logical:: ret
+         <%= ti.declare %>, intent(in):: a
+         <%= tr.declare %>, intent(in):: b
+         Real(kind=kind(b)), intent(in), optional:: rtol
+         Real(kind=kind(b)), intent(in), optional:: atol
+
+         if(present(rtol))then
+            if(present(atol))then
+               ret = almost_equal(real(a, kind=kind(b)), b, rtol, atol)
+            else
+               ret = almost_equal(real(a, kind=kind(b)), b, rtol)
+            end if
+         else
+            if(present(atol))then
+               ret = almost_equal(real(a, kind=kind(b)), b, atol)
+            else
+               ret = almost_equal(real(a, kind=kind(b)), b)
+            end if
+         end if
+      end function almost_equal<%= ti %><%= tr %>
+
+      elemental function almost_equal<%= tr %><%= ti %>(a, b, rtol, atol) result(ret)
+         Logical:: ret
+         <%= tr.declare %>, intent(in):: a
+         <%= ti.declare %>, intent(in):: b
+         Real(kind=kind(a)), intent(in), optional:: rtol
+         Real(kind=kind(a)), intent(in), optional:: atol
+
+         if(present(rtol))then
+            if(present(atol))then
+               ret = almost_equal(a, real(b, kind=kind(a)), rtol, atol)
+            else
+               ret = almost_equal(a, real(b, kind=kind(a)), rtol)
+            end if
+         else
+            if(present(atol))then
+               ret = almost_equal(a, real(b, kind=kind(a)), atol)
+            else
+               ret = almost_equal(a, real(b, kind=kind(a)))
+            end if
+         end if
+      end function almost_equal<%= tr %><%= ti %>
    <% } %>
 
    <% REAL_PAIRS.each{|t1, t2| %>

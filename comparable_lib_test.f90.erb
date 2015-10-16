@@ -64,6 +64,12 @@ program comparable_lib_test
    use, non_intrinsic:: comparable_lib
    implicit none
 
+   ! almost_equal for real with integer
+   TEST(almost_equal(3.0, 3))
+   TEST(almost_equal(3, 3.0))
+   TEST(.not.almost_equal(0d0, 3))
+   TEST(.not.almost_equal(3, 0d0))
+
    TEST(.true. == .true.)
    TEST(.false. == .false.)
    TEST(.not.(.false. == .true.))
