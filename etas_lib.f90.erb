@@ -76,7 +76,7 @@ module etas_lib
       end interface load
    <% } %>
 
-   <% KS.each{|k| %>
+   <% REALS.each{|suffix, decl, t, k| %>
       type, public:: EtasInputs<%= k %>
          Real(kind=real<%= k %>):: m_for_K
          Real(kind=real<%= k %>):: t_normalize_len
@@ -85,6 +85,8 @@ module etas_lib
          Real(kind=real<%= k %>), allocatable:: ts(:)
          Real(kind=real<%= k %>), allocatable:: ms(:)
          Integer(kind=int64):: n
+      contains
+         final:: finalize_EtasInputs<%= suffix %>
       end type EtasInputs<%= k %>
    <% } %>
 
@@ -401,5 +403,13 @@ contains
          allocate(self%ts(self%n), source=ts(i_pre:i_end))
          allocate(self%ms(self%n), source=ms(i_pre:i_end))
       end subroutine load_EtasInputs<%= suffix %>
+
+
+      subroutine finalize_EtasInputs<%= suffix %>(self)
+         type(EtasInputs<%= k %>), intent(inout):: self
+
+         if(allocated(self%ts)) deallocate(self%ts)
+         if(allocated(self%ms)) deallocate(self%ms)
+      end subroutine finalize_EtasInputs<%= suffix %>
    <% } %>
 end module etas_lib
