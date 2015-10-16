@@ -148,6 +148,7 @@ $(1)/test/stack_lib_test.exe: $$(call o_mod_$(1),stack_lib stack_lib_test)
 $(1)/test/queue_lib_test.exe: $$(call o_mod_$(1),queue_lib queue_lib_test)
 $(1)/test/io_lib_test.exe: $$(call o_mod_$(1),character_lib comparable_lib io_lib io_lib_test)
 $(1)/test/config_lib_test.exe: $$(call o_mod_$(1),config_lib config_lib_test)
+$(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe.in
 $(1)/test/sac_lib_test.exe: $$(call o_mod_$(1),character_lib sac_lib sac_lib_test)
 $(1)/test/path_lib_test.exe: $$(call o_mod_$(1),path_lib path_lib_test)
 $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib geodetic_lib geodetic_lib_test)
@@ -156,7 +157,6 @@ $(1)/test/dual_lib_test.exe: $$(call o_mod_$(1),comparable_lib dual_lib dual_lib
 $(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib ad_lib optimize_lib optimize_lib_test)
 $(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib math_lib geometry_lib etas_lib etas_lib_test)
 $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib ad_lib ad_lib_test)
-$(1)/test/config_lib_test.exe.tested: $(1)/test/config_lib_test.exe.in
 $(1)/test/geometry_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib geometry_lib geometry_lib_test)
 $(1)/test/quadrature_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib quadrature_lib_test)
 $(1)/test/quadpack_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadpack_lib quadpack_lib_test)
