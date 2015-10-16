@@ -72,7 +72,7 @@ module etas_lib
       <% } %>
 
       interface load
-         module procedure load_EtasInputs<%= suffix %>
+         module procedure load_EtasInputs<%= k %>
       end interface load
    <% } %>
 
@@ -86,7 +86,7 @@ module etas_lib
          Real(kind=real<%= k %>), allocatable:: ms(:)
          Integer(kind=int64):: n
       contains
-         final:: finalize_EtasInputs<%= suffix %>
+         final:: finalize_EtasInputs<%= k %>
       end type EtasInputs<%= k %>
    <% } %>
 
@@ -366,7 +366,7 @@ contains
       end function index_lt<%= suffix %>
 
 
-      subroutine load_EtasInputs<%= suffix %>(self, unit)
+      subroutine load_EtasInputs<%= k %>(self, unit)
          Integer(kind=int64), parameter:: one = 1
          type(EtasInputs<%= k %>), intent(out):: self
          Integer(kind=kind(input_unit)), intent(in):: unit
@@ -402,14 +402,14 @@ contains
          self%n = i_end - i_pre + 1
          allocate(self%ts(self%n), source=ts(i_pre:i_end))
          allocate(self%ms(self%n), source=ms(i_pre:i_end))
-      end subroutine load_EtasInputs<%= suffix %>
+      end subroutine load_EtasInputs<%= k %>
 
 
-      subroutine finalize_EtasInputs<%= suffix %>(self)
+      impure elemental subroutine finalize_EtasInputs<%= k %>(self)
          type(EtasInputs<%= k %>), intent(inout):: self
 
          if(allocated(self%ts)) deallocate(self%ts)
          if(allocated(self%ms)) deallocate(self%ms)
-      end subroutine finalize_EtasInputs<%= suffix %>
+      end subroutine finalize_EtasInputs<%= k %>
    <% } %>
 end module etas_lib
