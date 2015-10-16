@@ -41,7 +41,7 @@ Initial values.
 Using a good initial value may reduce number of iterations needed to converge.
 Initial value should satisfy lower <= initial value <= upper.
 
---lower[=1d-8,0,1d-8,-1,-1]:
+--lower[=1e-8,0,1e-8,-1,-1]:
 Lower bounds of the ETAS parameters.
 Order is mu,K,c,alpha,p
 
@@ -101,10 +101,10 @@ alpha=0.5
 p=1.1
 fixed=f,f,f,f,f
 by_log=t,t,t,f,f
-lower=1d-8,0,1d-8,-1,-1
+lower=1e-8,0,1e-8,-1,-1
 upper=1e308,1e308,3,5,4
-m_fit_min=-1d308
-gtol=1d-6
+m_aux_min=-1e308
+gtol=1e-6
 iter_limit=1000
 initial_step_size=-1
 while true
