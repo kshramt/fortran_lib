@@ -42,9 +42,70 @@ program main
    Real(kind=real64), parameter:: ts9(9) = [1, 2, 3, 4, 5, 6, 7, 8, 9]
    Real(kind=real64), parameter:: dms9(9) = [9, 8, 7, 6, 5, 4, 3, 2, 1]
 
-   Real(kind=kind(ts)):: t_pre, t_begin, t_end, normalize_interval, mu, K, c, alpha, p, m_fit_min
+   Real(kind=kind(ts)):: t_begin, t_end, normalize_interval, mu, K, c, alpha, p, m_fit_min
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, ll
 
+
+
+   block ! load_EtasInputs
+      use, non_intrinsic:: etas_lib, only: EtasInputs64, load
+      type(EtasInputs64):: etas_inputs
+      Integer:: unit
+
+      block ! n == n_actual
+         block ! t_pre < t1
+            block ! t2 < t_end
+               open(newunit=unit, file='etas_inputs_111.in', status='old', action='read')
+               call load(etas_inputs, unit)
+               close(unit)
+               TEST(almost_equal(etas_inputs%m_for_K, 6))
+               TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               TEST(almost_equal(etas_inputs%t_pre, -100))
+               TEST(almost_equal(etas_inputs%t_end, 100))
+               TEST(almost_equal(etas_inputs%n, 10))
+               TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])))
+               TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
+               close(unit)
+            end block
+         end block
+      end block
+
+      block ! n > n_actual
+         block ! t_pre < t1
+            block ! t2 < t_end
+               open(newunit=unit, file='etas_inputs_211.in', status='old', action='read')
+               call load(etas_inputs, unit)
+               close(unit)
+               TEST(almost_equal(etas_inputs%m_for_K, 6))
+               TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               TEST(almost_equal(etas_inputs%t_pre, -100))
+               TEST(almost_equal(etas_inputs%t_end, 100))
+               TEST(almost_equal(etas_inputs%n, 10))
+               TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])))
+               TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
+               close(unit)
+            end block
+         end block
+      end block
+
+      block ! n < n_actual
+         block ! t_pre < t1
+            block ! t2 < t_end
+               open(newunit=unit, file='etas_inputs_311.in', status='old', action='read')
+               call load(etas_inputs, unit)
+               close(unit)
+               TEST(almost_equal(etas_inputs%m_for_K, 6))
+               TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               TEST(almost_equal(etas_inputs%t_pre, -100))
+               TEST(almost_equal(etas_inputs%t_end, 100))
+               TEST(almost_equal(etas_inputs%n, 5))
+               TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9])))
+               TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10])))
+               close(unit)
+            end block
+         end block
+      end block
+   end block
 
    ! log_likelihood_etas_range
    d_mu = Dual64_2_5(1, [1, 0, 0, 0, 0])
