@@ -91,25 +91,25 @@ contains
 
 
    <% TYPES.each{|suffix, decl, t, k| %>
-      function intensity_etas<%= suffix %>(t, t_normalize_len, mu, K, c, alpha, p, ts, dms) result(ret)
+      function intensity_etas<%= suffix %>(t, t_normalize_len, mu, K, tau, alpha, p, ts, dms) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, t_normalize_len, ts(:), dms(size64(ts))
-         <%= decl %>, intent(in):: mu, K, c, alpha, p
+         <%= decl %>, intent(in):: mu, K, tau, alpha, p
          <%= decl %>:: coeffs(size64(dms))
          <%= decl %>:: mu_normalized
 
-         coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
-         mu_normalized = mu/t_normalize_len
-         ret = lambda_neg_p(t, c, -p, mu_normalized, ts, coeffs)
+         coeffs = kernel_coeff(dms, K, alpha)
+         mu_normalized = mu
+         ret = lambda_neg_p(t, tau, -p, mu_normalized, ts, coeffs)
       end function intensity_etas<%= suffix %>
 
 
-      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts, dms, i_begin, targets) result(ret)
+      function log_likelihood_etas<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, tau, alpha, p, ts, dms, i_begin, targets) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), dms(size64(ts))
          Integer(kind=int64), intent(in):: i_begin
          Logical, intent(in):: targets(size64(ts))
-         <%= decl %>, intent(in):: mu, K, c, alpha, p
+         <%= decl %>, intent(in):: mu, K, tau, alpha, p
          <%= decl %>:: coeffs(size64(dms))
          <%= decl %>:: mu_normalized, neg_p
          <%= decl %>:: log_lambdas(size64(ts) - i_begin + 1)
@@ -117,8 +117,8 @@ contains
 
          n = size(ts, kind=kind(n))
          ASSERT(t_begin <= ts(i_begin) .and. ts(i_begin) <= ts(n) .and. ts(n) <= t_end)
-         coeffs = kernel_coeff(dms, K, c, alpha, p, t_normalize_len)
-         mu_normalized = mu/t_normalize_len
+         coeffs = kernel_coeff(dms, K, alpha)
+         mu_normalized = mu
          neg_p = -p
          <% if t == :Real %>
             log_lambdas = 0
@@ -130,19 +130,19 @@ contains
          !$omp parallel do schedule(guided)
          do i = i_begin, n
             if(targets(i))then
-               log_lambdas(i - i_begin + 1) = log(lambda_neg_p(i, c, neg_p, mu_normalized, ts, coeffs))
+               log_lambdas(i - i_begin + 1) = log(lambda_neg_p(i, tau, neg_p, mu_normalized, ts, coeffs))
             end if
          end do
          ! Use pairwise summation instead of omp reduction(+:ret1)
-         ret = sum(log_lambdas) - lambda_integrate(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin)
+         ret = sum(log_lambdas) - lambda_integrate(t_begin, t_end, tau, p, mu_normalized, ts, coeffs, i_begin)
       end function log_likelihood_etas<%= suffix %>
 
 
-      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts, dms, targets) result(ret)
+      function log_likelihood_etas_range<%= suffix %>(t_begin, t_end, t_normalize_len, mu, K, tau, alpha, p, ts, dms, targets) result(ret)
          Integer(kind=int64), parameter:: one = 1
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, t_normalize_len, ts(:), dms(size64(ts))
-         <%= decl %>, intent(in):: mu, K, c, alpha, p
+         <%= decl %>, intent(in):: mu, K, tau, alpha, p
          Integer(kind=kind(one)):: n, i_begin, i_end
          Logical, intent(in):: targets(size64(ts))
 
@@ -152,15 +152,15 @@ contains
          ASSERT(1 <= i_begin)
          ASSERT(i_begin <= i_end)
          ASSERT(i_end <= n)
-         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, mu, K, c, alpha, p, ts(:i_end), dms(:i_end), i_begin, targets(:i_end))
+         ret = log_likelihood_etas(t_begin, t_end, t_normalize_len, mu, K, tau, alpha, p, ts(:i_end), dms(:i_end), i_begin, targets(:i_end))
       end function log_likelihood_etas_range<%= suffix %>
 
 
-      pure function lambda_neg_p_i<%= suffix %>(i, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_i<%= suffix %>(i, tau, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: i
          Real(kind=real<%= k %>), intent(in):: ts(:)
-         <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size64(ts))
+         <%= decl %>, intent(in):: tau, neg_p, mu_normalized, coeffs(size64(ts))
          Real(kind=kind(ts)):: ti
          Integer(kind=kind(i)):: j
 
@@ -168,46 +168,46 @@ contains
          do j = i - 1, 1, -1
             if(ts(j) < ti) exit
          end do
-         ret = lambda_neg_p(j, ti, c, neg_p, mu_normalized, ts, coeffs)
+         ret = lambda_neg_p(j, ti, tau, neg_p, mu_normalized, ts, coeffs)
       end function lambda_neg_p_i<%= suffix %>
 
 
-      pure function lambda_neg_p_t<%= suffix %>(t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_t<%= suffix %>(t, tau, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t, ts(:)
-         <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size64(ts))
+         <%= decl %>, intent(in):: tau, neg_p, mu_normalized, coeffs(size64(ts))
 
-         ret = lambda_neg_p(index_lt(ts, t, int(1, kind=int64), size64(ts)), t, c, neg_p, mu_normalized, ts, coeffs)
+         ret = lambda_neg_p(index_lt(ts, t, int(1, kind=int64), size64(ts)), t, tau, neg_p, mu_normalized, ts, coeffs)
       end function lambda_neg_p_t<%= suffix %>
 
 
-      pure function lambda_neg_p_j_t<%= suffix %>(j, t, c, neg_p, mu_normalized, ts, coeffs) result(ret)
+      pure function lambda_neg_p_j_t<%= suffix %>(j, t, tau, neg_p, mu_normalized, ts, coeffs) result(ret)
          <%= decl %>:: ret
          Integer(kind=int64), intent(in):: j
          Real(kind=real<%= k %>), intent(in):: t, ts(:)
-         <%= decl %>, intent(in):: c, neg_p, mu_normalized, coeffs(size64(ts))
+         <%= decl %>, intent(in):: tau, neg_p, mu_normalized, coeffs(size64(ts))
 
-         ret = mu_normalized + dot_product(coeffs(:j), omori_neg_p(c + (t - ts(:j)), neg_p))
+         ret = mu_normalized + dot_product(coeffs(:j), omori_neg_p(1 + (t - ts(:j))/tau, neg_p))
       end function lambda_neg_p_j_t<%= suffix %>
 
 
-      pure function lambda_integrate<%= suffix %>(t_begin, t_end, c, p, mu_normalized, ts, coeffs, i_begin) result(ret)
+      pure function lambda_integrate<%= suffix %>(t_begin, t_end, tau, p, mu_normalized, ts, coeffs, i_begin) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t_begin, t_end, ts(:)
          Integer(kind=int64), intent(in):: i_begin
-         <%= decl %>, intent(in):: c, p, mu_normalized, coeffs(size64(ts))
+         <%= decl %>, intent(in):: tau, p, mu_normalized, coeffs(size64(ts))
 
-         ret = (t_end - t_begin)*mu_normalized + sum(coeffs*omori_integrate(t_end - ts, c, p)) - sum(coeffs(:(i_begin - 1))*omori_integrate(t_begin - ts(:(i_begin - 1)), c, p))
+         ret = (t_end - t_begin)*mu_normalized + sum(coeffs*omori_integrate(t_end - ts, tau, p)) - sum(coeffs(:(i_begin - 1))*omori_integrate(t_begin - ts(:(i_begin - 1)), tau, p))
       end function lambda_integrate<%= suffix %>
 
 
-      elemental function kernel_coeff<%= suffix %>(dm, K, c, alpha, p, t_normalize_len) result(ret)
+      elemental function kernel_coeff<%= suffix %>(dm, K, alpha) result(ret)
          <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: dm, t_normalize_len
-         <%= decl %>, intent(in):: K, c, alpha, p
+         Real(kind=real<%= k %>), intent(in):: dm
+         <%= decl %>, intent(in):: K, alpha
 
          ! normalization by `omori_integrate` reduces correlation of objective function and improves convergence rate.
-         ret = K*utsu_seki(dm, alpha)/omori_integrate(t_normalize_len, c, p)
+         ret = K*utsu_seki(dm, alpha)
       end function kernel_coeff<%= suffix %>
 
 
@@ -219,12 +219,12 @@ contains
       end function omori_t_0_neg_p<%= suffix %>
 
 
-      elemental function omori_integrate<%= suffix %>(t, c, p) result(ret)
+      elemental function omori_integrate<%= suffix %>(t, tau, p) result(ret)
          <%= decl %>:: ret
          Real(kind=real<%= k %>), intent(in):: t
-         <%= decl %>, intent(in):: c, p
+         <%= decl %>, intent(in):: tau, p
 
-         ret = integrate_inv_x_pow_p<%= suffix %>(c, t + c, p)
+         ret = tau*integrate_inv_x_pow_p<%= suffix %>(t/tau + 1, p)
       end function omori_integrate<%= suffix %>
 
 
@@ -255,17 +255,17 @@ contains
          Real(kind=real<%= k %>), intent(in):: theta
          <%= decl %>, intent(in):: args(:) ! [l**2/exp(alpha*dm), d, q]
 
-         ret = integrate_inv_x_pow_p<%= suffix %>(args(2), args(1)/sin(theta)**2 + args(2), args(3))
+         ! ret = integrate_inv_x_pow_p<%= suffix %>(args(2), args(1)/sin(theta)**2 + args(2), args(3))
       end function space_kernel_ogata_1998_2_4_theta<%= suffix %>
 
 
       ! IO/utility functions
 
 
-      elemental function integrate_inv_x_pow_p<%= suffix %>(a, b, p) result(ret)
+      elemental function integrate_inv_x_pow_p<%= suffix %>(b, p) result(ret)
          ! $\int_{a}^{b} 1/x^{p} dx$
          <%= decl %>:: ret
-         <%= decl %>, intent(in):: a, b
+         <%= decl %>, intent(in):: b
          <%= decl %>, intent(in):: p
          <%= decl %>:: one_sub_p
 
@@ -276,9 +276,9 @@ contains
             ! If I wrote the above code like:
             ! ret = log(x)
             ! ∂/∂p will erroneously be 0.
-            ret = log(b)*b**one_sub_p - log(a)*a**one_sub_p
+            ret = log(b)*b**one_sub_p
          else
-            ret = (b**one_sub_p - a**one_sub_p)/one_sub_p
+            ret = (b**one_sub_p - 1)/one_sub_p
          end if
       end function integrate_inv_x_pow_p<%= suffix %>
    <% } %>
