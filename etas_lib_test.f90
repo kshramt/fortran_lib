@@ -4,7 +4,7 @@ program main
    use, intrinsic:: iso_fortran_env, only: input_unit, output_unit, error_unit, int64, real64
    use, non_intrinsic:: comparable_lib, only: almost_equal
    use, non_intrinsic:: ad_lib
-   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le, index_lt
+   use, non_intrinsic:: etas_lib, only: log_likelihood_etas, index_ge, index_le, index_lt, intensity_etas
 
    implicit none
 
@@ -45,6 +45,20 @@ program main
    Real(kind=kind(ts)):: t_begin, t_end, normalize_interval, mu, K, c, alpha, p, m_fit_min
    type(Dual64_2_5):: d_c, d_p, d_alpha, d_K, d_mu, ll
 
+
+
+   block ! intensity_etas
+      type(Dual64_2_5):: mu, K, c, alpha, p, ret
+      mu = Dual64_2_5(1, [1, 0, 0, 0, 0])
+      K = Dual64_2_5(2, [0, 1, 0, 0, 0])
+      c = Dual64_2_5(3, [0, 0, 1, 0, 0])
+      alpha = Dual64_2_5(4, [0, 0, 0, 1, 0])
+      p = Dual64_2_5(5, [0, 0, 0, 0, 1])
+      ret = intensity_etas(3d0, 2d0, mu, K, c, alpha, p, ts9, dms9)
+      TEST(almost_equal(real(ret), 1084496463522989.6d0))
+      TEST(all(almost_equal(grad(ret), [0.50000000000000000d0, 542248231761494.56d0, 433268362188298.88d0, 9703059223820180.0d0, -352541300610529.88d0])))
+      TEST(all(almost_equal(hess(ret), reshape([0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 0d0, 216634181094149.44d0, 4851529611910090.0d0, -176270650305264.94d0, 0d0, 216634181094149.44d0, -75307910105474.906d0, 3890072234842538.0d0, -31161379399679.172d0, 0d0, 4851529611910090.0d0, 3890072234842538.0d0, 86868261431287840.d0, -3166341867929631.0d0, 0d0, -176270650305264.94d0, -31161379399679.172d0, -3166341867929631.0d0, 97938757420072.125d0], [5, 5]))))
+   end block
 
 
    block ! load_EtasInputs
