@@ -10,7 +10,7 @@ This Fortran library provides basic data structures, algorithms and some handy u
 make
 ```
 
-You may get `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GCC).
+Compilation may fail with `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GCC).
 
 ### Dependencies
 
