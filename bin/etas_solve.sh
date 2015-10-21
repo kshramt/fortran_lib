@@ -104,6 +104,7 @@ by_log=t,t,t,f,f
 lower=1e-8,0,1e-8,-1,-1
 upper=1e308,1e308,3,5,4
 m_aux_min=-1e308
+m_fit_min=-inf
 gtol=1e-6
 iter_limit=1000
 initial_step_size=-1
