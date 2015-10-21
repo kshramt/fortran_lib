@@ -71,6 +71,10 @@ If initial_step_size <= 0, it is reset by etas_solve.exe.
 --m_aux_min[=-inf]:
 Lower bound (inclusive) of an auxiliary window for magnitude.
 Events with M < m_aux_min are ignored.
+
+--m_fit_min[=-inf]:
+Lower bound (inclusive) of a targt window for magnitude.
+Optimization is performed to fit events with M >= m_fit_min.
 EOF
    } >&2
    exit "${1:-1}"
