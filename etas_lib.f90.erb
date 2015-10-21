@@ -396,6 +396,7 @@ contains
                ASSERT(ts(i) >= ts(i - 1))
             end if
          end do
+         ASSERT(i_end > 0)
          i_pre = index_ge(ts, self%t_pre, one, i_end)
          ASSERT(i_pre <= i_end)
 
