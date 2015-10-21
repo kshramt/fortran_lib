@@ -133,9 +133,9 @@ $(1)/bin/sac_to_json.exe: $$(call o_mod_$(1),character_lib sac_lib sac_to_json)
 $(1)/bin/text_dump_array.exe: $$(call o_mod_$(1),character_lib io_lib text_dump_array)
 $(1)/bin/get_wgs84_from_ecef.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_wgs84_from_ecef)
 $(1)/bin/get_ecef_from_wgs84.exe: $$(call o_mod_$(1),character_lib constant_lib geodetic_lib get_ecef_from_wgs84)
-$(1)/bin/etas_solve.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib optimize_lib ad_lib quadrature_lib math_lib geometry_lib etas_lib etas_solve)
-$(1)/bin/etas_intensity.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib math_lib geometry_lib etas_lib etas_intensity)
-$(1)/bin/etas_log_likelihood.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib math_lib geometry_lib etas_lib etas_log_likelihood)
+$(1)/bin/etas_solve.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib optimize_lib ad_lib math_lib geometry_lib etas_lib etas_solve)
+$(1)/bin/etas_intensity.exe: $$(call o_mod_$(1),comparable_lib ad_lib math_lib geometry_lib etas_lib etas_intensity)
+$(1)/bin/etas_log_likelihood.exe: $$(call o_mod_$(1),comparable_lib ad_lib math_lib geometry_lib etas_lib etas_log_likelihood)
 
 ## Tests
 $(1)/test/array_lib_test.exe: $$(call o_mod_$(1),comparable_lib array_lib array_lib_test)
@@ -155,8 +155,8 @@ $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib 
 $(1)/test/math_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib math_lib_test)
 $(1)/test/dual_lib_test.exe: $$(call o_mod_$(1),comparable_lib dual_lib dual_lib_test)
 $(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib ad_lib optimize_lib optimize_lib_test)
-$(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib math_lib geometry_lib etas_lib etas_lib_test)
 $(1)/test/etas_lib_test.exe.tested: $(1)/test/etas_inputs_111.in $(1)/test/etas_inputs_211.in $(1)/test/etas_inputs_311.in
+$(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib math_lib geometry_lib etas_lib etas_lib_test)
 $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib ad_lib ad_lib_test)
 $(1)/test/geometry_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib geometry_lib geometry_lib_test)
 $(1)/test/quadrature_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib quadrature_lib_test)
