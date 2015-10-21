@@ -12,7 +12,15 @@ make
 
 You may get `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GCC).
 
-### Notes for Mac users
+### Dependencies
+
+- Git
+- GNU Make 3.82 or newer
+- GFortran 4.9 or newer
+- Ruby 1.9 or newer
+- BLAS and Lapack
+
+#### Notes for Mac users
 
 GNU version of basic commands (`sed`, `awk`, `getopt` and so on) are assumed to be installed.
 For example, `script/make_include_make.sh` does not work with BSD-sed.
@@ -60,14 +68,6 @@ This module contains types and routines for automatic differentiation up to seco
 ### `release/src/comparable_lib.f90`
 
 This module contains `almost_equal`.
-
-## Dependencies
-
-- Git
-- GNU Make 3.82 or newer
-- GFortran 4.9 or newer
-- Ruby 1.9 or newer
-- BLAS and Lapack
 
 ## License
 
