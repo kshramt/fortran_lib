@@ -1,4 +1,6 @@
 <%
+  LOOP_UNROLL_THRESHOLD = 10
+
   RKINDS = [
     32,
     64,
@@ -58,6 +60,9 @@
 #define sin_p1(x) (cos(x))
 #define sin_p2(x) (-sin(x))
 
+! assuming i >= j
+#define index_hess(i, j, n) (i + n*(j - 1) - (j*(j - 1))/2)
+
 module ad_lib
    <% RKINDS.each{|k|%>
       use, intrinsic:: iso_fortran_env, only: real<%= k %>
@@ -98,7 +103,7 @@ module ad_lib
          Real(kind=real<%= kd %>):: f = 0
          Real(kind=real<%= kd %>):: g(<%= n %>) = 0
          <% if o > 1 %>
-            Real(kind=real<%= kd %>):: h(<%= n %>, <%= n %>) = 0
+            Real(kind=real<%= kd %>):: h(<%= (n*(n + 1))/2 %>) = 0
          <% end %>
       end type Dual<%= kd %>_<%= o %>_<%= n %>
    <% } %>
@@ -235,10 +240,10 @@ contains
             Integer:: i, j
 
             do, concurrent(j = 1:<%= n %>)
-               ret(j, j) = x%h(j, j)
+               ret(j, j) = x%h(index_hess(j, j, <%= n %>))
                do, concurrent(i = (j + 1):<%= n %>)
-                  ret(i, j) = x%h(i, j)
-                  ret(j, i) = x%h(i, j)
+                  ret(i, j) = x%h(index_hess(i, j, <%= n %>))
+                  ret(j, i) = ret(i, j)
                end do
             end do
          end function hess_<%= kd %>_<%= o %>_<%= n %>
@@ -322,7 +327,9 @@ contains
             Real(kind=real<%= kd %>):: xf, fn_p1
             <% if o > 1 %>
                <% unless fn1 == :abs %>
-                  Integer:: i, j
+                  <% if n > LOOP_UNROLL_THRESHOLD %>
+                     Integer:: i, j
+                  <% end %>
                   Real(kind=real<%= kd %>):: fn_p2, fn_p2_xj
                <% end %>
             <% end %>
@@ -335,12 +342,21 @@ contains
                y%h = fn_p1*x%h
                <% unless fn1 == :abs %>
                   fn_p2 = <%= fn1 %>_p2(xf)
-                  do, concurrent(j = 1:<%= n %>)
-                     fn_p2_xj = fn_p2*x%g(j)
-                     do, concurrent(i = j:<%= n %>)
-                        y%h(i, j) = y%h(i, j) + fn_p2_xj*x%g(i)
+                  <% if n > LOOP_UNROLL_THRESHOLD %>
+                     do, concurrent(j = 1:<%= n %>)
+                        fn_p2_xj = fn_p2*x%g(j)
+                        do, concurrent(i = j:<%= n %>)
+                           y%h(index_hess(i, j, <%= n %>)) = y%h(index_hess(i, j, <%= n %>)) + fn_p2_xj*x%g(i)
+                        end do
                      end do
-                  end do
+                  <% else %>
+                     <% (1..n).each{|j| %>
+                        fn_p2_xj = fn_p2*x%g(<%= j %>)
+                        <% (j..n).each{|i| %>
+                           y%h(index_hess(<%= i %>, <%= j %>, <%= n %>)) = y%h(index_hess(<%= i %>, <%= j %>, <%= n %>)) + fn_p2_xj*x%g(<%= i %>)
+                        <% } %>
+                     <% } %>
+                  <% end %>
                <% end %>
             <% end %>
          end function <%= fn1 %>_<%= kd %>_<%= o %>_<%= n %>
@@ -381,7 +397,9 @@ contains
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf
             <% if o > 1 %>
-               Integer:: i, j
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  Integer:: i, j
+               <% end %>
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj
             <% end %>
 
@@ -391,13 +409,23 @@ contains
 
             z%g = x%g*yf + y%g*xf
             <% if o > 1 %>
-               do, concurrent(j = 1:<%= n %>)
-                  xj = x%g(j)
-                  yj = y%g(j)
-                  do, concurrent(i = j:<%= n %>)
-                     z%h(i, j) = x%h(i, j)*yf + y%h(i, j)*xf + x%g(i)*yj + y%g(i)*xj
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  do, concurrent(j = 1:<%= n %>)
+                     xj = x%g(j)
+                     yj = y%g(j)
+                     do, concurrent(i = j:<%= n %>)
+                        z%h(index_hess(i, j, <%= n %>)) = x%h(index_hess(i, j, <%= n %>))*yf + y%h(index_hess(i, j, <%= n %>))*xf + x%g(i)*yj + y%g(i)*xj
+                     end do
                   end do
-               end do
+               <% else %>
+                  <% (1..n).each{|j| %>
+                     xj = x%g(<%= j %>)
+                     yj = y%g(<%= j %>)
+                     <% (j..n).each{|i| %>
+                        z%h(index_hess(<%= i %>, <%= j %>, <%= n %>)) = x%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*yf + y%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*xf + x%g(<%= i %>)*yj + y%g(<%= i %>)*xj
+                     <% } %>
+                  <% } %>
+               <% end %>
             <% end %>
          end function mul_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
 
@@ -407,7 +435,9 @@ contains
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf, div_y, div_y2, x_div_y2, fn_py
             <% if o > 1 %>
-               Integer:: i, j
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  Integer:: i, j
+               <% end %>
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
             <% end %>
 
@@ -425,15 +455,27 @@ contains
                ! fn_pxx = 0
                fn_pxy = -div_y2
                fn_pyy = 2*x_div_y2*div_y
-               do, concurrent(j = 1:<%= n %>)
-                  xj = x%g(j)
-                  yj = y%g(j)
-                  fn_pxx_xj_add_fn_pxy_yj = fn_pxy*yj ! + fn_pxx*xj
-                  fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
-                  do, concurrent(i = j:<%= n %>)
-                     z%h(i, j) = x%h(i, j)*div_y + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  do, concurrent(j = 1:<%= n %>)
+                     xj = x%g(j)
+                     yj = y%g(j)
+                     fn_pxx_xj_add_fn_pxy_yj = fn_pxy*yj ! + fn_pxx*xj
+                     fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+                     do, concurrent(i = j:<%= n %>)
+                        z%h(index_hess(i, j, <%= n %>)) = x%h(index_hess(i, j, <%= n %>))*div_y + y%h(index_hess(i, j, <%= n %>))*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+                     end do
                   end do
-               end do
+               <% else %>
+                  <% (1..n).each{|j| %>
+                     xj = x%g(<%= j %>)
+                     yj = y%g(<%= j %>)
+                     fn_pxx_xj_add_fn_pxy_yj = fn_pxy*yj ! + fn_pxx*xj
+                     fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+                     <% (j..n).each{|i| %>
+                        z%h(index_hess(<%= i %>, <%= j %>, <%= n %>)) = x%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*div_y + y%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*fn_py + x%g(<%= i %>)*fn_pxx_xj_add_fn_pxy_yj + y%g(<%= i %>)*fn_pyx_xj_add_fn_pyy_yj
+                     <% } %>
+                  <% } %>
+               <% end %>
             <% end %>
          end function div_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
 
@@ -443,7 +485,9 @@ contains
             type(Dual<%= [kd, kd2].max %>_<%= o %>_<%= n %>):: z
             Real(kind=real<%= [kd, kd2].max %>):: xf, yf, fn_px, fn_py, x_pow_y, x_pow_y_sub_1, log_x
             <% if o > 1 %>
-               Integer:: i, j
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  Integer:: i, j
+               <% end %>
                Real(kind=real<%= [kd, kd2].max %>):: xj, yj, fn_pxx, fn_pxy, fn_pyy, fn_pxx_xj_add_fn_pxy_yj, fn_pyx_xj_add_fn_pyy_yj
             <% end %>
 
@@ -464,15 +508,27 @@ contains
                fn_pxx = yf*(yf - 1)*xf**(yf - 2)
                fn_pxy = (1 + yf*log_x)*x_pow_y_sub_1
                fn_pyy = log_x*fn_py ! = log_x**2*x_pow_y
-               do, concurrent(j = 1:<%= n %>)
-                  xj = x%g(j)
-                  yj = y%g(j)
-                  fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
-                  fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+               <% if n > LOOP_UNROLL_THRESHOLD %>
+                  do, concurrent(j = 1:<%= n %>)
+                     xj = x%g(j)
+                     yj = y%g(j)
+                     fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
+                     fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
                      do, concurrent(i = j:<%= n %>)
-                     z%h(i, j) = x%h(i, j)*fn_px + y%h(i, j)*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+                        z%h(index_hess(i, j, <%= n %>)) = x%h(index_hess(i, j, <%= n %>))*fn_px + y%h(index_hess(i, j, <%= n %>))*fn_py + x%g(i)*fn_pxx_xj_add_fn_pxy_yj + y%g(i)*fn_pyx_xj_add_fn_pyy_yj
+                     end do
                   end do
-               end do
+               <% else %>
+                  <% (1..n).each{|j| %>
+                     xj = x%g(<%= j %>)
+                     yj = y%g(<%= j %>)
+                     fn_pxx_xj_add_fn_pxy_yj = fn_pxx*xj + fn_pxy*yj
+                     fn_pyx_xj_add_fn_pyy_yj = fn_pxy*xj + fn_pyy*yj
+                     <% (j..n).each{|i| %>
+                        z%h(index_hess(<%= i %>, <%= j %>, <%= n %>)) = x%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*fn_px + y%h(index_hess(<%= i %>, <%= j %>, <%= n %>))*fn_py + x%g(<%= i %>)*fn_pxx_xj_add_fn_pxy_yj + y%g(<%= i %>)*fn_pyx_xj_add_fn_pyy_yj
+                     <% } %>
+                  <% } %>
+               <% end %>
             <% end %>
          end function pow_dd_<%= kd %>_<%= kd2 %>_<%= o %>_<%= n %>
       <% } %>
