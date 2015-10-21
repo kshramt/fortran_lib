@@ -67,6 +67,10 @@ Maximum number of iterations.
 --initial_step_size[=-1]:
 Maximum initial step size (may be doubled or halved).
 If initial_step_size <= 0, it is reset by etas_solve.exe.
+
+--m_aux_min[=-inf]:
+Lower bound (inclusive) of an auxiliary window for magnitude.
+Events with M < m_aux_min are ignored.
 EOF
    } >&2
    exit "${1:-1}"
@@ -87,7 +91,7 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_fit_min:,m_for_K:,mu:,K:,c:,alpha:,p:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
+      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_aux_min:,m_fit_min:,m_for_K:,mu:,K:,c:,alpha:,p:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
       --name="$program_name" \
       -- \
       "$@"
@@ -103,7 +107,7 @@ fixed=f,f,f,f,f
 by_log=t,t,t,f,f
 lower=1e-8,0,1e-8,-1,-1
 upper=1e308,1e308,3,5,4
-m_aux_min=-1e308
+m_aux_min=-inf
 m_fit_min=-inf
 gtol=1e-6
 iter_limit=1000
@@ -128,6 +132,10 @@ do
          ;;
       --t_normalize_len)
          t_normalize_len="$2"
+         shift
+         ;;
+      --m_aux_min)
+         m_aux_min="$2"
          shift
          ;;
       --m_fit_min)
@@ -225,4 +233,11 @@ echo "$t_normalize_len"
 echo "$t_pre"
 echo "$t_end"
 wc -l "$data_file" | awk '{print $1}'
-cat "$data_file"
+cat "$data_file" | {
+   awk \
+      -v CONVFMT='%.15g' \
+      -v OFMT='%.15g' \
+      -v m_aux_min="$m_aux_min" \
+      '$2 >= m_aux_min' \
+      || :
+}
