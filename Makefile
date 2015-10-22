@@ -59,6 +59,7 @@ $(call get,name,$(1))_names := $$($(call get,name,$(1))_files:$(call get,name_pa
 files := $$(filter-out $$($(call get,name,$(1))_files),$$(files))
 endef
 $(foreach params,name~param@file_pattern~%.f90.params@name_pattern~%.f90.params \
+                 name~param_rb@file_pattern~%.f90.params.rb@name_pattern~%.f90.params.rb \
                  name~template@file_pattern~%_template.f90.erb@name_pattern~%.f90.erb \
                  name~test_erb@file_pattern~%_test.f90.erb@name_pattern~%.f90.erb \
                  name~test_f90@file_pattern~%_test.f90@name_pattern~%.f90 \
@@ -71,7 +72,7 @@ $(foreach params,name~param@file_pattern~%.f90.params@name_pattern~%.f90.params 
    ,$(eval $(call names_template,$(params))))
 
 
-lib_names := $(lib_erb_names) $(lib_f90_names) $(param_names)
+lib_names := $(lib_erb_names) $(lib_f90_names) $(param_names) $(param_rb_names)
 exe_names := $(exe_erb_names) $(exe_f90_names)
 test_names := $(test_erb_names) $(test_f90_names) $(errortest_erb_names) $(errortest_f90_names)
 names := $(lib_names) $(exe_names) $(test_names)
