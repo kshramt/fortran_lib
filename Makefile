@@ -101,15 +101,12 @@ define MAIN_TEMPLATE =
 mod_$(1) = $$(patsubst %,$(1)/%.mod,$$(filter %_lib,$$(1)))
 o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
 
-.PHONY: all-$(1) check-$(1) clean-$(1)
-
+.PHONY: all-$(1) src-$(1) exe-$(1) check-$(1) clean-$(1)
 
 all: all-$(1)
-all-$(1): \
-   deps \
-   $$(addprefix $(1)/, \
-      $(names:%=src/%.f90) \
-      $(exe_names:%=bin/%.exe))
+all-$(1): src-$(1) exe-$(1)
+src-$(1): deps $(names:%=$(1)/src/%.f90)
+exe-$(1): deps $(exe_names:%=$(1)/bin/%.exe)
 
 
 check: check-$(1)
