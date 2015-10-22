@@ -10,7 +10,13 @@ This Fortran library provides basic data structures, algorithms and some handy u
 make
 ```
 
-Compilation may fail with `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GCC).
+Compilation may fail with `internal compiler error: Killed (program f951)` if your computer does not have enoguh memory (about 3 GB for GFortran).
+
+`*.f90.erb` files are preprocessed by eRuby and `cpp` during the compilation.
+Preprocessed pure Fortran code is also available at <https://github.com/kshramt/fortran_lib_expanded> and <https://bitbucket.org/kshramt/fortran_lib_expanded>.
+<!-- ```bash -->
+<!-- gfortran -o etas_solve.exe etas_solve.f90 [<dependency>...] -lblas -llapack -->
+<!-- ``` -->
 
 ### Dependencies
 
