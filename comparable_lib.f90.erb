@@ -95,6 +95,8 @@ contains
          Logical:: ret
          <%= ti.declare %>, intent(in):: a
          <%= tr.declare %>, intent(in):: b
+         ! In Fortran, `kind(int_a - real_b) = b`.
+         ! Julia also uses `rtol::(a - b)` in `isapprox`.
          Real(kind=kind(b)), intent(in), optional:: rtol
          Real(kind=kind(b)), intent(in), optional:: atol
 
