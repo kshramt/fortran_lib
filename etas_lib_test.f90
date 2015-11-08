@@ -81,9 +81,77 @@ program main
                TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
                close(unit)
             end block
+            block ! t2 == t_end
+               open(newunit=unit, file='etas_inputs_112.in', status='old', action='read')
+               call load(etas_inputs, unit)
+               close(unit)
+               TEST(almost_equal(etas_inputs%m_for_K, 6))
+               TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               TEST(almost_equal(etas_inputs%t_pre, -100))
+               TEST(almost_equal(etas_inputs%t_end, 19))
+               TEST(almost_equal(etas_inputs%n, 10))
+               TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])))
+               TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
+               close(unit)
+            end block
+            block ! t2 > t_end
+               open(newunit=unit, file='etas_inputs_113.in', status='old', action='read')
+               call load(etas_inputs, unit)
+               close(unit)
+               TEST(almost_equal(etas_inputs%m_for_K, 6))
+               TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               TEST(almost_equal(etas_inputs%t_pre, -100))
+               TEST(almost_equal(etas_inputs%t_end, 10))
+               TEST(almost_equal(etas_inputs%n, 5))
+               TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9])))
+               TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10])))
+               close(unit)
+            end block
+         end block
+         block ! t_pre == t1
+         end block
+         block ! t_pre > t1
+            block ! t2 < t_end
+               ! open(newunit=unit, file='etas_inputs_131.in', status='old', action='read')
+               ! call load(etas_inputs, unit)
+               ! close(unit)
+               ! TEST(almost_equal(etas_inputs%m_for_K, 6))
+               ! TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               ! TEST(almost_equal(etas_inputs%t_pre, -100))
+               ! TEST(almost_equal(etas_inputs%t_end, 100))
+               ! TEST(almost_equal(etas_inputs%n, 10))
+               ! TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])))
+               ! TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
+               ! close(unit)
+            end block
+            block ! t2 == t_end
+               ! open(newunit=unit, file='etas_inputs_132.in', status='old', action='read')
+               ! call load(etas_inputs, unit)
+               ! close(unit)
+               ! TEST(almost_equal(etas_inputs%m_for_K, 6))
+               ! TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               ! TEST(almost_equal(etas_inputs%t_pre, -100))
+               ! TEST(almost_equal(etas_inputs%t_end, 19))
+               ! TEST(almost_equal(etas_inputs%n, 10))
+               ! TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9, 11, 13, 15, 17, 19])))
+               ! TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10, 12, 14, 16, 18, 20])))
+               ! close(unit)
+            end block
+            block ! t2 > t_end
+               ! open(newunit=unit, file='etas_inputs_133.in', status='old', action='read')
+               ! call load(etas_inputs, unit)
+               ! close(unit)
+               ! TEST(almost_equal(etas_inputs%m_for_K, 6))
+               ! TEST(almost_equal(etas_inputs%t_normalize_len, 1))
+               ! TEST(almost_equal(etas_inputs%t_pre, -100))
+               ! TEST(almost_equal(etas_inputs%t_end, 10))
+               ! TEST(almost_equal(etas_inputs%n, 5))
+               ! TEST(all(almost_equal(etas_inputs%ts, [1, 3, 5, 7, 9])))
+               ! TEST(all(almost_equal(etas_inputs%ms, [2, 4, 6, 8, 10])))
+               ! close(unit)
+            end block
          end block
       end block
-
       block ! n > n_actual
          block ! t_pre < t1
             block ! t2 < t_end
@@ -101,7 +169,6 @@ program main
             end block
          end block
       end block
-
       block ! n < n_actual
          block ! t_pre < t1
             block ! t2 < t_end

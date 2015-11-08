@@ -153,8 +153,9 @@ $(1)/test/geodetic_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib 
 $(1)/test/math_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib math_lib_test)
 $(1)/test/dual_lib_test.exe: $$(call o_mod_$(1),comparable_lib dual_lib dual_lib_test)
 $(1)/test/optimize_lib_test.exe: $$(call o_mod_$(1),comparable_lib constant_lib array_lib math_lib ad_lib optimize_lib optimize_lib_test)
-$(1)/test/etas_lib_test.exe.tested: $(1)/test/etas_inputs_111.in $(1)/test/etas_inputs_211.in $(1)/test/etas_inputs_311.in
 $(1)/test/etas_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib math_lib geometry_lib etas_lib etas_lib_test)
+$(1)/test/etas_lib_test.exe.tested: $(1)/test/etas_inputs_111.in $(1)/test/etas_inputs_211.in $(1)/test/etas_inputs_311.in \
+                                    $(1)/test/etas_inputs_112.in $(1)/test/etas_inputs_113.in
 $(1)/test/ad_lib_test.exe: $$(call o_mod_$(1),constant_lib comparable_lib ad_lib ad_lib_test)
 $(1)/test/geometry_lib_test.exe: $$(call o_mod_$(1),comparable_lib math_lib geometry_lib geometry_lib_test)
 $(1)/test/quadrature_lib_test.exe: $$(call o_mod_$(1),comparable_lib ad_lib quadrature_lib quadrature_lib_test)
