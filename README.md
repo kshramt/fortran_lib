@@ -46,6 +46,19 @@ bin/etas_solve.sh --help
 for the details.
 [example/etas_solve/README.md](http://kshramt.github.io/fortran_lib/example/etas_solve/README.html) describes output format of `etas_solve.exe`.
 
+#### Example
+
+```bash
+bin/etas_solve.sh \
+   --t_normalize_len=1 \
+   --m_for_K=6 \
+   --t_pre=0 \
+   --t_begin=0 \
+   --t_end=1000 \
+   --data_file=example/etas_solve/catalog.tsv |
+   release/bin/etas_solve.exe
+```
+
 ### `bin/etas_intensity.sh` and `release/bin/etas_intensity.exe`
 
 These programs calculate the intensity function given data and parameters.
