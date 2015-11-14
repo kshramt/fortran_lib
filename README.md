@@ -44,6 +44,7 @@ bin/etas_solve.sh --help
 ```
 
 for the details.
+<example/etas_solve/README.md> describes output format of `etas_solve.exe`.
 
 ### `bin/etas_intensity.sh` and `release/bin/etas_intensity.exe`
 
