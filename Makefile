@@ -45,6 +45,9 @@ export MY_PYTHON ?= python3
 PYTHON := $(MY_PYTHON)
 
 
+PANDOC := pandoc
+PANDOC_FLAGS := --standalone --mathml --to=html5
+
 all_files := $(shell git ls-files)
 files := $(all_files)
 
@@ -243,6 +246,12 @@ bin/%.py.tested: bin/%.py
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 
+
+.PHONY: doc
+doc: README.html example/etas_solve/README.html
+%.html: %.md
+	mkdir -p $(@D)
+	$(PANDOC) $(PANDOC_FLAGS) -o $@ $<
 
 define DEPS_RULE_TEMPLATE =
 dep/$(1)/%: | dep/$(1).updated ;
