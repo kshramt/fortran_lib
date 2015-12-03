@@ -18,7 +18,7 @@ ifeq ($(FC),ifort)
 else
    FFLAG_COMMON := -ffree-line-length-none -fmax-identifier-length=63 -pipe -Wall
    FFLAG_DEBUG := -fcheck=all -O0 -fbacktrace -ffpe-trap=invalid,zero,overflow -ggdb -pg --coverage -DDEBUG
-   FFLAG_OPTIMIZE := -O3 -flto -fwhole-program
+   FFLAG_OPTIMIZE := -O3 -flto
    ifneq ($(shell uname -s),Darwin)
       FFLAG_OPTIMIZE += -march=native -fopenmp -ftree-parallelize-loops=$(shell nproc)
    endif
