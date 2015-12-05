@@ -240,28 +240,6 @@ contains
       end function utsu_seki<%= suffix %>
 
 
-      ! space-time ETAS
-
-
-      ! todo: do not create array every time
-      impure elemental function space_kernel_ogata_1998_2_4_integrate_theta<%= suffix %>(theta1, theta2, l_pow_2_div_exp_alpha_dm, d, q) result(ret)
-         <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: theta1, theta2
-         <%= decl %>, intent(in):: l_pow_2_div_exp_alpha_dm, d, q
-
-         ! ret = romberg(space_kernel_ogata_1998_2_4_theta<%= suffix %>, theta1, theta2, [l_pow_2_div_exp_alpha_dm, d, q])
-      end function space_kernel_ogata_1998_2_4_integrate_theta<%= suffix %>
-
-
-      pure function space_kernel_ogata_1998_2_4_theta<%= suffix %>(theta, args) result(ret)
-         <%= decl %>:: ret
-         Real(kind=real<%= k %>), intent(in):: theta
-         <%= decl %>, intent(in):: args(:) ! [l**2/exp(alpha*dm), d, q]
-
-         ret = integrate_inv_x_pow_p<%= suffix %>(args(2), args(1)/sin(theta)**2 + args(2), args(3))
-      end function space_kernel_ogata_1998_2_4_theta<%= suffix %>
-
-
       ! IO/utility functions
 
 
