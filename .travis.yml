@@ -34,7 +34,7 @@ script:
   - export MY_FC=gfortran-$MY_FC_V
   - $MY_FC --version
   - nproc
-  - $make -j1 check all
+  - $make -k -j1 all check
 env:
   - MY_FC_V=4.9 MAKE_V=make-3.82
   - MY_FC_V=5 MAKE_V=make-3.82
