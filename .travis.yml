@@ -1,5 +1,6 @@
 language: fortran
-sudo: false
+sudo: required
+dist: trusty
 rvm:
   - 1.9.3
   - 2.1.0
