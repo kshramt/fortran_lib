@@ -39,17 +39,13 @@ A M == m_for_K earthquake produces K direct aftershocks per t_normalize_len, on 
 --mu[=1], --K[=1], --c[=0.01], --alpha[=0.5], --p[=1.1]:
 Initial values.
 Using a good initial value may reduce number of iterations needed to converge.
-Initial value should satisfy lower <= initial value <= upper.
+Initial value should satisfy lower bound <= initial value <= upper bound.
 
---lower[=1e-8,0,1e-8,-1,-1]:
-Lower bounds of the ETAS parameters.
-Order is mu,K,c,alpha,p
+--mu_lower[=1e-8], --K_lower[=0], --c_lower=[=1e-8], --alpha_lower=[-1], --p_lower[=-1]
+Lower bounds.
 
---upper[=1e308,1e308,3,5,4]:
-Upper bounds of the ETAS parameters.
-Order is mu,K,c,alpha,p
-Setting a reasonably tight bound reduces number of iterations needed to converge.
-I set these upper bounds assuming that a time unit is day.
+--mu_upper[=1e308], --K_upper[=1e308], --c_upper[=3], --alpha_upper[=5], --p_upper[=4]
+Upper bounds.
 
 --fixed[=f,f,f,f,f]:
 If you want to fix p by the initial value while performing optimization, please try --fixed=f,t,f,f,f
@@ -95,7 +91,13 @@ readonly dir="${0%/*}"
 opts="$(
    getopt \
       --options h \
-      --longoptions help,t_pre:,t_begin:,t_end:,t_normalize_len:,m_aux_min:,m_fit_min:,m_for_K:,mu:,K:,c:,alpha:,p:,data_file:,fixed:,by_log:,lower:,upper:,gtol:,iter_limit:,initial_step_size: \
+      --longoptions help \
+      --longoptions t_pre:,t_begin:,t_end:,t_normalize_len: \
+      --longoptions m_aux_min:,m_fit_min:,m_for_K: \
+      --longoptions mu:,K:,c:,alpha:,p: \
+      --longoptions mu_lower:,K_lower:,c_lower:,alpha_lower:,p_lower: \
+      --longoptions mu_upper:,K_upper:,c_upper:,alpha_upper:,p_upper: \
+      --longoptions data_file:,fixed:,by_log:,gtol:,iter_limit:,initial_step_size: \
       --name="$program_name" \
       -- \
       "$@"
@@ -107,10 +109,18 @@ K=1
 c=0.01
 alpha=0.5
 p=1.1
+mu_lower=1e-8
+K_lower=0
+c_lower=1e-8
+alpha_lower=-1
+p_lower=-1
+mu_upper=1e308
+K_upper=1e308
+c_upper=3
+alpha_upper=5
+p_upper=4
 fixed=f,f,f,f,f
 by_log=t,t,t,f,f
-lower=1e-8,0,1e-8,-1,-1
-upper=1e308,1e308,3,5,4
 m_aux_min=-inf
 m_fit_min=-inf
 gtol=1e-6
@@ -170,6 +180,46 @@ do
          p="$2"
          shift
          ;;
+      --mu_lower)
+         mu_lower="$2"
+         shift
+            ;;
+      --K_lower)
+         K_lower="$2"
+         shift
+         ;;
+      --c_lower)
+         c_lower="$2"
+         shift
+         ;;
+      --alpha_lower)
+         alpha_lower="$2"
+         shift
+         ;;
+      --p_lower)
+         p_lower="$2"
+         shift
+         ;;
+      --mu_upper)
+         mu_upper="$2"
+         shift
+            ;;
+      --K_upper)
+         K_upper="$2"
+         shift
+         ;;
+      --c_upper)
+         c_upper="$2"
+         shift
+         ;;
+      --alpha_upper)
+         alpha_upper="$2"
+         shift
+         ;;
+      --p_upper)
+         p_upper="$2"
+         shift
+         ;;
       --data_file)
          data_file="$2"
          shift
@@ -180,14 +230,6 @@ do
          ;;
       --by_log)
          by_log="$2"
-         shift
-         ;;
-      --lower)
-         lower="$2"
-         shift
-         ;;
-      --upper)
-         upper="$2"
          shift
          ;;
       --gtol)
@@ -226,8 +268,8 @@ echo "$fixed"
 echo "$by_log"
 echo "$iter_limit"
 echo "$mu" "$K" "$c" "$alpha" "$p"
-echo "$lower"
-echo "$upper"
+echo "$mu_lower" "$K_lower" "$c_lower" "$alpha_lower" "$p_lower"
+echo "$mu_upper" "$K_upper" "$c_upper" "$alpha_upper" "$p_upper"
 echo "$m_fit_min"
 echo "$t_begin"
 echo "$gtol"
