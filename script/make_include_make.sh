@@ -32,5 +32,5 @@ if [[ $stem =~ _lib$ ]]; then
 else
    echo -n "$base_dir/$stem".o: '$(call '"mod_$base_dir"','
 fi
-"$dir"/fort_deps.sh < "$f90" | tr '\n' ' ' | ${MY_SED:-sed} -e 's/ $//'
+"$dir"/fort_deps.sh < "$f90" | tr '\n' ' ' | ${SED:-sed} -e 's/ $//'
 echo ')'

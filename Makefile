@@ -1,15 +1,12 @@
 # Constants
 DEPS := fort
 
-MY_ERB ?= erb
-ERB := ${MY_ERB}
-ERB_FLAGS :=
+export ERB := erb
+export ERB_FLAGS :=
 
-MY_RUBY ?= ruby
-RUBY := ${MY_RUBY}
+export RUBY := ruby
 
-MY_FC ?= gfortran
-FC := $(MY_FC)
+export FC := gfortran
 ifeq ($(FC),ifort)
    FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz -no-wrap-margin
    FFLAG_DEBUG := -check nouninit -trace -O0 -p -g -DDEBUG -debug all
@@ -27,8 +24,7 @@ endif
 FFLAGS_release := $(FFLAG_COMMON) $(FFLAG_OPTIMIZE)
 FFLAGS_debug := $(FFLAG_COMMON) $(FFLAG_DEBUG)
 
-MY_CPP ?= cpp
-CPP := $(MY_CPP)
+export CPP := cpp
 CPP_FLAG_COMMON := -P -C -nostdinc
 ifeq ($(FC),ifort)
    CPP_FLAG_COMMON += -D __INTEL_COMPILER
@@ -36,17 +32,15 @@ endif
 CPP_FLAGS_release := $(CPP_FLAG_COMMON)
 CPP_FLAGS_debug := $(CPP_FLAG_COMMON) -DDEBUG
 
-export MY_SHA256SUM ?= sha256sum
-SHA256SUM := $(MY_SHA256SUM)
+export SHA256SUM := sha256sum
 
-export MY_SED ?= sed
+export SED := sed
 
-export MY_PYTHON ?= python3
-PYTHON := $(MY_PYTHON)
+export PYTHON := python3
 
 
-PANDOC := pandoc
-PANDOC_FLAGS := --standalone --mathml --to=html5
+export PANDOC := pandoc
+export PANDOC_FLAGS := --standalone --mathml --to=html5
 
 all_files := $(shell git ls-files)
 files := $(all_files)
@@ -227,7 +221,7 @@ stack_lib.f90: stack_template.f90.erb
 
 
 bin/%.py.tested: bin/%.py
-	$(MY_PYTHON) $< --test
+	$(PYTHON) $< --test
 	touch $@
 
 

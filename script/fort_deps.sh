@@ -24,5 +24,5 @@ fi
 { grep '^ *use, non_intrinsic::' || : ; } |
    awk '{print $3}' |
    { grep -v ifport || : ; } |
-   ${MY_SED:-sed} -e 's/,$//' |
+   ${SED:-sed} -e 's/,$//' |
    sort -u
