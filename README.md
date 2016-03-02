@@ -7,6 +7,10 @@ This Fortran library provides basic data structures, algorithms and some handy u
 ## Compilation
 
 ```bash
+# fortran_lib should be cloned rather than downloaded as a tar file
+# because `git ls-files` is used in the build process
+git clone https://github.com/kshramt/fortran_lib
+cd fortran_lib
 make
 ```
 
