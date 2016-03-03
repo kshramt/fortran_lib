@@ -51,6 +51,7 @@ cd "$tmp_dir"
 "$FC" --version
 "$MAKE" --version
 "$RUBY" --version
+git --version
 
 
 git clone https://github.com/kshramt/fortran_lib.git
