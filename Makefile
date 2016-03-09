@@ -1,3 +1,8 @@
+$(if $(filter-out 3.75% 3.76% 3.77% 3.78% 3.79% 3.80% 3.81%,$(MAKE_VERSION)), \
+   , \
+   $(error This Makefile requires GNU Make 3.82 or newer. You are using $(MAKE) version $(MAKE_VERSION)))
+
+
 # Constants
 DEPS := fort
 
@@ -7,6 +12,13 @@ export ERB_FLAGS :=
 export RUBY := ruby
 
 export FC := gfortran
+$(if $(filter gfortran%,$(FC)), \
+   $(if $(filter-out 3.% 4.0% 4.1% 4.2% 4.3% 4.4% 4.5% 4.6% 4.7% 4.8%,$(shell $(FC) -dumpversion)), \
+      , \
+      $(error This Makefile requires gfortran 4.9 or newer. You are using $(FC) version $(shell $(FC) -dumpversion))), \
+   )
+
+
 ifeq ($(FC),ifort)
    FFLAG_COMMON := -warn -assume realloc_lhs -no-ftz -no-wrap-margin
    FFLAG_DEBUG := -check nouninit -trace -O0 -p -g -DDEBUG -debug all
