@@ -85,6 +85,10 @@ bin/etas_log_likelihood.sh --help
 
 for the details.
 
+### `example/etas_solve/make_catalog.py`
+
+This script generates a synthetic catalog for the temporal ETAS model.
+
 ### `release/src/ad_lib.f90`
 
 This module contains types and routines for automatic differentiation up to second-order derivatives with 1, 2 and 5 independent variables.
