@@ -95,4 +95,4 @@ This module contains `almost_equal`.
 
 ## License
 
-GPL Version 3.
+This program is distributed under the terms of [the GNU General Public License version 3](http://www.gnu.org/licenses/).
