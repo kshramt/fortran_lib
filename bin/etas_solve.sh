@@ -89,7 +89,7 @@ readonly dir="${0%/*}"
 
 
 opts="$(
-   getopt \
+   "${GETOPT:-getopt}" \
       --options h \
       --longoptions help \
       --longoptions t_pre:,t_begin:,t_end:,t_normalize_len: \

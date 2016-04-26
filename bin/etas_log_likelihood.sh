@@ -37,7 +37,7 @@ readonly dir="${0%/*}"
 
 
 opts="$(
-   getopt \
+   "${GETOPT:-getopt}" \
       --options h \
       --longoptions help,t_pre:,t_end:,t_normalize_len:,m_for_K:,data_file: \
       --name="$program_name" \
