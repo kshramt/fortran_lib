@@ -4,8 +4,6 @@ $(if $(filter-out 3.75% 3.76% 3.77% 3.78% 3.79% 3.80% 3.81%,$(MAKE_VERSION)), \
 
 
 # Constants
-DEPS := fort
-
 export ERB := erb
 export ERB_FLAGS :=
 
@@ -55,7 +53,7 @@ export PANDOC := pandoc
 export PANDOC_FLAGS := --standalone --mathml --to=html5
 
 all_files := $(shell git ls-files)
-files := $(all_files)
+files := $(filter-out dep/%,$(all_files))
 
 
 parse_stem = $(subst @, ,$(subst ~,=,$(1)))
@@ -97,9 +95,8 @@ export SHELLOPTS := pipefail:errexit:nounset:noclobber
 
 
 # Commands
-.PHONY: deps all check clean
+.PHONY: all check clean
 all:
-deps: $(DEPS:%=dep/%.updated)
 
 
 # Functions
@@ -115,13 +112,12 @@ o_mod_$(1) = $$(1:%=$(1)/%.o) $$(call mod_$(1),$$(1))
 
 all: all-$(1)
 all-$(1): src-$(1) exe-$(1)
-src-$(1): deps $(names:%=$(1)/src/%.f90)
-exe-$(1): deps $(exe_names:%=$(1)/bin/%.exe)
+src-$(1): $(names:%=$(1)/src/%.f90)
+exe-$(1): $(exe_names:%=$(1)/bin/%.exe)
 
 
 check: check-$(1)
 check-$(1): \
-   deps \
    $$(addprefix $(1)/, \
       $(test_names:%=test/%.exe.tested))
 
@@ -242,13 +238,13 @@ bin/%.py.tested: bin/%.py
 	ERB="$(ERB)" ERB_FLAGS="$(ERB_FLAGS)" $^ $* >| $@
 
 
-%.f90.params: %.f90.params.rb dep/fort.updated
+%.f90.params: %.f90.params.rb
 	mkdir -p $(@D)
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
 	$(RUBY) $< >| $@
 
 
-%.f90: %.f90.erb dep/fort.updated
+%.f90: %.f90.erb
 	export RUBYLIB=$(CURDIR)/dep/fort/lib:"$${RUBYLIB:-}"
 	$(ERB) $(ERB_FLAGS) $< >| $@
 
@@ -258,31 +254,3 @@ doc: README.html example/etas_solve/README.html
 %.html: %.md
 	mkdir -p $(@D)
 	$(PANDOC) $(PANDOC_FLAGS) -o $@ $<
-
-define DEPS_RULE_TEMPLATE =
-dep/$(1)/%: | dep/$(1).updated ;
-endef
-$(foreach f,$(DEPS),$(eval $(call DEPS_RULE_TEMPLATE,$(f))))
-
-
-$(DEPS:%=dep/%.updated): dep/%.updated: config/dep/%.ref dep/%.synced
-	cd $(@D)/$*
-	git fetch origin
-	git checkout "$$(cat ../../$<)"
-	cd -
-	if [[ -r dep/$*/Makefile ]]; then
-	   $(MAKE) -C dep/$*
-	fi
-	touch $@
-
-$(DEPS:%=dep/%.synced): dep/%.synced: config/dep/%.uri | dep/%
-	cd $(@D)/$*
-	git remote rm origin
-	git remote add origin "$$(cat ../../$<)"
-	cd -
-	touch $@
-
-$(DEPS:%=dep/%): dep/%:
-	git init $@
-	cd $@
-	git remote add origin "$$(cat ../../config/dep/$*.uri)"
